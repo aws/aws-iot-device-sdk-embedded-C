@@ -1,9 +1,11 @@
 addrinfo
+aes
 allocateaddrinfolinkedlist
 alpn
 alpnprotoslen
 api
 apis
+armmbed
 attemptsdone
 aws
 backoff
@@ -77,6 +79,7 @@ fwrite
 fwriteerrorreturn
 getaddrinfo
 getcwd
+github
 h
 hostnamelength
 html
@@ -97,6 +100,7 @@ longjmp
 malloc
 maxattempts
 maxfragmentlength
+mbedtls
 mcu
 messagelevel
 mfln
@@ -186,6 +190,8 @@ platformimagestate
 plisthead
 pnetworkcontext
 png
+pollin
+pollpri
 popensslcredentials
 popensslparams
 posix
@@ -210,6 +216,7 @@ recvtimeoutms
 retryable
 retvalue
 rfcxh
+rom
 rsa
 sdk
 sendtimeout
@@ -249,6 +256,7 @@ transportpage
 transportsectionimplementation
 transportsectionoverview
 transportstruct
+tx
 txt
 ulblockindex
 ulblocksize

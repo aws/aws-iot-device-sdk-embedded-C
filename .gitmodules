@@ -40,3 +40,15 @@
 [submodule "demos/jobs/jobs_demo_mosquitto/libmosquitto"]
 	path = demos/jobs/jobs_demo_mosquitto/libmosquitto
 	url = https://github.com/eclipse/mosquitto.git
+[submodule "libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk"]
+	path = libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk
+	url = https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk
+[submodule "libraries/3rdparty/tinycbor"]
+	path = libraries/3rdparty/tinycbor
+	url = https://github.com/intel/tinycbor
+[submodule "libraries/aws/sigv4-for-aws-iot-embedded-sdk"]
+	path = libraries/aws/sigv4-for-aws-iot-embedded-sdk
+	url = https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk.git
+[submodule "libraries/3rdparty/mbedtls"]
+	path = libraries/3rdparty/mbedtls
+	url = https://github.com/ARMmbed/mbedtls

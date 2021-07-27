@@ -4,6 +4,7 @@
 
 ### Minor Changes
 
+- [#1670](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1670) Update corePKCS11 demo to read the public key as the private key was being used to both sign and verify
 - [#1596](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1596) Make `THING_NAME` an alias for `CLIENT_IDENTIFIER` in MQTT-related demos
 - [#1593](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1593) Initialize MQTT status return code in OTA demos mqtt_publish
 - [#1599](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1599) Checking execution status of demo loop before calling pthread_join in OTA demos
@@ -35,7 +36,7 @@
 ### Major Changes
 
 - This release introduces the **AWS IoT Over-the-air Update** library(Release Candidate), **backoffAlgorithm** library, and **PKCS #11** library.
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx), and static code analysis from [Coverity statical analysis](https://scan.coverity.com/). In addition, PKCS11 library has also undergone validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk), and static code analysis from [Coverity statical analysis](https://scan.coverity.com/). In addition, PKCS11 library has also undergone validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
 
 - This release uses submodule references to the following new individual repositories for the AWS IoT Over-the-air Update, backoffAlgorithm, and PKCS11 libraries under the `libraries` folder:
    - [aws/ota-for-aws-iot-embedded-sdk](https://github.com/aws/ota-for-aws-iot-embedded-sdk) for the AWS IoT Over-the-air Update library.
@@ -47,7 +48,7 @@ These libraries have gone through code quality checks including verification tha
 ### Major Changes
 
 - This release introduces the re-factored **HTTP** client library, **AWS IoT Device Defender** client library, and **AWS IoT Jobs** client library.
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
 
 - This release uses submodule references to the following new individual repositories for the HTTP, AWS IoT Device Defender client, and AWS IoT Jobs client libraries under the `libraries` folder:
    - [FreeRTOS/coreHTTP](https://github.com/FreeRTOS/coreHTTP) for the HTTP client library
@@ -59,7 +60,7 @@ These libraries have gone through code quality checks including verification tha
 ### Major Changes
 
 - This release introduces the re-factored **MQTT** client library, **JSON** parser library, and **AWS IoT Device Shadow** client library.
-These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/MISRAHome/MISRAC2012/tabid/196/Default.aspx). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, and checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk). These libraries have also undergone both static code analysis from [Coverity statical analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
 
 - This release uses submodule references to the following new individual repositories for the MQTT, JSON, and AWS IoT Device Shadow client libraries under the `libraries` folder:
    - [FreeRTOS/coreMQTT](https://github.com/FreeRTOS/coreMQTT) for the MQTT client library

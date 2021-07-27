@@ -8,32 +8,32 @@ description: |-
   See dependencies for included libraries."
 dependencies:
   - name: "coreMQTT"
-    version: "v1.1.1"
+    version: "v1.1.2"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreMQTT"
   - name: "coreJSON"
-    version: "v3.0.1"
+    version: "v3.0.2"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreJSON"
   - name: "Device-Shadow-for-AWS-IoT-embedded-sdk"
-    version: "v1.1.0"
+    version: "v1.1.1"
     repository:
       type: "git"
       url: "https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk"
   - name: "coreHTTP"
-    version: "v2.0.1"
+    version: "v2.0.2"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreHTTP"
   - name: "Device-Defender-for-AWS-IoT-embedded-sdk"
-    version: "v1.1.0"
+    version: "v1.1.1"
     repository:
       type: "git"
       url: "https://github.com/aws/Device-Defender-for-AWS-IoT-embedded-sdk"
   - name: "Jobs-for-AWS-IoT-embedded-sdk"
-    version: "v1.1.0"
+    version: "v1.1.1"
     repository:
       type: "git"
       url: "https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk"
@@ -43,13 +43,23 @@ dependencies:
       type: "git"
       url: "https://github.com/aws/ota-for-aws-iot-embedded-sdk"
   - name: "backoffAlgorithm"
-    version: "v1.0.1"
+    version: "v1.1.0"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/backoffAlgorithm"
   - name: "corePKCS11"
-    version: "v3.0.1"
+    version: "v3.1.0"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/corePKCS11"
+  - name: "Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
+    version: "68d31ae"
+    repository:
+      type: "git"
+      url: "https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
+  - name: "sigv4-for-AWS-IoT-embedded-sdk"
+    version: "2e4bd59"
+    repository:
+      type: "git"
+      url: "https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk"
 license: "MIT"

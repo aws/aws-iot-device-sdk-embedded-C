@@ -20,43 +20,32 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file clock.h
- * @brief Time-related functions used by demos and tests in this SDK.
+#ifndef FLEET_PROVISIONING_CONFIG_H_
+#define FLEET_PROVISIONING_CONFIG_H_
+
+/**************************************************/
+/******* DO NOT CHANGE the following order ********/
+/**************************************************/
+
+/* Include logging header files and define logging macros in the following order:
+ * 1. Include the header file "logging_levels.h".
+ * 2. Define the LIBRARY_LOG_NAME and LIBRARY_LOG_LEVEL macros.
+ * 3. Include the header file "logging_stack.h".
  */
 
-#ifndef CLOCK_H_
-#define CLOCK_H_
+#include "logging_levels.h"
 
-/* Standard includes. */
-#include <stdint.h>
-
-/* *INDENT-OFF* */
-#ifdef __cplusplus
-    extern "C" {
+/* Logging configuration for the Fleet Provisioning library. */
+#ifndef LIBRARY_LOG_NAME
+    #define LIBRARY_LOG_NAME    "FleetProvisioning"
 #endif
-/* *INDENT-ON* */
 
-/**
- * @brief The timer query function.
- *
- * This function returns the elapsed time.
- *
- * @return Time in milliseconds.
- */
-uint32_t Clock_GetTimeMs( void );
-
-/**
- * @brief Millisecond sleep function.
- *
- * @param[in] sleepTimeMs milliseconds to sleep.
- */
-void Clock_SleepMs( uint32_t sleepTimeMs );
-
-/* *INDENT-OFF* */
-#ifdef __cplusplus
-    }
+#ifndef LIBRARY_LOG_LEVEL
+    #define LIBRARY_LOG_LEVEL    LOG_INFO
 #endif
-/* *INDENT-ON* */
 
-#endif /* ifndef CLOCK_H_ */
+#include "logging_stack.h"
+
+/************ End of logging configuration ****************/
+
+#endif /* ifndef FLEET_PROVISIONING_CONFIG_H_ */

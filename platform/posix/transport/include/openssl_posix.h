@@ -49,6 +49,12 @@
 
 /************ End of logging configuration ****************/
 
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /* OpenSSL include. */
 #include <openssl/ssl.h>
 
@@ -200,5 +206,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
 int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
                       const void * pBuffer,
                       size_t bytesToSend );
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef OPENSSL_POSIX_H_ */
