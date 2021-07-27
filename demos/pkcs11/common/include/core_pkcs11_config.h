@@ -162,6 +162,16 @@
 #define pkcs11configLABEL_CODE_VERIFICATION_KEY            "Code Verify Key"
 
 /**
+ * @brief The PKCS #11 label for the claim certificate for Fleet Provisioning.
+ */
+#define pkcs11configLABEL_CLAIM_CERTIFICATE                "Claim Cert"
+
+/**
+ * @brief The PKCS #11 label for the claim private key for Fleet Provisioning.
+ */
+#define pkcs11configLABEL_CLAIM_PRIVATE_KEY                "Claim Key"
+
+/**
  * @brief The PKCS #11 label for Just-In-Time-Provisioning.
  *
  * The certificate corresponding to the issuer of the device certificate

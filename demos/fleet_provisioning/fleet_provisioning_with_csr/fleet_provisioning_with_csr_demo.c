@@ -60,16 +60,19 @@
 /* Demo config. */
 #include "demo_config.h"
 
-/* MQTT operations. */
-#include "mqtt_operations.h"
-
 /* TinyCBOR library for CBOR encoding and decoding operations. */
 #include "cbor.h"
+
+/* corePKCS11 includes. */
+#include "core_pkcs11.h"
+#include "core_pkcs11_config.h"
 
 /* AWS IoT Fleet Provisioning Library. */
 #include "fleet_provisioning.h"
 
 /* Demo includes. */
+#include "mqtt_operations.h"
+#include "pkcs11_operations.h"
 #include "fleet_provisioning_serializer.h"
 
 /**
@@ -84,15 +87,6 @@
 #endif
 #ifndef CLAIM_PRIVATE_KEY_PATH
     #error "Please define path to claim private key (CLAIM_PRIVATE_KEY_PATH) in demo_config.h."
-#endif
-#ifndef PROVISIONING_PRIVATE_KEY_PATH
-    #error "Please define path to private key to provision (PROVISIONING_PRIVATE_KEY_PATH) in demo_config.h."
-#endif
-#ifndef PROVISIONING_CSR_PATH
-    #error "Please define path to CSR to use to provision (PROVISIONING_CSR_PATH) in demo_config.h."
-#endif
-#ifndef PROVISIONING_CERT_PATH
-    #error "Please define path to which to write the obtained certificate (PROVISIONING_CERT_PATH) in demo_config.h."
 #endif
 
 /**
@@ -200,17 +194,6 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
                                          uint16_t packetIdentifier );
 
 /**
- * @brief Obtains the CSR from the file path in #PROVISIONING_CSR_PATH.
- *
- * @param[in] pBuffer Buffer into which to read the CSR.
- * @param[in] bufferLength Length of #buffer.
- * @param[out] pOutCsrLength The length of the CSR.
- */
-static bool getCsr( char * pBuffer,
-                    size_t bufferLength,
-                    size_t * pOutCsrLength );
-
-/**
  * @brief Run the MQTT process loop to get a response.
  */
 static bool waitForResponse( void );
@@ -235,14 +218,6 @@ static bool subscribeToRegisterThingResponseTopics( void );
  */
 static bool unsubscribeFromRegisterThingResponseTopics( void );
 
-/**
- * @brief Save the certificate to the path specified by #PROVISIONING_CERT_PATH.
- *
- * @param[in] pCertificate The certificate to save.
- * @param[in] certificateLength Length of #pCertificate.
- */
-static bool saveCertificate( const char * pCertificate,
-                             size_t certificateLength );
 /*-----------------------------------------------------------*/
 
 static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
@@ -310,101 +285,6 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
                         ( const char * ) pPublishInfo->pTopicName ) );
         }
     }
-}
-/*-----------------------------------------------------------*/
-
-static bool getCsr( char * pBuffer,
-                    size_t bufferLength,
-                    size_t * pOutCsrLength )
-{
-    FILE * file;
-    size_t length = 0;
-    bool status = true;
-
-    /* Get the file descriptor for the CSR file. */
-    file = fopen( PROVISIONING_CSR_PATH, "rb" );
-
-    if( file == NULL )
-    {
-        LogError( ( "Error opening file at PROVISIONING_CSR_PATH: %s. Error: %s.",
-                    PROVISIONING_CSR_PATH, strerror( errno ) ) );
-        status = false;
-    }
-    else
-    {
-        int result;
-        /* Seek to the end of the file, so that we can get the file size. */
-        result = fseek( file, 0L, SEEK_END );
-
-        if( result == -1 )
-        {
-            LogError( ( "Failed while moving to end of the certificate signing request file. Path: %s. Error: %s.",
-                        PROVISIONING_CSR_PATH, strerror( errno ) ) );
-            status = false;
-        }
-        else
-        {
-            long lenResult = -1;
-            /* Get the current position which is the file size. */
-            lenResult = ftell( file );
-
-            if( lenResult == -1 )
-            {
-                LogError( ( "Failed to get length of certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror( errno ) ) );
-                status = false;
-            }
-            else
-            {
-                length = ( size_t ) lenResult;
-            }
-        }
-
-        if( status == true )
-        {
-            if( length > bufferLength )
-            {
-                LogError( ( "Buffer too small for certificate signing request. Buffer size: %ld. Required size: %ld.",
-                            bufferLength, length ) );
-                status = false;
-            }
-        }
-
-        if( status == true )
-        {
-            /* Return to the beginning of the file. */
-            result = fseek( file, 0L, SEEK_SET );
-
-            if( result == -1 )
-            {
-                LogError( ( "Failed to move to beginning of certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror( errno ) ) );
-                status = false;
-            }
-        }
-
-        if( status == true )
-        {
-            size_t written = 0;
-            /* Read the CSR into our buffer. */
-            written = fread( pBuffer, 1, length, file );
-
-            if( written != length )
-            {
-                LogError( ( "Failed reading certificate signing request file. Path: %s. Error: %s.",
-                            PROVISIONING_CSR_PATH, strerror( errno ) ) );
-                status = false;
-            }
-            else
-            {
-                *pOutCsrLength = length;
-            }
-        }
-
-        fclose( file );
-    }
-
-    return status;
 }
 /*-----------------------------------------------------------*/
 
@@ -555,38 +435,6 @@ static bool unsubscribeFromRegisterThingResponseTopics( void )
 }
 /*-----------------------------------------------------------*/
 
-static bool saveCertificate( const char * pCertificate,
-                             size_t certificateLength )
-{
-    FILE * file;
-    bool status = false;
-
-    file = fopen( PROVISIONING_CERT_PATH, "wb" );
-
-    if( file == NULL )
-    {
-        LogError( ( "Failed opening PROVISIONING_CERT_PATH for writing." ) );
-    }
-    else
-    {
-        size_t written;
-        written = fwrite( ( const void * ) pCertificate, 1U, certificateLength, file );
-        fclose( file );
-
-        if( written != certificateLength )
-        {
-            LogError( ( "Failed writing newly provisioned certificate to file." ) );
-        }
-        else
-        {
-            status = true;
-        }
-    }
-
-    return status;
-}
-/*-----------------------------------------------------------*/
-
 /* This example uses a single application task, which shows that how to use
  * the Fleet Provisioning library to generate and validate AWS IoT Fleet
  * Provisioning MQTT topics, and use the coreMQTT library to communicate with
@@ -610,6 +458,7 @@ int main( int argc,
     char ownershipToken[ OWNERSHIP_TOKEN_BUFFER_LENGTH ];
     size_t ownershipTokenLength;
     bool connectionEstablished = false;
+    CK_SESSION_HANDLE p11Session;
     size_t i;
     int demoRunCount = 0;
 
@@ -631,6 +480,12 @@ int main( int argc,
             deviceSerial[ i ] = '0' + ( rand() % 10 );
         }
 
+        /* Initialize the PKCS #11 module */
+        xInitializePkcs11Session( &p11Session );
+
+        /* Insert the claim credentials into the PKCS #11 module */
+        loadClaimCredentials( p11Session );
+
         /**** Connect to AWS IoT Core with provisioning claim credentials *****/
 
         /* We first use the claim credentials to connect to the broker. These
@@ -643,8 +498,9 @@ int main( int argc,
          * exponentially increase until maximum attempts are reached. */
         LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
         status = EstablishMqttSession( provisioningPublishCallback,
-                                       CLAIM_CERT_PATH,
-                                       CLAIM_PRIVATE_KEY_PATH );
+                                       p11Session,
+                                       pkcs11configLABEL_CLAIM_CERTIFICATE,
+                                       pkcs11configLABEL_CLAIM_PRIVATE_KEY );
 
         if( status == false )
         {
@@ -671,8 +527,8 @@ int main( int argc,
 
         if( status == true )
         {
-            /* Read the CSR into the CSR buffer. */
-            status = getCsr( csr, NETWORK_BUFFER_SIZE, &csrLength );
+            /* Create a new key and CSR. */
+            status = generateKeyAndCsr( p11Session, csr, NETWORK_BUFFER_SIZE, &csrLength );
         }
 
         if( status == true )
@@ -729,9 +585,8 @@ int main( int argc,
 
         if( status == true )
         {
-            /* Save the certificate where it is to be stored. In this demo we
-             * save it to the file path given by #PROVISIONING_CERT_PATH */
-            status = saveCertificate( certificate, certificateLength );
+            /* Save the certificate into PKCS #11. */
+            status = loadCertificate( p11Session, certificate, certificateLength );
         }
 
         if( status == true )
@@ -824,8 +679,9 @@ int main( int argc,
         {
             LogInfo( ( "Establishing MQTT session with provisioned certificate..." ) );
             status = EstablishMqttSession( provisioningPublishCallback,
-                                           PROVISIONING_CERT_PATH,
-                                           PROVISIONING_PRIVATE_KEY_PATH );
+                                           p11Session,
+                                           pkcs11configLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                           pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS );
 
             if( status != true )
             {
@@ -849,6 +705,8 @@ int main( int argc,
             DisconnectMqttSession();
             connectionEstablished = false;
         }
+
+        pkcs11CloseSession( p11Session );
 
         /**** Retry in case of failure ****************************************/
 

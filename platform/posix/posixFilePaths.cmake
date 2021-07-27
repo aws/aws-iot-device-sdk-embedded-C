@@ -17,6 +17,10 @@ set( PLAINTEXT_TRANSPORT_SOURCES
 set( OPENSSL_TRANSPORT_SOURCES
      ${CMAKE_CURRENT_LIST_DIR}/transport/src/openssl_posix.c )
 
+# MbedTLS transport source files.
+set( MBEDTLS_PKCS11_TRANSPORT_SOURCES
+     ${CMAKE_CURRENT_LIST_DIR}/transport/src/mbedtls_pkcs11_posix.c )
+
 # Transport Public Include directories.
 set( COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS
      ${CMAKE_CURRENT_LIST_DIR}/transport/include

@@ -26,6 +26,9 @@
 /* MQTT API header. */
 #include "core_mqtt.h"
 
+/* corePKCS11 include. */
+#include "core_pkcs11.h"
+
 /**
  * @brief Application callback type to handle the incoming publishes.
  *
@@ -40,15 +43,17 @@ typedef void (* MQTTPublishCallback_t )( MQTTPublishInfo_t * pPublishInfo,
  *
  * @param[in] publishCallback The callback function to receive incoming
  * publishes from the MQTT broker.
- * @param[in] pClientCertPath The client certificate path to use.
- * @param[in] pPrivateKeyPath The private key path for the client certificate.
+ * @param[in] p11Session The PKCS #11 session to use.
+ * @param[in] pClientCertLabel The client certificate PKCS #11 label to use.
+ * @param[in] pPrivateKeyLabel The private key PKCS #11 label for the client certificate.
  *
  * @return true if an MQTT session is established;
  * false otherwise.
  */
 bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
-                           const char * pClientCertPath,
-                           const char * pPrivateKeyPath );
+                           CK_SESSION_HANDLE p11Session,
+                           char * pClientCertLabel,
+                           char * pPrivateKeyLabel );
 
 /**
  * @brief Disconnect the MQTT connection.
