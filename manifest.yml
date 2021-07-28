@@ -1,5 +1,5 @@
 name : "AWS_IoT_Device_SDK_for_Embedded_C"
-version: "202103.00"
+version: "202108.00"
 description: |-
   "The AWS IoT Device SDK for Embedded C is a collection of C source
   files that can be used in embedded applications to securely connect
@@ -8,55 +8,55 @@ description: |-
   See dependencies for included libraries."
 dependencies:
   - name: "coreMQTT"
-    version: "51c8067bffbe73eaff2b666104293e46bdb103e6"
+    version: "v1.1.2"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreMQTT"
       path: "libraries/standard/coreMQTT"
   - name: "coreJSON"
-    version: "caf540ccdb98e8f96a6f557075cb607288384938"
+    version: "v3.0.2"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreJSON"
       path: "libraries/standard/coreJSON"
   - name: "Device-Shadow-for-AWS-IoT-embedded-sdk"
-    version: "4a1a9544"
+    version: "v1.1.1"
     repository:
       type: "git"
       url: "https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk"
       path: "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"
   - name: "coreHTTP"
-    version: "9f511d57f4f4048654389259a1a483b0f71f6951"
+    version: "v2.0.2"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreHTTP"
       path: "libraries/standard/coreHTTP"
   - name: "Device-Defender-for-AWS-IoT-embedded-sdk"
-    version: "8caa3de66c335623ada5a3b49663868c48daaf4e"
+    version: "v1.1.1"
     repository:
       type: "git"
       url: "https://github.com/aws/Device-Defender-for-AWS-IoT-embedded-sdk"
       path: "libraries/aws/device-defender-for-aws-iot-embedded-sdk"
   - name: "Jobs-for-AWS-IoT-embedded-sdk"
-    version: "9a69e7da8ec555f584b0d7fa26ad26139619f91a"
+    version: "v1.1.1"
     repository:
       type: "git"
       url: "https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk"
       path: "libraries/aws/jobs-for-aws-iot-embedded-sdk"
   - name: "OTA-for-AWS-IoT-embedded-sdk"
-    version: "fc02e5291070e8f4df54deea15c56ef977f172e3"
+    version: "fc02e529"
     repository:
       type: "git"
       url: "https://github.com/aws/ota-for-aws-iot-embedded-sdk"
       path: "libraries/aws/ota-for-aws-iot-embedded-sdk"
   - name: "backoffAlgorithm"
-    version: "6343da924adee67b315ce7f8ace2fb2ff5f05a29"
+    version: "v1.1.0"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/backoffAlgorithm"
       path: "libraries/standard/backoffAlgorithm"
   - name: "corePKCS11"
-    version: "d6a519146598ec2ccd6f0230a01fca876767a8fe"
+    version: "v3.1.0"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/corePKCS11"
