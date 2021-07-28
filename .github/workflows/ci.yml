@@ -337,12 +337,13 @@ jobs:
       - name: Setup Python for manifest.yml verifier action
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7.x'
+          python-version: '3.x'
       - name: Verify manifest.yml
         uses: aggarw13/CI-CD-GitHub-Actions/manifest-verifier@action/add-manifest-verification
         with:
           path: ./
           exclude-submodules: libraries/3rdparty/CMock,libraries/3rdparty/mbedtls,libraries/3rdparty/tinycbor,demos/jobs/jobs_demo_mosquitto/libmosquitto
+          fail-on-incorrect-version: true
 
 
 
