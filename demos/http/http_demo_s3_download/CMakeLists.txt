@@ -6,6 +6,7 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 # Include backoffAlgorithm library file path configuration.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the coreHTTP library
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
 
 # Demo target.

@@ -9,6 +9,7 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorith
 
 set( DEMO_NAME "mqtt_demo_subscription_manager" )
 
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the coreMQTT library
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
 
 # Demo target.

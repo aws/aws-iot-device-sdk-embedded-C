@@ -12,6 +12,7 @@ include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sd
 # Include JSON library's source and header path variables.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the Device Shadow library
 file( GLOB DEMO_SRCS "*.c*" )
 
 # Demo target.
