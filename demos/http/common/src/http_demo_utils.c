@@ -43,6 +43,9 @@
 /* Third party parser utilities. */
 #include "http_parser.h"
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -59,6 +62,23 @@
  * @brief The base back-off delay (in milliseconds) to use for connection retry attempts.
  */
 #define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
+
+#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD       "date"
+
+#define AWS_IOT_THING_NAME "MyHomeThermostat"
+
+#define AWS_IOT_THING_NAME_HEADER_FIELD           "x-amz-iot-thing-name"
+
+ #define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT    "https://"    \
+ AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/"    \
+ AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
+
+ #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "c3tvrvalb8cjyy.credentials.iot.us-east-2.amazonaws.com"
+
+/** 
+ * @brief Role alias for accessing the credential provider. 
+ */
+#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE "Thermostat-dynamodb-access-role-alias"
 
 /*-----------------------------------------------------------*/
 
@@ -217,6 +237,8 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen )
+
+
 {
     /* http-parser status. Initialized to 1 to signify failure. */
     int parserStatus = 1;
@@ -269,4 +291,174 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     }
 
     return httpStatus;
+}
+
+JSONStatus_t parseCredentials(HTTPResponse_t response ,SigV4Credentials_t*  sigvCreds)
+{
+
+        JSONStatus_t jsonStatus=JSONSuccess;
+
+        jsonStatus=JSON_Search( response.pBody,
+                    response.bodyLen,
+                    "credentials.accessKeyId",
+                    strlen("credentials.accessKeyId"),
+                    (const char **)&(sigvCreds->pAccessKeyId ),
+                    &(sigvCreds->accessKeyLen));
+
+        if(jsonStatus != JSONSuccess){   
+            LogError( ( "Error parsing accessKeyId in the credentials.") );
+        }
+
+        if(jsonStatus == JSONSuccess){      
+            jsonStatus=JSON_Search( response.pBody,
+                        response.bodyLen,
+                        "credentials.secretAccessKey",
+                        strlen("credentials.secretAccessKey"),
+                        (const char **)&(sigvCreds->pSecretAccessKey),
+                        &(sigvCreds->secretAccessKeyLen));
+        }
+        
+        if(jsonStatus != JSONSuccess){   
+            LogError( ( "Error parsing secretAccessKey in the credentials.") );
+        }
+
+        if(jsonStatus == JSONSuccess){    
+            jsonStatus=JSON_Search( response.pBody,
+                        response.bodyLen,
+                        "credentials.sessionToken",
+                        strlen("credentials.sessionToken"),
+                        (const char **)&(sigvCreds->pSecurityToken),
+                        &(sigvCreds->securityTokenLen));
+        }
+
+        if(jsonStatus != JSONSuccess){   
+            LogError( ( "Error parsing sessionToken in the credentials.") );
+        }
+        
+        if(jsonStatus == JSONSuccess){    
+            jsonStatus=JSON_Search( response.pBody,
+                        response.bodyLen,
+                        "credentials.expiration",
+                        strlen("credentials.expiration"),
+                        (const char **)&(sigvCreds->pExpiration),
+                        &(sigvCreds->expirationLen));
+        }
+
+        if(jsonStatus != JSONSuccess){   
+            LogError( ( "Error parsing expiration date in the credentials.") );
+        }
+        
+        return jsonStatus;
+}
+
+int getTemporaryCredentials(TransportInterface_t* transportInterface, char * pDateISO8601, size_t pDateISO8601Len, SigV4Credentials_t*  sigvCreds)
+{
+
+        /******************** Get Temporary Credentials. **********************/
+        int returnStatus=EXIT_SUCCESS;
+        HTTPRequestHeaders_t requestHeaders = { 0 };
+        HTTPRequestInfo_t requestInfo = { 0 };
+        HTTPResponse_t response = { 0 };
+        uint8_t pAwsIotHttpBuffer[2048] = { 0 };
+        uint8_t pS3HttpBuffer[2048] = { 0 };
+        size_t pathLen = 0;
+        size_t addressLen = 0;
+        HTTPStatus_t httpStatus = HTTPSuccess;
+        SigV4Status_t sigv4Status=SigV4Success;
+        JSONStatus_t jsonStatus;
+        const char * pAddress=NULL;
+        const char *pDate;
+        const char *pPath;
+        size_t dateLen;
+
+        /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+        httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+                                    sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+                                    &pAddress,
+                                    &addressLen );
+        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+        if(returnStatus==EXIT_SUCCESS){
+            httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+                                        sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+                                            &pPath,
+                                            &pathLen );
+        }
+        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+        /* Request header buffer. */
+        requestHeaders.pBuffer = pAwsIotHttpBuffer;
+        requestHeaders.bufferLen = sizeof(pAwsIotHttpBuffer);
+
+
+        /* Temporary token request. */
+        requestInfo.pMethod = HTTP_METHOD_GET;
+        requestInfo.methodLen = sizeof(HTTP_METHOD_GET)-1;
+        requestInfo.pPath = pPath;
+        requestInfo.pathLen = pathLen;
+        requestInfo.pHost = pAddress;
+        requestInfo.hostLen = addressLen;
+        requestInfo.reqFlags=0;
+
+        response.pBuffer = pAwsIotHttpBuffer;
+        response.bufferLen= sizeof(pAwsIotHttpBuffer);
+        response.pHeaderParsingCallback = NULL;
+
+        if(returnStatus==EXIT_SUCCESS){
+            httpStatus=HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+        }
+        
+        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+        if(returnStatus==EXIT_SUCCESS){
+        httpStatus=HTTPClient_AddHeader( &requestHeaders, 
+                     AWS_IOT_THING_NAME_HEADER_FIELD, 
+                     sizeof(AWS_IOT_THING_NAME_HEADER_FIELD)-1,
+                     AWS_IOT_THING_NAME,
+                     sizeof(AWS_IOT_THING_NAME));
+        }
+        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+        if(returnStatus==EXIT_SUCCESS){
+            httpStatus=HTTPClient_Send( transportInterface,
+                    &requestHeaders,
+                    NULL,
+                    0,
+                    &response,0 );
+        }
+
+        LogInfo( ( "HTTPSTATUS = %s", HTTPClient_strerror(httpStatus) ) );
+        LogInfo( ( "HTTPSTATUS = %d", response.statusCode ) );
+        LogInfo( ( "HTTPSTATUS = %s", response.pHeaders ) ); 
+
+        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+        if(returnStatus==EXIT_SUCCESS){
+            jsonStatus=parseCredentials(response ,sigvCreds);
+        }
+
+        returnStatus= (jsonStatus == JSONSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+        /* Get the current time from the http response. */
+        if(returnStatus==EXIT_SUCCESS){
+            httpStatus=HTTPClient_ReadHeader( &response, 
+                                HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, 
+                                sizeof(HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD)-1, 
+                                (const char **)&pDate,
+                                &dateLen );
+        }
+        
+
+        LogInfo( ( "JSONSTATUS = %d", jsonStatus ) );  
+
+        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+        if(returnStatus==EXIT_SUCCESS){
+            sigv4Status=SigV4_AwsIotDateToIso8601( pDate,dateLen, pDateISO8601 ,pDateISO8601Len);
+        }
+
+        returnStatus= (sigv4Status == SigV4Success)? EXIT_SUCCESS:EXIT_FAILURE;
+        
+        LogInfo( ( "SIGv4STATUS = %s", pDateISO8601 ) );
+        
+        return returnStatus;
 }

@@ -38,6 +38,15 @@
 /* HTTP API header. */
 #include "core_http_client.h"
 
+/* JSON API header. */
+#include "core_json.h"
+
+/* SIGV4 API header. */
+#include "sigv4.h"
+
+/* MBEDTLS API header. */
+#include "mbedtls/sha256.h"
+
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
@@ -49,14 +58,14 @@
     #error "Please define a HTTPS_PORT."
 #endif
 
-/* Check that a path for Root CA Certificate is defined. */
+/* Check that a path for Root CA Certificate is defined for AWS IOT SERVICE. */
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define a ROOT_CA_CERT_PATH."
+    #error "Please define a ROOT_CA_CERT_PATH for AWS IOT."
 #endif
 
-/* Check that the pre-signed GET URL is defined. */
-#ifndef S3_PRESIGNED_GET_URL
-    #error "Please define a S3_PRESIGNED_GET_URL."
+/* Check that a path for Root CA Certificate is defined for AWS S3 Service. */
+#ifndef ROOT_CA_CERT_PATH_S3
+    #error "Please define a ROOT_CA_CERT_PATH_S3 for AWS S3."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */
@@ -74,10 +83,35 @@
     #define FILE_BUFFER_LENGTH    ( 2048 )
 #endif
 
-/**
- * @brief Length of the pre-signed GET URL defined in demo_config.h.
- */
-#define S3_PRESIGNED_GET_URL_LENGTH               ( sizeof( S3_PRESIGNED_GET_URL ) - 1 )
+/* Check that AWS IOT Thing Name is defined. */
+#ifndef AWS_IOT_THING_NAME
+    #error "Please define a AWS IOT Thing Name."
+#endif
+
+/* Check that AWS IOT credential provider endpoint is defined. */
+#ifndef AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT
+    #error "Please define a AWS IOT credential provider endpoint."
+#endif
+
+/* Check that AWS IOT credential provider endpoint is defined. */
+#ifndef AWS_IOT_CREDENTIAL_PROVIDER_ROLE
+    #error "Please define a AWS IOT credential provider role."
+#endif
+
+/* Check that AWS S3 BUCKET NAME is defined. */
+#ifndef AWS_S3_BUCKET_NAME
+    #error "Please define a AWS S3 BUCKET NAME."
+#endif
+
+/* Check that AWS S3 OBJECT NAME is defined. */
+#ifndef AWS_S3_OBJECT_NAME
+    #error "Please define a AWS S3 OBJECT NAME."
+#endif
+
+/* Check that AWS S3 BUCKET REGION is defined. */
+#ifndef AWS_S3_BUCKET_REGION
+    #error "Please define a AWS S3 REGION in which bucket resides."
+#endif
 
 /**
  * @brief The length of the HTTP GET method.
@@ -115,6 +149,33 @@
  */
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
+#define SHA256_HEX_ENCODED_DIGEST_LENGTH (( ( uint16_t ) 32 ))
+
+/* Full AWS S3 server endpoint. */
+#define AWS_S3_OBJECT_URL    "https://"    \
+ AWS_S3_BUCKET_NAME ".s3."    \
+ AWS_S3_BUCKET_REGION  ".amazonaws.com/" \
+ AWS_S3_OBJECT_NAME 
+
+/* Full credentials endpoint including role alias. */
+ #define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT    "https://"    \
+ AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/"    \
+ AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
+
+/**
+ * @brief Field name of the HTTP thing name header sent in HTTP request to AWS S3.
+ */
+#define AWS_IOT_THING_NAME_HEADER_FIELD           "x-amz-iot-thing-name"
+
+/**
+ * @brief Field name of the HTTP date header to read from the AWS IOT credential provider server response.
+ */
+#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD       "date"
+
+#define SIGV4_AUTH_HEADER_FIELD_NAME "Authorization"
+
+#define SIGV4_ISO_STRING_LEN                        16U    
+
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
  * response headers and body.
@@ -142,22 +203,34 @@ static HTTPRequestInfo_t requestInfo;
 static HTTPResponse_t response;
 
 /**
- * @brief The host address string extracted from the pre-signed URL.
- *
- * @note S3_PRESIGNED_GET_URL_LENGTH is set as the array length here as the
- * length of the host name string cannot exceed this value.
+ * @brief The host address string extracted from the given server URL.
  */
-static char serverHost[ S3_PRESIGNED_GET_URL_LENGTH ];
+static char serverHost[ 65 ];
 
 /**
- * @brief The length of the host address found in the pre-signed URL.
+ * @brief The length of the host address found in the given server URL.
  */
 static size_t serverHostLength;
 
 /**
- * @brief The location of the path within the pre-signed URL.
+ * @brief The location of the path within the server URL.
  */
 static const char * pPath;
+
+/**
+ *  @brief mbedTLS Hash Context passed to SIGV4 cryptointerface for generating the signature. 
+ */
+static mbedtls_sha256_context hashContext={0};
+
+/**
+ *  @brief Configurations of the AWS credentials sent to sigV4 library for generating the Signing Key. 
+ */
+static SigV4Credentials_t  sigvCreds = { 0 };
+
+/** 
+ * @brief Represents date in ISO8601 format used in the HTTP requests sent to AWS S3. 
+ */
+static char pDateISO8601[SIGV4_ISO_STRING_LEN] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -170,7 +243,7 @@ struct NetworkContext
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Connect to HTTP server with reconnection retries.
+ * @brief Connect to AWS IOT Credential Provider server with reconnection retries.
  *
  * @param[out] pNetworkContext The output parameter to return the created
  * network context.
@@ -178,6 +251,16 @@ struct NetworkContext
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
 static int32_t connectToServer( NetworkContext_t * pNetworkContext );
+
+/**
+ * @brief Connect to HTTP AWS S3 server with reconnection retries.
+ *
+ * @param[out] pNetworkContext The output parameter to return the created
+ * network context.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
+ */
+static int32_t connectToS3Server( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Send multiple HTTP GET requests, based on a specified path, to
@@ -215,14 +298,118 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                  size_t hostLen,
                                  const char * pPath );
 
+/**
+ * @brief Retrieve the temporary credentials form AWS IOT Credential Provider.
+ *
+ * @param[in] pTransportInterface The transport interface for making network
+ *
+ * @return 0 if credentials are retrieved successfully else 1.
+ */
+//static int getTemporaryCredentials(TransportInterface_t* transportInterface);
+
 /*-----------------------------------------------------------*/
 
-static int32_t connectToServer( NetworkContext_t * pNetworkContext )
+static int32_t sha256( const unsigned char * pInput, size_t ilen, unsigned char * pOutput )
+ {
+     return mbedtls_sha256_ret( pInput, ilen, pOutput, 0 );
+ }
+
+ static void sha256Init( void * hashContext)
+ {
+     return mbedtls_sha256_init( hashContext );
+ }
+
+ static int32_t sha256Update( void * hashContext, const uint8_t * pInput,
+                              size_t inputLen )
+ {
+     const unsigned char * input=(const unsigned char *)pInput;
+     return mbedtls_sha256_update_ret( hashContext,
+                               input,
+                               inputLen );
+ }
+
+ static int32_t sha256Final( void * hashContext, uint8_t * pOutput,
+                             size_t outputLen )
+ {
+     unsigned char *output = (unsigned char *)pOutput;
+     return mbedtls_sha256_finish_ret( hashContext,
+                                output);
+ }
+
+/* Setup the crypto interface. */
+static SigV4CryptoInterface_t  cryptoInterface = {
+    .hashInit = sha256Init, 
+    .hashUpdate = sha256Update, 
+    .hashFinal = sha256Final,
+    .pHashContext = &hashContext
+};
+
+static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 {
     int32_t returnStatus = EXIT_FAILURE;
     HTTPStatus_t httpStatus = HTTPSuccess;
 
-    /* The location of the host address within the pre-signed URL. */
+    /* The location of the host address within the AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    const char * pAddress = NULL;
+
+    /* Status returned by OpenSSL transport implementation. */
+    OpensslStatus_t opensslStatus;
+    /* Credentials to establish the TLS connection. */
+    OpensslCredentials_t opensslCredentials = { 0 };
+    /* Information about the server to send the HTTP requests. */
+    ServerInfo_t serverInfo = { 0 };
+    
+    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+                                sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+                                &pAddress,
+                                &serverHostLength );
+    returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    
+    if( returnStatus == EXIT_SUCCESS )
+    {
+        /* serverHost should consist only of the host address located in
+         * AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+        memcpy( serverHost, pAddress, serverHostLength );
+        serverHost[ serverHostLength ] = '\0';
+
+        /* Initialize TLS credentials. */
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+        opensslCredentials.sniHostName = serverHost;
+
+        opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
+        opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
+
+        serverInfo.pHostName = serverHost;
+        serverInfo.hostNameLength = serverHostLength;
+        serverInfo.port = HTTPS_PORT;
+
+        /* Establish a TLS session with the HTTP server. This example connects
+         * to the HTTP server as specified in AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT and HTTPS_PORT in
+         * demo_config.h. */
+        LogInfo( ( "Establishing a TLS session with %s:%d.",
+                   serverHost,
+                   HTTPS_PORT ) );
+
+        opensslStatus = Openssl_Connect( pNetworkContext,
+                                         &serverInfo,
+                                         &opensslCredentials,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS,
+                                         TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+        returnStatus = ( opensslStatus == OPENSSL_SUCCESS ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    return returnStatus;
+}
+
+
+static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
+{
+    int32_t returnStatus = EXIT_FAILURE;
+    HTTPStatus_t httpStatus = HTTPSuccess;
+
+    /* The location of the host address within the AWS_S3_OBJECT_URL. */
     const char * pAddress = NULL;
 
     /* Status returned by OpenSSL transport implementation. */
@@ -232,9 +419,9 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* Information about the server to send the HTTP requests. */
     ServerInfo_t serverInfo = { 0 };
 
-    /* Retrieve the address location and length from S3_PRESIGNED_GET_URL. */
-    httpStatus = getUrlAddress( S3_PRESIGNED_GET_URL,
-                                S3_PRESIGNED_GET_URL_LENGTH,
+    /* Retrieve the address location and length from AWS_S3_OBJECT_URL. */
+    httpStatus = getUrlAddress( AWS_S3_OBJECT_URL,
+                                sizeof(AWS_S3_OBJECT_URL)-1,
                                 &pAddress,
                                 &serverHostLength );
     returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -242,12 +429,12 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     if( returnStatus == EXIT_SUCCESS )
     {
         /* serverHost should consist only of the host address located in
-         * S3_PRESIGNED_GET_URL. */
+         * AWS_S3_OBJECT_URL. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH_S3;
         opensslCredentials.sniHostName = serverHost;
 
         /* Initialize server information. */
@@ -256,7 +443,7 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
         serverInfo.port = HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in S3_PRESIGNED_GET_URL and HTTPS_PORT in
+         * to the HTTP server as specified in AWS_S3_OBJECT_URL and HTTPS_PORT in
          * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
@@ -482,7 +669,33 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                     HTTPClient_strerror( httpStatus ) ) );
         returnStatus = false;
     }
+     /* Get the hash of the payload. */
+    char pPayloadHashDigest[ SHA256_HEX_ENCODED_DIGEST_LENGTH ];
+    sha256("", 0, pPayloadHashDigest);
 
+    LogInfo( ( "Date Header=%s"  ,(const char *)SIGV4_HTTP_X_AMZ_DATE_HEADER));
+    //LogInfo( ( "Date Value=%s"  ,pPayloadHashDigest));
+    /* Add the sigv4 required headers to the request. */
+    httpStatus=HTTPClient_AddHeader( &requestHeaders,
+                        (const char *)SIGV4_HTTP_X_AMZ_DATE_HEADER,
+                        (size_t)sizeof(SIGV4_HTTP_X_AMZ_DATE_HEADER) - 1,
+                        (const char *)pDateISO8601,
+                        (size_t)strlen(pDateISO8601) );
+    LogInfo( ( "HTTP STATUS=%s"  ,HTTPClient_strerror( httpStatus )));
+        /* S3 requires the security token as part of the canonical headers. IoT for example 
+        * does not; it is added as part of the path. */               
+    httpStatus=HTTPClient_AddHeader( &requestHeaders,
+                            (const char *)SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER,
+                            (size_t)sizeof(SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER) - 1,
+                            (const char *)sigvCreds.pSecurityToken,
+                            (size_t)sigvCreds.securityTokenLen );
+                            LogInfo( ( "HTTP STATUS=%s"  ,HTTPClient_strerror( httpStatus )));
+    httpStatus=HTTPClient_AddHeader( &requestHeaders,
+                            SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER,
+                            sizeof( SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER ) - 1,
+                            pPayloadHashDigest,
+                            32);
+    LogInfo( ( "HTTP STATUS=%s"  ,HTTPClient_strerror( httpStatus )));
     if( returnStatus == true )
     {
         /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
@@ -499,6 +712,52 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         }
     }
 
+    
+
+    /********************** 5. Generate HTTP Sigv4 Auth ******************/
+    
+    /* Setup the HTTP parameters. */
+    SigV4HttpParameters_t  Sigv4HttpParams = {
+        .pHttpMethod = requestInfo.pMethod,
+        .httpMethodLen = requestInfo.methodLen,
+        .flags = 0, // None of the requests parameters below are pre-canonicalized
+        .pPath = requestInfo.pPath,
+        .pathLen = requestInfo.pathLen,
+        .pQuery = NULL,
+        .queryLen = 0,
+        .pHeaders = requestHeaders.pBuffer,
+        .headersLen = requestHeaders.headersLen,
+        .pPayload = NULL,
+        .payloadLen = 0
+    };
+
+    /* Setup the Sigv4 Parameters. */
+    SigV4Parameters_t  Sigv4Params = {
+
+        .pCredentials = &sigvCreds,
+        .pDateIso8601 = pDateISO8601,
+        .pRegion = AWS_S3_BUCKET_REGION,
+        .regionLen = strlen(AWS_S3_BUCKET_REGION)-1,
+        .pService = "s3",
+        .serviceLen = strlen("s3")-1,
+        .pCryptoInterface=&cryptoInterface,
+        .pHttpParameters = &Sigv4HttpParams
+    };
+
+    char* pSigv4Auth = (char*)malloc(2048);
+    size_t sigv4AuthLen = 2048;
+    SigV4Status_t sigv4Status=SigV4Success;
+    // sigv4Status=Sigv4_GenerateHTTPAuthorization( &Sigv4Params,
+    //                                 NULL,
+    //                                 pSigv4Auth,
+    //                                 &sigv4AuthLen );
+                                    
+    /* Write to the authorization to the HTTP headers. */
+    // httpStatus=HTTPClient_AddHeader(&requestHeaders, 
+    //                     (const char *)SIGV4_AUTH_HEADER_FIELD_NAME,
+    //                     (size_t)sizeof( SIGV4_AUTH_HEADER_FIELD_NAME ) - 1,
+    //                     (const char *)pSigv4Auth,
+    //                     (size_t)sigv4AuthLen );
     if( returnStatus == true )
     {
         /* Send the request and receive the response. */
@@ -591,6 +850,116 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     return returnStatus;
 }
 
+// static int getTemporaryCredentials(TransportInterface_t* transportInterface)
+// {
+
+//         /******************** Get Temporary Credentials. **********************/
+//         int returnStatus=EXIT_SUCCESS;
+//         HTTPRequestHeaders_t requestHeaders = { 0 };
+//         HTTPRequestInfo_t requestInfo = { 0 };
+//         HTTPResponse_t response = { 0 };
+//         uint8_t pAwsIotHttpBuffer[2048] = { 0 };
+//         uint8_t pS3HttpBuffer[2048] = { 0 };
+//         size_t pathLen = 0;
+//         size_t addressLen = 0;
+//         HTTPStatus_t httpStatus = HTTPSuccess;
+//         SigV4Status_t sigv4Status=SigV4Success;
+//         JSONStatus_t jsonStatus;
+//         const char * pAddress=NULL;
+//         const char *pDate;
+//         size_t dateLen;
+
+//         /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+//         httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+//                                     sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+//                                     &pAddress,
+//                                     &addressLen );
+//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+//         if(returnStatus==EXIT_SUCCESS){
+//             httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+//                                         sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+//                                             &pPath,
+//                                             &pathLen );
+//         }
+//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+//         /* Request header buffer. */
+//         requestHeaders.pBuffer = pAwsIotHttpBuffer;
+//         requestHeaders.bufferLen = sizeof(pAwsIotHttpBuffer);
+
+
+//         /* Temporary token request. */
+//         requestInfo.pMethod = HTTP_METHOD_GET;
+//         requestInfo.methodLen = sizeof(HTTP_METHOD_GET)-1;
+//         requestInfo.pPath = pPath;
+//         requestInfo.pathLen = pathLen;
+//         requestInfo.pHost = pAddress;
+//         requestInfo.hostLen = addressLen;
+//         requestInfo.reqFlags=0;
+
+//         response.pBuffer = pAwsIotHttpBuffer;
+//         response.bufferLen= sizeof(pAwsIotHttpBuffer);
+//         response.pHeaderParsingCallback = NULL;
+
+//         if(returnStatus==EXIT_SUCCESS){
+//             httpStatus=HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+//         }
+        
+//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+//         if(returnStatus==EXIT_SUCCESS){
+//         httpStatus=HTTPClient_AddHeader( &requestHeaders, 
+//                      AWS_IOT_THING_NAME_HEADER_FIELD, 
+//                      sizeof(AWS_IOT_THING_NAME_HEADER_FIELD)-1,
+//                      AWS_IOT_THING_NAME,
+//                      sizeof(AWS_IOT_THING_NAME));
+//         }
+//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+//         if(returnStatus==EXIT_SUCCESS){
+//             httpStatus=HTTPClient_Send( transportInterface,
+//                     &requestHeaders,
+//                     NULL,
+//                     0,
+//                     &response,0 );
+//         }
+
+//         LogInfo( ( "HTTPSTATUS = %s", HTTPClient_strerror(httpStatus) ) );
+//         LogInfo( ( "HTTPSTATUS = %d", response.statusCode ) );
+//         LogInfo( ( "HTTPSTATUS = %s", response.pHeaders ) ); 
+
+//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+//         if(returnStatus==EXIT_SUCCESS){
+//             jsonStatus=parseCredentials(response ,&sigvCreds);
+//         }
+
+//         returnStatus= (jsonStatus == JSONSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+//         /* Get the current time from the http response. */
+//         if(returnStatus==EXIT_SUCCESS){
+//             httpStatus=HTTPClient_ReadHeader( &response, 
+//                                 HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, 
+//                                 sizeof(HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD)-1, 
+//                                 (const char **)&pDate,
+//                                 &dateLen );
+//         }
+        
+
+//         LogInfo( ( "JSONSTATUS = %d", jsonStatus ) );  
+
+//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+
+//         if(returnStatus==EXIT_SUCCESS){
+//             sigv4Status=SigV4_AwsIotDateToIso8601( pDate,dateLen, pDateISO8601 ,sizeof(pDateISO8601));
+//         }
+
+//         returnStatus= (sigv4Status == SigV4Success)? EXIT_SUCCESS:EXIT_FAILURE;
+        
+//         LogInfo( ( "SIGv4STATUS = %s", pDateISO8601 ) );
+        
+//         return returnStatus;
+// }
 /*-----------------------------------------------------------*/
 
 /**
@@ -648,8 +1017,8 @@ int main( int argc,
     /* Set the pParams member of the network context with desired transport. */
     networkContext.pParams = &opensslParams;
 
-    LogInfo( ( "HTTP Client Synchronous S3 download demo using pre-signed URL:\n%s",
-               S3_PRESIGNED_GET_URL ) );
+    LogInfo( ( "HTTP Client Synchronous S3 download demo using temporary credentials fetched from iot credential provider:\n%s",
+               AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT ) );
 
     do
     {
@@ -657,20 +1026,20 @@ int main( int argc,
 
         /* Establish TLS connection on top of TCP connection using OpenSSL. */
 
-        /* Attempt to connect to the HTTP server. If connection fails, retry
+        /* Attempt to connect to the AWS IOT CREDENTIAL PROVIDER server. If connection fails, retry
          * after a timeout. The timeout value will be exponentially
          * increased until either the maximum number of attempts or the
          * maximum timeout value is reached. The function returns
          * EXIT_FAILURE if the TCP connection cannot be established to the
          * broker after the configured number of attempts. */
-        returnStatus = connectToServerWithBackoffRetries( connectToServer,
+        returnStatus = connectToServerWithBackoffRetries( connectToIotServer,
                                                           &networkContext );
 
         if( returnStatus == EXIT_FAILURE )
         {
             /* Log an error to indicate connection failure after all
              * reconnect attempts are over. */
-            LogError( ( "Failed to connect to HTTP server %s.",
+            LogError( ( "Failed to connect to AWS IOT CREDENTIAL PROVIDER server %s.",
                         serverHost ) );
         }
 
@@ -683,32 +1052,70 @@ int main( int argc,
             transportInterface.pNetworkContext = &networkContext;
         }
 
-        /******************** Download S3 Object File. **********************/
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Retrieve the path location from S3_PRESIGNED_GET_URL. This
-             * function returns the length of the path without the query into
-             * pathLen, which is left unused in this demo. */
-            httpStatus = getUrlPath( S3_PRESIGNED_GET_URL,
-                                     S3_PRESIGNED_GET_URL_LENGTH,
-                                     &pPath,
-                                     &pathLen );
-
-            returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+        //returnStatus=getTemporaryCredentials(&transportInterface);
+        returnStatus=getTemporaryCredentials(&transportInterface,pDateISO8601,sizeof(pDateISO8601),&sigvCreds);
+        if( returnStatus == EXIT_FAILURE ){
+            LogError( ( "Failed to get temporary credentials from AWS IOT CREDENTIALS PROVIDER %s.",
+                        serverHost ) );
         }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            ret = downloadS3ObjectFile( &transportInterface,
-                                        pPath );
-            returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
-        }
-
-        /************************** Disconnect. *****************************/
-
-        /* End the TLS session, then close the TCP connection. */
+         /* End the TLS session, then close the TCP connection. */
         ( void ) Openssl_Disconnect( &networkContext );
+
+        if( returnStatus == EXIT_SUCCESS ){
+            /* Attempt to connect to the AWS S3 Http server. If connection fails, retry
+            * after a timeout. The timeout value will be exponentially
+            * increased until either the maximum number of attempts or the
+            * maximum timeout value is reached. The function returns
+            * EXIT_FAILURE if the TCP connection cannot be established to the
+            * broker after the configured number of attempts. */
+            returnStatus = connectToServerWithBackoffRetries( connectToS3Server,
+                                                            &networkContext );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                /* Log an error to indicate connection failure after all
+                * reconnect attempts are over. */
+                LogError( ( "Failed to connect to AWS S3 Http server %s.",
+                            serverHost ) );
+            }
+
+            /* Define the transport interface. */
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                ( void ) memset( &transportInterface, 0, sizeof( transportInterface ) );
+                transportInterface.recv = Openssl_Recv;
+                transportInterface.send = Openssl_Send;
+                transportInterface.pNetworkContext = &networkContext;
+            }
+
+            /******************** Download S3 Object File. **********************/
+           
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                /* Retrieve the path location from AWS_S3_OBJECT_URL. This
+                * function returns the length of the path without the query into
+                * pathLen, which is left unused in this demo. */
+                httpStatus = getUrlPath(AWS_S3_OBJECT_URL,
+                                        sizeof(AWS_S3_OBJECT_URL)-1,
+                                        &pPath,
+                                        &pathLen );
+
+                returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+            }
+
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                ret = downloadS3ObjectFile( &transportInterface,
+                                            pPath );
+                returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
+            }
+
+            /************************** Disconnect. *****************************/
+
+            /* End the TLS session, then close the TCP connection. */
+            ( void ) Openssl_Disconnect( &networkContext );
+
+        }
 
         /******************* Retry in case of failure. **********************/
 

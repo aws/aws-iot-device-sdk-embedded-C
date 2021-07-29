@@ -30,6 +30,15 @@
 /* HTTP API header. */
 #include "core_http_client.h"
 
+/* JSON API header. */
+#include "core_json.h"
+
+/* SIGV4 API header. */
+#include "sigv4.h"
+
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /**
  * @brief Function pointer for establishing connection to a server.
  *
@@ -113,3 +122,25 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen );
+
+/**
+ * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API .
+ *
+ * @param[in] response HTTP response which needs to be parsed to get credentials.
+ *
+ * @return #JSONSuccess if the query is matched and the value output;
+ * #JSONNullParameter if any pointer parameters are NULL;
+ * #JSONBadParameter if the query is empty, or the portion after a separator is empty,
+ * or max is 0, or an index is too large to convert to a signed 32-bit integer;
+ * #JSONNotFound if the query has no match.
+ */
+JSONStatus_t parseCredentials(HTTPResponse_t response ,SigV4Credentials_t* sigvCreds);
+
+/**
+ * @brief Retrieve the temporary credentials form AWS IOT Credential Provider.
+ *
+ * @param[in] pTransportInterface The transport interface for making network
+ *
+ * @return 0 if credentials are retrieved successfully else 1.
+ */
+int getTemporaryCredentials(TransportInterface_t* transportInterface, char * pDateISO8601, size_t pDateISO8601Len,SigV4Credentials_t*  sigvCreds);
