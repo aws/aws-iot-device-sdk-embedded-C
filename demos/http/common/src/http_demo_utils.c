@@ -351,7 +351,7 @@ JSONStatus_t parseCredentials(HTTPResponse_t response ,SigV4Credentials_t*  sigv
         return jsonStatus;
 }
 
-int getTemporaryCredentials(TransportInterface_t* transportInterface, char * pDateISO8601, size_t pDateISO8601Len, SigV4Credentials_t*  sigvCreds)
+getTemporaryCredentials(TransportInterface_t* transportInterface, size_t pDateISO8601Len, char * pDateISO8601, SigV4Credentials_t*  sigvCreds)
 {
 
         /******************** Get Temporary Credentials. **********************/
@@ -458,7 +458,7 @@ int getTemporaryCredentials(TransportInterface_t* transportInterface, char * pDa
 
         returnStatus= (sigv4Status == SigV4Success)? EXIT_SUCCESS:EXIT_FAILURE;
         
-        LogInfo( ( "SIGv4STATUS = %s", pDateISO8601 ) );
+        LogInfo( ( "Converted date = %s", pDateISO8601 ) );
         
         return returnStatus;
 }

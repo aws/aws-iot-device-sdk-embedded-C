@@ -1053,7 +1053,7 @@ int main( int argc,
         }
 
         //returnStatus=getTemporaryCredentials(&transportInterface);
-        returnStatus=getTemporaryCredentials(&transportInterface,pDateISO8601,sizeof(pDateISO8601),&sigvCreds);
+        returnStatus=getTemporaryCredentials(&transportInterface,sizeof(pDateISO8601),pDateISO8601,&sigvCreds);
         if( returnStatus == EXIT_FAILURE ){
             LogError( ( "Failed to get temporary credentials from AWS IOT CREDENTIALS PROVIDER %s.",
                         serverHost ) );
