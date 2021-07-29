@@ -323,7 +323,7 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
         if( api == DefenderJsonReportAccepted )
         {
             /* Check if the response is valid and is for the report we published. */
-            validationResult = validateDefenderResponse( pPublishInfo->pPayload,
+            validationResult = validateDefenderResponse( ( const char * ) pPublishInfo->pPayload,
                                                          pPublishInfo->payloadLength );
 
             if( validationResult == true )
@@ -337,7 +337,7 @@ static void publishCallback( MQTTPublishInfo_t * pPublishInfo,
         else if( api == DefenderJsonReportRejected )
         {
             /* Check if the response is valid and is for the report we published. */
-            validationResult = validateDefenderResponse( pPublishInfo->pPayload,
+            validationResult = validateDefenderResponse( ( const char * ) pPublishInfo->pPayload,
                                                          pPublishInfo->payloadLength );
 
             if( validationResult == true )
