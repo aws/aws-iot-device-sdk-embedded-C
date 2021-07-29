@@ -41,5 +41,5 @@ the device's classic shadow or a named shadow depending on the demo configuratio
   operation initiated previously by ensuring that it contains the same
   clientToken as sent in the update operation. ( step 34 ~ step 39. )
 
-@image html shadow_demo_main.png width=100%
+@image html shadow_demo_main.png width=50%
 */

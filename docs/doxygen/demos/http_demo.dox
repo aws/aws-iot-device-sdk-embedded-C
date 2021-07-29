@@ -17,7 +17,7 @@ requests are logged.
 <div class="caption" style="text-align:center">
 HTTP Plaintext Demo Workflow — Note that these steps are repeated indefinitely
 </div>
-@image html http_demo_plaintext.png width=100%
+@image html http_demo_plaintext.png width=50%
 
 @section http_demo_basic_tls HTTP Basic TLS Demo
 @brief A demo of the coreHTTP library that establishes a TLS connection with server-only authentication,
@@ -36,7 +36,7 @@ requests are logged.
 <div class="caption" style="text-align:center">
 HTTP Basic TLS Demo Workflow — Note that these steps are repeated indefinitely
 </div>
-@image html http_demo_basic_tls.png width=100%
+@image html http_demo_basic_tls.png width=50%
 
 @section http_demo_mutual_auth HTTP Mutual Auth Demo
 @brief A demo of the coreHTTP library that establishes a TLS connection with both server and client authentication,
@@ -60,7 +60,7 @@ message at least once.
 <div class="caption" style="text-align:center">
 HTTP Mutual Auth Demo Workflow — Note that these steps are repeated indefinitely
 </div>
-@image html http_demo_mutual_auth.png width=100%
+@image html http_demo_mutual_auth.png width=50%
 
 @section http_demo_s3_upload HTTP S3 Upload Demo
 @brief A demo of the coreHTTP library that utilizes user-defined pre-signed PUT
@@ -89,7 +89,7 @@ their equivalence.
 <div class="caption" style="text-align:center">
 HTTP S3 Upload Demo Workflow
 </div>
-@image html http_demo_s3_upload.png width=100%
+@image html http_demo_s3_upload.png width=50%
 
 @section http_demo_s3_download HTTP S3 Download Demo
 @brief A demo of the coreHTTP library that utilizes a user-defined pre-signed
@@ -117,7 +117,7 @@ length) on each iteration.
 <div class="caption" style="text-align:center">
 HTTP S3 Download Demo Workflow
 </div>
-@image html http_demo_s3_download.png width=100%
+@image html http_demo_s3_download.png width=50%
 
 @section http_demo_s3_download_multithreaded HTTP Multithreaded S3 Download Demo
 @brief A demo of the coreHTTP library that establishes a TLS connection with
@@ -148,5 +148,5 @@ HTTP Multithreaded S3 Download Workflow — Note that this diagram shows an
 example where the file is downloaded in three ranges. As it is multithreaded,
 these steps may not occur in the same order.
 </div>
-@image html http_demo_s3_download_multithreaded.png width=100%
+@image html http_demo_s3_download_multithreaded.png width=50%
 */
