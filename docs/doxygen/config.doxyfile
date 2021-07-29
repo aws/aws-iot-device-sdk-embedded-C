@@ -931,7 +931,7 @@ EXCLUDE_SYMBOLS        =
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           =
+EXAMPLE_PATH           = demos/fleet_provisioning/fleet_provisioning_with_csr
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and
@@ -2242,7 +2242,8 @@ TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.ta
                          libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/defender.tag=../../../../libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/jobs.tag=../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/standard/backoffAlgorithm/docs/doxygen/output/backoffalgorithm.tag=../../../../libraries/standard/backoffAlgorithm/docs/doxygen/output/html \
-                         libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/ota.tag=../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html
+                         libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/ota.tag=../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
+                         libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/docs/doxygen/output/fleet_provisioning.tag=../../../../libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/docs/doxygen/output/html
 
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a

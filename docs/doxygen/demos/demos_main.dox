@@ -10,4 +10,5 @@ Demos for the following libraries are provided:
 - @subpage jobs_demo
 - @subpage defender_demo
 - @subpage ota_demos
+- @subpage fleet_provisioning_demo
 */

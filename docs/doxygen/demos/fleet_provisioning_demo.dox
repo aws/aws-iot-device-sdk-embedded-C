@@ -1,0 +1,98 @@
+
+/**
+@page fleet_provisioning_demo AWS IoT Fleet Provisioning Demo
+@brief This demo demonstrates usage of the AWS IoT Fleet Provisioning library.
+
+@section fleet_provisioning_demo_main AWS IoT Fleet Provisioning Demo Overview
+@brief The demo application showcases how a fleet of IoT devices can be provisioned
+with unique certificates and registered with AWS IoT Core using the Fleet Provisioning feature.
+This demo shows how devices with the ability to generate public-private key-pair on board
+can utilize a common claim certificate (across the entire fleet of devices) to request
+unique certificates from AWS IoT Core for their generated
+key-pairs, and register themselves with AWS IoT Core as AWS IoT Thing resources.
+
+For more information on Fleet Provisioning feature of AWS IoT, refer to [the AWS document](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
+There are 2 workflows of provisioning with Fleet Provisioning, [**Provisioning by Claim**](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based) and [**Provisioning by Trusted User**](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#trusted-user).
+This demo shows use of the **Provisioning by Claim** workflow for provisioning devices with unique certificates using a common **Claim** certificate registered with AWS IoT Core.
+
+@brief This demo depends on the following libraries:
+- [Fleet Provisioning](@ref fleet_provisioning) for MQTT topic generation and matching.
+- [tinyCBOR](https://github.com/intel/tinycbor/tree/9924cfed3b95ad6de299ae675064430fdb886216) for CBOR encoding/decoding of MQTT payload to communicate with Fleet Provisioning APIs of AWS IoT Core.
+- [coreMQTT](@ref mqtt) for performing MQTT client operations.
+- [mbedTLS library](https://github.com/ARMmbed/mbedtls/tree/e483a77c85e1f9c1dd2eb1c5a8f552d2617fe400) for TLS connection with AWS IoT Core.
+- [corePKCS11](@ref core_pkcs11) for credential management and cryptographic operations.
+
+@note The Fleet Provisioning library is agnostic to libraries used for network operations, credential management as well as payload serialization/de-serialization. You can
+replace any of the libraries with your library of choice.
+
+@section fleet_provisioning_demo_setup Instructions for setting up AWS resource before running the demo.
+@brief For using the Fleet Provisioning feature of AWS IoT Core, you need to setup an **IAM role** and a **Provisioning Template** in your AWS account. These AWS resources can
+be setup either through the AWS console or programmatically through AWS CLI. Following are instructions with AWS CLI. (In the following example commands, replace the `<aws-region>`, `<aws-account-id>` with the AWS Region and ID relevant to your AWS account.)
+
+1. Create an IAM role that will be needed by a fleet provisioning template. Replace `<RoleName>` with a name of the role you want to create.
+@code{.sh}
+aws iam create-role \
+    --role-name "<RoleName>" \
+    --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"iot.amazonaws.com"}}]}'
+@endcode
+
+2. Attach a policy to the role created in the above step. Replace `<RoleName>` with the name of the role you created in Step 1.
+@code{.sh}
+aws iam attach-role-policy \
+        --role-name "<RoleName>" \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration
+@endcode
+
+3. Create the template resource which will be used for provisioning the demo application. This needs to be done only once. For more information on fleet provisioning template, refer to [this guide](https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html#fleet-provision-template)
+@code{.sh}
+aws iot create-provisioning-template \
+        --template-name <TemplateName> \
+        --provisioning-role-arn arn:aws:iam::<aws-account>:service-role/<RoleName> \
+        --template-body file://template.json \
+        --enabled
+@endcode
+In the above example, replace `<TemplateName>` with the name of the fleet provisioning template you want to create, `<RoleName>` with the name of the role you created in Step 1, and the file://template.json with the file path to the template's JSON definition.
+Here is an example template for the demo (replace parts in angle brackets):
+@include example_demo_template.json.
+
+You can query the created template using the following CLI command. Replace the `<TemplateName>` with the name of the fleet provisioning template you created.
+@code{.sh}
+aws iot describe-provisioning-template --template-name <TemplateName>
+@endcode
+
+4. Create a claim certificate and private key to use for the Provisioning by Claim workflow in the demo. (Replace the angled brackets with credential file names of your choice.)
+@code{.sh}
+aws iot create-keys-and-certificate \
+    --certificate-pem-outfile "<ClaimCertificate.pem>" \
+    --public-key-outfile "<ClaimPubKey.pem>" \
+    --private-key-outfile "<ClaimPrivateKey.pem>"
+@endcode
+
+5. Create an IoT Policy for the Claim certificate. Following is an example of an IoT Policy.
+@include example_claim_policy.json.
+
+Following is the AWS CLI command for creating an IoT Policy. Replace `<PolicyName>` with the name of the IoT Policy you want to create, and file://policy.json with the path to the JSON definition file for the Policy in your system.
+@code{.sh}
+aws iot create-policy \
+    --policy-name <PolicyName> \
+    --policy-document file://policy.json
+@endcode
+
+6. Attach the policy to the claim certificate. Replace `<Claim-Cert-ID>` with the certificate ID of the Claim Certificate that you created in Step 4.
+@code{.sh}
+aws iot attach-policy \
+    --target "arn:aws:iot:<aws-region>:<aws-account-id>:cert/<Claim-Cert-ID>" \
+    --policy-name "<PolicyName>"
+@endcode
+
+@section Demo Workflow
+@brief As mentioned before, the demo showcases the **Provisioning by Claim** workflow of the Fleet Provisioning feature of AWS IoT Core. It uses
+the Claim Credentials to establish an MQTT connection with AWS IoT Core and calls the [**CreateCertificateWithCsr** MQTT API](https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#create-cert-csr) to request a certificate
+for the Certificate Signing Request of the key-pair generated by the demo, and the [**RegisterThing** MQTT API](https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html#register-thing) to create an AWS IoT Thing for the demo
+with the provisioned certificate. After getting provisioned with a new certificate, the demo creates a new MQTT connection with AWS IoT Core with the new provisioned credentials.
+
+The below diagram is an overview of the operations performed by the demo.
+
+@image html fleet_provisioning_demo.png width=50%
+
+*/
