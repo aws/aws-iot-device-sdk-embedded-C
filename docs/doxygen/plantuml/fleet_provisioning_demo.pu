@@ -4,7 +4,7 @@ autonumber
 
 box "Demo" #LightGreen
     participant "Demo" as demo
-endbox 
+endbox
 
 participant "Fleet Provisioning\nLibrary" as library
 participant "tinyCBOR" as cbor
