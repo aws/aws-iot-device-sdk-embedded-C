@@ -138,7 +138,16 @@
  * @note The provisioning template MUST be created in AWS IoT before running the
  * demo.
  *
- *  #define PROVISIONING_TEMPLATE_NAME    "...insert here..."
+ * #define PROVISIONING_TEMPLATE_NAME    "...insert here..."
+ */
+
+/**
+ * @brief Serial number sent as part of the RegisterThing request.
+ *
+ * This is sent as a paramter to the provisioning template, which uses it to
+ * generate a unique Thing name. This should be unique per device.
+ *
+ * #define DEVICE_SERIAL_NUMBER    "...insert here..."
  */
 
 /**
@@ -152,7 +161,7 @@
  * However, it is not required for the demo to run.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    THING_NAME
+    #define CLIENT_IDENTIFIER    DEVICE_SERIAL_NUMBER
 #endif
 
 /**

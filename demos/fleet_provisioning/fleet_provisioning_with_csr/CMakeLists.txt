@@ -61,6 +61,7 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "CLAIM_CERT_PATH"
                         "CLAIM_PRIVATE_KEY_PATH"
                         "PROVISIONING_TEMPLATE_NAME"
+                        "DEVICE_SERIAL_NUMBER"
                         "CLIENT_IDENTIFIER"
                         "OS_NAME"
                         "OS_VERSION"
