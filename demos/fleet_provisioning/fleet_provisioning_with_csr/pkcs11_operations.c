@@ -102,6 +102,9 @@ static const char * pNoLowLevelMbedTlsCodeStr = "<No-Low-Level-Code>";
 #define EC_PARAMS_LENGTH      10
 #define EC_D_LENGTH           32
 
+/**
+ * @brief Struct for holding parsed RSA-2048 private keys.
+ */
 typedef struct RsaParams_t
 {
     CK_BYTE modulus[ MODULUS_LENGTH + 1 ];
@@ -114,14 +117,23 @@ typedef struct RsaParams_t
     CK_BYTE coefficient[ COEFFICIENT_LENGTH + 1 ];
 } RsaParams_t;
 
+/**
+ * @brief Struct containing parameters needed by the signing callback.
+ */
 typedef struct SigningCallbackContext
 {
     CK_SESSION_HANDLE p11Session;
     CK_OBJECT_HANDLE p11PrivateKey;
 } SigningCallbackContext_t;
 
+/**
+ * @brief Parameters for the signing callback. This needs to be global as
+ * MbedTLS passes the key context to the signing function, so we cannot pass
+ * our own.
+ */
 static SigningCallbackContext_t signingContext = { 0 };
 
+/* Defined in libraries/standard/corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c */
 extern int convert_pem_to_der( const unsigned char * pucInput,
                                size_t xLen,
                                unsigned char * pucOutput,
@@ -1022,3 +1034,5 @@ bool pkcs11CloseSession( CK_SESSION_HANDLE p11Session )
 
     return( result == CKR_OK );
 }
+
+/*-----------------------------------------------------------*/
