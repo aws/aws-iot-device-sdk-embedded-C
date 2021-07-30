@@ -707,6 +707,9 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
     MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = NULL;
     MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
     int32_t mbedtlsError = 0;
+    char portStr[ 6 ] = { 0 };
+
+    snprintf( portStr, 6, "%u", port );
 
     if( ( pNetworkContext == NULL ) ||
         ( pNetworkContext->pParams == NULL ) ||
@@ -752,7 +755,7 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
     {
         mbedtlsError = mbedtls_net_connect( &( pMbedtlsPkcs11Context->socketContext ),
                                             pHostName,
-                                            "8883",
+                                            portStr,
                                             MBEDTLS_NET_PROTO_TCP );
 
         if( mbedtlsError != 0 )
