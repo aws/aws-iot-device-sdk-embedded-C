@@ -123,53 +123,6 @@
  */
 
 /**
- * @brief Path of the file containing the private key that the device is to be
- * provisioned with using the Fleet Provisioning APIs. This should be the key
- * used to generate the Certificate Signing Request (CSR) for certificate
- * provisioning. This key should be used to connect to IoT Core after the
- * client device has been provisioned.
- *
- * The following openssl command can be used to generate a private key and CSR:
- * openssl req -newkey rsa:2048 -keyout fpdemo_priv_key.pem -out fpdemo_csr.pem
- *
- * For information about provisioning by claim, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
- *
- * @note This private key should be PEM-encoded.
- *
- * #define PROVISIONING_PRIVATE_KEY_PATH    "...insert here..."
- */
-
-/**
- * @brief Path of the file containing the Certificate Signing Request (CSR) to
- * send to the AWS IoT Fleet Provisioning APIs for provisioning the client
- * device with a new certificate.
- *
- * The following openssl command can be used to generate a private key and CSR:
- * openssl req -newkey rsa:2048 -keyout fpdemo_priv_key.pem -out fpdemo_csr.pem
- *
- * For information about provisioning by claim, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
- *
- * @note This CSR should be PEM-encoded.
- *
- * #define PROVISIONING_CSR_PATH    "...insert here..."
- */
-
-/**
- * @brief Path to which to write the newly provisioned client certificate
- * obtained from AWS IoT Core through the Fleet Provisioning APIs.
- *
- * For information about provisioning by claim, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
- *
- * For information about client certificates, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/x509-client-certs.html
- *
- * #define PROVISIONING_CERT_PATH    "...insert here..."
- */
-
-/**
  * @brief Name of the provisioning template to use for the RegisterThing
  * portion of the Fleet Provisioning workflow.
  *
