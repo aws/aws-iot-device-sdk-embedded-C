@@ -33,6 +33,7 @@
 
 /* MbedTLS includes. */
 #include "mbedtls/error.h"
+#include "mbedtls/debug.h"
 
 /* PKCS #11 includes. */
 #include "core_pki_utils.h"
@@ -210,6 +211,22 @@ static void contextFree( MbedtlsPkcs11Context_t * pContext )
 }
 
 /*-----------------------------------------------------------*/
+static void prvTlsDebugPrint( void * ctx,
+                              int lLevel,
+                              const char * pcFile,
+                              int lLine,
+                              const char * pcStr )
+{
+    /* Unused parameters. */
+    ( void ) ctx;
+    ( void ) pcFile;
+    ( void ) lLine;
+
+    /* Send the debug string to the portable logger. */
+    printf( "mbedTLS: |%d| %s", lLevel, pcStr );
+}
+
+/*-----------------------------------------------------------*/
 
 static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
                                                const char * pHostName,
@@ -257,6 +274,12 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
         mbedtls_ssl_conf_cert_profile( &( pMbedtlsPkcs11Context->config ),
                                        &( pMbedtlsPkcs11Context->certProfile ) );
 
+        /* If mbedTLS is being compiled with debug support, assume that the
+         * runtime configuration should use verbose output. */
+        mbedtls_ssl_conf_dbg( &pMbedtlsPkcs11Context->config, prvTlsDebugPrint, NULL );
+        mbedtls_debug_set_threshold( 4 );
+
+
         /* Parse the server root CA certificate into the SSL context. */
         mbedtlsError = mbedtls_x509_crt_parse_file( &( pMbedtlsPkcs11Context->rootCa ),
                                                     pMbedtlsPkcs11Credentials->pRootCaPath );
@@ -281,7 +304,7 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
     {
         /* Setup the client private key. */
         result = initializeClientKeys( pMbedtlsPkcs11Context,
-                                        pMbedtlsPkcs11Credentials->pPrivateKeyLabel );
+                                       pMbedtlsPkcs11Credentials->pPrivateKeyLabel );
 
         if( result != CKR_OK )
         {

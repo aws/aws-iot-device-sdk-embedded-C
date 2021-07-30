@@ -30,6 +30,8 @@
 /* Generate errors if deprecated functions are used. */
 #define MBEDTLS_DEPRECATED_REMOVED
 
+#define MBEDTLS_DEBUG_C
+
 /* Place AES tables in ROM. */
 #define MBEDTLS_AES_ROM_TABLES
 
