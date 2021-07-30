@@ -23,7 +23,7 @@ Once the image is downloaded, the file key signature, version, and image is veri
 <div class="caption" style="text-align:center">
 OTA over coreMQTT Demo Workflow
 </div>
-@image html ota_demo_core_mqtt.svg width=100%
+@image html ota_demo_core_mqtt.svg width=50%
 
 @section ota_demo_core_http OTA over HTTP Demo
 @brief A demo of OTA library to perform a firmware update using coreHTTP for data operations.
@@ -37,6 +37,6 @@ MQTT to download the file.
 <div class="caption" style="text-align:center">
 OTA over coreHTTP Demo Workflow
 </div>
-@image html ota_demo_core_http.svg width=100%
+@image html ota_demo_core_http.svg width=50%
 
 */

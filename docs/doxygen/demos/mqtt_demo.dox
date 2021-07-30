@@ -9,7 +9,7 @@ This demo uses an OpenSSL-based transport interface implementation to establish 
 
 Messages in this demo are sent at QoS 2, which guarantees exactly one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mqtt_basic_tls.png width=100%
+@image html mqtt_basic_tls.png width=50%
 
 
 @section mqtt_demo_mutual_auth MQTT Mutual Auth Demo
@@ -19,7 +19,7 @@ This demo uses an OpenSSL-based transport interface implementation to establish 
 
 Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mqtt_mutual_auth.png width=100%
+@image html mqtt_mutual_auth.png width=50%
 
 
 @section mqtt_demo_plaintext MQTT Plaintext Demo
@@ -29,7 +29,7 @@ This demo uses a POSIX socket-based transport interface implementation to establ
 
 Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mqtt_plaintext.png width=100%
+@image html mqtt_plaintext.png width=50%
 
 
 @section mqtt_demo_serializer MQTT Serializer Demo
@@ -39,7 +39,7 @@ This demo uses POSIX sockets to establish a TCP connection, and demonstrates the
 
 Messages in this demo are sent at QoS 0, which guarantees at most one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mqtt_serializer.png width=100%
+@image html mqtt_serializer.png width=50%
 
 
 @section mqtt_demo_subscription_manager MQTT Subscription Manager Demo
@@ -49,6 +49,6 @@ This demo uses an OpenSSL-based transport interface implementation to establish 
 
 Messages in this demo are sent at QoS 1, which guarantees at least one delivery according to the MQTT spec. See the demo workflow below:
 
-@image html mqtt_subscription_manager.png width=100%
+@image html mqtt_subscription_manager.png width=50%
 */
 

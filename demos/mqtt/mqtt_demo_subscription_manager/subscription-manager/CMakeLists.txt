@@ -5,9 +5,12 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 set( LIBRARY_NAME "mqtt_subscription_manager" )
+
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the coreMQTT library
+file( GLOB LIBRARY_SRCS "${LIBRARY_NAME}.c*" )
 # Library target.
 add_library( ${LIBRARY_NAME}
-            "${LIBRARY_NAME}.c" )
+             ${LIBRARY_SRCS} )
 
 target_include_directories(
     ${LIBRARY_NAME}

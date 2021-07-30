@@ -20,9 +20,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef HTTP_DEMO_UTILS_H_
+#define HTTP_DEMO_UTILS_H_
+
 /* Standard includes. */
 #include <stdlib.h>
 #include <stdbool.h>
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
 
 /* Transport interface include. */
 #include "transport_interface.h"
@@ -113,3 +122,11 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen );
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
+
+#endif /* ifndef HTTP_DEMO_UTILS_H_ */

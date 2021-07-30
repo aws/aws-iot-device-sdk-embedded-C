@@ -68,5 +68,5 @@ The demo program accepts several arguments:
 <div class="caption" style="text-align:center">
 Success path workflow of a single "Download" job in the AWS IoT Jobs Demo
 </div>
-@image html jobs_demo.png width=100%
+@image html jobs_demo.png width=75%
 */

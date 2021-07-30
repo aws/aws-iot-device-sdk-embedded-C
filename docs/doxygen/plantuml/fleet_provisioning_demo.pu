@@ -1,0 +1,80 @@
+@startuml
+
+autonumber
+
+box "Demo" #LightGreen
+    participant "Demo" as demo
+endbox
+
+participant "Fleet Provisioning\nLibrary" as library
+participant "tinyCBOR" as cbor
+
+box "MQTT Client" #LightPink
+    participant "corePKCS11\nLibrary" as pkcs11
+    participant "coreMQTT\nLibrary" as mqtt
+endbox
+
+box "AWS" #LightBlue
+    participant "AWS IoT" as aws
+endbox
+
+== Establish <b>MQTT over TLS connection with Claim Credentials</b> ==
+
+demo->pkcs11: Import "<b>Claim Credentials</b>" to device.
+demo->mqtt: Establish <b>MQTT connection</b>
+mqtt->aws: MQTT CONNECT
+aws->mqtt: CONNACK
+
+== Generate new key-pair and\n Certificate Signing Request (CSR)  ==
+
+demo->pkcs11: <b>Generate new-key pair and CSR</b>
+pkcs11->demo
+
+== Request AWS IoT Core for <b>new certificate from CSR</b> ==
+
+demo->mqtt: Subscribe to <b>CreateCertitificateFromCsr</b> response topics
+mqtt->aws: Subscribe request for\n<b>CreateCertitificateFromCsr</b>\nreponse topics
+aws->mqtt: SUBACK
+demo->cbor: Serialize CSR request
+cbor->demo
+demo->mqtt: Publish to <b>CreateCertitificateFromCsr</b> request topic
+mqtt->aws: Publish operation
+aws->mqtt: PUBACK
+aws->aws: <b>Create Certificate</b>\nfor CSR
+aws->mqtt: Publish created certificate on\n<b>CreateCertitificateFromCsr</b>\nresponse topic
+mqtt->demo
+demo->cbor: De-serializer service response
+cbor->demo
+demo->pkcs11: Store provisioned certificate
+demo->mqtt: Unsubcribe from  <b>CreateCertitificateFromCsr</b> response topics
+mqtt->aws: Unsubscibe request
+aws->mqtt: UNSUBACK
+
+== Request AWS IoT Core to <b>Register Thing</b> ==
+
+demo->mqtt: Subscribe to <b>RegisterThing</b> response topics
+mqtt->aws: Subscribe request
+aws->mqtt: SUBACK
+demo->cbor: Serialize RegisterThing request
+cbor->demo
+demo->mqtt: Publish to <b>RegisterThing</b> request topic
+mqtt->aws: Publish operation
+aws->mqtt: PUBACK
+aws->aws: Register <b>IoT Thing</b> with\n<b>provisioned certificate</b>
+aws->mqtt: Publish on <b>RegiserThing</b> accepted topic
+mqtt->demo
+demo->mqtt: Unsubcribe from  <b>RegisterThing</b> response topics
+mqtt->aws: Unsubscibe request
+aws->mqtt: UNSUBACK
+
+demo->mqtt: Disconnect from IoT Core
+mqtt->aws: Disconnect
+
+== Establish new MQTT connection with provisioned certificate ==
+
+demo->mqtt: Re-establish <b>MQTT connection</b>\nwith <b>provisioned cert</b>
+mqtt->aws: MQTT CONNECT
+aws->mqtt: CONNACK
+
+
+@enduml

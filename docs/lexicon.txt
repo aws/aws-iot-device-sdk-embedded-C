@@ -12,10 +12,13 @@ applicationfunction
 argparse
 args
 argumentlength
+armmbed
 arn
+assumerole
 ats
 auth
 aws
+awsiotthingsregistration
 backoff
 bbaf
 bool
@@ -26,6 +29,7 @@ cacreateserial
 cafile
 cakey
 capath
+cbor
 cc
 cd
 cdn
@@ -33,6 +37,9 @@ cert
 certfile
 certs
 ci
+claimcertificate
+claimprivatekey
+claimpubkey
 cli
 clienttoken
 cmake
@@ -52,6 +59,7 @@ corejson
 coremqtt
 corepkcs
 cpu
+createcertificatewithcsr
 crontab
 crt
 csr
@@ -61,6 +69,7 @@ datatypes
 daws
 dclient
 dd
+de
 debian
 defgroup
 dev
@@ -97,6 +106,7 @@ https
 iam
 init
 int
+intel
 iot
 json
 keyfile
@@ -114,6 +124,7 @@ lowercamelcase
 lowercamelcased
 mainpage
 matchtopic
+mbedtls
 meminfo
 metadata
 misra
@@ -134,6 +145,7 @@ openssl
 org
 os
 ota
+outfile
 papplicationhandler
 params
 pargument
@@ -141,6 +153,7 @@ pem
 pkcs
 plaintext
 png
+policyname
 posix
 poweron
 pre
@@ -149,18 +162,21 @@ presigned
 printf
 proc
 processloop
+programmatically
 pwd
 py
 qos
 receivedbytes
 receiveloop
 refactored
+registerthing
 relaunch
 repo
 req
 resubscribe
 rm
 rng
+rolename
 rsa
 sdk
 sha
@@ -174,12 +190,16 @@ ssl
 stdint
 struct
 structs
+sts
 styleguide
 suback
 sudo
 svg
 tcp
 td
+temperaturesensorpolicy
+templatejson
+templatename
 testclient
 tinycbor
 tls
@@ -198,5 +218,6 @@ urllmnmopqrstuvw
 urls
 userguide
 wikipedia
+wo
 www
 xz

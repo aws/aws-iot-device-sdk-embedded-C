@@ -298,7 +298,7 @@ static void deleteRejectedHandler( MQTTPublishInfo_t * pPublishInfo )
      */
 
     /* Make sure the payload is a valid json document. */
-    result = JSON_Validate( pPublishInfo->pPayload,
+    result = JSON_Validate( ( const char * ) pPublishInfo->pPayload,
                             pPublishInfo->payloadLength );
 
     if( result == JSONSuccess )
@@ -372,7 +372,7 @@ static void updateDeltaHandler( MQTTPublishInfo_t * pPublishInfo )
      */
 
     /* Make sure the payload is a valid json document. */
-    result = JSON_Validate( pPublishInfo->pPayload,
+    result = JSON_Validate( ( const char * ) pPublishInfo->pPayload,
                             pPublishInfo->payloadLength );
 
     if( result == JSONSuccess )
@@ -499,7 +499,7 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
      */
 
     /* Make sure the payload is a valid json document. */
-    result = JSON_Validate( pPublishInfo->pPayload,
+    result = JSON_Validate( ( const char * ) pPublishInfo->pPayload,
                             pPublishInfo->payloadLength );
 
     if( result == JSONSuccess )

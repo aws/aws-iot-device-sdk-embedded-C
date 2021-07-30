@@ -950,7 +950,7 @@ static int subscribeToAndRegisterTopicFilter( MQTTContext_t * pContext,
                                               SubscriptionManagerCallback_t callback )
 {
     int returnStatus = EXIT_SUCCESS;
-    SubscriptionManagerStatus_t managerStatus = 0u;
+    SubscriptionManagerStatus_t managerStatus = ( SubscriptionManagerStatus_t ) 0u;
 
     /* Register the topic filter and its callback with subscription manager.
      * On an incoming PUBLISH message whose topic name that matches the topic filter
@@ -1045,10 +1045,12 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
     int returnStatus = EXIT_SUCCESS;
 
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    MQTTPublishInfo_t publishInfo = { 0 };
+    MQTTPublishInfo_t publishInfo;
     uint16_t pubPacketId = MQTT_PACKET_ID_INVALID;
 
     assert( pMqttContext != NULL );
+
+    ( void ) memset( &publishInfo, 0x00, sizeof( MQTTPublishInfo_t ) );
 
     if( returnStatus == EXIT_FAILURE )
     {
