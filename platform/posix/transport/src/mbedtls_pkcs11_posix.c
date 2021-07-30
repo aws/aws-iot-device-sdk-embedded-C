@@ -110,6 +110,7 @@ static void contextFree( MbedtlsPkcs11Context_t * pContext );
  * @param[in] pMbedtlsPkcs11Context Network context.
  * @param[in] pHostName Remote host name, used for server name indication.
  * @param[in] pMbedtlsPkcs11Credentials TLS setup parameters.
+ * @param[in] recvTimeoutMs Receive timeout for network socket.
  *
  * @return #MBEDTLS_PKCS11_SUCCESS, #MBEDTLS_PKCS11_INSUFFICIENT_MEMORY, #MBEDTLS_PKCS11_INVALID_CREDENTIALS,
  * #MBEDTLS_PKCS11_HANDSHAKE_FAILED, or #MBEDTLS_PKCS11_INTERNAL_ERROR.
@@ -118,6 +119,42 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
                                                const char * pHostName,
                                                const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
                                                uint32_t recvTimeoutMs );
+
+/**
+ * @brief Configure the credentials in the MbedTLS SSL context.
+ *
+ * @param[in] pMbedtlsPkcs11Context Network context.
+ * @param[in] pMbedtlsPkcs11Credentials TLS setup parameters.
+ *
+ * @return #MBEDTLS_PKCS11_SUCCESS on success,
+ * #MBEDTLS_PKCS11_INVALID_CREDENTIALS on error.
+ */
+static MbedtlsPkcs11Status_t configureMbedtlsCertificates( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
+                                                           const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials );
+
+/**
+ * @brief Configure the SNI and ALPN in the MbedTLS SSL context.
+ *
+ * @param[in] pMbedtlsPkcs11Context Network context.
+ * @param[in] pMbedtlsPkcs11Credentials TLS setup parameters.
+ * @param[in] pHostName Remote host name, used for server name indication.
+ *
+ * @return #MBEDTLS_PKCS11_SUCCESS on success,
+ * #MBEDTLS_PKCS11_INVALID_CREDENTIALS on error.
+ */
+static MbedtlsPkcs11Status_t configureMbedtlsSniAlpn( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
+                                                      const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
+                                                      const char * pHostName );
+
+/**
+ * @brief Configure the SNI and Maximum Fragment Length in the MbedTLS SSL context.
+ *
+ * @param[in] pMbedtlsPkcs11Context Network context.
+ *
+ * @return #MBEDTLS_PKCS11_SUCCESS on success,
+ * #MBEDTLS_PKCS11_INVALID_CREDENTIALS on error.
+ */
+static MbedtlsPkcs11Status_t configureMbedtlsFragmentLength( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context );
 
 /**
  * @brief Callback that wraps PKCS #11 for pseudo-random number generation.
@@ -166,7 +203,7 @@ static CK_RV initializeClientKeys( MbedtlsPkcs11Context_t * pCtx,
  * @param[in] pContext Crypto context.
  * @param[in] mdAlg Unused.
  * @param[in] pHash Length in bytes of hash to be signed.
- * @param[in] hashLen Byte array of hash to be signed.
+ * @param[in] hashLen Byte array of hash to be signied.
  * @param[out] pSig RSA signature bytes.
  * @param[in] pSigLen Length in bytes of signature buffer.
  * @param[in] pRng Unused.
@@ -180,11 +217,8 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int32_t ( * pRng )( void *,
-                                                              unsigned char *,
-                                                              size_t ),
+                                          int32_t ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
-
 
 /*-----------------------------------------------------------*/
 
@@ -240,7 +274,6 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
 {
     MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
     int32_t mbedtlsError = 0;
-    CK_RV result = CKR_OK;
 
     assert( pMbedtlsPkcs11Context != NULL );
     assert( pHostName != NULL );
@@ -265,96 +298,25 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
         /* Per MbedTLS docs, mbedtls_ssl_config_defaults only fails on memory allocation. */
         returnStatus = MBEDTLS_PKCS11_INSUFFICIENT_MEMORY;
     }
-
-    if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
+    else
     {
         /* Set up the certificate security profile, starting from the default value. */
         pMbedtlsPkcs11Context->certProfile = mbedtls_x509_crt_profile_default;
 
         /* Set SSL authmode and the RNG context. */
-        mbedtls_ssl_conf_authmode( &( pMbedtlsPkcs11Context->config ),
-                                   MBEDTLS_SSL_VERIFY_REQUIRED );
-        mbedtls_ssl_conf_rng( &( pMbedtlsPkcs11Context->config ),
-                              generateRandomBytes,
-                              pMbedtlsPkcs11Context );
-        mbedtls_ssl_conf_cert_profile( &( pMbedtlsPkcs11Context->config ),
-                                       &( pMbedtlsPkcs11Context->certProfile ) );
+        mbedtls_ssl_conf_authmode( &( pMbedtlsPkcs11Context->config ), MBEDTLS_SSL_VERIFY_REQUIRED );
+        mbedtls_ssl_conf_rng( &( pMbedtlsPkcs11Context->config ), generateRandomBytes, pMbedtlsPkcs11Context );
+        mbedtls_ssl_conf_cert_profile( &( pMbedtlsPkcs11Context->config ), &( pMbedtlsPkcs11Context->certProfile ) );
         mbedtls_ssl_conf_read_timeout( &( pMbedtlsPkcs11Context->config ), recvTimeoutMs );
-
         mbedtls_ssl_conf_dbg( &pMbedtlsPkcs11Context->config, mbedtlsDebugPrint, NULL );
         mbedtls_debug_set_threshold( MBEDTLS_DEBUG_LEVEL );
 
-
-        /* Parse the server root CA certificate into the SSL context. */
-        mbedtlsError = mbedtls_x509_crt_parse_file( &( pMbedtlsPkcs11Context->rootCa ),
-                                                    pMbedtlsPkcs11Credentials->pRootCaPath );
-
-        if( mbedtlsError != 0 )
-        {
-            LogError( ( "Failed to parse server root CA certificate: mbedTLSError= %s : %s.",
-                        mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
-                        mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
-
-            returnStatus = MBEDTLS_PKCS11_INVALID_CREDENTIALS;
-        }
-        else
-        {
-            mbedtls_ssl_conf_ca_chain( &( pMbedtlsPkcs11Context->config ),
-                                       &( pMbedtlsPkcs11Context->rootCa ),
-                                       NULL );
-        }
+        returnStatus = configureMbedtlsCertificates( pMbedtlsPkcs11Context, pMbedtlsPkcs11Credentials );
     }
 
     if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
     {
-        /* Setup the client private key. */
-        result = initializeClientKeys( pMbedtlsPkcs11Context,
-                                       pMbedtlsPkcs11Credentials->pPrivateKeyLabel );
-
-        if( result != CKR_OK )
-        {
-            LogError( ( "Failed to setup key handling by PKCS #11." ) );
-
-            returnStatus = MBEDTLS_PKCS11_INVALID_CREDENTIALS;
-        }
-        else
-        {
-            /* Setup the client certificate. */
-            mbedtlsError = readCertificateIntoContext( pMbedtlsPkcs11Context,
-                                                       pMbedtlsPkcs11Credentials->pClientCertLabel,
-                                                       CKO_CERTIFICATE,
-                                                       &( pMbedtlsPkcs11Context->clientCert ) );
-
-            if( mbedtlsError != 0 )
-            {
-                LogError( ( "Failed to get certificate from PKCS #11 module." ) );
-
-                returnStatus = MBEDTLS_PKCS11_INVALID_CREDENTIALS;
-            }
-            else
-            {
-                ( void ) mbedtls_ssl_conf_own_cert( &( pMbedtlsPkcs11Context->config ),
-                                                    &( pMbedtlsPkcs11Context->clientCert ),
-                                                    &( pMbedtlsPkcs11Context->privKey ) );
-            }
-        }
-    }
-
-    if( ( returnStatus == MBEDTLS_PKCS11_SUCCESS ) && ( pMbedtlsPkcs11Credentials->pAlpnProtos != NULL ) )
-    {
-        /* Include an application protocol list in the TLS ClientHello
-         * message. */
-        mbedtlsError = mbedtls_ssl_conf_alpn_protocols( &( pMbedtlsPkcs11Context->config ),
-                                                        pMbedtlsPkcs11Credentials->pAlpnProtos );
-
-        if( mbedtlsError != 0 )
-        {
-            LogError( ( "Failed to configure ALPN protocol in MbedTLS: mbedTLSError= %s : %s.",
-                        mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
-                        mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
-
-            returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
-        }
+        returnStatus = configureMbedtlsSniAlpn( pMbedtlsPkcs11Context, pMbedtlsPkcs11Credentials, pHostName );
     }
 
     if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
@@ -368,59 +330,21 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
             LogError( ( "Failed to set up MbedTLS SSL context: mbedTLSError= %s : %s.",
                         mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
                         mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
-
             returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
-        }
-        else
-        {
-            /* Set the underlying IO for the TLS connection. */
-            mbedtls_ssl_set_bio( &( pMbedtlsPkcs11Context->context ),
-                                 ( void * ) &( pMbedtlsPkcs11Context->socketContext ),
-                                 mbedtls_net_send,
-                                 mbedtls_net_recv,
-                                 mbedtls_net_recv_timeout );
         }
     }
 
     if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
     {
-        /* Enable SNI if requested. */
-        if( pMbedtlsPkcs11Credentials->disableSni == false )
-        {
-            mbedtlsError = mbedtls_ssl_set_hostname( &( pMbedtlsPkcs11Context->context ),
-                                                     pHostName );
+        /* Set the underlying IO for the TLS connection. */
+        mbedtls_ssl_set_bio( &( pMbedtlsPkcs11Context->context ),
+                             ( void * ) &( pMbedtlsPkcs11Context->socketContext ),
+                             mbedtls_net_send,
+                             mbedtls_net_recv,
+                             mbedtls_net_recv_timeout );
 
-            if( mbedtlsError != 0 )
-            {
-                LogError( ( "Failed to set server name: mbedTLSError= %s : %s.",
-                            mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
-                            mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
-
-                returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
-            }
-        }
+        returnStatus = configureMbedtlsFragmentLength( pMbedtlsPkcs11Context );
     }
-
-    /* Set Maximum Fragment Length if enabled. */
-    #ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
-        if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
-        {
-            /* Enable the max fragment extension. 4096 bytes is currently the largest fragment size permitted.
-             * See RFC 8449 https://tools.ietf.org/html/rfc8449 for more information.
-             *
-             * Smaller values can be found in "mbedtls/include/ssl.h".
-             */
-            mbedtlsError = mbedtls_ssl_conf_max_frag_len( &( pMbedtlsPkcs11Context->config ), MBEDTLS_SSL_MAX_FRAG_LEN_4096 );
-
-            if( mbedtlsError != 0 )
-            {
-                LogError( ( "Failed to maximum fragment length extension: mbedTLSError= %s : %s.",
-                            mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
-                            mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
-                returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
-            }
-        }
-    #endif /* ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
 
     if( returnStatus != MBEDTLS_PKCS11_SUCCESS )
     {
@@ -428,11 +352,142 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
     }
     else
     {
-        LogInfo( ( "(Network connection %p) TLS handshake successful.",
-
-                   pNetworkContext ) );
+        LogInfo( ( "(Network connection %p) TLS handshake successful.", pNetworkContext ) );
     }
 
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static MbedtlsPkcs11Status_t configureMbedtlsCertificates( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
+                                                           const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials )
+
+{
+    MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
+    int32_t mbedtlsError = 0;
+    CK_RV result = CKR_OK;
+
+    /* Parse the server root CA certificate into the SSL context. */
+    mbedtlsError = mbedtls_x509_crt_parse_file( &( pMbedtlsPkcs11Context->rootCa ),
+                                                pMbedtlsPkcs11Credentials->pRootCaPath );
+
+    if( mbedtlsError != 0 )
+    {
+        LogError( ( "Failed to parse server root CA certificate: mbedTLSError= %s : %s.",
+                    mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
+                    mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
+        returnStatus = MBEDTLS_PKCS11_INVALID_CREDENTIALS;
+    }
+    else
+    {
+        mbedtls_ssl_conf_ca_chain( &( pMbedtlsPkcs11Context->config ),
+                                   &( pMbedtlsPkcs11Context->rootCa ),
+                                   NULL );
+        /* Setup the client private key. */
+        result = initializeClientKeys( pMbedtlsPkcs11Context,
+                                       pMbedtlsPkcs11Credentials->pPrivateKeyLabel );
+
+        if( result != CKR_OK )
+        {
+            LogError( ( "Failed to setup key handling by PKCS #11." ) );
+            returnStatus = MBEDTLS_PKCS11_INVALID_CREDENTIALS;
+        }
+    }
+
+    if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
+    {
+        /* Setup the client certificate. */
+        mbedtlsError = readCertificateIntoContext( pMbedtlsPkcs11Context,
+                                                   pMbedtlsPkcs11Credentials->pClientCertLabel,
+                                                   CKO_CERTIFICATE,
+                                                   &( pMbedtlsPkcs11Context->clientCert ) );
+
+        if( mbedtlsError != 0 )
+        {
+            LogError( ( "Failed to get certificate from PKCS #11 module." ) );
+            returnStatus = MBEDTLS_PKCS11_INVALID_CREDENTIALS;
+        }
+    }
+
+    if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
+    {
+        ( void ) mbedtls_ssl_conf_own_cert( &( pMbedtlsPkcs11Context->config ),
+                                            &( pMbedtlsPkcs11Context->clientCert ),
+                                            &( pMbedtlsPkcs11Context->privKey ) );
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static MbedtlsPkcs11Status_t configureMbedtlsSniAlpn( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
+                                                      const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
+                                                      const char * pHostName )
+{
+    MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
+    int32_t mbedtlsError = 0;
+
+    if( pMbedtlsPkcs11Credentials->pAlpnProtos != NULL )
+    {
+        /* Include an application protocol list in the TLS ClientHello message. */
+        mbedtlsError = mbedtls_ssl_conf_alpn_protocols( &( pMbedtlsPkcs11Context->config ),
+                                                        pMbedtlsPkcs11Credentials->pAlpnProtos );
+
+        if( mbedtlsError != 0 )
+        {
+            LogError( ( "Failed to configure ALPN protocol in MbedTLS: mbedTLSError= %s : %s.",
+                        mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
+                        mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
+            returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
+        }
+    }
+
+    /* Enable SNI if requested. */
+    if( ( returnStatus == MBEDTLS_PKCS11_SUCCESS ) &&
+        ( pMbedtlsPkcs11Credentials->disableSni == false ) )
+    {
+        mbedtlsError = mbedtls_ssl_set_hostname( &( pMbedtlsPkcs11Context->context ),
+                                                 pHostName );
+
+        if( mbedtlsError != 0 )
+        {
+            LogError( ( "Failed to set server name: mbedTLSError= %s : %s.",
+                        mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
+                        mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
+            returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
+        }
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static MbedtlsPkcs11Status_t configureMbedtlsFragmentLength( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context )
+{
+    MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
+
+    /* Set Maximum Fragment Length if enabled. */
+    #ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
+        int32_t mbedtlsError = 0;
+
+        /* Enable the max fragment extension. 4096 bytes is currently the largest fragment size permitted.
+         * See RFC 8449 https://tools.ietf.org/html/rfc8449 for more information.
+         *
+         * Smaller values can be found in "mbedtls/include/ssl.h".
+         */
+        mbedtlsError = mbedtls_ssl_conf_max_frag_len( &( pMbedtlsPkcs11Context->config ), MBEDTLS_SSL_MAX_FRAG_LEN_4096 );
+
+        if( mbedtlsError != 0 )
+        {
+            LogError( ( "Failed to maximum fragment length extension: mbedTLSError= %s : %s.",
+                        mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
+                        mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
+            returnStatus = MBEDTLS_PKCS11_INTERNAL_ERROR;
+        }
+    #endif /* ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
     return returnStatus;
 }
 
@@ -529,14 +584,6 @@ static int32_t readCertificateIntoContext( MbedtlsPkcs11Context_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-/**
- * @brief Helper for setting up potentially hardware-based cryptographic context
- * for the client TLS certificate and private key.
- *
- * @param pCtx Caller context.
- *
- * @return Zero on success.
- */
 static CK_RV initializeClientKeys( MbedtlsPkcs11Context_t * pCtx,
                                    char * pPrivateKeyLabel )
 {
@@ -709,12 +756,13 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
     int32_t mbedtlsError = 0;
     char portStr[ 6 ] = { 0 };
 
-    snprintf( portStr, 6, "%u", port );
-
     if( ( pNetworkContext == NULL ) ||
         ( pNetworkContext->pParams == NULL ) ||
         ( pHostName == NULL ) ||
-        ( pMbedtlsPkcs11Credentials == NULL ) )
+        ( pMbedtlsPkcs11Credentials == NULL ) ||
+        ( pMbedtlsPkcs11Credentials->pRootCaPath == NULL ) ||
+        ( pMbedtlsPkcs11Credentials->pClientCertLabel == NULL ) ||
+        ( pMbedtlsPkcs11Credentials->pPrivateKeyLabel == NULL ) )
     {
         LogError( ( "Invalid input parameter(s): Arguments cannot be NULL. pNetworkContext=%p, "
                     "pHostName=%p, pMbedtlsPkcs11Credentials=%p.",
@@ -723,30 +771,12 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
                     ( const void * ) pMbedtlsPkcs11Credentials ) );
         returnStatus = MBEDTLS_PKCS11_INVALID_PARAMETER;
     }
-    else if( ( pMbedtlsPkcs11Credentials->pRootCaPath == NULL ) )
-    {
-        LogError( ( "pRootCaPath cannot be NULL." ) );
-        returnStatus = MBEDTLS_PKCS11_INVALID_PARAMETER;
-    }
-    else if( ( pMbedtlsPkcs11Credentials->pClientCertLabel == NULL ) )
-    {
-        LogError( ( "pClientCertLabel cannot be NULL." ) );
-        returnStatus = MBEDTLS_PKCS11_INVALID_PARAMETER;
-    }
-    else if( ( pMbedtlsPkcs11Credentials->pPrivateKeyLabel == NULL ) )
-    {
-        LogError( ( "pPrivateKeyLabel cannot be NULL." ) );
-        returnStatus = MBEDTLS_PKCS11_INVALID_PARAMETER;
-    }
     else
     {
-        /* Empty else for MISRA 15.7 compliance. */
+        snprintf( portStr, 6, "%u", port );
         pMbedtlsPkcs11Context = pNetworkContext->pParams;
-    }
 
-    /* Configure MbedTLS. */
-    if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
-    {
+        /* Configure MbedTLS. */
         returnStatus = configureMbedtls( pMbedtlsPkcs11Context, pHostName, pMbedtlsPkcs11Credentials, recvTimeoutMs );
     }
 
@@ -760,17 +790,13 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
 
         if( mbedtlsError != 0 )
         {
-            LogError( ( "Failed to connect to %s with error %d.",
-                        pHostName,
-                        mbedtlsError ) );
+            LogError( ( "Failed to connect to %s with error %d.", pHostName, mbedtlsError ) );
             returnStatus = MBEDTLS_PKCS11_CONNECT_FAILURE;
         }
     }
 
     if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
     {
-        uint32_t sslVerifyRet = -1U;
-
         /* Perform the TLS handshake. */
         do
         {
@@ -778,17 +804,11 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
         } while( ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_READ ) ||
                  ( mbedtlsError == MBEDTLS_ERR_SSL_WANT_WRITE ) );
 
-        if( mbedtlsError == 0 )
-        {
-            sslVerifyRet = mbedtls_ssl_get_verify_result( &( pMbedtlsPkcs11Context->context ) );
-        }
-
-        if( sslVerifyRet != 0 )
+        if( ( mbedtlsError != 0 ) || ( mbedtls_ssl_get_verify_result( &( pMbedtlsPkcs11Context->context ) ) != 0U ) )
         {
             LogError( ( "Failed to perform TLS handshake: mbedTLSError= %s : %s.",
                         mbedtlsHighLevelCodeOrDefault( mbedtlsError ),
                         mbedtlsLowLevelCodeOrDefault( mbedtlsError ) ) );
-
             returnStatus = MBEDTLS_PKCS11_HANDSHAKE_FAILED;
         }
     }
@@ -800,9 +820,7 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
     }
     else
     {
-        LogInfo( ( "(Network connection %p) Connection to %s established.",
-                   pNetworkContext,
-                   pHostName ) );
+        LogInfo( ( "(Network connection %p) Connection to %s established.", pNetworkContext, pHostName ) );
     }
 
     return returnStatus;
