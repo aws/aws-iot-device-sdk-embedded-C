@@ -100,7 +100,7 @@
 /**
  * @brief The length of #DEVICE_SERIAL_NUMBER.
  */
-#define DEVICE_SERIAL_NUMBER_LENGTH    ( ( uint16_t ) ( sizeof( DEVICE_SERIAL_NUMBER ) - 1 ) )
+#define DEVICE_SERIAL_NUMBER_LENGTH          ( ( uint16_t ) ( sizeof( DEVICE_SERIAL_NUMBER ) - 1 ) )
 
 /**
  * @brief Size of AWS IoT Thing name buffer.

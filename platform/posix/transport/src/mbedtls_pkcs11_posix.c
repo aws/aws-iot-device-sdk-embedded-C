@@ -281,7 +281,7 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
     {
         /* Setup the client private key. */
         result = initializeClientKeys( pMbedtlsPkcs11Context,
-                                        pMbedtlsPkcs11Credentials->pPrivateKeyLabel );
+                                       pMbedtlsPkcs11Credentials->pPrivateKeyLabel );
 
         if( result != CKR_OK )
         {
