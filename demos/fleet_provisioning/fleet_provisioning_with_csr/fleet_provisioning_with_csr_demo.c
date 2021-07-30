@@ -88,11 +88,19 @@
 #ifndef CLAIM_PRIVATE_KEY_PATH
     #error "Please define path to claim private key (CLAIM_PRIVATE_KEY_PATH) in demo_config.h."
 #endif
+#ifndef DEVICE_SERIAL_NUMBER
+    #error "Please define a serial number (DEVICE_SERIAL_NUMBER) in demo_config.h."
+#endif
 
 /**
  * @brief The length of #PROVISIONING_TEMPLATE_NAME.
  */
 #define PROVISIONING_TEMPLATE_NAME_LENGTH    ( ( uint16_t ) ( sizeof( PROVISIONING_TEMPLATE_NAME ) - 1 ) )
+
+/**
+ * @brief The length of #DEVICE_SERIAL_NUMBER.
+ */
+#define DEVICE_SERIAL_NUMBER_LENGTH          ( ( uint16_t ) ( sizeof( DEVICE_SERIAL_NUMBER ) - 1 ) )
 
 /**
  * @brief Size of AWS IoT Thing name buffer.
@@ -443,8 +451,6 @@ int main( int argc,
           char ** argv )
 {
     bool status = false;
-    char deviceSerial[ 10 ];
-    size_t deviceSerialLength = 10;
     /* Buffer for holding the CSR. */
     char csr[ CSR_BUFFER_LENGTH ] = { 0 };
     size_t csrLength = 0;
@@ -472,13 +478,6 @@ int main( int argc,
         certificateLength = CERT_BUFFER_LENGTH;
         certificateIdLength = CERT_ID_BUFFER_LENGTH;
         ownershipTokenLength = OWNERSHIP_TOKEN_BUFFER_LENGTH;
-
-        /* The demo template we use has a serial number as a parameter.
-         * For this demo we use a random 10 digit number. */
-        for( i = 0; i < deviceSerialLength; i++ )
-        {
-            deviceSerial[ i ] = '0' + ( rand() % 10 );
-        }
 
         /* Initialize the PKCS #11 module */
         xInitializePkcs11Session( &p11Session );
@@ -607,8 +606,8 @@ int main( int argc,
                                                    NETWORK_BUFFER_SIZE,
                                                    ownershipToken,
                                                    ownershipTokenLength,
-                                                   deviceSerial,
-                                                   deviceSerialLength,
+                                                   DEVICE_SERIAL_NUMBER,
+                                                   DEVICE_SERIAL_NUMBER_LENGTH,
                                                    &payloadLength );
         }
 

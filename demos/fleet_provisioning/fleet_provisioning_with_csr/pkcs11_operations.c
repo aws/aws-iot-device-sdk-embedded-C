@@ -618,9 +618,9 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 bool loadClaimCredentials( CK_SESSION_HANDLE p11Session )
 {
     bool status;
-    char claimCert[ CLAIM_CERT_BUFFER_LENGTH ];
+    char claimCert[ CLAIM_CERT_BUFFER_LENGTH ] = { 0 };
     size_t claimCertLength = 0;
-    char claimPrivateKey[ CLAIM_PRIVATE_KEY_BUFFER_LENGTH ];
+    char claimPrivateKey[ CLAIM_PRIVATE_KEY_BUFFER_LENGTH ] = { 0 };
     size_t claimPrivateKeyLength = 0;
     CK_RV ret;
 
