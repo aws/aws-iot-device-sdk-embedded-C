@@ -14,7 +14,7 @@
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
         * [AWS IoT Over-the-air Update Library](#aws-iot-over-the-air-update)
-        * [AWS IoT Fleet Provisoning](#aws-iot-fleet-provisoning)
+        * [AWS IoT Fleet Provisoning](#aws-iot-fleet-provisioning)
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
@@ -145,7 +145,7 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 #### AWS IoT Fleet Provisioning
 
-The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisoning-for-aws-iot-embedded-sdk) library enables you to interact with the AWS IoT Fleet Provisioning MQTT APIs in order to provison IoT devices that do not have device certificates. With AWS IoT Fleet Provisioning, devices can securely recieve unique device certificates from AWS IoT when they connect for the first time. For an overview of all provisioning options offered by AWS IoT, see [Device provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provision.html). For details about Fleet Provisioning, refer to the [AWS IoT Fleet Provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
+The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library enables you to interact with the AWS IoT Fleet Provisioning MQTT APIs in order to provison IoT devices that do not have device certificates. With AWS IoT Fleet Provisioning, devices can securely recieve unique device certificates from AWS IoT when they connect for the first time. For an overview of all provisioning options offered by AWS IoT, see [Device provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provision.html). For details about Fleet Provisioning, refer to the [AWS IoT Fleet Provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
 <!-- See memory requirements for the latest release [here](). -->
 
