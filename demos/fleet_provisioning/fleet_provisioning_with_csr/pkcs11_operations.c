@@ -914,7 +914,6 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
                         size_t csrBufferLength,
                         size_t * pOutCsrLength )
 {
-    bool status = true;
     CK_OBJECT_HANDLE privKeyHandle;
     CK_OBJECT_HANDLE pubKeyHandle;
     CK_RV pkcs11Ret = CKR_OK;
@@ -974,7 +973,6 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
             mbedtls_x509write_csr_set_key( &req, &privKey );
 
             mbedtlsRet = mbedtls_x509write_csr_pem( &req, ( unsigned char * ) pCsrBuffer, csrBufferLength, &randomCallback, &p11Session );
-            status = ( mbedtlsRet == 0 );
         }
 
         mbedtls_x509write_csr_free( &req );
