@@ -144,7 +144,7 @@
 /**
  * @brief Serial number sent as part of the RegisterThing request.
  *
- * This is sent as a paramter to the provisioning template, which uses it to
+ * This is sent as a parameter to the provisioning template, which uses it to
  * generate a unique Thing name. This should be unique per device.
  *
  * #define DEVICE_SERIAL_NUMBER    "...insert here..."

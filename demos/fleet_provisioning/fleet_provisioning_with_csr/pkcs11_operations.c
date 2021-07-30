@@ -355,7 +355,6 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
-        /* See MSVC Compiler Warning C4221 */
         privateKeyTemplate[ 0 ].pValue = &privateKeyClass;
         privateKeyTemplate[ 1 ].pValue = &privateKeyType;
         privateKeyTemplate[ 3 ].pValue = &trueObject;
@@ -455,7 +454,6 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
-        /* See MSVC Compiler Warning C4221 */
         privateKeyTemplate[ 0 ].pValue = &privateKeyClass;
         privateKeyTemplate[ 1 ].pValue = &privateKeyType;
         privateKeyTemplate[ 3 ].pValue = &trueObject;
@@ -885,7 +883,6 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
-    /* See MSVC Compiler Warning C4221 */
     publicKeyTemplate[ 0 ].pValue = &keyType;
     publicKeyTemplate[ 1 ].pValue = &trueObject;
     publicKeyTemplate[ 2 ].pValue = &ecParams;
@@ -900,7 +897,6 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
-    /* See MSVC Compiler Warning C4221 */
     privateKeyTemplate[ 0 ].pValue = &keyType;
     privateKeyTemplate[ 1 ].pValue = &trueObject;
     privateKeyTemplate[ 2 ].pValue = &trueObject;

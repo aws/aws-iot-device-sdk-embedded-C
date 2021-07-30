@@ -13,6 +13,7 @@ alt
 amazonrootca
 amazontrust
 amzn
+ansi
 api
 apireference
 apis
@@ -126,6 +127,7 @@ crypto
 cryptoapi
 cryptoki
 csr
+csrbufferlength
 csrlength
 csrs
 ctr
@@ -167,6 +169,7 @@ digicert
 doesn
 doxygen
 dp
+dptr
 drbg
 dsa
 dtls
@@ -181,6 +184,8 @@ ecdhe
 ecdsa
 ecjpake
 ecp
+ecparams
+ecparamsptr
 ede
 eg
 en
@@ -287,6 +292,7 @@ karthikeyan
 ke
 keygen
 keyout
+keytype
 keyusage
 knownmessage
 kw
@@ -429,12 +435,14 @@ pcertificateidlength
 pcertificatelength
 pcertificateownershiptoken
 pcks
+pclientcertlabel
 pclientcertpath
 pclientsessionpresent
 pconnectionsarray
 pcontext
 pcpuusage
 pcsr
+pcsrbuffer
 pcustommetric
 pdeserializedinfo
 pdf
@@ -499,6 +507,7 @@ ppath
 ppathlen
 ppayload
 ppkey
+pprivatekeylabel
 pprivatekeypath
 pprocfile
 ppubinfo
@@ -510,6 +519,8 @@ presigned
 presponse
 prf
 printf
+privatekeyclass
+privatekeytype
 proc
 processloop
 procfs
@@ -666,6 +677,7 @@ totalmem
 totalmemory
 transportinterface
 transporttimeout
+trueobject
 txt
 ubuntu
 udbl
