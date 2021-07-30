@@ -114,6 +114,14 @@ typedef struct RsaParams_t
     CK_BYTE coefficient[ COEFFICIENT_LENGTH + 1 ];
 } RsaParams_t;
 
+typedef struct SigningCallbackContext
+{
+    CK_SESSION_HANDLE p11Session;
+    CK_OBJECT_HANDLE p11PrivateKey;
+} SigningCallbackContext_t;
+
+static SigningCallbackContext_t signingContext = { 0 };
+
 extern int convert_pem_to_der( const unsigned char * pucInput,
                                size_t xLen,
                                unsigned char * pucOutput,
@@ -658,10 +666,10 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
                                mbedtls_ecdsa_context * pEcdsaContext,
                                CK_OBJECT_HANDLE publicKey )
 {
-    CK_ATTRIBUTE template;
-    int mbedtlsRet = 0;
+    CK_ATTRIBUTE template = { 0 };
+    int mbedtlsRet = -1;
     CK_RV pkcs11ret = CKR_OK;
-    CK_BYTE ecPoint[ 256 ] = { 0 };
+    CK_BYTE ecPoint[ 67 ] = { 0 };
     CK_FUNCTION_LIST_PTR pP11FunctionList;
 
     mbedtls_ecdsa_init( pEcdsaContext );
@@ -723,101 +731,85 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
 
 /*-----------------------------------------------------------*/
 
-static int privateKeySigningCallback( void * context,
-                                      mbedtls_md_type_t mdAlg,
-                                      const unsigned char * pHash,
-                                      size_t hashLen,
-                                      unsigned char * pSig,
-                                      size_t * pSigLen,
-                                      int ( * pRng )( void *,
-                                                      unsigned char *,
-                                                      size_t ),
-                                      void * pRngContext )
+static int32_t privateKeySigningCallback( void * pContext,
+                                          mbedtls_md_type_t mdAlg,
+                                          const unsigned char * pHash,
+                                          size_t hashLen,
+                                          unsigned char * pSig,
+                                          size_t * pSigLen,
+                                          int ( * pRng )( void *,
+                                                          unsigned char *,
+                                                          size_t ),
+                                          void * pRngContext )
 {
     CK_RV ret = CKR_OK;
-    int result = 0;
+    int32_t result = 0;
     CK_MECHANISM mech = { 0 };
-    char pPrivateKeyLabel[] = { pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS };
-    CK_OBJECT_HANDLE privateKeyHandle = { 0 };
-    CK_SESSION_HANDLE p11Session = *( ( CK_SESSION_HANDLE * ) context );
-    CK_FUNCTION_LIST_PTR pP11FunctionList;
-
-    mech.mechanism = CKM_ECDSA;
+    CK_BYTE toBeSigned[ 256 ];
+    CK_ULONG toBeSignedLen = sizeof( toBeSigned );
+    CK_FUNCTION_LIST_PTR functionList = NULL;
 
     /* Unreferenced parameters. */
-    ( void ) context;
+    ( void ) ( pContext );
     ( void ) ( pRng );
     ( void ) ( pRngContext );
     ( void ) ( mdAlg );
 
-    ret = C_GetFunctionList( &pP11FunctionList );
-
-    if( ret != CKR_OK )
+    /* Sanity check buffer length. */
+    if( hashLen > sizeof( toBeSigned ) )
     {
-        LogError( ( "Failed to sign callback hash. Could not get a "
-                    "PKCS #11 function pointer." ) );
+        ret = CKR_ARGUMENTS_BAD;
+    }
+
+    mech.mechanism = CKM_ECDSA;
+    memcpy( toBeSigned, pHash, hashLen );
+    toBeSignedLen = hashLen;
+
+    if( ret == CKR_OK )
+    {
+        ret = C_GetFunctionList( &functionList );
     }
 
     if( ret == CKR_OK )
     {
-        ret = xFindObjectWithLabelAndClass( p11Session,
-                                            pPrivateKeyLabel,
-                                            strlen( pPrivateKeyLabel ),
-                                            CKO_CERTIFICATE,
-                                            &privateKeyHandle );
+        ret = functionList->C_SignInit( signingContext.p11Session,
+                                        &mech,
+                                        signingContext.p11PrivateKey );
+    }
 
-        if( ret != CKR_OK )
+    if( ret == CKR_OK )
+    {
+        *pSigLen = sizeof( toBeSigned );
+        ret = functionList->C_Sign( signingContext.p11Session,
+                                    toBeSigned,
+                                    toBeSignedLen,
+                                    pSig,
+                                    ( CK_ULONG_PTR ) pSigLen );
+    }
+
+    if( ret == CKR_OK )
+    {
+        /* PKCS #11 for P256 returns a 64-byte signature with 32 bytes for R and 32 bytes for S.
+         * This must be converted to an ASN.1 encoded array. */
+        if( *pSigLen != pkcs11ECDSA_P256_SIGNATURE_LENGTH )
         {
-            LogError( ( "Failed to sign callback hash. Could not find private key "
-                        "object handle." ) );
+            ret = CKR_FUNCTION_FAILED;
+            LogError( ( "Failed to sign message using PKCS #11. Expected signature "
+                        "length of %lu, but received %lu.",
+                        ( unsigned long ) pkcs11ECDSA_P256_SIGNATURE_LENGTH,
+                        ( unsigned long ) *pSigLen ) );
         }
-    }
 
-    if( CKR_OK == ret )
-    {
-        ret = pP11FunctionList->C_SignInit( p11Session,
-                                            &mech,
-                                            privateKeyHandle );
-    }
-
-    if( CKR_OK == ret )
-    {
-        ret = pP11FunctionList->C_Sign( p11Session,
-                                        ( unsigned char * ) pHash,
-                                        hashLen,
-                                        pSig,
-                                        ( CK_ULONG_PTR ) pSigLen );
-    }
-
-    /* PKCS #11 for P256 returns a 64-byte signature with 32 bytes for R and 32 bytes for S.
-     * This must be converted to an ASN.1 encoded array. */
-    if( *pSigLen != pkcs11ECDSA_P256_SIGNATURE_LENGTH )
-    {
-        ret = CKR_FUNCTION_FAILED;
-        LogError( ( "Failed to sign message using PKCS #11. Expected signature "
-                    "length of %lu, but received %lu.",
-                    ( unsigned long ) pkcs11ECDSA_P256_SIGNATURE_LENGTH,
-                    ( unsigned long ) *pSigLen ) );
-    }
-
-    if( ret == CKR_OK )
-    {
-        PKI_pkcs11SignatureTombedTLSSignature( pSig, pSigLen );
+        if( ret == CKR_OK )
+        {
+            PKI_pkcs11SignatureTombedTLSSignature( pSig, pSigLen );
+        }
     }
 
     if( ret != CKR_OK )
     {
         LogError( ( "Failed to sign message using PKCS #11 with error code %lu.", ret ) );
-    }
-
-    if( ret != CKR_OK )
-    {
         result = -1;
-    }
-
-    if( p11Session != CK_INVALID_HANDLE )
-    {
-        pP11FunctionList->C_CloseSession( p11Session );
     }
 
     return result;
@@ -970,14 +962,16 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
         if( mbedtlsRet == 0 )
         {
+            signingContext.p11Session = p11Session;
+            signingContext.p11PrivateKey = privKeyHandle;
+
             memcpy( &privKeyInfo, privKey.pk_info, sizeof( mbedtls_pk_info_t ) );
 
             privKeyInfo.sign_func = privateKeySigningCallback;
             privKey.pk_info = &privKeyInfo;
-            privKey.pk_ctx = &p11Session;
+            privKey.pk_ctx = &xEcdsaContext;
 
             mbedtls_x509write_csr_set_key( &req, &privKey );
-
 
             mbedtlsRet = mbedtls_x509write_csr_pem( &req, ( unsigned char * ) pCsrBuffer, csrBufferLength, &randomCallback, &p11Session );
             status = ( mbedtlsRet == 0 );

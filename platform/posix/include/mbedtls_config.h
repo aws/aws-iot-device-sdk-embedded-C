@@ -30,8 +30,6 @@
 /* Generate errors if deprecated functions are used. */
 #define MBEDTLS_DEPRECATED_REMOVED
 
-#define MBEDTLS_DEBUG_C
-
 /* Place AES tables in ROM. */
 #define MBEDTLS_AES_ROM_TABLES
 
@@ -81,6 +79,7 @@
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CMAC_C
 #define MBEDTLS_CTR_DRBG_C
+#define MBEDTLS_DEBUG_C
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECDSA_C
 #define MBEDTLS_ECP_C

@@ -83,6 +83,11 @@ static const char * pNoLowLevelMbedTlsCodeStr = "<No-Low-Level-Code>";
     ( mbedtls_low_level_strerr( mbedTlsCode ) != NULL ) ? \
     mbedtls_low_level_strerr( mbedTlsCode ) : pNoLowLevelMbedTlsCodeStr
 
+/**
+ * @brief Debug logging level to use for MbedTLS.
+ */
+#define MBEDTLS_DEBUG_LEVEL    0
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -111,7 +116,8 @@ static void contextFree( MbedtlsPkcs11Context_t * pContext );
  */
 static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
                                                const char * pHostName,
-                                               const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials );
+                                               const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
+                                               uint32_t recvTimeoutMs );
 
 /**
  * @brief Callback that wraps PKCS #11 for pseudo-random number generation.
@@ -205,32 +211,32 @@ static void contextFree( MbedtlsPkcs11Context_t * pContext )
         mbedtls_ssl_config_free( &( pContext->config ) );
         mbedtls_x509_crt_free( &( pContext->rootCa ) );
         mbedtls_x509_crt_free( &( pContext->clientCert ) );
-
-        pContext->pP11FunctionList->C_CloseSession( pContext->p11Session );
     }
 }
 
 /*-----------------------------------------------------------*/
-static void prvTlsDebugPrint( void * ctx,
-                              int lLevel,
-                              const char * pcFile,
-                              int lLine,
-                              const char * pcStr )
+
+static void mbedtlsDebugPrint( void * ctx,
+                               int level,
+                               const char * pFile,
+                               int line,
+                               const char * pStr )
 {
     /* Unused parameters. */
     ( void ) ctx;
-    ( void ) pcFile;
-    ( void ) lLine;
+    ( void ) pFile;
+    ( void ) line;
 
     /* Send the debug string to the portable logger. */
-    printf( "mbedTLS: |%d| %s", lLevel, pcStr );
+    printf( "mbedTLS: |%d| %s", level, pStr );
 }
 
 /*-----------------------------------------------------------*/
 
 static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context,
                                                const char * pHostName,
-                                               const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials )
+                                               const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
+                                               uint32_t recvTimeoutMs )
 {
     MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
     int32_t mbedtlsError = 0;
@@ -273,11 +279,10 @@ static MbedtlsPkcs11Status_t configureMbedtls( MbedtlsPkcs11Context_t * pMbedtls
                               pMbedtlsPkcs11Context );
         mbedtls_ssl_conf_cert_profile( &( pMbedtlsPkcs11Context->config ),
                                        &( pMbedtlsPkcs11Context->certProfile ) );
+        mbedtls_ssl_conf_read_timeout( &( pMbedtlsPkcs11Context->config ), recvTimeoutMs );
 
-        /* If mbedTLS is being compiled with debug support, assume that the
-         * runtime configuration should use verbose output. */
-        mbedtls_ssl_conf_dbg( &pMbedtlsPkcs11Context->config, prvTlsDebugPrint, NULL );
-        mbedtls_debug_set_threshold( 4 );
+        mbedtls_ssl_conf_dbg( &pMbedtlsPkcs11Context->config, mbedtlsDebugPrint, NULL );
+        mbedtls_debug_set_threshold( MBEDTLS_DEBUG_LEVEL );
 
 
         /* Parse the server root CA certificate into the SSL context. */
@@ -546,7 +551,7 @@ static CK_RV initializeClientKeys( MbedtlsPkcs11Context_t * pCtx,
                                         CKO_PRIVATE_KEY,
                                         &pCtx->p11PrivateKey );
 
-    if( ( CKR_OK == ret ) && ( pCtx->p11PrivateKey == CK_INVALID_HANDLE ) )
+    if( ( ret == CKR_OK ) && ( pCtx->p11PrivateKey == CK_INVALID_HANDLE ) )
     {
         ret = CK_INVALID_HANDLE;
         LogError( ( "Could not find private key." ) );
@@ -696,7 +701,8 @@ static int32_t privateKeySigningCallback( void * pContext,
 MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext,
                                               const char * pHostName,
                                               uint16_t port,
-                                              const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials )
+                                              const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
+                                              uint32_t recvTimeoutMs )
 {
     MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = NULL;
     MbedtlsPkcs11Status_t returnStatus = MBEDTLS_PKCS11_SUCCESS;
@@ -738,7 +744,7 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
     /* Configure MbedTLS. */
     if( returnStatus == MBEDTLS_PKCS11_SUCCESS )
     {
-        returnStatus = configureMbedtls( pMbedtlsPkcs11Context, pHostName, pMbedtlsPkcs11Credentials );
+        returnStatus = configureMbedtls( pMbedtlsPkcs11Context, pHostName, pMbedtlsPkcs11Credentials, recvTimeoutMs );
     }
 
     /* Establish a TCP connection with the server. */

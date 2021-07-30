@@ -155,6 +155,11 @@
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
+ * @brief Timeout in milliseconds for transport send and receive.
+ */
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 100U )
+
+/**
  * @brief The MQTT metrics string expected by AWS IoT MQTT Broker.
  */
 #define METRICS_STRING                           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
@@ -398,7 +403,8 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
             tlsStatus = Mbedtls_Pkcs11_Connect( pNetworkContext,
                                                 AWS_IOT_ENDPOINT,
                                                 AWS_MQTT_PORT,
-                                                &tlsCredentials );
+                                                &tlsCredentials,
+                                                TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
             if( tlsStatus == MBEDTLS_PKCS11_SUCCESS )
             {

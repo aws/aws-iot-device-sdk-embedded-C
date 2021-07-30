@@ -465,8 +465,8 @@ int main( int argc,
     size_t ownershipTokenLength;
     bool connectionEstablished = false;
     CK_SESSION_HANDLE p11Session;
-    size_t i;
     int demoRunCount = 0;
+    CK_RV pkcs11ret = CKR_OK;
 
     /* Silence compiler warnings about unused variables. */
     ( void ) argc;
@@ -480,10 +480,23 @@ int main( int argc,
         ownershipTokenLength = OWNERSHIP_TOKEN_BUFFER_LENGTH;
 
         /* Initialize the PKCS #11 module */
-        xInitializePkcs11Session( &p11Session );
+        pkcs11ret = xInitializePkcs11Session( &p11Session );
 
-        /* Insert the claim credentials into the PKCS #11 module */
-        loadClaimCredentials( p11Session );
+        if( pkcs11ret != CKR_OK )
+        {
+            LogError( ( "Failed to initialize PKCS #11." ) );
+            status = false;
+        }
+        else
+        {
+            /* Insert the claim credentials into the PKCS #11 module */
+            status = loadClaimCredentials( p11Session );
+
+            if( status == false )
+            {
+                LogError( ( "Failed to provision PKCS #11 with claim credentials." ) );
+            }
+        }
 
         /**** Connect to AWS IoT Core with provisioning claim credentials *****/
 
@@ -492,23 +505,26 @@ int main( int argc,
          * CreateCertificatefromCsr or CreateKeysAndCertificate.
          * In this demo we use CreateCertificatefromCsr. */
 
-        /* Attempts to connect to the AWS IoT MQTT broker. If the
-         * connection fails, retries after a timeout. Timeout value will
-         * exponentially increase until maximum attempts are reached. */
-        LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
-        status = EstablishMqttSession( provisioningPublishCallback,
-                                       p11Session,
-                                       pkcs11configLABEL_CLAIM_CERTIFICATE,
-                                       pkcs11configLABEL_CLAIM_PRIVATE_KEY );
+        if( status == true )
+        {
+            /* Attempts to connect to the AWS IoT MQTT broker. If the
+             * connection fails, retries after a timeout. Timeout value will
+             * exponentially increase until maximum attempts are reached. */
+            LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
+            status = EstablishMqttSession( provisioningPublishCallback,
+                                           p11Session,
+                                           pkcs11configLABEL_CLAIM_CERTIFICATE,
+                                           pkcs11configLABEL_CLAIM_PRIVATE_KEY );
 
-        if( status == false )
-        {
-            LogError( ( "Failed to establish MQTT session." ) );
-        }
-        else
-        {
-            LogInfo( ( "Established connection with claim credentials." ) );
-            connectionEstablished = true;
+            if( status == false )
+            {
+                LogError( ( "Failed to establish MQTT session." ) );
+            }
+            else
+            {
+                LogInfo( ( "Established connection with claim credentials." ) );
+                connectionEstablished = true;
+            }
         }
 
         /**** Call the CreateCertificateFromCsr API ***************************/
@@ -527,7 +543,7 @@ int main( int argc,
         if( status == true )
         {
             /* Create a new key and CSR. */
-            status = generateKeyAndCsr( p11Session, csr, NETWORK_BUFFER_SIZE, &csrLength );
+            status = generateKeyAndCsr( p11Session, csr, CSR_BUFFER_LENGTH, &csrLength );
         }
 
         if( status == true )

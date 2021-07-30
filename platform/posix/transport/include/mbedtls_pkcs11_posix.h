@@ -42,7 +42,7 @@
     #define LIBRARY_LOG_NAME     "Transport_MbedTLS_PKCS11_Sockets"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
-    #define LIBRARY_LOG_LEVEL    LOG_ERROR
+    #define LIBRARY_LOG_LEVEL    LOG_WARN
 #endif
 
 #include "logging_stack.h"
@@ -150,7 +150,8 @@ typedef struct MbedtlsPkcs11Credentials
 MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext,
                                               const char * pHostName,
                                               uint16_t port,
-                                              const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials );
+                                              const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
+                                              uint32_t recvTimeoutMs );
 
 /**
  * @brief Gracefully disconnect an established TLS connection.
