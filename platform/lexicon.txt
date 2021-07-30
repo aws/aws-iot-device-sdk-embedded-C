@@ -244,6 +244,7 @@ retryable
 retvalue
 rfc
 rfcxh
+rng
 rom
 rootca
 rsa
