@@ -136,7 +136,7 @@ CK_RV PKCS11ManagementAndRNGDemo( void )
      * slot ids. */
     if( result == CKR_OK )
     {
-        slotId = malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
+        slotId = ( CK_SLOT_ID * ) malloc( sizeof( CK_SLOT_ID ) * ( slotCount ) );
 
         if( slotId == NULL )
         {

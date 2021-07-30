@@ -14,10 +14,12 @@ list(APPEND PKCS_SOURCES
             "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
             )
 
+file( GLOB DEMO_SRCS "*.c*" )
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
-    "${DEMO_NAME}.c"
+    ${DEMO_SRCS}
     ${PKCS_SOURCES}
 )
 

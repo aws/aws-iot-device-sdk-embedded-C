@@ -22,12 +22,12 @@ list(APPEND PKCS_SOURCES
     "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
 )
 
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the Fleet Provisioning library
+file( GLOB DEMO_SRCS "*.c*" )
+
 # Demo target.
 add_executable( ${DEMO_NAME}
-                "fleet_provisioning_with_csr_demo.c"
-                "fleet_provisioning_serializer.c"
-                "pkcs11_operations.c"
-                "mqtt_operations.c"
+                ${DEMO_SRCS}
                 ${MQTT_SOURCES}
                 ${MQTT_SERIALIZER_SOURCES}
                 ${BACKOFF_ALGORITHM_SOURCES}

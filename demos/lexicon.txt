@@ -81,6 +81,7 @@ chacha
 chachapoly
 chinese
 chunked
+ci
 ciphersuite
 ciphersuites
 ciphertext
@@ -136,6 +137,7 @@ currentversion
 customisation
 cybertrust
 dat
+datalength
 dd
 debian
 dec
@@ -685,7 +687,6 @@ udp
 udpportsarraylength
 uint
 ulblocksize
-uldatalength
 uldigestlength
 uloffset
 ulong

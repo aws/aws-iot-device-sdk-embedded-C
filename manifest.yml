@@ -62,7 +62,7 @@ dependencies:
       url: "https://github.com/FreeRTOS/corePKCS11"
       path: "libraries/standard/corePKCS11"
   - name: "Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
-    version: "68d31ae"
+    version: "cbcb7a5"
     repository:
       type: "git"
       url: "https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk"

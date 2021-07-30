@@ -87,6 +87,14 @@
     "xg07nhvDeydwB48xXrPQ1KutrRyh\n"                                     \
     "-----END CERTIFICATE-----"
 
+/* Add C++ guards for C linkage in case this file is being compiled as C++
+ * for a CI check. */
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
+
 /* This function can be found in
  * corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c.
  * It will be used to convert the RSA certificate from PEM format
@@ -95,6 +103,12 @@ extern int convert_pem_to_der( const unsigned char * pucInput,
                                size_t xLen,
                                unsigned char * pucOutput,
                                size_t * pxOlen );
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
+
 /*-----------------------------------------------------------*/
 
 
@@ -232,7 +246,7 @@ static CK_RV objectImporting( void )
     /* Convert the certificate to DER format if it was in PEM. The DER key
      * should be about 3/4 the size of the PEM key, so mallocing the PEM key
      * size is sufficient. */
-    derObject = malloc( certificateTemplate.xValue.ulValueLen );
+    derObject = ( uint8_t * ) malloc( certificateTemplate.xValue.ulValueLen );
 
     if( derObject == NULL )
     {
@@ -242,7 +256,7 @@ static CK_RV objectImporting( void )
     if( result == CKR_OK )
     {
         derLen = certificateTemplate.xValue.ulValueLen;
-        ( void ) convert_pem_to_der( certificateTemplate.xValue.pValue,
+        ( void ) convert_pem_to_der( ( unsigned char * ) certificateTemplate.xValue.pValue,
                                      certificateTemplate.xValue.ulValueLen,
                                      derObject,
                                      &derLen );
@@ -303,7 +317,7 @@ static CK_RV objectGeneration( void )
     CK_FUNCTION_LIST_PTR functionList = NULL;
     CK_BYTE * derPublicKey = NULL;
     CK_ULONG derPublicKeyLength = 0;
-    CK_BBOOL true = CK_TRUE;
+    CK_BBOOL trueVar = CK_TRUE;
 
     /* Specify the mechanism to use in the key pair generation. Mechanisms are
      * previously explained in the "mechanims_and_digests.c" demo. */
@@ -353,7 +367,7 @@ static CK_RV objectGeneration( void )
     CK_ATTRIBUTE publicKeyTemplate[] =
     {
         { CKA_KEY_TYPE,  &keyType,       sizeof( keyType )            },
-        { CKA_VERIFY,    &true,          sizeof( true )               },
+        { CKA_VERIFY,    &trueVar,       sizeof( trueVar )            },
         { CKA_EC_PARAMS, ecParams,       sizeof( ecParams )           },
         { CKA_LABEL,     publicKeyLabel, sizeof( publicKeyLabel ) - 1 }
     };
@@ -368,9 +382,9 @@ static CK_RV objectGeneration( void )
     CK_ATTRIBUTE privateKeyTemplate[] =
     {
         { CKA_KEY_TYPE, &keyType,        sizeof( keyType )             },
-        { CKA_TOKEN,    &true,           sizeof( true )                },
-        { CKA_PRIVATE,  &true,           sizeof( true )                },
-        { CKA_SIGN,     &true,           sizeof( true )                },
+        { CKA_TOKEN,    &trueVar,        sizeof( trueVar )             },
+        { CKA_PRIVATE,  &trueVar,        sizeof( trueVar )             },
+        { CKA_SIGN,     &trueVar,        sizeof( trueVar )             },
         { CKA_LABEL,    privateKeyLabel, sizeof( privateKeyLabel ) - 1 }
     };
 
