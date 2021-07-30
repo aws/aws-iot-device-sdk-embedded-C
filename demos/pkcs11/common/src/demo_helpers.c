@@ -130,12 +130,12 @@ void end( CK_SESSION_HANDLE session,
 }
 /*-----------------------------------------------------------*/
 
-void writeHexBytesToConsole( char * description,
+void writeHexBytesToConsole( const char * description,
                              CK_BYTE * data,
                              CK_ULONG dataLength )
 {
     /* This function is simply a helper function to print the raw hex values
-     * of an EC public key. It's explanation is not within the scope of the demos
+     * of an EC public key. Its explanation is not within the scope of the demos
      * and is sparsely commented. */
     char byteRow[ 1 + ( BYTES_TO_DISPLAY_PER_ROW * 2 ) + ( BYTES_TO_DISPLAY_PER_ROW / 2 ) ];
     char * nextChar = byteRow;

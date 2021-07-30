@@ -54,7 +54,7 @@ jobs:
           submodules: recursive
       - name: Rename source files
         run: |
-          for demo in mqtt http shadow defender
+          for demo in mqtt http shadow defender pkcs11 fleet_provisioning
           do
               for source in demos/$demo/*/*.c
               do

@@ -10,11 +10,12 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorith
 include(
     ${CMAKE_SOURCE_DIR}/libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/fleetprovisioningFilePaths.cmake )
 
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the Fleet Provisioning library
+file( GLOB DEMO_SRCS "*.c*" )
+
 # Demo target.
 add_executable( ${DEMO_NAME}
-                "fleet_provisioning_with_csr_demo.c"
-                "fleet_provisioning_serializer.c"
-                "mqtt_operations.c"
+                ${DEMO_SRCS}
                 ${MQTT_SOURCES}
                 ${MQTT_SERIALIZER_SOURCES}
                 ${BACKOFF_ALGORITHM_SOURCES}
