@@ -74,20 +74,24 @@ static const char * pNoHighLevelMbedTlsCodeStr = "<No-High-Level-Code>";
 static const char * pNoLowLevelMbedTlsCodeStr = "<No-Low-Level-Code>";
 
 /**
- * @brief Utility for converting the high-level code in an mbedTLS error to string,
- * if the code-contains a high-level code; otherwise, using a default string.
+ * @brief Utility for converting the high-level code in an mbedTLS error to
+ * string, if the code-contains a high-level code; otherwise, using a default
+ * string.
  */
-#define mbedtlsHighLevelCodeOrDefault( mbedTlsCode )       \
-    ( mbedtls_high_level_strerr( mbedTlsCode ) != NULL ) ? \
-    mbedtls_high_level_strerr( mbedTlsCode ) : pNoHighLevelMbedTlsCodeStr
+#define mbedtlsHighLevelCodeOrDefault( mbedTlsCode )     \
+    ( mbedtls_high_level_strerr( mbedTlsCode ) != NULL ) \
+    ? mbedtls_high_level_strerr( mbedTlsCode )           \
+    : pNoHighLevelMbedTlsCodeStr
 
 /**
- * @brief Utility for converting the level-level code in an mbedTLS error to string,
- * if the code-contains a level-level code; otherwise, using a default string.
+ * @brief Utility for converting the level-level code in an mbedTLS error to
+ * string, if the code-contains a level-level code; otherwise, using a default
+ * string.
  */
-#define mbedtlsLowLevelCodeOrDefault( mbedTlsCode )       \
-    ( mbedtls_low_level_strerr( mbedTlsCode ) != NULL ) ? \
-    mbedtls_low_level_strerr( mbedTlsCode ) : pNoLowLevelMbedTlsCodeStr
+#define mbedtlsLowLevelCodeOrDefault( mbedTlsCode )     \
+    ( mbedtls_low_level_strerr( mbedTlsCode ) != NULL ) \
+    ? mbedtls_low_level_strerr( mbedTlsCode )           \
+    : pNoLowLevelMbedTlsCodeStr
 
 /* Length parameters for importing RSA-2048 private keys. */
 #define MODULUS_LENGTH        pkcs11RSA_2048_MODULUS_BITS / 8
@@ -133,7 +137,9 @@ typedef struct SigningCallbackContext
  */
 static SigningCallbackContext_t signingContext = { 0 };
 
-/* Defined in libraries/standard/corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c */
+/* Defined in
+ * libraries/standard/corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c
+ */
 extern int convert_pem_to_der( const unsigned char * pucInput,
                                size_t xLen,
                                unsigned char * pucOutput,
@@ -179,8 +185,8 @@ static bool readFile( const char * path,
 
             if( lenResult == -1 )
             {
-                LogError( ( "Failed to get length of file. Path: %s. Error: %s.",
-                            path, strerror( errno ) ) );
+                LogError( ( "Failed to get length of file. Path: %s. Error: %s.", path,
+                            strerror( errno ) ) );
                 status = false;
             }
             else
@@ -220,8 +226,8 @@ static bool readFile( const char * path,
 
             if( written != length )
             {
-                LogError( ( "Failed reading file. Path: %s. Error: %s.",
-                            path, strerror( errno ) ) );
+                LogError( ( "Failed reading file. Path: %s. Error: %s.", path,
+                            strerror( errno ) ) );
                 status = false;
             }
             else
@@ -255,27 +261,23 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
     {
         labelPtr = pkcsLabelsPtr[ index ];
 
-        result = xFindObjectWithLabelAndClass( session,
-                                               ( char * ) labelPtr,
+        result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
                                                strlen( ( char * ) labelPtr ),
-                                               class[ index ],
-                                               &objectHandle );
+                                               class[ index ], &objectHandle );
 
         while( ( result == CKR_OK ) && ( objectHandle != CK_INVALID_HANDLE ) )
         {
             result = functionList->C_DestroyObject( session, objectHandle );
 
             /* PKCS #11 allows a module to maintain multiple objects with the same
-             * label and type. The intent of this loop is to try to delete all of them.
-             * However, to avoid getting stuck, we won't try to find another object
-             * of the same label/type if the previous delete failed. */
+             * label and type. The intent of this loop is to try to delete all of
+             * them. However, to avoid getting stuck, we won't try to find another
+             * object of the same label/type if the previous delete failed. */
             if( result == CKR_OK )
             {
-                result = xFindObjectWithLabelAndClass( session,
-                                                       ( char * ) labelPtr,
+                result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
                                                        strlen( ( char * ) labelPtr ),
-                                                       class[ index ],
-                                                       &objectHandle );
+                                                       class[ index ], &objectHandle );
             }
             else
             {
@@ -433,8 +435,8 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
     if( result == CKR_OK )
     {
         /* When importing the fields, the pointer is incremented by 1
-         * to remove the leading 0 padding (if it existed) and the original field length is used */
-
+         * to remove the leading 0 padding (if it existed) and the original field
+         * length is used */
 
         CK_ATTRIBUTE privateKeyTemplate[] =
         {
@@ -486,7 +488,8 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
     mbedtls_pk_context mbedPkContext = { 0 };
 
     mbedtls_pk_init( &mbedPkContext );
-    mbedResult = mbedtls_pk_parse_key( &mbedPkContext, privateKey, privateKeyLength, NULL, 0 );
+    mbedResult = mbedtls_pk_parse_key( &mbedPkContext, privateKey,
+                                       privateKeyLength, NULL, 0 );
 
     if( mbedResult != 0 )
     {
@@ -501,19 +504,18 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
 
         if( mbedKeyType == MBEDTLS_PK_RSA )
         {
-            result = provisionPrivateRSAKey( session,
-                                             label,
-                                             &mbedPkContext );
+            result = provisionPrivateRSAKey( session, label, &mbedPkContext );
         }
-        else if( ( mbedKeyType == MBEDTLS_PK_ECDSA ) || ( mbedKeyType == MBEDTLS_PK_ECKEY ) || ( mbedKeyType == MBEDTLS_PK_ECKEY_DH ) )
+        else if( ( mbedKeyType == MBEDTLS_PK_ECDSA ) ||
+                 ( mbedKeyType == MBEDTLS_PK_ECKEY ) ||
+                 ( mbedKeyType == MBEDTLS_PK_ECKEY_DH ) )
         {
-            result = provisionPrivateECKey( session,
-                                            label,
-                                            &mbedPkContext );
+            result = provisionPrivateECKey( session, label, &mbedPkContext );
         }
         else
         {
-            LogError( ( "Invalid private key type provided. RSA-2048 and EC P-256 keys are supported." ) );
+            LogError( ( "Invalid private key type provided. RSA-2048 and EC P-256 keys "
+                        "are supported." ) );
             result = CKR_ARGUMENTS_BAD;
         }
     }
@@ -582,8 +584,7 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
         {
             conversion = convert_pem_to_der( certificateTemplate.xValue.pValue,
                                              certificateTemplate.xValue.ulValueLen,
-                                             derObject,
-                                             &derLen );
+                                             derObject, &derLen );
 
             if( 0 != conversion )
             {
@@ -606,10 +607,7 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
     /* Best effort clean-up of the existing object, if it exists. */
     if( result == CKR_OK )
     {
-        destroyProvidedObjects( session,
-                                &label,
-                                &certificateClass,
-                                1 );
+        destroyProvidedObjects( session, &label, &certificateClass, 1 );
     }
 
     /* Create an object using the encoded client certificate. */
@@ -642,17 +640,18 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session )
     size_t claimPrivateKeyLength = 0;
     CK_RV ret;
 
-    status = readFile( CLAIM_CERT_PATH, claimCert, CLAIM_CERT_BUFFER_LENGTH, &claimCertLength );
+    status = readFile( CLAIM_CERT_PATH, claimCert, CLAIM_CERT_BUFFER_LENGTH,
+                       &claimCertLength );
 
     if( status == true )
     {
-        status = readFile( CLAIM_PRIVATE_KEY_PATH, claimPrivateKey, CLAIM_PRIVATE_KEY_BUFFER_LENGTH, &claimPrivateKeyLength );
+        status = readFile( CLAIM_PRIVATE_KEY_PATH, claimPrivateKey,
+                           CLAIM_PRIVATE_KEY_BUFFER_LENGTH, &claimPrivateKeyLength );
     }
 
     if( status == true )
     {
-        ret = provisionPrivateKey( p11Session,
-                                   ( uint8_t * ) claimPrivateKey,
+        ret = provisionPrivateKey( p11Session, ( uint8_t * ) claimPrivateKey,
                                    claimPrivateKeyLength + 1,
                                    ( uint8_t * ) pkcs11configLABEL_CLAIM_PRIVATE_KEY );
         status = ( ret == CKR_OK );
@@ -660,8 +659,7 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session )
 
     if( status == true )
     {
-        ret = provisionCertificate( p11Session,
-                                    ( uint8_t * ) claimCert,
+        ret = provisionCertificate( p11Session, ( uint8_t * ) claimCert,
                                     claimCertLength + 1,
                                     ( uint8_t * ) pkcs11configLABEL_CLAIM_CERTIFICATE );
         status = ( ret == CKR_OK );
@@ -684,7 +682,6 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
 
     mbedtls_ecdsa_init( pEcdsaContext );
     mbedtls_ecp_group_init( &( pEcdsaContext->grp ) );
-
 
     pkcs11ret = C_GetFunctionList( &pP11FunctionList );
 
@@ -747,9 +744,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int ( * pRng )( void *,
-                                                          unsigned char *,
-                                                          size_t ),
+                                          int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext )
 {
     CK_RV ret = CKR_OK;
@@ -782,25 +777,21 @@ static int32_t privateKeySigningCallback( void * pContext,
 
     if( ret == CKR_OK )
     {
-        ret = functionList->C_SignInit( signingContext.p11Session,
-                                        &mech,
+        ret = functionList->C_SignInit( signingContext.p11Session, &mech,
                                         signingContext.p11PrivateKey );
     }
 
     if( ret == CKR_OK )
     {
         *pSigLen = sizeof( toBeSigned );
-        ret = functionList->C_Sign( signingContext.p11Session,
-                                    toBeSigned,
-                                    toBeSignedLen,
-                                    pSig,
-                                    ( CK_ULONG_PTR ) pSigLen );
+        ret = functionList->C_Sign( signingContext.p11Session, toBeSigned,
+                                    toBeSignedLen, pSig, ( CK_ULONG_PTR ) pSigLen );
     }
 
     if( ret == CKR_OK )
     {
-        /* PKCS #11 for P256 returns a 64-byte signature with 32 bytes for R and 32 bytes for S.
-         * This must be converted to an ASN.1 encoded array. */
+        /* PKCS #11 for P256 returns a 64-byte signature with 32 bytes for R and 32
+         * bytes for S. This must be converted to an ASN.1 encoded array. */
         if( *pSigLen != pkcs11ECDSA_P256_SIGNATURE_LENGTH )
         {
             ret = CKR_FUNCTION_FAILED;
@@ -865,10 +856,7 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
                                 CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
     CK_RV result;
-    CK_MECHANISM mechanism =
-    {
-        CKM_EC_KEY_PAIR_GEN, NULL_PTR, 0
-    };
+    CK_MECHANISM mechanism = { CKM_EC_KEY_PAIR_GEN, NULL_PTR, 0 };
     CK_FUNCTION_LIST_PTR functionList;
     CK_BYTE ecParams[] = pkcs11DER_ENCODED_OID_P256; /* prime256v1 */
     CK_KEY_TYPE keyType = CKK_EC;
@@ -980,7 +968,9 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
             mbedtls_x509write_csr_set_key( &req, &privKey );
 
-            mbedtlsRet = mbedtls_x509write_csr_pem( &req, ( unsigned char * ) pCsrBuffer, csrBufferLength, &randomCallback, &p11Session );
+            mbedtlsRet = mbedtls_x509write_csr_pem( &req, ( unsigned char * ) pCsrBuffer,
+                                                    csrBufferLength, &randomCallback,
+                                                    &p11Session );
         }
 
         mbedtls_x509write_csr_free( &req );
