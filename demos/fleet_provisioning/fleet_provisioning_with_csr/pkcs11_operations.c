@@ -255,7 +255,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int ( * pRng )( void *, unsigned char *, size_t ),
+                                          int ( *pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
 
 /**
@@ -453,7 +453,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    DPtr = (CK_BYTE * ) malloc( EC_D_LENGTH );
+    DPtr = ( CK_BYTE * ) malloc( EC_D_LENGTH );
 
     if( DPtr == NULL )
     {
@@ -528,7 +528,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
     CK_FUNCTION_LIST_PTR functionList = NULL;
     int mbedResult = 0;
     CK_KEY_TYPE privateKeyType = CKK_RSA;
-    mbedtls_rsa_context * rsaContext = (mbedtls_rsa_context *) mbedPkContext->pk_ctx;
+    mbedtls_rsa_context * rsaContext = ( mbedtls_rsa_context * ) mbedPkContext->pk_ctx;
     CK_OBJECT_CLASS privateKeyClass = CKO_PRIVATE_KEY;
     RsaParams_t * rsaParams = NULL;
     CK_BBOOL trueObject = CK_TRUE;
@@ -536,7 +536,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    rsaParams = (RsaParams_t*) malloc( sizeof( RsaParams_t ) );
+    rsaParams = ( RsaParams_t * ) malloc( sizeof( RsaParams_t ) );
 
     if( rsaParams == NULL )
     {
@@ -717,12 +717,12 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
         /* Convert the certificate to DER format if it was in PEM. The DER key
          * should be about 3/4 the size of the PEM key, so mallocing the PEM key
          * size is sufficient. */
-        derObject = (uint8_t *)malloc( certificateTemplate.xValue.ulValueLen );
+        derObject = ( uint8_t * ) malloc( certificateTemplate.xValue.ulValueLen );
         derLen = certificateTemplate.xValue.ulValueLen;
 
         if( derObject != NULL )
         {
-            conversion = convert_pem_to_der( (unsigned char*)certificateTemplate.xValue.pValue,
+            conversion = convert_pem_to_der( ( unsigned char * ) certificateTemplate.xValue.pValue,
                                              certificateTemplate.xValue.ulValueLen,
                                              derObject, &derLen );
 
@@ -884,7 +884,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int ( * pRng )( void *, unsigned char *, size_t ),
+                                          int ( *pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext )
 {
     CK_RV ret = CKR_OK;
