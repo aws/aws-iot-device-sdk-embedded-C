@@ -147,6 +147,146 @@ extern int convert_pem_to_der( const unsigned char * pucInput,
 
 /*-----------------------------------------------------------*/
 
+/**
+ * @brief Reads a file into the given buffer.
+ *
+ * @param[in] path Path of the file.
+ * @param[out] pBuffer Buffer to read file contents into.
+ * @param[in] bufferLength Length of #pBuffer.
+ * @param[out] pOutWrittenLength Length of contents written to #pBuffer.
+ */
+static bool readFile( const char * path,
+                      char * pBuffer,
+                      size_t bufferLength,
+                      size_t * pOutWrittenLength );
+
+/**
+ * @brief Delete the specified crypto object from storage.
+ *
+ * @param[in] session The PKCS #11 session.
+ * @param[in] pkcsLabelsPtr The list of labels to remove.
+ * @param[in] pClass The list of corresponding classes.
+ * @param[in] count The length of #pkcsLabelsPtr and #pClass.
+ */
+static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
+                                     CK_BYTE_PTR * pkcsLabelsPtr,
+                                     CK_OBJECT_CLASS * pClass,
+                                     CK_ULONG count );
+
+
+/**
+ * @brief Import the specified ECDSA private key into storage.
+ *
+ * @param[in] session The PKCS #11 session.
+ * @param[in] label The label to store the key.
+ * @param[in] mbedPkContext The private key to store.
+ */
+static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
+                                    uint8_t * label,
+                                    mbedtls_pk_context * mbedPkContext );
+
+
+
+/**
+ * @brief Import the specified RSA private key into storage.
+ *
+ * @param[in] session The PKCS #11 session.
+ * @param[in] label The label to store the key.
+ * @param[in] mbedPkContext The private key to store.
+ */
+static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
+                                     uint8_t * label,
+                                     mbedtls_pk_context * mbedPkContext );
+
+
+/**
+ * @brief Import the specified private key into storage.
+ *
+ * @param[in] session The PKCS #11 session.
+ * @param[in] privateKey The private key to store, in PEM format.
+ * @param[in] privateKeyLength The length of the key, including null terminator.
+ * @param[in] label The label to store the key.
+ */
+static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
+                                  uint8_t * privateKey,
+                                  size_t privateKeyLength,
+                                  uint8_t * label );
+
+/**
+ * @brief Import the specified X.509 client certificate into storage.
+ *
+ * @param[in] session The PKCS #11 session.
+ * @param[in] certificate The certificate to store, in PEM format.
+ * @param[in] certificateLength The length of the certificate, including null terminator.
+ * @param[in] label The label to store the certificate.
+ */
+static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
+                                   uint8_t * certificate,
+                                   size_t certificateLength,
+                                   uint8_t * label );
+
+/**
+ * @brief Read the specified ECDSA public key into the MbedTLS ECDSA context.
+ *
+ * @param[in] p11Session The PKCS #11 session.
+ * @param[in] pEcdsaContext The context in which to store the key.
+ * @param[in] publicKey The public key to read.
+ */
+static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
+                               mbedtls_ecdsa_context * pEcdsaContext,
+                               CK_OBJECT_HANDLE publicKey );
+
+/**
+ * @brief MbedTLS callback for signing using the provisioned private key. Used for
+ * signing the CSR.
+ *
+ * @param[in] pContext Unused.
+ * @param[in] mdAlg Unused.
+ * @param[in] pHash Data to sign.
+ * @param[in] hashLen Length of #pHash.
+ * @param[out] pSig The signature
+ * @param[out] pSigLen The length of the signature.
+ * @param[in] pRng Unused.
+ * @param[in] pRngContext Unused.
+ */
+static int32_t privateKeySigningCallback( void * pContext,
+                                          mbedtls_md_type_t mdAlg,
+                                          const unsigned char * pHash,
+                                          size_t hashLen,
+                                          unsigned char * pSig,
+                                          size_t * pSigLen,
+                                          int ( * pRng )( void *, unsigned char *, size_t ),
+                                          void * pRngContext );
+
+/**
+ * @brief MbedTLS random generation callback to generate random values with
+ * PKCS #11.
+ *
+ * @param[in] pCtx Pointer to the PKCS #11 session handle.
+ * @param[out] pRandom Buffer to write random data to.
+ * @param[in] randomLength Length of random data to write.
+ */
+static int randomCallback( void * pCtx,
+                           unsigned char * pRandom,
+                           size_t randomLength );
+
+/**
+ * @brief Generate a new ECDSA key pair using PKCS #11.
+ *
+ * @param[in] session The PKCS #11 session.
+ * @param[in] privateKeyLabel The label to store the private key.
+ * @param[in] publicKeyLabel The label to store the public key.
+ * @param[out] privateKeyHandlePtr The handle of the private key.
+ * @param[out] publicKeyHandlePtr The handle of the public key.
+ */
+static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
+                                uint8_t * privateKeyLabel,
+                                uint8_t * publicKeyLabel,
+                                CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
+                                CK_OBJECT_HANDLE_PTR publicKeyHandlePtr );
+
+/*-----------------------------------------------------------*/
+
 static bool readFile( const char * path,
                       char * pBuffer,
                       size_t bufferLength,
@@ -246,7 +386,7 @@ static bool readFile( const char * path,
 
 static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
                                      CK_BYTE_PTR * pkcsLabelsPtr,
-                                     CK_OBJECT_CLASS * class,
+                                     CK_OBJECT_CLASS * pClass,
                                      CK_ULONG count )
 {
     CK_RV result;
@@ -263,7 +403,7 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
 
         result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
                                                strlen( ( char * ) labelPtr ),
-                                               class[ index ], &objectHandle );
+                                               pClass[ index ], &objectHandle );
 
         while( ( result == CKR_OK ) && ( objectHandle != CK_INVALID_HANDLE ) )
         {
@@ -277,7 +417,7 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
             {
                 result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
                                                        strlen( ( char * ) labelPtr ),
-                                                       class[ index ], &objectHandle );
+                                                       pClass[ index ], &objectHandle );
             }
             else
             {

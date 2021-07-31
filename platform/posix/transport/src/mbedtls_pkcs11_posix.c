@@ -203,7 +203,7 @@ static CK_RV initializeClientKeys( MbedtlsPkcs11Context_t * pCtx,
  * @param[in] pContext Crypto context.
  * @param[in] mdAlg Unused.
  * @param[in] pHash Length in bytes of hash to be signed.
- * @param[in] hashLen Byte array of hash to be signied.
+ * @param[in] hashLen Byte array of hash to be signed.
  * @param[out] pSig RSA signature bytes.
  * @param[in] pSigLen Length in bytes of signature buffer.
  * @param[in] pRng Unused.
