@@ -453,7 +453,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    DPtr = malloc( EC_D_LENGTH );
+    DPtr = (CK_BYTE * ) malloc( EC_D_LENGTH );
 
     if( DPtr == NULL )
     {
@@ -528,7 +528,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
     CK_FUNCTION_LIST_PTR functionList = NULL;
     int mbedResult = 0;
     CK_KEY_TYPE privateKeyType = CKK_RSA;
-    mbedtls_rsa_context * rsaContext = mbedPkContext->pk_ctx;
+    mbedtls_rsa_context * rsaContext = (mbedtls_rsa_context *) mbedPkContext->pk_ctx;
     CK_OBJECT_CLASS privateKeyClass = CKO_PRIVATE_KEY;
     RsaParams_t * rsaParams = NULL;
     CK_BBOOL trueObject = CK_TRUE;
@@ -536,7 +536,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    rsaParams = malloc( sizeof( RsaParams_t ) );
+    rsaParams = (RsaParams_t*) malloc( sizeof( RsaParams_t ) );
 
     if( rsaParams == NULL )
     {
@@ -717,12 +717,12 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
         /* Convert the certificate to DER format if it was in PEM. The DER key
          * should be about 3/4 the size of the PEM key, so mallocing the PEM key
          * size is sufficient. */
-        derObject = malloc( certificateTemplate.xValue.ulValueLen );
+        derObject = (uint8_t *)malloc( certificateTemplate.xValue.ulValueLen );
         derLen = certificateTemplate.xValue.ulValueLen;
 
         if( derObject != NULL )
         {
-            conversion = convert_pem_to_der( certificateTemplate.xValue.pValue,
+            conversion = convert_pem_to_der( (unsigned char*)certificateTemplate.xValue.pValue,
                                              certificateTemplate.xValue.ulValueLen,
                                              derObject, &derLen );
 
@@ -814,7 +814,7 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
                                mbedtls_ecdsa_context * pEcdsaContext,
                                CK_OBJECT_HANDLE publicKey )
 {
-    CK_ATTRIBUTE template = { 0 };
+    CK_ATTRIBUTE ecTemplate = { 0 };
     int mbedtlsRet = -1;
     CK_RV pkcs11ret = CKR_OK;
     CK_BYTE ecPoint[ 67 ] = { 0 };
@@ -832,10 +832,10 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
     }
     else
     {
-        template.type = CKA_EC_POINT;
-        template.pValue = ecPoint;
-        template.ulValueLen = sizeof( ecPoint );
-        pkcs11ret = pP11FunctionList->C_GetAttributeValue( p11Session, publicKey, &template, 1 );
+        ecTemplate.type = CKA_EC_POINT;
+        ecTemplate.pValue = ecPoint;
+        ecTemplate.ulValueLen = sizeof( ecPoint );
+        pkcs11ret = pP11FunctionList->C_GetAttributeValue( p11Session, publicKey, &ecTemplate, 1 );
 
         if( pkcs11ret != CKR_OK )
         {
@@ -859,7 +859,7 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
         }
         else
         {
-            mbedtlsRet = mbedtls_ecp_point_read_binary( &( pEcdsaContext->grp ), &( pEcdsaContext->Q ), &ecPoint[ 2 ], template.ulValueLen - 2 );
+            mbedtlsRet = mbedtls_ecp_point_read_binary( &( pEcdsaContext->grp ), &( pEcdsaContext->Q ), &ecPoint[ 2 ], ecTemplate.ulValueLen - 2 );
 
             if( mbedtlsRet != 0 )
             {
