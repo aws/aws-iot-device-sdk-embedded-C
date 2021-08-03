@@ -42,6 +42,7 @@
 	url = https://github.com/eclipse/mosquitto.git
 [submodule "libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk"]
 	path = libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk
+	branch = main
 	url = https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk
 [submodule "libraries/3rdparty/tinycbor"]
 	path = libraries/3rdparty/tinycbor
