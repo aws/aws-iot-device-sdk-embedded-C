@@ -90,7 +90,7 @@
 #endif
 
 /**
- * @brief Path the file containing the provisioning claim certificate. This
+ * @brief Path of the file containing the provisioning claim certificate. This
  * certificate is used to connect to AWS IoT Core and use Fleet Provisioning
  * APIs to provision the client device. This is used for the "Provisioning by
  * Claim" provisioning workflow.

@@ -1,6 +1,6 @@
 /*
- * FreeRTOS V202107.00
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * AWS IoT Device SDK for Embedded C 202103.00
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -23,6 +23,14 @@
 #ifndef MBEDTLS_PKCS11_POSIX_H_
 #define MBEDTLS_PKCS11_POSIX_H_
 
+/**
+ * @file mbedtls_pkcs11_posix.h
+ *
+ * @brief Implementation for the transport interface using a mutually
+ * authenticated TLS connection with MbedTLS for TLS and corePKCS11 for secure
+ * credential management.
+ */
+
 /**************************************************/
 /******* DO NOT CHANGE the following order ********/
 /**************************************************/
@@ -39,7 +47,7 @@
 /* Logging configuration for the transport interface implementation which uses
  * MbedTLS and Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "Transport_MbedTLS_PKCS11_Sockets"
+    #define LIBRARY_LOG_NAME     "Transport_MbedTLS_PKCS11"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_WARN
@@ -71,8 +79,12 @@
 #include "core_pkcs11.h"
 
 /**
- * @brief Definition of the network context for the transport interface
- * implementation that uses mbedTLS and FreeRTOS+TLS sockets.
+ * @brief Context containing state for the MbedTLS and corePKCS11 based
+ * transport interface implementation.
+ *
+ * @note Applications using this transport interface implementation should use
+ * this struct as the #NetworkContext_t for the transport interface
+ * configuration passed to coreMQTT or coreHTTP.
  */
 typedef struct MbedtlsPkcs11Context
 {
@@ -86,10 +98,10 @@ typedef struct MbedtlsPkcs11Context
     mbedtls_pk_info_t privKeyInfo;        /**< @brief Client private key info. */
 
     /* PKCS #11. */
-    CK_FUNCTION_LIST_PTR pP11FunctionList;
-    CK_SESSION_HANDLE p11Session;
-    CK_OBJECT_HANDLE p11PrivateKey;
-    CK_KEY_TYPE keyType;
+    CK_FUNCTION_LIST_PTR pP11FunctionList; /**< @brief PKCS #11 function list. */
+    CK_SESSION_HANDLE p11Session;          /**< @brief PKCS #11 session. */
+    CK_OBJECT_HANDLE p11PrivateKey;        /**< @brief PKCS #11 handle for the private key to use for client auth. */
+    CK_KEY_TYPE keyType;                   /**< @brief PKCS #11 key type corresponding to #p11PrivateKey. */
 } MbedtlsPkcs11Context_t;
 
 /**
@@ -133,14 +145,17 @@ typedef struct MbedtlsPkcs11Credentials
 } MbedtlsPkcs11Credentials_t;
 
 /**
- * @brief Sets up a TLS session on top of a TCP connection using the MbedTLS API.
+ * @brief Sets up a mutually authenticated TLS session on top of a TCP
+ * connection using the MbedTLS library for TLS and the corePKCS11 library for
+ * credential management.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
  * @param[in] pHostName The hostname of the remote endpoint.
  * @param[in] port The destination port.
  * @param[in] pMbedtlsPkcs11Credentials Credentials for the TLS connection.
+ * @param[in] recvTimeoutMs The timeout for socket recieve operations.
  *
- * @note A timeout of 0 means infinite timeout.
+ * @note #recvTimeoutMs sets the maximum blocking time of the #Mbedtls_Pkcs11_Recv function.
  *
  * @return #MBEDTLS_PKCS11_SUCCESS on success;
  * #MBEDTLS_PKCS11_INSUFFICIENT_MEMORY, #MBEDTLS_PKCS11_INVALID_CREDENTIALS,
@@ -163,8 +178,8 @@ void Mbedtls_Pkcs11_Disconnect( NetworkContext_t * pNetworkContext );
 /**
  * @brief Receives data over an established TLS session using the MbedTLS API.
  *
- * This can be used as #TransportInterface.recv function for receiving data
- * from the network.
+ * This function can be used as the #TransportInterface.recv implementation of
+ * the transport interface to receive data from the network.
  *
  * @param[in] pNetworkContext The network context created using Mbedtls_Pkcs11_Connect API.
  * @param[out] pBuffer Buffer to receive network data into.
@@ -180,8 +195,8 @@ int32_t Mbedtls_Pkcs11_Recv( NetworkContext_t * pNetworkContext,
 /**
  * @brief Sends data over an established TLS session using the MbedTLS API.
  *
- * This can be used as the #TransportInterface.send function to send data
- * over the network.
+ * This function can be used as the #TransportInterface.send implementation of
+ * the transport interface to receive data from the network.
  *
  * @param[in] pNetworkContext The network context created using Mbedtls_Pkcs11_Connect API.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.

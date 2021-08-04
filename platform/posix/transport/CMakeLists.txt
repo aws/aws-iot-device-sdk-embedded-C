@@ -52,17 +52,17 @@ list(APPEND PKCS_SOURCES
     "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
 )
 
-# Create target for POSIX implementation of MbedTLS.
-add_library( mbedtls_pkcs11_posix
+# Create target for POSIX implementation of MbedTLS transport with PKCS #11.
+add_library( transport_mbedtls_pkcs11_posix
                 ${MBEDTLS_PKCS11_TRANSPORT_SOURCES}
                 ${PKCS_SOURCES} )
 
-target_link_libraries( mbedtls_pkcs11_posix
+target_link_libraries( transport_mbedtls_pkcs11_posix
                        PRIVATE
                           mbedtls )
 
 target_include_directories(
-    mbedtls_pkcs11_posix
+    transport_mbedtls_pkcs11_posix
     PUBLIC
         ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
         ${LOGGING_INCLUDE_DIRS}
@@ -80,7 +80,7 @@ if(INSTALL_PLATFORM_ABSTRACTIONS)
       openssl_posix
       plaintext_posix
       sockets_posix
-      mbedtls_pkcs11_posix
+      transport_mbedtls_pkcs11_posix
       LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}"
       ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}")
 endif()

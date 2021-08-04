@@ -38,7 +38,7 @@ target_link_libraries( ${DEMO_NAME} PRIVATE
                        tinycbor
                        mbedtls
                        clock_posix
-                       mbedtls_pkcs11_posix )
+                       transport_mbedtls_pkcs11_posix )
 
 target_include_directories( ${DEMO_NAME}
                             PUBLIC
@@ -48,7 +48,7 @@ target_include_directories( ${DEMO_NAME}
                               ${PKCS_INCLUDE_PUBLIC_DIRS}
                               "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
                               "${FLEET_PROVISIONING_INCLUDE_PUBLIC_DIRS}"
-                              "${DEMOS_DIR}/pkcs11/common/include"
+                              "${DEMOS_DIR}/pkcs11/common/include" # corePKCS11 config
                               "${CMAKE_SOURCE_DIR}/platform/include"
                               "${CMAKE_CURRENT_LIST_DIR}"
                             PRIVATE
