@@ -1086,8 +1086,6 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
         if( mbedtlsRet == 0 )
         {
             mbedtls_pk_init( &privKey );
-
-            mbedtlsRet = mbedtls_pk_setup( &privKey, header );
         }
 
         if( mbedtlsRet == 0 )
@@ -1100,7 +1098,7 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
             signingContext.p11Session = p11Session;
             signingContext.p11PrivateKey = privKeyHandle;
 
-            memcpy( &privKeyInfo, privKey.pk_info, sizeof( mbedtls_pk_info_t ) );
+            memcpy( &privKeyInfo, header, sizeof( mbedtls_pk_info_t ) );
 
             privKeyInfo.sign_func = privateKeySigningCallback;
             privKey.pk_info = &privKeyInfo;
