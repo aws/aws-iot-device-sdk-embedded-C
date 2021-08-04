@@ -40,11 +40,13 @@ set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdp
 set(MQTT_EXTRA_SOURCES
         ${MQTT_SERIALIZER_SOURCES})
 set(PKCS_EXTRA_SOURCES
-        "${COREPKCS11_LOCATION}/source/portable/posix/core_pkcs11_pal.c"
+        "${COREPKCS11_LOCATION}/source/portable/os/posix/core_pkcs11_pal.c"
+        "${COREPKCS11_LOCATION}/source/portable/os/core_pkcs11_pal_utils.c"
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c")
 set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils")
+        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
+        "${COREPKCS11_LOCATION}/source/portable/os")
 set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
 foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
