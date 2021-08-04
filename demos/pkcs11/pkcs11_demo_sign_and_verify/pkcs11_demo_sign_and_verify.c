@@ -331,6 +331,7 @@ CK_RV PKCS11SignVerifyDemo( void )
         writeHexBytesToConsole( "Public Key in Hex Format",
                                 derPublicKey,
                                 derPublicKeyLength );
+
         /* exportPublicKey allocates memory which needs to be freed. */
         if( derPublicKey != NULL )
         {
