@@ -75,8 +75,6 @@ CK_RV PKCS11SignVerifyDemo( void )
     /* Helper / previously explained variables. */
     CK_RV result = CKR_OK;
     CK_SESSION_HANDLE session = CK_INVALID_HANDLE;
-    CK_SLOT_ID * slotId = NULL;
-    CK_ULONG slotCount = 0;
     CK_ULONG index = 0;
     CK_OBJECT_HANDLE privateKeyHandle = CK_INVALID_HANDLE;
     CK_OBJECT_HANDLE publicKeyHandle = CK_INVALID_HANDLE;
@@ -128,16 +126,6 @@ CK_RV PKCS11SignVerifyDemo( void )
     if( result == CKR_OK )
     {
         result = xInitializePkcs11Token();
-    }
-
-    /* This function will:
-     * Query the Cryptoki library for the total number of slots. Malloc an array
-     * of slots. Then the slotId and slotCount variables will be updated to
-     * point to the slot array, and the total slot count.
-     */
-    if( result == CKR_OK )
-    {
-        result = xGetSlotList( &slotId, &slotCount );
     }
 
     /***************************** Find Objects *****************************/
@@ -343,6 +331,11 @@ CK_RV PKCS11SignVerifyDemo( void )
         writeHexBytesToConsole( "Public Key in Hex Format",
                                 derPublicKey,
                                 derPublicKeyLength );
+        /* exportPublicKey allocates memory which needs to be freed. */
+        if( derPublicKey != NULL )
+        {
+            free( derPublicKey );
+        }
     }
 
     /* This utility function converts the PKCS #11 signature into an ASN.1
