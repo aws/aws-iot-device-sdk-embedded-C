@@ -79,15 +79,6 @@ static const char * pNoLowLevelMbedTlsCodeStr = "<No-Low-Level-Code>";
     ( mbedtls_low_level_strerr( mbedTlsCode ) != NULL ) ? \
     mbedtls_low_level_strerr( mbedTlsCode ) : pNoLowLevelMbedTlsCodeStr
 
-/**
- * @brief Debug logging level to use for MbedTLS.
- *
- * @note The default value of 0 disables MbedTLS logging.
- * See <https://tls.mbed.org/api/debug_8h.html#a6629362e96b43725ace95c8ff01d9985>
- * for valid values.
- */
-#define MBEDTLS_DEBUG_LOG_LEVEL    0
-
 /*-----------------------------------------------------------*/
 
 /**
@@ -187,7 +178,7 @@ static bool readCertificateIntoContext( MbedtlsPkcs11Context_t * pContext,
                                         mbedtls_x509_crt * pCertificateContext );
 
 /**
- * @brief Helper for configuring MbedTLS to use client key from PKCS #11.
+ * @brief Helper for configuring MbedTLS to use client private key from PKCS #11.
  *
  * @param pContext Caller context.
  * @param pPrivateKeyLabel PKCS #11 label for the private key.
@@ -195,7 +186,7 @@ static bool readCertificateIntoContext( MbedtlsPkcs11Context_t * pContext,
  * @return True on success.
  */
 static bool initializeClientKeys( MbedtlsPkcs11Context_t * pContext,
-                                  char * pPrivateKeyLabel );
+                                  const char * pPrivateKeyLabel );
 
 /**
  * @brief Sign a cryptographic hash with the private key. This is passed as a
@@ -571,7 +562,8 @@ static bool readCertificateIntoContext( MbedtlsPkcs11Context_t * pContext,
 
         if( NULL == template.pValue )
         {
-            LogError( ( "Falied to allocate memory for certificate buffer." ) );
+            LogError( ( "Failed to allocate %lu bytes of memory for certificate buffer.",
+                        template.ulValueLen ) );
             pkcs11Ret = CKR_HOST_MEMORY;
         }
     }
@@ -602,7 +594,7 @@ static bool readCertificateIntoContext( MbedtlsPkcs11Context_t * pContext,
 /*-----------------------------------------------------------*/
 
 static bool initializeClientKeys( MbedtlsPkcs11Context_t * pContext,
-                                  char * pPrivateKeyLabel )
+                                  const char * pPrivateKeyLabel )
 {
     CK_RV ret = CKR_OK;
     CK_ATTRIBUTE template[ 2 ] = { 0 };
@@ -613,7 +605,7 @@ static bool initializeClientKeys( MbedtlsPkcs11Context_t * pContext,
 
     /* Get the handle of the device private key. */
     ret = xFindObjectWithLabelAndClass( pContext->p11Session,
-                                        pPrivateKeyLabel,
+                                        ( char * ) pPrivateKeyLabel,
                                         strlen( pPrivateKeyLabel ),
                                         CKO_PRIVATE_KEY,
                                         &pContext->p11PrivateKey );
@@ -685,6 +677,7 @@ static int32_t privateKeySigningCallback( void * pContext,
     int32_t result = 0;
     MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = ( MbedtlsPkcs11Context_t * ) pContext;
     CK_MECHANISM mech = { 0 };
+    /* Buffer bigh enough to hold data to be signed. */
     CK_BYTE toBeSigned[ 256 ];
     CK_ULONG toBeSignedLen = sizeof( toBeSigned );
 
@@ -844,7 +837,7 @@ MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext
     }
     else
     {
-        LogInfo( ( "Connection to %s established.", pHostName ) );
+        LogInfo( ( "TLS Connection to %s established.", pHostName ) );
     }
 
     return returnStatus;

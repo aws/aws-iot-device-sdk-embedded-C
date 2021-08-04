@@ -79,6 +79,15 @@
 #include "core_pkcs11.h"
 
 /**
+ * @brief Debug logging level to use for MbedTLS.
+ *
+ * @note The default value of 0 disables MbedTLS logging.
+ * See https://tls.mbed.org/api/debug_8h.html#a6629362e96b43725ace95c8ff01d9985
+ * for valid values.
+ */
+#define MBEDTLS_DEBUG_LOG_LEVEL    0
+
+/**
  * @brief Context containing state for the MbedTLS and corePKCS11 based
  * transport interface implementation.
  *
@@ -100,7 +109,7 @@ typedef struct MbedtlsPkcs11Context
     /* PKCS #11. */
     CK_FUNCTION_LIST_PTR pP11FunctionList; /**< @brief PKCS #11 function list. */
     CK_SESSION_HANDLE p11Session;          /**< @brief PKCS #11 session. */
-    CK_OBJECT_HANDLE p11PrivateKey;        /**< @brief PKCS #11 handle for the private key to use for client auth. */
+    CK_OBJECT_HANDLE p11PrivateKey;        /**< @brief PKCS #11 handle for the private key to use for client authentication. */
     CK_KEY_TYPE keyType;                   /**< @brief PKCS #11 key type corresponding to #p11PrivateKey. */
 } MbedtlsPkcs11Context_t;
 
@@ -196,7 +205,7 @@ int32_t Mbedtls_Pkcs11_Recv( NetworkContext_t * pNetworkContext,
  * @brief Sends data over an established TLS session using the MbedTLS API.
  *
  * This function can be used as the #TransportInterface.send implementation of
- * the transport interface to receive data from the network.
+ * the transport interface to send data over the network.
  *
  * @param[in] pNetworkContext The network context created using Mbedtls_Pkcs11_Connect API.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
