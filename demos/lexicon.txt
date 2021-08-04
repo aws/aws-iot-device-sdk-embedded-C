@@ -201,6 +201,7 @@ esavedagentstate
 establishmqttsession
 ethernet
 eventcallback
+exportpublickey
 extendedkeyusage
 familiy
 faqs

@@ -429,6 +429,13 @@ static CK_RV objectGeneration( void )
     writeHexBytesToConsole( "Public Key in Hex Format",
                             derPublicKey,
                             derPublicKeyLength );
+
+    /* exportPublicKey allocates memory which must be freed. */
+    if( derPublicKey != NULL )
+    {
+        free( derPublicKey );
+    }
+
     LogInfo( ( "---------Finished Generating Objects---------" ) );
     end( session, slotId );
 

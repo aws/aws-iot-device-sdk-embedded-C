@@ -14,6 +14,7 @@
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
         * [AWS IoT Over-the-air Update Library](#aws-iot-over-the-air-update)
+        * [AWS IoT Fleet Provisoning](#aws-iot-fleet-provisioning)
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
@@ -128,7 +129,6 @@ See memory requirements for the latest release [here](https://docs.aws.amazon.co
 
 #### AWS IoT Device Defender
 
-
 The [AWS IoT Device Defender](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk) library enables you to interact with the AWS IoT Device Defender service to continuously monitor security metrics from devices for deviations from what you have defined as appropriate behavior for each device. If something doesn’t look right, AWS IoT Device Defender sends out an alert so you can take action to remediate the issue. More details about Device Defender can be found in [AWS IoT Device Defender documentation](https://docs.aws.amazon.com/iot/latest/developerguide/device-defender.html). This library supports custom metrics, a feature that helps you monitor operational health metrics that are unique to your fleet or use case. For example, you can define a new metric to monitor the memory usage or CPU usage on your devices.
 
 The AWS IoT Device Defender library has no dependencies on additional libraries other than the standard C library. It also doesn’t have any platform dependencies, such as threading or synchronization. It can be used with any MQTT library and any JSON library (see [demos](demos/defender) with coreMQTT and coreJSON).
@@ -142,6 +142,12 @@ The [AWS IoT Over-the-air Update](https://github.com/aws/ota-for-aws-iot-embedde
 The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS) (see [demos](demos/ota) with coreMQTT and coreHTTP over Linux).
 
 See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202103.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
+
+#### AWS IoT Fleet Provisioning
+
+The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library enables you to interact with the [AWS IoT Fleet Provisioning MQTT APIs](https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html) in order to provison IoT devices without preexisting device certificates. With AWS IoT Fleet Provisioning, devices can securely receive unique device certificates from AWS IoT when they connect for the first time. For an overview of all provisioning options offered by AWS IoT, see [device provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provision.html). For details about Fleet Provisioning, refer to the [AWS IoT Fleet Provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
+
+<!-- See memory requirements for the latest release [here](). -->
 
 #### backoffAlgorithm
 
