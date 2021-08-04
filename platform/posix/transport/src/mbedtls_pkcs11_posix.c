@@ -209,7 +209,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int32_t ( * pRng )( void *, unsigned char *, size_t ),
+                                          int32_t ( *pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
 
 /*-----------------------------------------------------------*/
@@ -668,7 +668,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int32_t ( * pRng )( void *,
+                                          int32_t ( *pRng )( void *,
                                                               unsigned char *,
                                                               size_t ),
                                           void * pRngContext )
