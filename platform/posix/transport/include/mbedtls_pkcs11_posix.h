@@ -162,7 +162,7 @@ typedef struct MbedtlsPkcs11Credentials
  * @param[in] pHostName The hostname of the remote endpoint.
  * @param[in] port The destination port.
  * @param[in] pMbedtlsPkcs11Credentials Credentials for the TLS connection.
- * @param[in] recvTimeoutMs The timeout for socket recieve operations.
+ * @param[in] recvTimeoutMs The timeout for socket receive operations.
  *
  * @note #recvTimeoutMs sets the maximum blocking time of the #Mbedtls_Pkcs11_Recv function.
  *

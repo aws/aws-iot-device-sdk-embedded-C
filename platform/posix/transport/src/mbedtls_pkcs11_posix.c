@@ -669,15 +669,15 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
                                           int32_t ( *pRng )( void *,
-                                                              unsigned char *,
-                                                              size_t ),
+                                                             unsigned char *,
+                                                             size_t ),
                                           void * pRngContext )
 {
     CK_RV ret = CKR_OK;
     int32_t result = 0;
     MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = ( MbedtlsPkcs11Context_t * ) pContext;
     CK_MECHANISM mech = { 0 };
-    /* Buffer bigh enough to hold data to be signed. */
+    /* Buffer big enough to hold data to be signed. */
     CK_BYTE toBeSigned[ 256 ];
     CK_ULONG toBeSignedLen = sizeof( toBeSigned );
 

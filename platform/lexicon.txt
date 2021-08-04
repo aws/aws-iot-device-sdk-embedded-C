@@ -38,6 +38,8 @@ config
 config
 connectsuccessindex
 const
+corehttp
+coremqtt
 couldn
 coverity
 crt
@@ -102,6 +104,7 @@ io
 iot
 ip
 ip
+keytype
 lfilecloseresult
 linux
 logpath
@@ -109,6 +112,7 @@ longjmp
 malloc
 maxattempts
 maxfragmentlength
+mbed
 mbedtls
 mcu
 mdalg
