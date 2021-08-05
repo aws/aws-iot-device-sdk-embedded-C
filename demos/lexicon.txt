@@ -91,6 +91,8 @@ cka
 ckf
 ckm
 ckr
+claimcertlength
+claimprivatekeylength
 cli
 clienthello
 clienttoken
@@ -442,6 +444,10 @@ pcertificateidlength
 pcertificatelength
 pcertificateownershiptoken
 pcks
+pclaimcertlabel
+pclaimcertpath
+pclaimprivkeylabel
+pclaimprivkeypath
 pclass
 pclientcertlabel
 pclientcertpath
@@ -476,6 +482,7 @@ pkcslabelsptr
 pki
 pkparse
 pkwrite
+plabel
 plaintext
 platformimagestate
 pleace
@@ -522,8 +529,10 @@ ppayload
 ppkey
 pprivatekeylabel
 pprivatekeypath
+pprivkeylabel
 pprocfile
 ppubinfo
+ppubkeylabel
 ppublishinfo
 ppxslotid
 prandom

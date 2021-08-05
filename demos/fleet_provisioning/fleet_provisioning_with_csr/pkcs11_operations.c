@@ -217,7 +217,7 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
  *
  * @param[in] session The PKCS #11 session.
  * @param[in] certificate The certificate to store, in PEM format.
- * @param[in] certificateLength The length of the certificate, including the NUL terminator.
+ * @param[in] certificateLength The length of the certificate, including the null terminator.
  * @param[in] label The label to store the certificate.
  */
 static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
@@ -820,7 +820,7 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
     if( status == true )
     {
         ret = provisionPrivateKey( p11Session, claimPrivateKey,
-                                   claimPrivateKeyLength + 1, /* MbedTLS includes NUL character in length for PEM objects. */
+                                   claimPrivateKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
                                    claimPrivKeyLabel );
         status = ( ret == CKR_OK );
     }
@@ -828,7 +828,7 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
     if( status == true )
     {
         ret = provisionCertificate( p11Session, claimCert,
-                                    claimCertLength + 1, /* MbedTLS includes NUL character in length for PEM objects. */
+                                    claimCertLength + 1, /* MbedTLS includes null character in length for PEM objects. */
                                     claimCertLabel );
         status = ( ret == CKR_OK );
     }
@@ -1170,7 +1170,7 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
 
     ret = provisionCertificate( p11Session,
                                 pCertificate,
-                                certificateLength + 1, /* MbedTLS includes NUL character in length for PEM objects. */
+                                certificateLength + 1, /* MbedTLS includes null character in length for PEM objects. */
                                 pLabel );
 
     return( ret == CKR_OK );
