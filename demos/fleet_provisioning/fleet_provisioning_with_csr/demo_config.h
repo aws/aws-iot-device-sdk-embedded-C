@@ -152,7 +152,9 @@
  */
 
 /**
- * @brief Subject name to use when creating the certificate signing request (CSR).
+ * @brief Subject name to use when creating the certificate signing request (CSR)
+ * for provisioning the demo client with using the Fleet Provisioning
+ * CreateCertificateFromCsr APIs.
  *
  * This is passed to MbedTLS; see https://tls.mbed.org/api/x509__csr_8h.html#a954eae166b125cea2115b7db8c896e90
  */
