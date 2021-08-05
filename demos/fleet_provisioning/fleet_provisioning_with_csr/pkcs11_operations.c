@@ -28,6 +28,7 @@
 
 /* Standard includes. */
 #include <errno.h>
+#include <assert.h>
 
 /* Config include. */
 #include "demo_config.h"
@@ -280,8 +281,8 @@ static int randomCallback( void * pCtx,
  * @param[out] publicKeyHandlePtr The handle of the public key.
  */
 static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
-                                uint8_t * privateKeyLabel,
-                                uint8_t * publicKeyLabel,
+                                const char * privateKeyLabel,
+                                const char * publicKeyLabel,
                                 CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
                                 CK_OBJECT_HANDLE_PTR publicKeyHandlePtr );
 
@@ -399,8 +400,7 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
 
     if( result != CKR_OK )
     {
-        LogError( ( "Failed to extract EC public key. Could not get a "
-                    "PKCS #11 function pointer." ) );
+        LogError( ( "Could not get a PKCS #11 function pointer." ) );
     }
     else
     {
@@ -458,8 +458,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
 
     if( result != CKR_OK )
     {
-        LogError( ( "Failed to extract EC public key. Could not get a "
-                    "PKCS #11 function pointer." ) );
+        LogError( ( "Could not get a PKCS #11 function pointer." ) );
     }
     else
     {
@@ -500,7 +499,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
         {
             { CKA_CLASS,     NULL /* &privateKeyClass*/, sizeof( CK_OBJECT_CLASS )                     },
             { CKA_KEY_TYPE,  NULL /* &privateKeyType*/,  sizeof( CK_KEY_TYPE )                         },
-            { CKA_LABEL,     ( void * ) label,           ( CK_ULONG ) strlen( ( const char * ) label ) },
+            { CKA_LABEL,     ( void * ) label,           ( CK_ULONG ) strlen( label ) },
             { CKA_TOKEN,     NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
             { CKA_SIGN,      NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
             { CKA_EC_PARAMS, NULL /* ecParamsPtr*/,      EC_PARAMS_LENGTH                              },
@@ -549,8 +548,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
     if( result != CKR_OK )
     {
-        LogError( ( "Failed to extract EC public key. Could not get a "
-                    "PKCS #11 function pointer." ) );
+        LogError( ( "Could not get a PKCS #11 function pointer." ) );
     }
     else
     {
@@ -601,7 +599,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
         {
             { CKA_CLASS,            NULL /* &privateKeyClass */, sizeof( CK_OBJECT_CLASS )                     },
             { CKA_KEY_TYPE,         NULL /* &privateKeyType */,  sizeof( CK_KEY_TYPE )                         },
-            { CKA_LABEL,            ( void * ) label,            ( CK_ULONG ) strlen( ( const char * ) label ) },
+            { CKA_LABEL,            ( void * ) label,            ( CK_ULONG ) strlen( label )                  },
             { CKA_TOKEN,            NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
             { CKA_SIGN,             NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
             { CKA_MODULUS,          rsaParams->modulus + 1,      MODULUS_LENGTH                                },
@@ -735,8 +733,7 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 
         if( result != CKR_OK )
         {
-            LogError( ( "Failed to extract EC public key. Could not get a "
-                        "PKCS #11 function pointer." ) );
+        LogError( ( "Could not get a PKCS #11 function pointer." ) );
         }
     }
 
@@ -796,10 +793,10 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
-                           const char * claimCertPath,
-                           const char * claimCertLabel,
-                           const char * claimPrivKeyPath,
-                           const char * claimPrivKeyLabel )
+                           const char * pClaimCertPath,
+                           const char * pClaimCertLabel,
+                           const char * pClaimPrivKeyPath,
+                           const char * pClaimPrivKeyLabel )
 {
     bool status;
     char claimCert[ CLAIM_CERT_BUFFER_LENGTH ] = { 0 };
@@ -808,12 +805,17 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
     size_t claimPrivateKeyLength = 0;
     CK_RV ret;
 
-    status = readFile( claimCertPath, claimCert, CLAIM_CERT_BUFFER_LENGTH,
+    assert( pClaimCertPath != NULL );
+    assert( pClaimCertLabel != NULL );
+    assert( pClaimPrivKeyPath != NULL );
+    assert( pClaimPrivKeyLabel != NULL );
+
+    status = readFile( pClaimCertPath, claimCert, CLAIM_CERT_BUFFER_LENGTH,
                        &claimCertLength );
 
     if( status == true )
     {
-        status = readFile( claimPrivKeyPath, claimPrivateKey,
+        status = readFile( pClaimPrivKeyPath, claimPrivateKey,
                            CLAIM_PRIVATE_KEY_BUFFER_LENGTH, &claimPrivateKeyLength );
     }
 
@@ -821,7 +823,7 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
     {
         ret = provisionPrivateKey( p11Session, claimPrivateKey,
                                    claimPrivateKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
-                                   claimPrivKeyLabel );
+                                   pClaimPrivKeyLabel );
         status = ( ret == CKR_OK );
     }
 
@@ -829,7 +831,7 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
     {
         ret = provisionCertificate( p11Session, claimCert,
                                     claimCertLength + 1, /* MbedTLS includes null character in length for PEM objects. */
-                                    claimCertLabel );
+                                    pClaimCertLabel );
         status = ( ret == CKR_OK );
     }
 
@@ -855,8 +857,7 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
 
     if( pkcs11ret != CKR_OK )
     {
-        LogError( ( "Failed to extract EC public key. Could not get a "
-                    "PKCS #11 function pointer." ) );
+        LogError( ( "Could not get a PKCS #11 function pointer." ) );
     }
     else
     {
@@ -1018,8 +1019,8 @@ static int randomCallback( void * pCtx,
 /*-----------------------------------------------------------*/
 
 static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
-                                uint8_t * privateKeyLabel,
-                                uint8_t * publicKeyLabel,
+                                const char * privateKeyLabel,
+                                const char * publicKeyLabel,
                                 CK_OBJECT_HANDLE_PTR privateKeyHandlePtr,
                                 CK_OBJECT_HANDLE_PTR publicKeyHandlePtr )
 {
@@ -1035,7 +1036,7 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
         { CKA_KEY_TYPE,  NULL /* &keyType */,    sizeof( keyType )                         },
         { CKA_VERIFY,    NULL /* &trueObject */, sizeof( trueObject )                      },
         { CKA_EC_PARAMS, NULL /* ecParams */,    sizeof( ecParams )                        },
-        { CKA_LABEL,     publicKeyLabel,         strlen( ( const char * ) publicKeyLabel ) }
+        { CKA_LABEL,     (void *) publicKeyLabel,         strlen( publicKeyLabel ) }
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1049,7 +1050,7 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
         { CKA_TOKEN,    NULL /* &trueObject */, sizeof( trueObject )                       },
         { CKA_PRIVATE,  NULL /* &trueObject */, sizeof( trueObject )                       },
         { CKA_SIGN,     NULL /* &trueObject */, sizeof( trueObject )                       },
-        { CKA_LABEL,    privateKeyLabel,        strlen( ( const char * ) privateKeyLabel ) }
+        { CKA_LABEL,    ( void *) privateKeyLabel,        strlen( privateKeyLabel ) }
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1062,8 +1063,7 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 
     if( result != CKR_OK )
     {
-        LogError( ( "Failed to extract EC public key. Could not get a "
-                    "PKCS #11 function pointer." ) );
+        LogError( ( "Could not get a PKCS #11 function pointer." ) );
     }
     else
     {
@@ -1098,9 +1098,14 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
     int32_t mbedtlsRet = -1;
     const mbedtls_pk_info_t * header = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
 
+    assert( pPrivKeyLabel != NULL );
+    assert( pPubKeyLabel != NULL );
+    assert( pCsrBuffer != NULL );
+    assert( pOutCsrLength != NULL );
+
     pkcs11Ret = generateKeyPairEC( p11Session,
-                                   ( uint8_t * ) pPrivKeyLabel,
-                                   ( uint8_t * ) pPubKeyLabel,
+                                   pPrivKeyLabel,
+                                   pPubKeyLabel,
                                    &privKeyHandle,
                                    &pubKeyHandle );
 
@@ -1167,6 +1172,9 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
                       size_t certificateLength )
 {
     CK_RV ret;
+
+    assert( pCertificate != NULL );
+    assert( pLabel != NULL );
 
     ret = provisionCertificate( p11Session,
                                 pCertificate,
