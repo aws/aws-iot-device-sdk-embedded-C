@@ -497,13 +497,13 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
     {
         CK_ATTRIBUTE privateKeyTemplate[] =
         {
-            { CKA_CLASS,     NULL /* &privateKeyClass*/, sizeof( CK_OBJECT_CLASS )                     },
-            { CKA_KEY_TYPE,  NULL /* &privateKeyType*/,  sizeof( CK_KEY_TYPE )                         },
+            { CKA_CLASS,     NULL /* &privateKeyClass*/, sizeof( CK_OBJECT_CLASS )    },
+            { CKA_KEY_TYPE,  NULL /* &privateKeyType*/,  sizeof( CK_KEY_TYPE )        },
             { CKA_LABEL,     ( void * ) label,           ( CK_ULONG ) strlen( label ) },
-            { CKA_TOKEN,     NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
-            { CKA_SIGN,      NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
-            { CKA_EC_PARAMS, NULL /* ecParamsPtr*/,      EC_PARAMS_LENGTH                              },
-            { CKA_VALUE,     NULL /* DPtr*/,             EC_D_LENGTH                                   }
+            { CKA_TOKEN,     NULL /* &trueObject*/,      sizeof( CK_BBOOL )           },
+            { CKA_SIGN,      NULL /* &trueObject*/,      sizeof( CK_BBOOL )           },
+            { CKA_EC_PARAMS, NULL /* ecParamsPtr*/,      EC_PARAMS_LENGTH             },
+            { CKA_VALUE,     NULL /* DPtr*/,             EC_D_LENGTH                  }
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
@@ -597,19 +597,19 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
         CK_ATTRIBUTE privateKeyTemplate[] =
         {
-            { CKA_CLASS,            NULL /* &privateKeyClass */, sizeof( CK_OBJECT_CLASS )                     },
-            { CKA_KEY_TYPE,         NULL /* &privateKeyType */,  sizeof( CK_KEY_TYPE )                         },
-            { CKA_LABEL,            ( void * ) label,            ( CK_ULONG ) strlen( label )                  },
-            { CKA_TOKEN,            NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
-            { CKA_SIGN,             NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
-            { CKA_MODULUS,          rsaParams->modulus + 1,      MODULUS_LENGTH                                },
-            { CKA_PRIVATE_EXPONENT, rsaParams->d + 1,            D_LENGTH                                      },
-            { CKA_PUBLIC_EXPONENT,  rsaParams->e + 1,            E_LENGTH                                      },
-            { CKA_PRIME_1,          rsaParams->prime1 + 1,       PRIME_1_LENGTH                                },
-            { CKA_PRIME_2,          rsaParams->prime2 + 1,       PRIME_2_LENGTH                                },
-            { CKA_EXPONENT_1,       rsaParams->exponent1 + 1,    EXPONENT_1_LENGTH                             },
-            { CKA_EXPONENT_2,       rsaParams->exponent2 + 1,    EXPONENT_2_LENGTH                             },
-            { CKA_COEFFICIENT,      rsaParams->coefficient + 1,  COEFFICIENT_LENGTH                            }
+            { CKA_CLASS,            NULL /* &privateKeyClass */, sizeof( CK_OBJECT_CLASS )    },
+            { CKA_KEY_TYPE,         NULL /* &privateKeyType */,  sizeof( CK_KEY_TYPE )        },
+            { CKA_LABEL,            ( void * ) label,            ( CK_ULONG ) strlen( label ) },
+            { CKA_TOKEN,            NULL /* &trueObject */,      sizeof( CK_BBOOL )           },
+            { CKA_SIGN,             NULL /* &trueObject */,      sizeof( CK_BBOOL )           },
+            { CKA_MODULUS,          rsaParams->modulus + 1,      MODULUS_LENGTH               },
+            { CKA_PRIVATE_EXPONENT, rsaParams->d + 1,            D_LENGTH                     },
+            { CKA_PUBLIC_EXPONENT,  rsaParams->e + 1,            E_LENGTH                     },
+            { CKA_PRIME_1,          rsaParams->prime1 + 1,       PRIME_1_LENGTH               },
+            { CKA_PRIME_2,          rsaParams->prime2 + 1,       PRIME_2_LENGTH               },
+            { CKA_EXPONENT_1,       rsaParams->exponent1 + 1,    EXPONENT_1_LENGTH            },
+            { CKA_EXPONENT_2,       rsaParams->exponent2 + 1,    EXPONENT_2_LENGTH            },
+            { CKA_COEFFICIENT,      rsaParams->coefficient + 1,  COEFFICIENT_LENGTH           }
         };
 
         /* Aggregate initializers must not use the address of an automatic variable. */
@@ -733,7 +733,7 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 
         if( result != CKR_OK )
         {
-        LogError( ( "Could not get a PKCS #11 function pointer." ) );
+            LogError( ( "Could not get a PKCS #11 function pointer." ) );
         }
     }
 
@@ -1033,10 +1033,10 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
     CK_BBOOL trueObject = CK_TRUE;
     CK_ATTRIBUTE publicKeyTemplate[] =
     {
-        { CKA_KEY_TYPE,  NULL /* &keyType */,    sizeof( keyType )                         },
-        { CKA_VERIFY,    NULL /* &trueObject */, sizeof( trueObject )                      },
-        { CKA_EC_PARAMS, NULL /* ecParams */,    sizeof( ecParams )                        },
-        { CKA_LABEL,     (void *) publicKeyLabel,         strlen( publicKeyLabel ) }
+        { CKA_KEY_TYPE,  NULL /* &keyType */,       sizeof( keyType )        },
+        { CKA_VERIFY,    NULL /* &trueObject */,    sizeof( trueObject )     },
+        { CKA_EC_PARAMS, NULL /* ecParams */,       sizeof( ecParams )       },
+        { CKA_LABEL,     ( void * ) publicKeyLabel, strlen( publicKeyLabel ) }
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
@@ -1046,11 +1046,11 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 
     CK_ATTRIBUTE privateKeyTemplate[] =
     {
-        { CKA_KEY_TYPE, NULL /* &keyType */,    sizeof( keyType )                          },
-        { CKA_TOKEN,    NULL /* &trueObject */, sizeof( trueObject )                       },
-        { CKA_PRIVATE,  NULL /* &trueObject */, sizeof( trueObject )                       },
-        { CKA_SIGN,     NULL /* &trueObject */, sizeof( trueObject )                       },
-        { CKA_LABEL,    ( void *) privateKeyLabel,        strlen( privateKeyLabel ) }
+        { CKA_KEY_TYPE, NULL /* &keyType */,        sizeof( keyType )         },
+        { CKA_TOKEN,    NULL /* &trueObject */,     sizeof( trueObject )      },
+        { CKA_PRIVATE,  NULL /* &trueObject */,     sizeof( trueObject )      },
+        { CKA_SIGN,     NULL /* &trueObject */,     sizeof( trueObject )      },
+        { CKA_LABEL,    ( void * ) privateKeyLabel, strlen( privateKeyLabel ) }
     };
 
     /* Aggregate initializers must not use the address of an automatic variable. */
