@@ -1,6 +1,6 @@
 /*
  * AWS IoT Device SDK for Embedded C 202103.00
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -182,7 +182,7 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
  * @param[in] mbedPkContext The private key to store.
  */
 static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
-                                    uint8_t * label,
+                                    const char * label,
                                     mbedtls_pk_context * mbedPkContext );
 
 
@@ -195,7 +195,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
  * @param[in] mbedPkContext The private key to store.
  */
 static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
-                                     uint8_t * label,
+                                     const char * label,
                                      mbedtls_pk_context * mbedPkContext );
 
 
@@ -208,22 +208,22 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
  * @param[in] label The label to store the key.
  */
 static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
-                                  uint8_t * privateKey,
+                                  const char * privateKey,
                                   size_t privateKeyLength,
-                                  uint8_t * label );
+                                  const char * label );
 
 /**
  * @brief Import the specified X.509 client certificate into storage.
  *
  * @param[in] session The PKCS #11 session.
  * @param[in] certificate The certificate to store, in PEM format.
- * @param[in] certificateLength The length of the certificate, including null terminator.
+ * @param[in] certificateLength The length of the certificate, including the NUL terminator.
  * @param[in] label The label to store the certificate.
  */
 static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
-                                   uint8_t * certificate,
+                                   const char * certificate,
                                    size_t certificateLength,
-                                   uint8_t * label );
+                                   const char * label );
 
 /**
  * @brief Read the specified ECDSA public key into the MbedTLS ECDSA context.
@@ -255,7 +255,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int ( *pRng )( void *, unsigned char *, size_t ),
+                                          int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
 
 /**
@@ -397,37 +397,40 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    for( index = 0; index < count; index++ )
+    if( result != CKR_OK )
     {
-        labelPtr = pkcsLabelsPtr[ index ];
-
-        result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
-                                               strlen( ( char * ) labelPtr ),
-                                               pClass[ index ], &objectHandle );
-
-        while( ( result == CKR_OK ) && ( objectHandle != CK_INVALID_HANDLE ) )
+        LogError( ( "Failed to extract EC public key. Could not get a "
+                    "PKCS #11 function pointer." ) );
+    }
+    else
+    {
+        for( index = 0; index < count; index++ )
         {
-            result = functionList->C_DestroyObject( session, objectHandle );
+            labelPtr = pkcsLabelsPtr[ index ];
 
-            /* PKCS #11 allows a module to maintain multiple objects with the same
-             * label and type. The intent of this loop is to try to delete all of
-             * them. However, to avoid getting stuck, we won't try to find another
-             * object of the same label/type if the previous delete failed. */
-            if( result == CKR_OK )
-            {
-                result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
-                                                       strlen( ( char * ) labelPtr ),
-                                                       pClass[ index ], &objectHandle );
-            }
-            else
-            {
-                break;
-            }
-        }
+            result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
+                                                   strlen( ( char * ) labelPtr ),
+                                                   pClass[ index ], &objectHandle );
 
-        if( result == CKR_FUNCTION_NOT_SUPPORTED )
-        {
-            break;
+            while( ( result == CKR_OK ) && ( objectHandle != CK_INVALID_HANDLE ) )
+            {
+                result = functionList->C_DestroyObject( session, objectHandle );
+
+                /* PKCS #11 allows a module to maintain multiple objects with the same
+                 * label and type. The intent of this loop is to try to delete all of
+                 * them. However, to avoid getting stuck, we won't try to find another
+                 * object of the same label/type if the previous delete failed. */
+                if( result == CKR_OK )
+                {
+                    result = xFindObjectWithLabelAndClass( session, ( char * ) labelPtr,
+                                                           strlen( ( char * ) labelPtr ),
+                                                           pClass[ index ], &objectHandle );
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
 
@@ -437,12 +440,12 @@ static CK_RV destroyProvidedObjects( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
-                                    uint8_t * label,
+                                    const char * label,
                                     mbedtls_pk_context * mbedPkContext )
 {
     CK_RV result = CKR_OK;
     CK_FUNCTION_LIST_PTR functionList = NULL;
-    CK_BYTE * DPtr;               /* Private value D. */
+    CK_BYTE * DPtr = NULL;        /* Private value D. */
     CK_BYTE * ecParamsPtr = NULL; /* DER-encoding of an ANSI X9.62 Parameters value */
     int mbedResult = 0;
     CK_BBOOL trueObject = CK_TRUE;
@@ -453,11 +456,19 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    DPtr = ( CK_BYTE * ) malloc( EC_D_LENGTH );
-
-    if( DPtr == NULL )
+    if( result != CKR_OK )
     {
-        result = CKR_HOST_MEMORY;
+        LogError( ( "Failed to extract EC public key. Could not get a "
+                    "PKCS #11 function pointer." ) );
+    }
+    else
+    {
+        DPtr = ( CK_BYTE * ) malloc( EC_D_LENGTH );
+
+        if( DPtr == NULL )
+        {
+            result = CKR_HOST_MEMORY;
+        }
     }
 
     if( result == CKR_OK )
@@ -489,7 +500,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
         {
             { CKA_CLASS,     NULL /* &privateKeyClass*/, sizeof( CK_OBJECT_CLASS )                     },
             { CKA_KEY_TYPE,  NULL /* &privateKeyType*/,  sizeof( CK_KEY_TYPE )                         },
-            { CKA_LABEL,     label,                      ( CK_ULONG ) strlen( ( const char * ) label ) },
+            { CKA_LABEL,     ( void * ) label,           ( CK_ULONG ) strlen( ( const char * ) label ) },
             { CKA_TOKEN,     NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
             { CKA_SIGN,      NULL /* &trueObject*/,      sizeof( CK_BBOOL )                            },
             { CKA_EC_PARAMS, NULL /* ecParamsPtr*/,      EC_PARAMS_LENGTH                              },
@@ -521,7 +532,7 @@ static CK_RV provisionPrivateECKey( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
-                                     uint8_t * label,
+                                     const char * label,
                                      mbedtls_pk_context * mbedPkContext )
 {
     CK_RV result = CKR_OK;
@@ -536,11 +547,19 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    rsaParams = ( RsaParams_t * ) malloc( sizeof( RsaParams_t ) );
-
-    if( rsaParams == NULL )
+    if( result != CKR_OK )
     {
-        result = CKR_HOST_MEMORY;
+        LogError( ( "Failed to extract EC public key. Could not get a "
+                    "PKCS #11 function pointer." ) );
+    }
+    else
+    {
+        rsaParams = ( RsaParams_t * ) malloc( sizeof( RsaParams_t ) );
+
+        if( rsaParams == NULL )
+        {
+            result = CKR_HOST_MEMORY;
+        }
     }
 
     if( result == CKR_OK )
@@ -582,7 +601,7 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
         {
             { CKA_CLASS,            NULL /* &privateKeyClass */, sizeof( CK_OBJECT_CLASS )                     },
             { CKA_KEY_TYPE,         NULL /* &privateKeyType */,  sizeof( CK_KEY_TYPE )                         },
-            { CKA_LABEL,            label,                       ( CK_ULONG ) strlen( ( const char * ) label ) },
+            { CKA_LABEL,            ( void * ) label,            ( CK_ULONG ) strlen( ( const char * ) label ) },
             { CKA_TOKEN,            NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
             { CKA_SIGN,             NULL /* &trueObject */,      sizeof( CK_BBOOL )                            },
             { CKA_MODULUS,          rsaParams->modulus + 1,      MODULUS_LENGTH                                },
@@ -618,9 +637,9 @@ static CK_RV provisionPrivateRSAKey( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
-                                  uint8_t * privateKey,
+                                  const char * privateKey,
                                   size_t privateKeyLength,
-                                  uint8_t * label )
+                                  const char * label )
 {
     CK_RV result = CKR_OK;
     mbedtls_pk_type_t mbedKeyType = MBEDTLS_PK_NONE;
@@ -628,7 +647,7 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
     mbedtls_pk_context mbedPkContext = { 0 };
 
     mbedtls_pk_init( &mbedPkContext );
-    mbedResult = mbedtls_pk_parse_key( &mbedPkContext, privateKey,
+    mbedResult = mbedtls_pk_parse_key( &mbedPkContext, ( const uint8_t * ) privateKey,
                                        privateKeyLength, NULL, 0 );
 
     if( mbedResult != 0 )
@@ -654,8 +673,8 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
         }
         else
         {
-            LogError( ( "Invalid private key type provided. RSA-2048 and EC P-256 keys "
-                        "are supported." ) );
+            LogError( ( "Invalid private key type provided. Only RSA-2048 and "
+                        "EC P-256 keys are supported." ) );
             result = CKR_ARGUMENTS_BAD;
         }
     }
@@ -668,15 +687,15 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
-                                   uint8_t * certificate,
+                                   const char * certificate,
                                    size_t certificateLength,
-                                   uint8_t * label )
+                                   const char * label )
 {
     PKCS11_CertificateTemplate_t certificateTemplate;
     CK_OBJECT_CLASS certificateClass = CKO_CERTIFICATE;
     CK_CERTIFICATE_TYPE certificateType = CKC_X_509;
-    CK_FUNCTION_LIST_PTR functionList;
-    CK_RV result;
+    CK_FUNCTION_LIST_PTR functionList = NULL;
+    CK_RV result = CKR_OK;
     uint8_t * derObject = NULL;
     int32_t conversion = 0;
     size_t derLen = 0;
@@ -696,7 +715,7 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
     certificateTemplate.xValue.ulValueLen = ( CK_ULONG ) certificateLength;
     certificateTemplate.xLabel.type = CKA_LABEL;
     certificateTemplate.xLabel.pValue = ( CK_VOID_PTR ) label;
-    certificateTemplate.xLabel.ulValueLen = strlen( ( const char * ) label );
+    certificateTemplate.xLabel.ulValueLen = strlen( label );
     certificateTemplate.xCertificateType.type = CKA_CERTIFICATE_TYPE;
     certificateTemplate.xCertificateType.pValue = &certificateType;
     certificateTemplate.xCertificateType.ulValueLen = sizeof( CK_CERTIFICATE_TYPE );
@@ -704,19 +723,28 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
     certificateTemplate.xTokenObject.pValue = &tokenStorage;
     certificateTemplate.xTokenObject.ulValueLen = sizeof( tokenStorage );
 
-    result = C_GetFunctionList( &functionList );
-
-    /* Test for a valid certificate: 0x2d is '-', as in ----- BEGIN CERTIFICATE. */
-    if( ( certificate == NULL ) || ( certificate[ 0 ] != 0x2d ) )
+    if( certificate == NULL )
     {
+        LogError( ( "Certificate cannot be null." ) );
         result = CKR_ATTRIBUTE_VALUE_INVALID;
     }
 
     if( result == CKR_OK )
     {
-        /* Convert the certificate to DER format if it was in PEM. The DER key
-         * should be about 3/4 the size of the PEM key, so mallocing the PEM key
-         * size is sufficient. */
+        result = C_GetFunctionList( &functionList );
+
+        if( result != CKR_OK )
+        {
+            LogError( ( "Failed to extract EC public key. Could not get a "
+                        "PKCS #11 function pointer." ) );
+        }
+    }
+
+    if( result == CKR_OK )
+    {
+        /* Convert the certificate to DER format from PEM. The DER key should
+         * be about 3/4 the size of the PEM key, so mallocing the PEM key size
+         * is sufficient. */
         derObject = ( uint8_t * ) malloc( certificateTemplate.xValue.ulValueLen );
         derLen = certificateTemplate.xValue.ulValueLen;
 
@@ -728,11 +756,13 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 
             if( 0 != conversion )
             {
+                LogError( ( "Failed to convert provided certificate." ) );
                 result = CKR_ARGUMENTS_BAD;
             }
         }
         else
         {
+            LogError( ( "Failed to allocate buffer for converting certificate to DER." ) );
             result = CKR_HOST_MEMORY;
         }
     }
@@ -742,18 +772,12 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
         /* Set the template pointers to refer to the DER converted objects. */
         certificateTemplate.xValue.pValue = derObject;
         certificateTemplate.xValue.ulValueLen = derLen;
-    }
 
-    /* Best effort clean-up of the existing object, if it exists. */
-    if( result == CKR_OK )
-    {
-        destroyProvidedObjects( session, &label, &certificateClass, 1 );
-    }
+        /* Best effort clean-up of the existing object, if it exists. */
+        destroyProvidedObjects( session, ( CK_BYTE_PTR * ) &label, &certificateClass, 1 );
 
-    /* Create an object using the encoded client certificate. */
-    if( result == CKR_OK )
-    {
-        LogInfo( ( "Writing certificate..." ) );
+        /* Create an object using the encoded client certificate. */
+        LogInfo( ( "Writing certificate into label \"%s\".", label ) );
 
         result = functionList->C_CreateObject( session,
                                                ( CK_ATTRIBUTE_PTR ) &certificateTemplate,
@@ -771,7 +795,11 @@ static CK_RV provisionCertificate( CK_SESSION_HANDLE session,
 
 /*-----------------------------------------------------------*/
 
-bool loadClaimCredentials( CK_SESSION_HANDLE p11Session )
+bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
+                           const char * claimCertPath,
+                           const char * claimCertLabel,
+                           const char * claimPrivKeyPath,
+                           const char * claimPrivKeyLabel )
 {
     bool status;
     char claimCert[ CLAIM_CERT_BUFFER_LENGTH ] = { 0 };
@@ -780,28 +808,28 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session )
     size_t claimPrivateKeyLength = 0;
     CK_RV ret;
 
-    status = readFile( CLAIM_CERT_PATH, claimCert, CLAIM_CERT_BUFFER_LENGTH,
+    status = readFile( claimCertPath, claimCert, CLAIM_CERT_BUFFER_LENGTH,
                        &claimCertLength );
 
     if( status == true )
     {
-        status = readFile( CLAIM_PRIVATE_KEY_PATH, claimPrivateKey,
+        status = readFile( claimPrivKeyPath, claimPrivateKey,
                            CLAIM_PRIVATE_KEY_BUFFER_LENGTH, &claimPrivateKeyLength );
     }
 
     if( status == true )
     {
-        ret = provisionPrivateKey( p11Session, ( uint8_t * ) claimPrivateKey,
-                                   claimPrivateKeyLength + 1,
-                                   ( uint8_t * ) pkcs11configLABEL_CLAIM_PRIVATE_KEY );
+        ret = provisionPrivateKey( p11Session, claimPrivateKey,
+                                   claimPrivateKeyLength + 1, /* MbedTLS includes NUL character in length for PEM objects. */
+                                   claimPrivKeyLabel );
         status = ( ret == CKR_OK );
     }
 
     if( status == true )
     {
-        ret = provisionCertificate( p11Session, ( uint8_t * ) claimCert,
-                                    claimCertLength + 1,
-                                    ( uint8_t * ) pkcs11configLABEL_CLAIM_CERTIFICATE );
+        ret = provisionCertificate( p11Session, claimCert,
+                                    claimCertLength + 1, /* MbedTLS includes NUL character in length for PEM objects. */
+                                    claimCertLabel );
         status = ( ret == CKR_OK );
     }
 
@@ -884,7 +912,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int ( *pRng )( void *, unsigned char *, size_t ),
+                                          int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext )
 {
     CK_RV ret = CKR_OK;
@@ -1032,13 +1060,21 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 
     result = C_GetFunctionList( &functionList );
 
-    result = functionList->C_GenerateKeyPair( session,
-                                              &mechanism,
-                                              publicKeyTemplate,
-                                              sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                              privateKeyTemplate, sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
-                                              publicKeyHandlePtr,
-                                              privateKeyHandlePtr );
+    if( result != CKR_OK )
+    {
+        LogError( ( "Failed to extract EC public key. Could not get a "
+                    "PKCS #11 function pointer." ) );
+    }
+    else
+    {
+        result = functionList->C_GenerateKeyPair( session,
+                                                  &mechanism,
+                                                  publicKeyTemplate,
+                                                  sizeof( publicKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                                  privateKeyTemplate, sizeof( privateKeyTemplate ) / sizeof( CK_ATTRIBUTE ),
+                                                  publicKeyHandlePtr,
+                                                  privateKeyHandlePtr );
+    }
 
     return result;
 }
@@ -1046,6 +1082,8 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 /*-----------------------------------------------------------*/
 
 bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
+                        const char * pPrivKeyLabel,
+                        const char * pPubKeyLabel,
                         char * pCsrBuffer,
                         size_t csrBufferLength,
                         size_t * pOutCsrLength )
@@ -1061,8 +1099,8 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
     const mbedtls_pk_info_t * header = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
 
     pkcs11Ret = generateKeyPairEC( p11Session,
-                                   ( uint8_t * ) pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                   ( uint8_t * ) pkcs11configLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
+                                   ( uint8_t * ) pPrivKeyLabel,
+                                   ( uint8_t * ) pPubKeyLabel,
                                    &privKeyHandle,
                                    &pubKeyHandle );
 
@@ -1080,7 +1118,7 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
         if( mbedtlsRet == 0 )
         {
-            mbedtlsRet = mbedtls_x509write_csr_set_subject_name( &req, ( const char * ) "CN=TestSubject" );
+            mbedtlsRet = mbedtls_x509write_csr_set_subject_name( &req, SUBJECT_NAME );
         }
 
         if( mbedtlsRet == 0 )
@@ -1124,15 +1162,16 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 /*-----------------------------------------------------------*/
 
 bool loadCertificate( CK_SESSION_HANDLE p11Session,
-                      char * pCertificate,
+                      const char * pCertificate,
+                      const char * pLabel,
                       size_t certificateLength )
 {
     CK_RV ret;
 
     ret = provisionCertificate( p11Session,
-                                ( uint8_t * ) pCertificate,
-                                certificateLength + 1,
-                                ( uint8_t * ) pkcs11configLABEL_DEVICE_CERTIFICATE_FOR_TLS );
+                                pCertificate,
+                                certificateLength + 1, /* MbedTLS includes NUL character in length for PEM objects. */
+                                pLabel );
 
     return( ret == CKR_OK );
 }

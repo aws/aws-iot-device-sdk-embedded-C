@@ -47,7 +47,7 @@
 /* Interface include. */
 #include "mqtt_operations.h"
 
-/* MbedTLS sockets transport implementation. */
+/* MbedTLS transport include. */
 #include "mbedtls_pkcs11_posix.h"
 
 /*Include backoff algorithm header for retry logic.*/
@@ -302,8 +302,7 @@ static void cleanupOutgoingPublishAt( uint8_t index );
 static void cleanupOutgoingPublishes( void );
 
 /**
- * @brief Clean up the publish packet with the given packet id. in the
- *                                             CK_SESSION_HANDLE p11Session,
+ * @brief Clean up the publish packet with the given packet id in the
  * #outgoingPublishPackets array.
  *
  * @param[in] packetId Packet id of the packet to be clean.
@@ -388,48 +387,45 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
                                        CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
                                        CONNECTION_RETRY_MAX_ATTEMPTS );
 
-    if( tlsStatus == MBEDTLS_PKCS11_SUCCESS )
+    do
     {
-        do
+        /* Establish a TLS session with the MQTT broker. This example connects
+         * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT
+         * at the demo config header. */
+        LogDebug( ( "Establishing a TLS session to %.*s:%d.",
+                    AWS_IOT_ENDPOINT_LENGTH,
+                    AWS_IOT_ENDPOINT,
+                    AWS_MQTT_PORT ) );
+
+        tlsStatus = Mbedtls_Pkcs11_Connect( pNetworkContext,
+                                            AWS_IOT_ENDPOINT,
+                                            AWS_MQTT_PORT,
+                                            &tlsCredentials,
+                                            TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+        if( tlsStatus == MBEDTLS_PKCS11_SUCCESS )
         {
-            /* Establish a TLS session with the MQTT broker. This example connects
-             * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT
-             * at the demo config header. */
-            LogDebug( ( "Establishing a TLS session to %.*s:%d.",
-                        AWS_IOT_ENDPOINT_LENGTH,
-                        AWS_IOT_ENDPOINT,
-                        AWS_MQTT_PORT ) );
+            /* Connection successful. */
+            returnStatus = true;
+        }
+        else
+        {
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
 
-            tlsStatus = Mbedtls_Pkcs11_Connect( pNetworkContext,
-                                                AWS_IOT_ENDPOINT,
-                                                AWS_MQTT_PORT,
-                                                &tlsCredentials,
-                                                TRANSPORT_SEND_RECV_TIMEOUT_MS );
-
-            if( tlsStatus == MBEDTLS_PKCS11_SUCCESS )
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
             {
-                /* Connection successful. */
-                returnStatus = true;
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
             }
-            else
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
             {
-                /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
-                backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
-
-                if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
-                {
-                    LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
-                }
-                else if( backoffAlgStatus == BackoffAlgorithmSuccess )
-                {
-                    LogWarn( ( "Connection to the broker failed. Retrying connection "
-                               "after %hu ms backoff.",
-                               ( unsigned short ) nextRetryBackOff ) );
-                    Clock_SleepMs( nextRetryBackOff );
-                }
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
             }
-        } while( ( tlsStatus != MBEDTLS_PKCS11_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
-    }
+        }
+    } while( ( tlsStatus != MBEDTLS_PKCS11_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }

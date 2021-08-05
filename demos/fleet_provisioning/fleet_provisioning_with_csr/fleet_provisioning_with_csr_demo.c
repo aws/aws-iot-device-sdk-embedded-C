@@ -490,7 +490,11 @@ int main( int argc,
         else
         {
             /* Insert the claim credentials into the PKCS #11 module */
-            status = loadClaimCredentials( p11Session );
+            status = loadClaimCredentials( p11Session,
+                                           CLAIM_CERT_PATH,
+                                           pkcs11configLABEL_CLAIM_CERTIFICATE,
+                                           CLAIM_PRIVATE_KEY_PATH,
+                                           pkcs11configLABEL_CLAIM_PRIVATE_KEY );
 
             if( status == false )
             {
@@ -543,7 +547,12 @@ int main( int argc,
         if( status == true )
         {
             /* Create a new key and CSR. */
-            status = generateKeyAndCsr( p11Session, csr, CSR_BUFFER_LENGTH, &csrLength );
+            status = generateKeyAndCsr( p11Session,
+                                        pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                        pkcs11configLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
+                                        csr,
+                                        CSR_BUFFER_LENGTH,
+                                        &csrLength );
         }
 
         if( status == true )
@@ -601,7 +610,10 @@ int main( int argc,
         if( status == true )
         {
             /* Save the certificate into PKCS #11. */
-            status = loadCertificate( p11Session, certificate, certificateLength );
+            status = loadCertificate( p11Session,
+                                      certificate,
+                                      pkcs11configLABEL_DEVICE_CERTIFICATE_FOR_TLS,
+                                      certificateLength );
         }
 
         if( status == true )

@@ -142,13 +142,21 @@
  */
 
 /**
- * @brief Serial number sent as part of the RegisterThing request.
+ * @brief Serial number to send in the request to the Fleet Provisioning
+ * RegisterThing API.
  *
  * This is sent as a parameter to the provisioning template, which uses it to
  * generate a unique Thing name. This should be unique per device.
  *
  * #define DEVICE_SERIAL_NUMBER    "...insert here..."
  */
+
+/**
+ * @brief Subject name to use when creating the certificate signing request (CSR).
+ *
+ * This is passed to MbedTLS; see https://tls.mbed.org/api/x509__csr_8h.html#a954eae166b125cea2115b7db8c896e90
+ */
+#define SUBJECT_NAME    "CN=Fleet Provisioning Demo"
 
 /**
  * @brief MQTT client identifier.
