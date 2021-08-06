@@ -90,7 +90,7 @@
 #endif
 
 /**
- * @brief Path the file containing the provisioning claim certificate. This
+ * @brief Path of the file containing the provisioning claim certificate. This
  * certificate is used to connect to AWS IoT Core and use Fleet Provisioning
  * APIs to provision the client device. This is used for the "Provisioning by
  * Claim" provisioning workflow.
@@ -123,53 +123,6 @@
  */
 
 /**
- * @brief Path of the file containing the private key that the device is to be
- * provisioned with using the Fleet Provisioning APIs. This should be the key
- * used to generate the Certificate Signing Request (CSR) for certificate
- * provisioning. This key should be used to connect to IoT Core after the
- * client device has been provisioned.
- *
- * The following openssl command can be used to generate a private key and CSR:
- * openssl req -newkey rsa:2048 -keyout fpdemo_priv_key.pem -out fpdemo_csr.pem
- *
- * For information about provisioning by claim, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
- *
- * @note This private key should be PEM-encoded.
- *
- * #define PROVISIONING_PRIVATE_KEY_PATH    "...insert here..."
- */
-
-/**
- * @brief Path of the file containing the Certificate Signing Request (CSR) to
- * send to the AWS IoT Fleet Provisioning APIs for provisioning the client
- * device with a new certificate.
- *
- * The following openssl command can be used to generate a private key and CSR:
- * openssl req -newkey rsa:2048 -keyout fpdemo_priv_key.pem -out fpdemo_csr.pem
- *
- * For information about provisioning by claim, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
- *
- * @note This CSR should be PEM-encoded.
- *
- * #define PROVISIONING_CSR_PATH    "...insert here..."
- */
-
-/**
- * @brief Path to which to write the newly provisioned client certificate
- * obtained from AWS IoT Core through the Fleet Provisioning APIs.
- *
- * For information about provisioning by claim, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html#claim-based
- *
- * For information about client certificates, see the following AWS documentation:
- * https://docs.aws.amazon.com/iot/latest/developerguide/x509-client-certs.html
- *
- * #define PROVISIONING_CERT_PATH    "...insert here..."
- */
-
-/**
  * @brief Name of the provisioning template to use for the RegisterThing
  * portion of the Fleet Provisioning workflow.
  *
@@ -185,8 +138,27 @@
  * @note The provisioning template MUST be created in AWS IoT before running the
  * demo.
  *
- *  #define PROVISIONING_TEMPLATE_NAME    "...insert here..."
+ * #define PROVISIONING_TEMPLATE_NAME    "...insert here..."
  */
+
+/**
+ * @brief Serial number to send in the request to the Fleet Provisioning
+ * RegisterThing API.
+ *
+ * This is sent as a parameter to the provisioning template, which uses it to
+ * generate a unique Thing name. This should be unique per device.
+ *
+ * #define DEVICE_SERIAL_NUMBER    "...insert here..."
+ */
+
+/**
+ * @brief Subject name to use when creating the certificate signing request (CSR)
+ * for provisioning the demo client with using the Fleet Provisioning
+ * CreateCertificateFromCsr APIs.
+ *
+ * This is passed to MbedTLS; see https://tls.mbed.org/api/x509__csr_8h.html#a954eae166b125cea2115b7db8c896e90
+ */
+#define SUBJECT_NAME    "CN=Fleet Provisioning Demo"
 
 /**
  * @brief MQTT client identifier.
@@ -199,7 +171,7 @@
  * However, it is not required for the demo to run.
  */
 #ifndef CLIENT_IDENTIFIER
-    #define CLIENT_IDENTIFIER    THING_NAME
+    #define CLIENT_IDENTIFIER    DEVICE_SERIAL_NUMBER
 #endif
 
 /**
