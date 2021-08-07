@@ -74,6 +74,10 @@
  * @brief ALPN protocol name to be sent as part of the ClientHello message.
  *
  * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
+ *
+ * @note OpenSSL requires that the protocol string passed to it for configuration be encoded
+ * with the prefix of 8-bit length information of the string. Thus, the 14 byte (0x0e)
+ * length information is prefixed to the string.
  */
 #define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
 
