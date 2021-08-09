@@ -158,7 +158,9 @@
  *
  * This is passed to MbedTLS; see https://tls.mbed.org/api/x509__csr_8h.html#a954eae166b125cea2115b7db8c896e90
  */
-#define SUBJECT_NAME    "CN=Fleet Provisioning Demo"
+#ifndef CSR_SUBJECT_NAME
+    #define CSR_SUBJECT_NAME    "CN=Fleet Provisioning Demo"
+#endif
 
 /**
  * @brief MQTT client identifier.

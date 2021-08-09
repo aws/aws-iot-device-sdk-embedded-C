@@ -1123,7 +1123,7 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
         if( mbedtlsRet == 0 )
         {
-            mbedtlsRet = mbedtls_x509write_csr_set_subject_name( &req, SUBJECT_NAME );
+            mbedtlsRet = mbedtls_x509write_csr_set_subject_name( &req, CSR_SUBJECT_NAME );
         }
 
         if( mbedtlsRet == 0 )
