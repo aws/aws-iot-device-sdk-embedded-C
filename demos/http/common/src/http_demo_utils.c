@@ -63,22 +63,23 @@
  */
 #define CONNECTION_RETRY_BACKOFF_BASE_MS         ( 500U )
 
-#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD       "date"
+#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD     "date"
 
-#define AWS_IOT_THING_NAME "MyHomeThermostat"
+#define AWS_IOT_THING_NAME                       "MyHomeThermostat"
 
-#define AWS_IOT_THING_NAME_HEADER_FIELD           "x-amz-iot-thing-name"
+#define AWS_IOT_THING_NAME_HEADER_FIELD          "x-amz-iot-thing-name"
 
- #define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT    "https://"    \
- AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/"    \
- AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
+#define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT         \
+    "https://"                                            \
+    AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/" \
+    AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
 
- #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "c3tvrvalb8cjyy.credentials.iot.us-east-2.amazonaws.com"
+#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "c3tvrvalb8cjyy.credentials.iot.us-east-2.amazonaws.com"
 
-/** 
- * @brief Role alias for accessing the credential provider. 
+/**
+ * @brief Role alias for accessing the credential provider.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE "Thermostat-dynamodb-access-role-alias"
+#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Thermostat-dynamodb-access-role-alias"
 
 /*-----------------------------------------------------------*/
 
@@ -293,172 +294,231 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     return httpStatus;
 }
 
-JSONStatus_t parseCredentials(HTTPResponse_t response ,SigV4Credentials_t*  sigvCreds)
+JSONStatus_t parseCredentials( HTTPResponse_t * response,
+                               SigV4Credentials_t * sigvCreds )
 {
+    JSONStatus_t jsonStatus = JSONSuccess;
 
-        JSONStatus_t jsonStatus=JSONSuccess;
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get accessKeyId from HTTP response. */
+        jsonStatus = JSON_Search( response->pBody,
+                                  response->bodyLen,
+                                  "credentials.accessKeyId",
+                                  strlen( "credentials.accessKeyId" ),
+                                  ( const char ** ) &( sigvCreds->pAccessKeyId ),
+                                  &( sigvCreds->accessKeyIdLen ) );
 
-        jsonStatus=JSON_Search( response.pBody,
-                    response.bodyLen,
-                    "credentials.accessKeyId",
-                    strlen("credentials.accessKeyId"),
-                    (const char **)&(sigvCreds->pAccessKeyId ),
-                    &(sigvCreds->accessKeyLen));
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing accessKeyId in the credentials." ) );
+        }
+    }
 
-        if(jsonStatus != JSONSuccess){   
-            LogError( ( "Error parsing accessKeyId in the credentials.") );
-        }
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get secretAccessKey from HTTP response. */
+        jsonStatus = JSON_Search( response->pBody,
+                                  response->bodyLen,
+                                  "credentials.secretAccessKey",
+                                  strlen( "credentials.secretAccessKey" ),
+                                  ( const char ** ) &( sigvCreds->pSecretAccessKey ),
+                                  &( sigvCreds->secretAccessKeyLen ) );
 
-        if(jsonStatus == JSONSuccess){      
-            jsonStatus=JSON_Search( response.pBody,
-                        response.bodyLen,
-                        "credentials.secretAccessKey",
-                        strlen("credentials.secretAccessKey"),
-                        (const char **)&(sigvCreds->pSecretAccessKey),
-                        &(sigvCreds->secretAccessKeyLen));
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing secretAccessKey in the credentials." ) );
         }
-        
-        if(jsonStatus != JSONSuccess){   
-            LogError( ( "Error parsing secretAccessKey in the credentials.") );
-        }
+    }
 
-        if(jsonStatus == JSONSuccess){    
-            jsonStatus=JSON_Search( response.pBody,
-                        response.bodyLen,
-                        "credentials.sessionToken",
-                        strlen("credentials.sessionToken"),
-                        (const char **)&(sigvCreds->pSecurityToken),
-                        &(sigvCreds->securityTokenLen));
-        }
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get sessionToken from HTTP response. */
+        jsonStatus = JSON_Search( response->pBody,
+                                  response->bodyLen,
+                                  "credentials.sessionToken",
+                                  strlen( "credentials.sessionToken" ),
+                                  ( const char ** ) &( sigvCreds->pSecurityToken ),
+                                  &( sigvCreds->securityTokenLen ) );
 
-        if(jsonStatus != JSONSuccess){   
-            LogError( ( "Error parsing sessionToken in the credentials.") );
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing sessionToken in the credentials." ) );
         }
-        
-        if(jsonStatus == JSONSuccess){    
-            jsonStatus=JSON_Search( response.pBody,
-                        response.bodyLen,
-                        "credentials.expiration",
-                        strlen("credentials.expiration"),
-                        (const char **)&(sigvCreds->pExpiration),
-                        &(sigvCreds->expirationLen));
-        }
+    }
 
-        if(jsonStatus != JSONSuccess){   
-            LogError( ( "Error parsing expiration date in the credentials.") );
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get expiration date from HTTP response. */
+        jsonStatus = JSON_Search( response->pBody,
+                                  response->bodyLen,
+                                  "credentials.expiration",
+                                  strlen( "credentials.expiration" ),
+                                  ( const char ** ) &( sigvCreds->pExpiration ),
+                                  &( sigvCreds->expirationLen ) );
+
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing expiration date in the credentials." ) );
         }
-        
-        return jsonStatus;
+    }
+
+    return jsonStatus;
 }
 
-getTemporaryCredentials(TransportInterface_t* transportInterface, size_t pDateISO8601Len, char * pDateISO8601, SigV4Credentials_t*  sigvCreds)
+bool getTemporaryCredentials( TransportInterface_t * transportInterface,
+                              size_t pDateISO8601Len,
+                              HTTPResponse_t * response,
+                              char * pDateISO8601,
+                              SigV4Credentials_t * sigvCreds )
 {
+    bool returnStatus = true;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    HTTPRequestInfo_t requestInfo = { 0 };
+    size_t pathLen = 0;
+    size_t addressLen = 0;
+    HTTPStatus_t httpStatus = HTTPSuccess;
+    SigV4Status_t sigv4Status = SigV4Success;
+    JSONStatus_t jsonStatus = JSONSuccess;
+    const char * pAddress = NULL;
+    const char * pDate;
+    const char * pPath;
+    size_t dateLen;
 
-        /******************** Get Temporary Credentials. **********************/
-        int returnStatus=EXIT_SUCCESS;
-        HTTPRequestHeaders_t requestHeaders = { 0 };
-        HTTPRequestInfo_t requestInfo = { 0 };
-        HTTPResponse_t response = { 0 };
-        uint8_t pAwsIotHttpBuffer[2048] = { 0 };
-        uint8_t pS3HttpBuffer[2048] = { 0 };
-        size_t pathLen = 0;
-        size_t addressLen = 0;
-        HTTPStatus_t httpStatus = HTTPSuccess;
-        SigV4Status_t sigv4Status=SigV4Success;
-        JSONStatus_t jsonStatus;
-        const char * pAddress=NULL;
-        const char *pDate;
-        const char *pPath;
-        size_t dateLen;
-
-        /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    if( returnStatus == true )
+    {
         httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-                                    sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+                                    sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
                                     &pAddress,
                                     &addressLen );
-        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
 
-        if(returnStatus==EXIT_SUCCESS){
-            httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-                                        sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
-                                            &pPath,
-                                            &pathLen );
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to get Address from URL %s: Error=%s.",
+                        AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
         }
-        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-        /* Request header buffer. */
-        requestHeaders.pBuffer = pAwsIotHttpBuffer;
-        requestHeaders.bufferLen = sizeof(pAwsIotHttpBuffer);
+    }
 
+    if( returnStatus == true )
+    {
+        /* Retrieve the path and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+        httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+                                 sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
+                                 &pPath,
+                                 &pathLen );
 
-        /* Temporary token request. */
-        requestInfo.pMethod = HTTP_METHOD_GET;
-        requestInfo.methodLen = sizeof(HTTP_METHOD_GET)-1;
-        requestInfo.pPath = pPath;
-        requestInfo.pathLen = pathLen;
-        requestInfo.pHost = pAddress;
-        requestInfo.hostLen = addressLen;
-        requestInfo.reqFlags=0;
-
-        response.pBuffer = pAwsIotHttpBuffer;
-        response.bufferLen= sizeof(pAwsIotHttpBuffer);
-        response.pHeaderParsingCallback = NULL;
-
-        if(returnStatus==EXIT_SUCCESS){
-            httpStatus=HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to get path from URL %s: Error=%s.",
+                        AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
         }
-        
-        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+    }
 
-        if(returnStatus==EXIT_SUCCESS){
-        httpStatus=HTTPClient_AddHeader( &requestHeaders, 
-                     AWS_IOT_THING_NAME_HEADER_FIELD, 
-                     sizeof(AWS_IOT_THING_NAME_HEADER_FIELD)-1,
-                     AWS_IOT_THING_NAME,
-                     sizeof(AWS_IOT_THING_NAME));
+    /* Initialize Request header buffer. */
+    requestHeaders.pBuffer = response->pBuffer;
+    requestHeaders.bufferLen = response->bufferLen;
+
+    /* Temporary token HTTP request parameters. */
+    requestInfo.pMethod = HTTP_METHOD_GET;
+    requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
+    requestInfo.pPath = pPath;
+    requestInfo.pathLen = pathLen;
+    requestInfo.pHost = pAddress;
+    requestInfo.hostLen = addressLen;
+    requestInfo.reqFlags = 0;
+
+    response->pHeaderParsingCallback = NULL;
+
+    if( returnStatus == true )
+    {
+        /* Initialize request headers. */
+        httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to initialize request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
         }
-        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+    }
 
-        if(returnStatus==EXIT_SUCCESS){
-            httpStatus=HTTPClient_Send( transportInterface,
-                    &requestHeaders,
-                    NULL,
-                    0,
-                    &response,0 );
+    if( returnStatus == true )
+    {
+        /* Add AWS_IOT_THING_NAME_HEADER_FIELD header to the HTTP request headers. */
+        httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                           AWS_IOT_THING_NAME_HEADER_FIELD,
+                                           sizeof( AWS_IOT_THING_NAME_HEADER_FIELD ) - 1,
+                                           AWS_IOT_THING_NAME,
+                                           sizeof( AWS_IOT_THING_NAME ) );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to add x-amz-iot-thing-name header to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
         }
+    }
 
-        LogInfo( ( "HTTPSTATUS = %s", HTTPClient_strerror(httpStatus) ) );
-        LogInfo( ( "HTTPSTATUS = %d", response.statusCode ) );
-        LogInfo( ( "HTTPSTATUS = %s", response.pHeaders ) ); 
+    if( returnStatus == true )
+    {
+        /* Send the request and receive the response. */
+        httpStatus = HTTPClient_Send( transportInterface,
+                                      &requestHeaders,
+                                      NULL,
+                                      0,
+                                      response, 0 );
 
-        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-        if(returnStatus==EXIT_SUCCESS){
-            jsonStatus=parseCredentials(response ,sigvCreds);
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+                        pAddress, pPath, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
         }
+    }
 
-        returnStatus= (jsonStatus == JSONSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
+    if( returnStatus == true )
+    {
+        /* Parse the credentials received in the response. */
+        jsonStatus = parseCredentials( response, sigvCreds );
 
-        /* Get the current time from the http response. */
-        if(returnStatus==EXIT_SUCCESS){
-            httpStatus=HTTPClient_ReadHeader( &response, 
-                                HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, 
-                                sizeof(HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD)-1, 
-                                (const char **)&pDate,
-                                &dateLen );
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Failed to parse temporary IOT credentials. " ) );
+            returnStatus = false;
         }
-        
+    }
 
-        LogInfo( ( "JSONSTATUS = %d", jsonStatus ) );  
+    /* Get the AWS IOT date from the http response. */
+    if( returnStatus == true )
+    {
+        httpStatus = HTTPClient_ReadHeader( response,
+                                            HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD,
+                                            sizeof( HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD ) - 1,
+                                            ( const char ** ) &pDate,
+                                            &dateLen );
 
-        returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-        if(returnStatus==EXIT_SUCCESS){
-            sigv4Status=SigV4_AwsIotDateToIso8601( pDate,dateLen, pDateISO8601 ,pDateISO8601Len);
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to retrieve %s header from response: Error=%s.",
+                        HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
         }
+    }
 
-        returnStatus= (sigv4Status == SigV4Success)? EXIT_SUCCESS:EXIT_FAILURE;
-        
-        LogInfo( ( "Converted date = %s", pDateISO8601 ) );
-        
-        return returnStatus;
+    if( returnStatus == true )
+    {
+        /* Convert AWS IOT date retrieved from IOT server to ISO 8601 date format. */
+        sigv4Status = SigV4_AwsIotDateToIso8601( pDate, dateLen, pDateISO8601, pDateISO8601Len );
+
+        if( sigv4Status != SigV4Success )
+        {
+            LogError( ( "Failed to convert AWS IOT date to ISO 8601 format." ) );
+            returnStatus = false;
+        }
+    }
+
+    return returnStatus;
 }

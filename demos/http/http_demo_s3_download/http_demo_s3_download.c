@@ -149,32 +149,53 @@
  */
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
-#define SHA256_HEX_ENCODED_DIGEST_LENGTH (( ( uint16_t ) 32 ))
+/**
+ * @brief Hex encoded hash digest length.
+ */
+#define SHA256_HEX_ENCODED_DIGEST_LENGTH         ( ( ( uint16_t ) 64 ) )
+
+/**
+ * @brief AWS Service name to send HTTP request using SigV4 library.
+ */
+#define AWS_SERVICE_NAME                         "s3"
 
 /* Full AWS S3 server endpoint. */
-#define AWS_S3_OBJECT_URL    "https://"    \
- AWS_S3_BUCKET_NAME ".s3."    \
- AWS_S3_BUCKET_REGION  ".amazonaws.com/" \
- AWS_S3_OBJECT_NAME 
+#define AWS_S3_OBJECT_URL                       \
+    "https://"                                  \
+    AWS_S3_BUCKET_NAME "." AWS_SERVICE_NAME "." \
+    AWS_S3_BUCKET_REGION  ".amazonaws.com/"     \
+    AWS_S3_OBJECT_NAME
 
 /* Full credentials endpoint including role alias. */
- #define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT    "https://"    \
- AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/"    \
- AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
+#define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT         \
+    "https://"                                            \
+    AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/" \
+    AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
 
 /**
  * @brief Field name of the HTTP thing name header sent in HTTP request to AWS S3.
  */
-#define AWS_IOT_THING_NAME_HEADER_FIELD           "x-amz-iot-thing-name"
+#define AWS_IOT_THING_NAME_HEADER_FIELD         "x-amz-iot-thing-name"
 
 /**
  * @brief Field name of the HTTP date header to read from the AWS IOT credential provider server response.
  */
-#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD       "date"
+#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD    "date"
 
-#define SIGV4_AUTH_HEADER_FIELD_NAME "Authorization"
+/**
+ * @brief Field name of the HTTP Authorization header to add to the request headers.
+ */
+#define SIGV4_AUTH_HEADER_FIELD_NAME            "Authorization"
 
-#define SIGV4_ISO_STRING_LEN                        16U    
+/**
+ * @brief IS8601 formatted date length.
+ */
+#define SIGV4_ISO_STRING_LEN                    16U
+
+/**
+ * @brief Length of AWS HTTP Authorization header value generated using SigV4 library.
+ */
+#define AWS_HTTP_AUTH_HEADER_VALUE_LEN          2048
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
@@ -218,19 +239,30 @@ static size_t serverHostLength;
 static const char * pPath;
 
 /**
- *  @brief mbedTLS Hash Context passed to SIGV4 cryptointerface for generating the signature. 
+ *  @brief mbedTLS Hash Context passed to SIGV4 cryptointerface for generating the signature.
  */
-static mbedtls_sha256_context hashContext={0};
+static mbedtls_sha256_context hashContext = { 0 };
 
 /**
- *  @brief Configurations of the AWS credentials sent to sigV4 library for generating the Signing Key. 
+ *  @brief Configurations of the AWS credentials sent to sigV4 library for generating the Authorization Header.
  */
-static SigV4Credentials_t  sigvCreds = { 0 };
+SigV4Credentials_t sigvCreds = { 0 };
 
-/** 
- * @brief Represents date in ISO8601 format used in the HTTP requests sent to AWS S3. 
+/**
+ * @brief Represents a response returned from an AWS IOT credential provider.
  */
-static char pDateISO8601[SIGV4_ISO_STRING_LEN] = { 0 };
+HTTPResponse_t credentialResponse = { 0 };
+
+/**
+ * @brief Buffer used in the demo for storing temporary credentials
+ * received from AWS TOT credential provider.
+ */
+uint8_t pAwsIotHttpBuffer[ 2048 ] = { 0 };
+
+/**
+ * @brief Represents date in ISO8601 format used in the HTTP requests sent to AWS S3.
+ */
+static char pDateISO8601[ SIGV4_ISO_STRING_LEN ] = { 0 };
 
 /*-----------------------------------------------------------*/
 
@@ -298,51 +330,95 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                  size_t hostLen,
                                  const char * pPath );
 
-/**
- * @brief Retrieve the temporary credentials form AWS IOT Credential Provider.
- *
- * @param[in] pTransportInterface The transport interface for making network
- *
- * @return 0 if credentials are retrieved successfully else 1.
- */
-//static int getTemporaryCredentials(TransportInterface_t* transportInterface);
+static void lowercaseHexEncode( unsigned char * pBuffer,
+                                size_t bufferLen,
+                                char * pHexOutput );
+
+static int32_t sha256( const unsigned char * pInput,
+                       size_t ilen,
+                       unsigned char * pOutput );
+
+static int32_t sha256Init( void * hashContext );
+
+static int32_t sha256Update( void * hashContext,
+                             const char * pInput,
+                             size_t inputLen );
+
+static int32_t sha256Final( void * hashContext,
+                            char * pOutput,
+                            size_t outputLen );
 
 /*-----------------------------------------------------------*/
 
-static int32_t sha256( const unsigned char * pInput, size_t ilen, unsigned char * pOutput )
- {
-     return mbedtls_sha256_ret( pInput, ilen, pOutput, 0 );
- }
+static void lowercaseHexEncode( unsigned char * pBuffer,
+                                size_t bufferLen,
+                                char * pHexOutput )
+{
+    static const char digitArr[] = "0123456789abcdef";
+    char * hex = pHexOutput;
+    size_t i = 0U;
 
- static void sha256Init( void * hashContext)
- {
-     return mbedtls_sha256_init( hashContext );
- }
+    for( i = 0; i < bufferLen; i++ )
+    {
+        *hex = digitArr[ ( pBuffer[ i ] & 0xF0 ) >> 4 ];
+        hex++;
+        *hex = digitArr[ ( pBuffer[ i ] & 0x0F ) ];
+        hex++;
+    }
+}
 
- static int32_t sha256Update( void * hashContext, const uint8_t * pInput,
-                              size_t inputLen )
- {
-     const unsigned char * input=(const unsigned char *)pInput;
-     return mbedtls_sha256_update_ret( hashContext,
-                               input,
-                               inputLen );
- }
+/*-----------------------------------------------------------*/
 
- static int32_t sha256Final( void * hashContext, uint8_t * pOutput,
-                             size_t outputLen )
- {
-     unsigned char *output = (unsigned char *)pOutput;
-     return mbedtls_sha256_finish_ret( hashContext,
-                                output);
- }
+static int32_t sha256( const unsigned char * pInput,
+                       size_t ilen,
+                       unsigned char * pOutput )
+{
+    return mbedtls_sha256_ret( pInput, ilen, pOutput, 0 );
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t sha256Init( void * hashContext )
+{
+    mbedtls_sha256_init( ( mbedtls_sha256_context * ) hashContext );
+    return mbedtls_sha256_starts_ret( ( mbedtls_sha256_context * ) hashContext, 0 );
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t sha256Update( void * hashContext,
+                             const char * pInput,
+                             size_t inputLen )
+{
+    return mbedtls_sha256_update_ret( ( mbedtls_sha256_context * ) hashContext,
+                                      ( const unsigned char * ) pInput,
+                                      inputLen );
+}
+
+/*-----------------------------------------------------------*/
+
+static int32_t sha256Final( void * hashContext,
+                            char * pOutput,
+                            size_t outputLen )
+{
+    return mbedtls_sha256_finish_ret( ( mbedtls_sha256_context * ) hashContext,
+                                      ( unsigned char * ) pOutput );
+}
+
+/*-----------------------------------------------------------*/
 
 /* Setup the crypto interface. */
-static SigV4CryptoInterface_t  cryptoInterface = {
-    .hashInit = sha256Init, 
-    .hashUpdate = sha256Update, 
-    .hashFinal = sha256Final,
-    .pHashContext = &hashContext
+static SigV4CryptoInterface_t cryptoInterface =
+{
+    .hashInit      = sha256Init,
+    .hashUpdate    = sha256Update,
+    .hashFinal     = sha256Final,
+    .pHashContext  = &hashContext,
+    .hashBlockLen  = SIGV4_HASH_MAX_BLOCK_LENGTH,
+    .hashDigestLen = SIGV4_HASH_MAX_DIGEST_LENGTH,
 };
+
+/*-----------------------------------------------------------*/
 
 static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 {
@@ -358,14 +434,14 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
     OpensslCredentials_t opensslCredentials = { 0 };
     /* Information about the server to send the HTTP requests. */
     ServerInfo_t serverInfo = { 0 };
-    
+
     /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
     httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-                                sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
+                                sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
                                 &pAddress,
                                 &serverHostLength );
     returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
-    
+
     if( returnStatus == EXIT_SUCCESS )
     {
         /* serverHost should consist only of the host address located in
@@ -403,6 +479,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
     return returnStatus;
 }
 
+/*-----------------------------------------------------------*/
 
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
 {
@@ -421,7 +498,7 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
 
     /* Retrieve the address location and length from AWS_S3_OBJECT_URL. */
     httpStatus = getUrlAddress( AWS_S3_OBJECT_URL,
-                                sizeof(AWS_S3_OBJECT_URL)-1,
+                                sizeof( AWS_S3_OBJECT_URL ) - 1,
                                 &pAddress,
                                 &serverHostLength );
     returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -478,6 +555,21 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
     /* curByte indicates which starting byte we want to download next. */
     size_t curByte = 0;
 
+    /* Variable to store hash of payload. */
+    char * pPayloadHashDigest = ( char * ) malloc( SHA256_HEX_ENCODED_DIGEST_LENGTH );
+    /* Variable to store hex encoded hash of payload. */
+    char * hexencoded = ( char * ) malloc( SHA256_HEX_ENCODED_DIGEST_LENGTH );
+    /* Store Authorization header value generated using SigV4 library. */
+    char * pSigv4Auth = ( char * ) malloc( AWS_HTTP_AUTH_HEADER_VALUE_LEN );
+    size_t sigv4AuthLen = AWS_HTTP_AUTH_HEADER_VALUE_LEN;
+
+    SigV4Status_t sigv4Status = SigV4Success;
+    SigV4HttpParameters_t sigv4HttpParams;
+
+    /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
+    char * signature;
+    size_t signatureLen;
+
     assert( pPath != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
@@ -531,6 +623,40 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
                                                           &requestInfo );
 
+        if( returnStatus == true )
+        {
+            /* Add the X-AMZ-DATE required headers to the request. */
+            httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                               ( const char * ) SIGV4_HTTP_X_AMZ_DATE_HEADER,
+                                               ( size_t ) sizeof( SIGV4_HTTP_X_AMZ_DATE_HEADER ) - 1,
+                                               ( const char * ) pDateISO8601,
+                                               ( size_t ) strlen( pDateISO8601 ) );
+
+            if( httpStatus != HTTPSuccess )
+            {
+                LogError( ( "Failed to add X-AMZ-DATE to request headers: Error=%s.",
+                            HTTPClient_strerror( httpStatus ) ) );
+                returnStatus = false;
+            }
+        }
+
+        if( returnStatus == true )
+        {
+            /* S3 requires the security token as part of the canonical headers. */
+            httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                               ( const char * ) SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER,
+                                               ( size_t ) ( sizeof( SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER ) - 1 ),
+                                               ( const char * ) sigvCreds.pSecurityToken,
+                                               ( size_t ) sigvCreds.securityTokenLen );
+
+            if( httpStatus != HTTPSuccess )
+            {
+                LogError( ( "Failed to add X-AMZ-SECURITY-TOKEN to request headers: Error=%s.",
+                            HTTPClient_strerror( httpStatus ) ) );
+                returnStatus = false;
+            }
+        }
+
         if( httpStatus == HTTPSuccess )
         {
             httpStatus = HTTPClient_AddRangeHeader( &requestHeaders,
@@ -539,8 +665,108 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         }
         else
         {
-            LogError( ( "Failed to initialize HTTP request headers: Error=%s.",
+            LogError( ( "Failed to add range header to request headers: Error=%s.",
                         HTTPClient_strerror( httpStatus ) ) );
+        }
+
+        /* Get the hash of the payload. */
+        sha256( "", 0, pPayloadHashDigest );
+        lowercaseHexEncode( pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
+
+        if( returnStatus == true )
+        {
+            httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                               ( const char * ) SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER,
+                                               ( size_t ) ( sizeof( SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER ) - 1 ),
+                                               ( const char * ) hexencoded,
+                                               64 );
+
+            if( httpStatus != HTTPSuccess )
+            {
+                LogError( ( "Failed to add X-AMZ-CONTENT-SHA256-HEADER to request headers: Error=%s.",
+                            HTTPClient_strerror( httpStatus ) ) );
+                returnStatus = false;
+            }
+        }
+
+        /********************** 5. Generate HTTP Sigv4 Auth ******************/
+
+        size_t i = 0;
+        const char * temp = requestHeaders.pBuffer;
+        size_t len = requestHeaders.headersLen;
+
+        while( temp[ i ] != '\n' )
+        {
+            temp++;
+            len--;
+        }
+
+        temp++;
+        len--;
+
+        /* Setup the HTTP parameters. */
+        sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
+        sigv4HttpParams.httpMethodLen = requestInfo.methodLen;
+        /* None of the requests parameters below are pre-canonicalized */
+        sigv4HttpParams.flags = 0;
+        sigv4HttpParams.pPath = requestInfo.pPath;
+        sigv4HttpParams.pathLen = requestInfo.pathLen;
+        sigv4HttpParams.pQuery = NULL;
+        sigv4HttpParams.queryLen = 0;
+        sigv4HttpParams.pHeaders = temp;
+        sigv4HttpParams.headersLen = len;
+        sigv4HttpParams.pPayload = "";
+        sigv4HttpParams.payloadLen = 0;
+
+        /* Setup the Sigv4 Parameters. */
+        SigV4Parameters_t sigv4Params =
+        {
+            .pCredentials     = &sigvCreds,
+            .pDateIso8601     = pDateISO8601,
+            .pRegion          = AWS_S3_BUCKET_REGION,
+            .regionLen        = strlen( AWS_S3_BUCKET_REGION ),
+            .pService         = AWS_SERVICE_NAME,
+            .serviceLen       = strlen( AWS_SERVICE_NAME ),
+            .pCryptoInterface = &cryptoInterface,
+            .pHttpParameters  = &sigv4HttpParams
+        };
+        /* SigV4Parameters_t sigv4Params; */
+        /*  sigv4Params.pCredentials     = &sigvCreds; */
+        /*     sigv4Params.pDateIso8601     = pDateISO8601; */
+        /*     sigv4Params.pRegion          = AWS_S3_BUCKET_REGION; */
+        /*     sigv4Params.regionLen        = strlen( AWS_S3_BUCKET_REGION ); */
+        /*     sigv4Params.pService         = AWS_SERVICE_NAME, */
+        /*     sigv4Params.serviceLen       = strlen( AWS_SERVICE_NAME ); */
+        /*     sigv4Params.pCryptoInterface = &cryptoInterface; */
+        /*     sigv4Params.pHttpParameters  = &sigv4HttpParams; */
+
+        if( returnStatus == true )
+        {
+            /* Generate HTTP Authorization header using SigV4_GenerateHTTPAuthorization API. */
+            sigv4Status = SigV4_GenerateHTTPAuthorization( &sigv4Params, pSigv4Auth, &sigv4AuthLen, &signature, &signatureLen );
+
+            if( sigv4Status != SigV4Success )
+            {
+                LogError( ( "SigV4 Library Failed to generate AUTHORIZATION Header." ) );
+                returnStatus = false;
+            }
+        }
+
+        /* Add the authorization header to the HTTP request headers. */
+        if( returnStatus == true )
+        {
+            httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                               ( const char * ) SIGV4_AUTH_HEADER_FIELD_NAME,
+                                               ( size_t ) sizeof( SIGV4_AUTH_HEADER_FIELD_NAME ) - 1,
+                                               ( const char * ) pSigv4Auth,
+                                               ( size_t ) sigv4AuthLen );
+
+            if( httpStatus != HTTPSuccess )
+            {
+                LogError( ( "Failed to add AUTHORIZATION Header to request headers: Error=%s.",
+                            HTTPClient_strerror( httpStatus ) ) );
+                returnStatus = false;
+            }
         }
 
         if( httpStatus == HTTPSuccess )
@@ -628,6 +854,22 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     char * contentRangeValStr = NULL;
     size_t contentRangeValStrLength = 0;
 
+    /* Variable to store hash of payload. */
+    char * pPayloadHashDigest = ( char * ) malloc( SHA256_HEX_ENCODED_DIGEST_LENGTH );
+    /* Variable to store hex encoded hash of payload. */
+    char * hexencoded = ( char * ) malloc( SHA256_HEX_ENCODED_DIGEST_LENGTH );
+
+    /* Store Authorization header value generated using SigV4 library. */
+    char * pSigv4Auth = ( char * ) malloc( AWS_HTTP_AUTH_HEADER_VALUE_LEN );
+    size_t sigv4AuthLen = AWS_HTTP_AUTH_HEADER_VALUE_LEN;
+
+    SigV4Status_t sigv4Status = SigV4Success;
+    SigV4HttpParameters_t sigv4HttpParams;
+
+    /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
+    char * signature;
+    size_t signatureLen;
+
     assert( pHost != NULL );
     assert( pPath != NULL );
 
@@ -669,33 +911,46 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                     HTTPClient_strerror( httpStatus ) ) );
         returnStatus = false;
     }
-     /* Get the hash of the payload. */
-    char pPayloadHashDigest[ SHA256_HEX_ENCODED_DIGEST_LENGTH ];
-    sha256("", 0, pPayloadHashDigest);
 
-    LogInfo( ( "Date Header=%s"  ,(const char *)SIGV4_HTTP_X_AMZ_DATE_HEADER));
-    //LogInfo( ( "Date Value=%s"  ,pPayloadHashDigest));
-    /* Add the sigv4 required headers to the request. */
-    httpStatus=HTTPClient_AddHeader( &requestHeaders,
-                        (const char *)SIGV4_HTTP_X_AMZ_DATE_HEADER,
-                        (size_t)sizeof(SIGV4_HTTP_X_AMZ_DATE_HEADER) - 1,
-                        (const char *)pDateISO8601,
-                        (size_t)strlen(pDateISO8601) );
-    LogInfo( ( "HTTP STATUS=%s"  ,HTTPClient_strerror( httpStatus )));
-        /* S3 requires the security token as part of the canonical headers. IoT for example 
-        * does not; it is added as part of the path. */               
-    httpStatus=HTTPClient_AddHeader( &requestHeaders,
-                            (const char *)SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER,
-                            (size_t)sizeof(SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER) - 1,
-                            (const char *)sigvCreds.pSecurityToken,
-                            (size_t)sigvCreds.securityTokenLen );
-                            LogInfo( ( "HTTP STATUS=%s"  ,HTTPClient_strerror( httpStatus )));
-    httpStatus=HTTPClient_AddHeader( &requestHeaders,
-                            SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER,
-                            sizeof( SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER ) - 1,
-                            pPayloadHashDigest,
-                            32);
-    LogInfo( ( "HTTP STATUS=%s"  ,HTTPClient_strerror( httpStatus )));
+    /* Get the hash of the payload. */
+    sha256( "", 0, pPayloadHashDigest );
+    lowercaseHexEncode( pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
+
+    if( returnStatus == true )
+    {
+        /* Add the sigv4 required headers to the request. */
+        httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                           ( const char * ) SIGV4_HTTP_X_AMZ_DATE_HEADER,
+                                           ( size_t ) sizeof( SIGV4_HTTP_X_AMZ_DATE_HEADER ) - 1,
+                                           ( const char * ) pDateISO8601,
+                                           ( size_t ) strlen( pDateISO8601 ) );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to add X-AMZ-DATE to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    if( returnStatus == true )
+    {
+        /* S3 requires the security token as part of the canonical headers. IoT for example
+         * does not; it is added as part of the path. */
+        httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                           ( const char * ) SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER,
+                                           ( size_t ) ( sizeof( SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER ) - 1 ),
+                                           ( const char * ) sigvCreds.pSecurityToken,
+                                           ( size_t ) sigvCreds.securityTokenLen );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to add X-AMZ-SECURITY-TOKEN to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
     if( returnStatus == true )
     {
         /* Add the header to get bytes=0-0. S3 will respond with a Content-Range
@@ -712,52 +967,92 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         }
     }
 
-    
+    if( returnStatus == true )
+    {
+        httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                           ( const char * ) SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER,
+                                           ( size_t ) ( sizeof( SIGV4_HTTP_X_AMZ_CONTENT_SHA256_HEADER ) - 1 ),
+                                           ( const char * ) hexencoded,
+                                           64 );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to add X-AMZ-CONTENT-SHA256-HEADER to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
 
     /********************** 5. Generate HTTP Sigv4 Auth ******************/
-    
+    size_t i = 0;
+    const char * temp = requestHeaders.pBuffer;
+    size_t len = requestHeaders.headersLen;
+
+    while( temp[ i ] != '\n' )
+    {
+        temp++;
+        len--;
+    }
+
+    temp++;
+    len--;
+
     /* Setup the HTTP parameters. */
-    SigV4HttpParameters_t  Sigv4HttpParams = {
-        .pHttpMethod = requestInfo.pMethod,
-        .httpMethodLen = requestInfo.methodLen,
-        .flags = 0, // None of the requests parameters below are pre-canonicalized
-        .pPath = requestInfo.pPath,
-        .pathLen = requestInfo.pathLen,
-        .pQuery = NULL,
-        .queryLen = 0,
-        .pHeaders = requestHeaders.pBuffer,
-        .headersLen = requestHeaders.headersLen,
-        .pPayload = NULL,
-        .payloadLen = 0
-    };
+    sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
+    sigv4HttpParams.httpMethodLen = requestInfo.methodLen;
+    /* None of the requests parameters below are pre-canonicalized */
+    sigv4HttpParams.flags = 0;
+    sigv4HttpParams.pPath = requestInfo.pPath;
+    sigv4HttpParams.pathLen = requestInfo.pathLen;
+    sigv4HttpParams.pQuery = NULL;
+    sigv4HttpParams.queryLen = 0;
+    sigv4HttpParams.pHeaders = temp;
+    sigv4HttpParams.headersLen = len;
+    sigv4HttpParams.pPayload = "";
+    sigv4HttpParams.payloadLen = 0;
 
     /* Setup the Sigv4 Parameters. */
-    SigV4Parameters_t  Sigv4Params = {
-
-        .pCredentials = &sigvCreds,
-        .pDateIso8601 = pDateISO8601,
-        .pRegion = AWS_S3_BUCKET_REGION,
-        .regionLen = strlen(AWS_S3_BUCKET_REGION)-1,
-        .pService = "s3",
-        .serviceLen = strlen("s3")-1,
-        .pCryptoInterface=&cryptoInterface,
-        .pHttpParameters = &Sigv4HttpParams
+    SigV4Parameters_t Sigv4Params =
+    {
+        .pCredentials     = &sigvCreds,
+        .pDateIso8601     = pDateISO8601,
+        .pRegion          = AWS_S3_BUCKET_REGION,
+        .regionLen        = strlen( AWS_S3_BUCKET_REGION ),
+        .pService         = AWS_SERVICE_NAME,
+        .serviceLen       = strlen( AWS_SERVICE_NAME ),
+        .pCryptoInterface = &cryptoInterface,
+        .pHttpParameters  = &sigv4HttpParams
     };
 
-    char* pSigv4Auth = (char*)malloc(2048);
-    size_t sigv4AuthLen = 2048;
-    SigV4Status_t sigv4Status=SigV4Success;
-    // sigv4Status=Sigv4_GenerateHTTPAuthorization( &Sigv4Params,
-    //                                 NULL,
-    //                                 pSigv4Auth,
-    //                                 &sigv4AuthLen );
-                                    
-    /* Write to the authorization to the HTTP headers. */
-    // httpStatus=HTTPClient_AddHeader(&requestHeaders, 
-    //                     (const char *)SIGV4_AUTH_HEADER_FIELD_NAME,
-    //                     (size_t)sizeof( SIGV4_AUTH_HEADER_FIELD_NAME ) - 1,
-    //                     (const char *)pSigv4Auth,
-    //                     (size_t)sigv4AuthLen );
+    if( returnStatus == true )
+    {
+        /* Generate HTTP Authorization header using SigV4_GenerateHTTPAuthorization API. */
+        sigv4Status = SigV4_GenerateHTTPAuthorization( &Sigv4Params, pSigv4Auth, &sigv4AuthLen, &signature, &signatureLen );
+
+        if( sigv4Status != SigV4Success )
+        {
+            LogError( ( "Failed to generate HTTP AUTHORIZATION Header. " ) );
+            returnStatus = false;
+        }
+    }
+
+    /* Add the authorization header to the HTTP request headers. */
+    if( returnStatus == true )
+    {
+        httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                           ( const char * ) SIGV4_AUTH_HEADER_FIELD_NAME,
+                                           ( size_t ) sizeof( SIGV4_AUTH_HEADER_FIELD_NAME ) - 1,
+                                           ( const char * ) pSigv4Auth,
+                                           ( size_t ) sigv4AuthLen );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+                        pHost, pPath, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
     if( returnStatus == true )
     {
         /* Send the request and receive the response. */
@@ -790,8 +1085,8 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         if( response.statusCode != HTTP_STATUS_CODE_PARTIAL_CONTENT )
         {
             LogError( ( "Received an invalid response from the server "
-                        "(Status Code: %u).",
-                        response.statusCode ) );
+                        "(Status Code: %s).",
+                        response.pBody ) );
             returnStatus = false;
         }
     }
@@ -850,116 +1145,6 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     return returnStatus;
 }
 
-// static int getTemporaryCredentials(TransportInterface_t* transportInterface)
-// {
-
-//         /******************** Get Temporary Credentials. **********************/
-//         int returnStatus=EXIT_SUCCESS;
-//         HTTPRequestHeaders_t requestHeaders = { 0 };
-//         HTTPRequestInfo_t requestInfo = { 0 };
-//         HTTPResponse_t response = { 0 };
-//         uint8_t pAwsIotHttpBuffer[2048] = { 0 };
-//         uint8_t pS3HttpBuffer[2048] = { 0 };
-//         size_t pathLen = 0;
-//         size_t addressLen = 0;
-//         HTTPStatus_t httpStatus = HTTPSuccess;
-//         SigV4Status_t sigv4Status=SigV4Success;
-//         JSONStatus_t jsonStatus;
-//         const char * pAddress=NULL;
-//         const char *pDate;
-//         size_t dateLen;
-
-//         /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
-//         httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-//                                     sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
-//                                     &pAddress,
-//                                     &addressLen );
-//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-//         if(returnStatus==EXIT_SUCCESS){
-//             httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-//                                         sizeof(AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT)-1,
-//                                             &pPath,
-//                                             &pathLen );
-//         }
-//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-//         /* Request header buffer. */
-//         requestHeaders.pBuffer = pAwsIotHttpBuffer;
-//         requestHeaders.bufferLen = sizeof(pAwsIotHttpBuffer);
-
-
-//         /* Temporary token request. */
-//         requestInfo.pMethod = HTTP_METHOD_GET;
-//         requestInfo.methodLen = sizeof(HTTP_METHOD_GET)-1;
-//         requestInfo.pPath = pPath;
-//         requestInfo.pathLen = pathLen;
-//         requestInfo.pHost = pAddress;
-//         requestInfo.hostLen = addressLen;
-//         requestInfo.reqFlags=0;
-
-//         response.pBuffer = pAwsIotHttpBuffer;
-//         response.bufferLen= sizeof(pAwsIotHttpBuffer);
-//         response.pHeaderParsingCallback = NULL;
-
-//         if(returnStatus==EXIT_SUCCESS){
-//             httpStatus=HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
-//         }
-        
-//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-//         if(returnStatus==EXIT_SUCCESS){
-//         httpStatus=HTTPClient_AddHeader( &requestHeaders, 
-//                      AWS_IOT_THING_NAME_HEADER_FIELD, 
-//                      sizeof(AWS_IOT_THING_NAME_HEADER_FIELD)-1,
-//                      AWS_IOT_THING_NAME,
-//                      sizeof(AWS_IOT_THING_NAME));
-//         }
-//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-//         if(returnStatus==EXIT_SUCCESS){
-//             httpStatus=HTTPClient_Send( transportInterface,
-//                     &requestHeaders,
-//                     NULL,
-//                     0,
-//                     &response,0 );
-//         }
-
-//         LogInfo( ( "HTTPSTATUS = %s", HTTPClient_strerror(httpStatus) ) );
-//         LogInfo( ( "HTTPSTATUS = %d", response.statusCode ) );
-//         LogInfo( ( "HTTPSTATUS = %s", response.pHeaders ) ); 
-
-//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-//         if(returnStatus==EXIT_SUCCESS){
-//             jsonStatus=parseCredentials(response ,&sigvCreds);
-//         }
-
-//         returnStatus= (jsonStatus == JSONSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-//         /* Get the current time from the http response. */
-//         if(returnStatus==EXIT_SUCCESS){
-//             httpStatus=HTTPClient_ReadHeader( &response, 
-//                                 HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, 
-//                                 sizeof(HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD)-1, 
-//                                 (const char **)&pDate,
-//                                 &dateLen );
-//         }
-        
-
-//         LogInfo( ( "JSONSTATUS = %d", jsonStatus ) );  
-
-//         returnStatus= (httpStatus == HTTPSuccess)? EXIT_SUCCESS:EXIT_FAILURE;
-
-//         if(returnStatus==EXIT_SUCCESS){
-//             sigv4Status=SigV4_AwsIotDateToIso8601( pDate,dateLen, pDateISO8601 ,sizeof(pDateISO8601));
-//         }
-
-//         returnStatus= (sigv4Status == SigV4Success)? EXIT_SUCCESS:EXIT_FAILURE;
-        
-//         LogInfo( ( "SIGv4STATUS = %s", pDateISO8601 ) );
-        
-//         return returnStatus;
-// }
 /*-----------------------------------------------------------*/
 
 /**
@@ -993,7 +1178,7 @@ int main( int argc,
     /* Return value of main. */
     int32_t returnStatus = EXIT_SUCCESS;
     /* Return value of private functions. */
-    bool ret = false;
+    bool ret = false, credentialStatus = false;
     /* HTTPS Client library return status. */
     HTTPStatus_t httpStatus = HTTPSuccess;
     int demoRunCount = 0;
@@ -1052,30 +1237,39 @@ int main( int argc,
             transportInterface.pNetworkContext = &networkContext;
         }
 
-        //returnStatus=getTemporaryCredentials(&transportInterface);
-        returnStatus=getTemporaryCredentials(&transportInterface,sizeof(pDateISO8601),pDateISO8601,&sigvCreds);
-        if( returnStatus == EXIT_FAILURE ){
+        /* Initialize response buffer. */
+        credentialResponse.pBuffer = pAwsIotHttpBuffer;
+        credentialResponse.bufferLen = 2048;
+
+        credentialStatus = getTemporaryCredentials( &transportInterface, sizeof( pDateISO8601 ), &credentialResponse, pDateISO8601, &sigvCreds );
+
+        returnStatus = ( credentialStatus == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
+
+        if( returnStatus == EXIT_FAILURE )
+        {
             LogError( ( "Failed to get temporary credentials from AWS IOT CREDENTIALS PROVIDER %s.",
                         serverHost ) );
         }
-         /* End the TLS session, then close the TCP connection. */
+
+        /* End the TLS session, then close the TCP connection. */
         ( void ) Openssl_Disconnect( &networkContext );
 
-        if( returnStatus == EXIT_SUCCESS ){
+        if( returnStatus == EXIT_SUCCESS )
+        {
             /* Attempt to connect to the AWS S3 Http server. If connection fails, retry
-            * after a timeout. The timeout value will be exponentially
-            * increased until either the maximum number of attempts or the
-            * maximum timeout value is reached. The function returns
-            * EXIT_FAILURE if the TCP connection cannot be established to the
-            * broker after the configured number of attempts. */
+             * after a timeout. The timeout value will be exponentially
+             * increased until either the maximum number of attempts or the
+             * maximum timeout value is reached. The function returns
+             * EXIT_FAILURE if the TCP connection cannot be established to the
+             * broker after the configured number of attempts. */
             returnStatus = connectToServerWithBackoffRetries( connectToS3Server,
-                                                            &networkContext );
+                                                              &networkContext );
 
             if( returnStatus == EXIT_FAILURE )
             {
                 /* Log an error to indicate connection failure after all
-                * reconnect attempts are over. */
-                LogError( ( "Failed to connect to AWS S3 Http server %s.",
+                 * reconnect attempts are over. */
+                LogError( ( "Failed to connect to AWS S3 HTTP server %s.",
                             serverHost ) );
             }
 
@@ -1089,16 +1283,16 @@ int main( int argc,
             }
 
             /******************** Download S3 Object File. **********************/
-           
+
             if( returnStatus == EXIT_SUCCESS )
             {
                 /* Retrieve the path location from AWS_S3_OBJECT_URL. This
-                * function returns the length of the path without the query into
-                * pathLen, which is left unused in this demo. */
-                httpStatus = getUrlPath(AWS_S3_OBJECT_URL,
-                                        sizeof(AWS_S3_OBJECT_URL)-1,
-                                        &pPath,
-                                        &pathLen );
+                 * function returns the length of the path without the query into
+                 * pathLen, which is left unused in this demo. */
+                httpStatus = getUrlPath( AWS_S3_OBJECT_URL,
+                                         sizeof( AWS_S3_OBJECT_URL ) - 1,
+                                         &pPath,
+                                         &pathLen );
 
                 returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
             }
@@ -1114,7 +1308,6 @@ int main( int argc,
 
             /* End the TLS session, then close the TCP connection. */
             ( void ) Openssl_Disconnect( &networkContext );
-
         }
 
         /******************* Retry in case of failure. **********************/

@@ -126,8 +126,8 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
 /**
  * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API .
  *
- * @param[in] response HTTP response which needs to be parsed to get credentials.
- * @param[out] sigvCreds Buffer to store the parsed credentials.
+ * @param[in] response HTTP response which needs to be parsed to get the credentials.
+ * @param[out] sigvCreds Buffer passed to store the parsed credentials.
  *
  * @return #JSONSuccess if the query is matched and the value output;
  * #JSONNullParameter if any pointer parameters are NULL;
@@ -135,16 +135,22 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
  * or max is 0, or an index is too large to convert to a signed 32-bit integer;
  * #JSONNotFound if the query has no match.
  */
-JSONStatus_t parseCredentials(HTTPResponse_t response ,SigV4Credentials_t* sigvCreds);
+JSONStatus_t parseCredentials( HTTPResponse_t * response,
+                               SigV4Credentials_t * sigvCreds );
 
 /**
- * @brief Retrieve the temporary credentials form AWS IOT Credential Provider.
+ * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
  *
  * @param[in] pTransportInterface The transport interface for making network
  * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date .
+ * @param[in,out] response Response buffer to store the HTTP response received.
  * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
  * @param[out] sigvCreds Buffer to store the parsed credentials.
  *
- * @return 0 if credentials are retrieved successfully else 1.
+ * @return `true` if credentials are retrieved successfully otherwise 'false`.
  */
-int getTemporaryCredentials(TransportInterface_t* transportInterface, size_t pDateISO8601Len, char * pDateISO8601, SigV4Credentials_t*  sigvCreds);
+bool getTemporaryCredentials( TransportInterface_t * transportInterface,
+                              size_t pDateISO8601Len,
+                              HTTPResponse_t * response,
+                              char * pDateISO8601,
+                              SigV4Credentials_t * sigvCreds );
