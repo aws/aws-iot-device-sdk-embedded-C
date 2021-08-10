@@ -20,9 +20,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef HTTP_DEMO_UTILS_H_
+#define HTTP_DEMO_UTILS_H_
+
 /* Standard includes. */
 #include <stdlib.h>
 #include <stdbool.h>
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
 
 /* Transport interface include. */
 #include "transport_interface.h"
@@ -153,3 +162,11 @@ bool getTemporaryCredentials( TransportInterface_t * transportInterface,
                               HTTPResponse_t * response,
                               char * pDateISO8601,
                               SigV4Credentials_t * sigvCreds );
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
+
+#endif /* ifndef HTTP_DEMO_UTILS_H_ */
