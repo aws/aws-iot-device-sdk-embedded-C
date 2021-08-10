@@ -90,7 +90,7 @@
  * @note This certificate should be PEM-encoded.
  */
 #ifndef CLIENT_CERT_PATH
-    #define CLIENT_CERT_PATH    ""
+    #define CLIENT_CERT_PATH    "...insert here..."
 #endif
 
 /**
@@ -100,13 +100,13 @@
  * @note This key should be PEM-encoded.
  */
 #ifndef CLIENT_PRIVATE_KEY_PATH
-    #define CLIENT_PRIVATE_KEY_PATH    ""
+    #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
 #endif
 
 /**
  * @brief Define AWS IOT thing name.
  */
-#define AWS_IOT_THING_NAME                      ""
+#define AWS_IOT_THING_NAME                      "...insert here..."
 
 /**
  * @brief Endpoint for the AWS IOT credential provider.
@@ -115,27 +115,27 @@
  * `aws iot describe-endpoint --endpoint-type iot:CredentialProvider` from
  * the AWS CLI.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    ""
+#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "...insert here..."
 
 /**
  * @brief Role alias for accessing the credential provider.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        ""
+#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
 
 /**
  * @brief Name of bucket in AWS S3 from where file needs to be downloaded.
  */
-#define AWS_S3_BUCKET_NAME                      ""
+#define AWS_S3_BUCKET_NAME                      "...insert here..."
 
 /**
  * @brief AWS Region where the bucket resides.
  */
-#define AWS_S3_BUCKET_REGION                    ""
+#define AWS_S3_BUCKET_REGION                    "...insert here..."
 
 /**
  * @brief Name of file that needs to be downloaded from AWS S3.
  */
-#define AWS_S3_OBJECT_NAME                      ""
+#define AWS_S3_OBJECT_NAME                      "...insert here..."
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.

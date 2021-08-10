@@ -12,16 +12,22 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 # Include sigV4 library file path configuration.
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/sigv4-for-aws-iot-embedded-sdk/sigv4FilePaths.cmake )
 
+# CPP files are searched for supporting CI build checks that verify C++ linkage of the coreHTTP library
+file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
+file( GLOB DEMO_UTILS "${DEMOS_DIR}/http/common/src/*.c*" )
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
-        "${DEMO_NAME}.c"
-        "${DEMOS_DIR}/http/common/src/http_demo_utils.c"
-        ${HTTP_SOURCES}
-        ${HTTP_THIRD_PARTY_SOURCES}
-        ${BACKOFF_ALGORITHM_SOURCES}
-        ${JSON_SOURCES}
-        ${SIGV4_SOURCES}
+    "${DEMO_FILE}"
+    ${DEMO_UTILS}
+    "${DEMO_NAME}.c"
+    "${DEMOS_DIR}/http/common/src/http_demo_utils.c"
+    ${HTTP_SOURCES}
+    ${HTTP_THIRD_PARTY_SOURCES}
+    ${BACKOFF_ALGORITHM_SOURCES}
+    ${JSON_SOURCES}
+    ${SIGV4_SOURCES}
 )
 
 target_link_libraries(
