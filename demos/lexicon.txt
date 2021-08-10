@@ -1,4 +1,5 @@
 accel
+accessKeyId
 ack
 acks
 addr
@@ -13,6 +14,7 @@ alpn
 alt
 amazonrootca
 amazontrust
+amz
 amzn
 ansi
 api
@@ -99,6 +101,8 @@ clienttoken
 closesession
 cmac
 cmake
+credentialprovider
+cryptointerface
 codesigner
 com
 compat
@@ -115,6 +119,7 @@ const
 contentrangevalstr
 copybrief
 corehttp
+corejson
 coremqtt
 corepkcs
 correclty
@@ -275,9 +280,11 @@ idletime
 ietf
 ifdef
 ifndef
+ilen
 inc
 init
 initializerequestheaders
+inputstrlen
 int
 intel
 interoperate
@@ -293,8 +300,12 @@ jitr
 jobid
 jobidlength
 json
+jsonbadparameter
 jsonlength
+jsonnotfound
+jsonnullparameter
 jsonstring
+jsonsuccess
 karthikeyan
 ke
 keygen
@@ -469,6 +480,7 @@ pfilepath
 pfilesize
 pfixedbuffer
 phash
+phexoutput
 phost
 php
 pid
@@ -476,6 +488,8 @@ pincomingpacket
 pindex
 pingreq
 pingresp
+pinput
+pinputstr
 pk
 pkcs
 pkcslabelsptr
@@ -511,6 +525,7 @@ poutnumopenports
 poutnumtcpopenports
 poutnumudpopenports
 poutportsarray
+poutput
 poutreportlength
 pouttcpportsarray
 poutudpportsarray
@@ -640,10 +655,12 @@ scsv
 sdk
 sec
 secp
+secretaccesskey
 seedfile
 sendupdate
 serialnumber
 serverhost
+sessiontoken
 setkey
 sha
 sha256
@@ -655,6 +672,7 @@ shasum
 sig
 signer
 signinit
+sigvcreds
 sizeof
 slotcount
 slotid
