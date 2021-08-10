@@ -631,6 +631,9 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
     SigV4Status_t sigv4Status = SigV4Success;
     SigV4HttpParameters_t sigv4HttpParams;
 
+    const char * pHeaders = NULL;
+    size_t headersLen = 0;
+
     /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
     char * signature;
     size_t signatureLen;
@@ -756,18 +759,20 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
 
         /********************** 5. Generate HTTP Sigv4 Auth ******************/
 
-        size_t i = 0;
-        const char * temp = requestHeaders.pBuffer;
-        size_t len = requestHeaders.headersLen;
+        /* Move request header pointer past the initial headers which are added by coreHTTP
+         * library and are not required by SigV4 library. */
+        pHeaders = requestHeaders.pBuffer;
+        headersLen = requestHeaders.headersLen;
 
-        while( temp[ i ] != '\n' )
+        while( 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
         {
-            temp++;
-            len--;
+            pHeaders++;
+            headersLen--;
         }
 
-        temp++;
-        len--;
+        /* Moving header pointer past "\r\n" .*/
+        pHeaders = pHeaders + 2;
+        headersLen = headersLen - 2;
 
         /* Setup the HTTP parameters. */
         sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
@@ -778,8 +783,8 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         sigv4HttpParams.pathLen = requestInfo.pathLen;
         sigv4HttpParams.pQuery = NULL;
         sigv4HttpParams.queryLen = 0;
-        sigv4HttpParams.pHeaders = temp;
-        sigv4HttpParams.headersLen = len;
+        sigv4HttpParams.pHeaders = pHeaders;
+        sigv4HttpParams.headersLen = headersLen;
         sigv4HttpParams.pPayload = "";
         sigv4HttpParams.payloadLen = 0;
 
@@ -912,6 +917,9 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     SigV4Status_t sigv4Status = SigV4Success;
     SigV4HttpParameters_t sigv4HttpParams;
 
+    const char * pHeaders = NULL;
+    size_t headersLen = 0;
+
     /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
     char * signature;
     size_t signatureLen;
@@ -1029,19 +1037,20 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         }
     }
 
-    /********************** 5. Generate HTTP Sigv4 Auth ******************/
-    size_t i = 0;
-    const char * temp = requestHeaders.pBuffer;
-    size_t len = requestHeaders.headersLen;
+    /* Move request header pointer past the initial headers which are added by coreHTTP
+     * library and are not required by SigV4 library. */
+    pHeaders = requestHeaders.pBuffer;
+    headersLen = requestHeaders.headersLen;
 
-    while( temp[ i ] != '\n' )
+    while( 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
     {
-        temp++;
-        len--;
+        pHeaders++;
+        headersLen--;
     }
 
-    temp++;
-    len--;
+    /* Moving header pointer past "\r\n" .*/
+    pHeaders = pHeaders + 2;
+    headersLen = headersLen - 2;
 
     /* Setup the HTTP parameters. */
     sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
@@ -1052,8 +1061,8 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     sigv4HttpParams.pathLen = requestInfo.pathLen;
     sigv4HttpParams.pQuery = NULL;
     sigv4HttpParams.queryLen = 0;
-    sigv4HttpParams.pHeaders = temp;
-    sigv4HttpParams.headersLen = len;
+    sigv4HttpParams.pHeaders = pHeaders;
+    sigv4HttpParams.headersLen = headersLen;
     sigv4HttpParams.pPayload = "";
     sigv4HttpParams.payloadLen = 0;
 
