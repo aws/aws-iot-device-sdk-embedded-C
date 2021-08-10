@@ -33,6 +33,9 @@
 #endif
 /* *INDENT-ON* */
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* Transport interface include. */
 #include "transport_interface.h"
 
@@ -44,9 +47,6 @@
 
 /* SIGV4 API header. */
 #include "sigv4.h"
-
-/* Include Demo Config as the first non-system header. */
-#include "demo_config.h"
 
 /**
  * @brief Function pointer for establishing connection to a server.
