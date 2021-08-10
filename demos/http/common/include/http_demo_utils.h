@@ -133,7 +133,7 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t * pAddressLen );
 
 /**
- * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API .
+ * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API.
  *
  * @param[in] response HTTP response which needs to be parsed to get the credentials.
  * @param[out] sigvCreds Buffer passed to store the parsed credentials.

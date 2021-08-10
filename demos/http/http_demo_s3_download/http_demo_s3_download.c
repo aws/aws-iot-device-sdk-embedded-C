@@ -152,7 +152,7 @@
 /**
  * @brief Length in bytes of hash digest. 32 bytes for SHA256.
  */
-#define SHA256_HASH_DIGEST_LENGTH                ( ( ( uint16_t ) 32 ) )
+#define SHA256_HASH_DIGEST_LENGTH                ( ( ( uint16_t ) 64 ) )
 
 /**
  * @brief Buffer Length for AWS IOT Credentials.
