@@ -1,5 +1,5 @@
 accel
-accessKeyId
+accesskeyid
 ack
 acks
 addr
