@@ -195,7 +195,12 @@
 /**
  * @brief Length of AWS HTTP Authorization header value generated using SigV4 library.
  */
-#define AWS_HTTP_AUTH_HEADER_VALUE_LEN          2048
+#define AWS_HTTP_AUTH_HEADER_VALUE_LEN          2048U
+
+/**
+ * @brief Length for AWS IOT Credential provider server host name.
+ */
+#define SERVER_HOST_NAME_LENGTH                 65U
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
@@ -225,8 +230,11 @@ static HTTPResponse_t response;
 
 /**
  * @brief The host address string extracted from the given server URL.
+ *
+ * @note SERVER_HOST_NAME_LENGTH is set as the array length here as the
+ * length of the host name string cannot exceed this value.
  */
-static char serverHost[ 65 ];
+static char serverHost[ SERVER_HOST_NAME_LENGTH ];
 
 /**
  * @brief The length of the host address found in the given server URL.

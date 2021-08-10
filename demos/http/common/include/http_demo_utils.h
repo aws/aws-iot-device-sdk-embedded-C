@@ -129,11 +129,10 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
  * @param[in] response HTTP response which needs to be parsed to get the credentials.
  * @param[out] sigvCreds Buffer passed to store the parsed credentials.
  *
- * @return #JSONSuccess if the query is matched and the value output;
+ * @return #JSONSuccess if the credentials are parsed successfully;
  * #JSONNullParameter if any pointer parameters are NULL;
- * #JSONBadParameter if the query is empty, or the portion after a separator is empty,
- * or max is 0, or an index is too large to convert to a signed 32-bit integer;
- * #JSONNotFound if the query has no match.
+ * #JSONBadParameter if any of the response parameters that needs to be parsed are empty;
+ * #JSONNotFound if the key to be parsed is not in the response.
  */
 JSONStatus_t parseCredentials( HTTPResponse_t * response,
                                SigV4Credentials_t * sigvCreds );
@@ -142,7 +141,7 @@ JSONStatus_t parseCredentials( HTTPResponse_t * response,
  * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
  *
  * @param[in] pTransportInterface The transport interface for making network
- * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date .
+ * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date.
  * @param[in,out] response Response buffer to store the HTTP response received.
  * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
  * @param[out] sigvCreds Buffer to store the parsed credentials.

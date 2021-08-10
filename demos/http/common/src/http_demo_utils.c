@@ -294,10 +294,15 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
     return httpStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 JSONStatus_t parseCredentials( HTTPResponse_t * response,
                                SigV4Credentials_t * sigvCreds )
 {
     JSONStatus_t jsonStatus = JSONSuccess;
+
+    assert( response != NULL );
+    assert( sigvCreds != NULL );
 
     if( jsonStatus == JSONSuccess )
     {
@@ -366,6 +371,8 @@ JSONStatus_t parseCredentials( HTTPResponse_t * response,
     return jsonStatus;
 }
 
+/*-----------------------------------------------------------*/
+
 bool getTemporaryCredentials( TransportInterface_t * transportInterface,
                               size_t pDateISO8601Len,
                               HTTPResponse_t * response,
@@ -384,6 +391,12 @@ bool getTemporaryCredentials( TransportInterface_t * transportInterface,
     const char * pDate;
     const char * pPath;
     size_t dateLen;
+
+    assert( transportInterface != NULL );
+    assert( response != NULL );
+    assert( sigvCreds != NULL );
+    assert( pDateISO8601 != NULL );
+    assert( pDateISO8601Len > 0 );
 
     /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
     if( returnStatus == true )
