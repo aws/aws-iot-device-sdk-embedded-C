@@ -43,9 +43,6 @@
 /* Third party parser utilities. */
 #include "http_parser.h"
 
-/* Include Demo Config as the first non-system header. */
-#include "demo_config.h"
-
 /*-----------------------------------------------------------*/
 
 /**
