@@ -217,8 +217,6 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen )
-
-
 {
     /* http-parser status. Initialized to 1 to signify failure. */
     int parserStatus = 1;

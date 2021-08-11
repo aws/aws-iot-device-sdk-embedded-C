@@ -151,7 +151,7 @@
  * be less than USER_BUFFER_LENGTH. We don't expect S3 to send more than 1024
  * bytes of headers.
  */
-#define USER_BUFFER_LENGTH                ( 8144 )
+#define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
  * @brief The size of the range of the file to download, with each request.

@@ -33,9 +33,6 @@
 #endif
 /* *INDENT-ON* */
 
-/* Include Demo Config as the first non-system header. */
-#include "demo_config.h"
-
 /* Transport interface include. */
 #include "transport_interface.h"
 
