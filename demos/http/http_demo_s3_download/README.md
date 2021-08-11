@@ -30,15 +30,11 @@ Run the following command in the AWS CLI to create a thing.
 
 #### 2. Register a certificate: 
 
-        Now, you need to have a Certificate Authority (CA) certificate, sign a device certificate using the CA certificate, and register both certificates with AWS           
-        IOT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as  
-        described in Use Your Own Certificate. To register your CA certificate with AWS IoT, follow the steps on Registering Your CA Certificate.
+Now, you need to have a Certificate Authority (CA) certificate, sign a device certificate using the CA certificate, and register both certificates with AWS           IOT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as  described in Use Your Own Certificate. To register your CA certificate with AWS IoT, follow the steps on Registering Your CA Certificate.
 
-        You then have to create a device certificate signed by the CA certificate and register it with AWS IoT, which you can do by following the steps on 
-        Creating a Device Certificate Using Your CA Certificate. Save the certificate and the corresponding key pair; you will use them when you request a 
-        security token later. Also, remember the password you provide when you create the certificate.
+You then have to create a device certificate signed by the CA certificate and register it with AWS IoT, which you can do by following the steps on Creating a Device Certificate Using Your CA Certificate. Save the certificate and the corresponding key pair; you will use them when you request a security token later. Also, remember the password you provide when you create the certificate.
 
-        Run the following command in the AWS CLI to attach the device certificate to your thing so that you can use thing attributes in policy variables.
+Run the following command in the AWS CLI to attach the device certificate to your thing so that you can use thing attributes in policy variables.
 
          ```sh
          aws iot attach-thing-principal --thing-name device_thing_name --principal <certificate-arn>
@@ -46,12 +42,9 @@ Run the following command in the AWS CLI to create a thing.
     
 #### 3.  Configure an IAM role: 
 
-         Next, configure an IAM role in your AWS account that will be assumed by the credentials provider on behalf of your device. You are required to 
-         associate two policies with the role: a trust policy that controls who can assume the role, and an access policy that controls which actions 
-         can be performed on which resources by assuming the role.
+Next, configure an IAM role in your AWS account that will be assumed by the credentials provider on behalf of your device. You are required to associate two policies with the role: a trust policy that controls who can assume the role, and an access policy that controls which actions can be performed on which resources by assuming the role.
 
-         The following trust policy grants the credentials provider permission to assume the role. Put it in a text document and save the document with 
-         the name, trustpolicyforiot.json.
+The following trust policy grants the credentials provider permission to assume the role. Put it in a text document and save the document with the name, trustpolicyforiot.json.
 
          ```
          {
@@ -63,13 +56,12 @@ Run the following command in the AWS CLI to create a thing.
            }
          }
          ```
-         Run the following command in the AWS CLI to create an IAM role with the preceding trust policy.
+Run the following command in the AWS CLI to create an IAM role with the preceding trust policy.
 
          ```sh
          aws iam create-role --role-name s3-access-role --assume-role-policy-document file://trustpolicyforiot.json
          ```
-         The following s3 access policy allows you to perform actions on S3. Put the following policy in a text document and save the document with the name,
-         accesspolicyfors3.json.
+The following s3 access policy allows you to perform actions on S3. Put the following policy in a text document and save the document with the name, accesspolicyfors3.json.
          ```
          {
              "Version": "2012-10-17",
@@ -82,20 +74,18 @@ Run the following command in the AWS CLI to create a thing.
              }
          }
          ```
-         Run the following command in the AWS CLI to create the access policy.
+Run the following command in the AWS CLI to create the access policy.
          ```sh
          aws iam create-policy --policy-name accesspolicyfors3 --policy-document file://accesspolicyfors3.json
          ```
-         Finally, run the following command in the AWS CLI to attach the access policy to your role.
+Finally, run the following command in the AWS CLI to attach the access policy to your role.
          ```sh
          aws iam attach-role-policy --role-name s3-access-role --policy-arn arn:aws:iam::<your_aws_account_id>:policy/accesspolicyfors3
          ```
 
-         Configure the PassRole permissions
+Configure the PassRole permissions
 
-         The IAM role that you have created must be passed to AWS IoT to create a role alias, as described in Step 4. The user who performs the operation requires
-         iam:PassRole permission to authorize this action. You also should add permission for the iam:GetRole action to allow the user to retrieve information 
-         about the specified role. Create the following policy to grant iam:PassRole and iam:GetRole permissions. Name this policy, passrolepermission.json.
+The IAM role that you have created must be passed to AWS IoT to create a role alias, as described in Step 4. The user who performs the operation requires iam:PassRole permission to authorize this action. You also should add permission for the iam:GetRole action to allow the user to retrieve information about the specified role. Create the following policy to grant iam:PassRole and iam:GetRole permissions. Name this policy, passrolepermission.json.
          ```
          {
            "Version": "2012-10-17",
@@ -110,35 +100,31 @@ Run the following command in the AWS CLI to create a thing.
          }
          ```
 
-         Run the following command in the AWS CLI to create the policy in your AWS account.
+Run the following command in the AWS CLI to create the policy in your AWS account.
          ```sh
          aws iam create-policy --policy-name passrolepermission --policy-document file://passrolepermission.json
          ```
 
-         Now, run the following command to attach the policy to the user.
+Now, run the following command to attach the policy to the user.
          ```sh
          aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:policy/passrolepermission --user-name <user_name>
          ```
 
 #### 4.  Create a role alias: 
          
-         Now that you have configured the IAM role, you will create a role alias with AWS IoT. You must provide the following pieces of information when creating a
-         role alias:
+Now that you have configured the IAM role, you will create a role alias with AWS IoT. You must provide the following pieces of information when creating a role alias:
 
-         RoleAlias: This is the primary key of the role alias data model and hence a mandatory attribute. It is a string; the minimum length is 1 character, and
-         the maximum length is 128 characters.
-         RoleArn: This is the Amazon Resource Name (ARN) of the IAM role you have created. This is also a mandatory attribute.
-         CredentialDurationSeconds: This is an optional attribute specifying the validity (in seconds) of the security token. The minimum value is 900 seconds (15
-         minutes), and the maximum value is 3,600 seconds (60 minutes); the default value is 3,600 seconds, if not specified.
-         Run the following command in the AWS CLI to create a role alias. Use the credentials of the user to whom you have given the iam:PassRole permission.
+RoleAlias: This is the primary key of the role alias data model and hence a mandatory attribute. It is a string; the minimum length is 1 character, andthe maximum length is 128 characters.
+RoleArn: This is the Amazon Resource Name (ARN) of the IAM role you have created. This is also a mandatory attribute.
+CredentialDurationSeconds: This is an optional attribute specifying the validity (in seconds) of the security token. The minimum value is 900 seconds (15 minutes), and the maximum value is 3,600 seconds (60 minutes); the default value is 3,600 seconds, if not specified.
+Run the following command in the AWS CLI to create a role alias. Use the credentials of the user to whom you have given the iam:PassRole permission.
          ```sh
          aws iot create-role-alias --role-alias name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-
          seconds 3600
          ```
 
 #### 5.  Attach a policy: 
-         You created and registered a certificate with AWS IoT earlier for successful authentication of your device. Now, you need to create and attach a policy to
-         the certificate to authorize the request for the security token.
+You created and registered a certificate with AWS IoT earlier for successful authentication of your device. Now, you need to create and attach a policy to the certificate to authorize the request for the security token.
          ```
          {
            "Version": "2012-10-17",
@@ -151,32 +137,29 @@ Run the following command in the AWS CLI to create a thing.
            ]
          }
          ```
-         Run the following command in the AWS CLI to create the policy in your AWS IoT database.
+Run the following command in the AWS CLI to create the policy in your AWS IoT database.
          ```sh
          aws iot create-policy --policy-name Thing_Policy_Name --policy-document file://thingpolicy.json
          ```
-         Use the following command to attach the policy with the certificate you registered earlier.
+Use the following command to attach the policy with the certificate you registered earlier.
          ```sh
          aws iot attach-policy --policy-name Thing_Policy_Name --target <certificate-arn>
          ```
 
 #### 6. Request a security token: 
         
-        Make an HTTPS request to the credentials provider to fetch a security token. You have to supply the following information:
+Make an HTTPS request to the credentials provider to fetch a security token. You have to supply the following information:
 
-        Certificate and key pair: Because this is an HTTP request over TLS mutual authentication, you have to provide the certificate and the corresponding key 
-        pair to your client while making the request. Use the same certificate and key pair that you used during certificate registration with AWS IoT.
-        RoleAlias: Provide the role alias (in this example, Thermostat-dynamodb-access-role-alias) to be assumed in the request.
-        ThingName: Provide the thing name that you created earlier in the AWS IoT thing registry database. This is passed as a header with the name, x-amzn-iot-
-        thingname. Note that the thing name is mandatory only if you have thing attributes as policy variables in AWS IoT or IAM policies.
+Certificate and key pair: Because this is an HTTP request over TLS mutual authentication, you have to provide the certificate and the corresponding key pair to your client while making the request. Use the same certificate and key pair that you used during certificate registration with AWS IoT.
+RoleAlias: Provide the role alias (in this example, Thermostat-dynamodb-access-role-alias) to be assumed in the request.
+ThingName: Provide the thing name that you created earlier in the AWS IoT thing registry database. This is passed as a header with the name, x-amzn-iot-thingname. Note that the thing name is mandatory only if you have thing attributes as policy variables in AWS IoT or IAM policies.
 
-        Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the DescribeEndpoint API 
-        documentation for further details.
+Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the DescribeEndpoint API documentation for further details.
 
          ```sh
          aws iot describe-endpoint --endpoint-type iot:CredentialProvider
          ```
-         The following is sample output of the describe-endpoint command. It contains the endpointAddress.
+The following is sample output of the describe-endpoint command. It contains the endpointAddress.
          ```
          {
              "endpointAddress": "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
