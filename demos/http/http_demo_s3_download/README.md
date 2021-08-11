@@ -18,6 +18,7 @@ Following steps needs to be followed to configure HTTP S3 Download Demo to use S
 #### 1. Create an AWS IoT thing: 
 
 Register your device in the AWS IoT thing registry database by creating a thing type and a thing. You can use the AWS CLI with the following command to create a thing type. The thing type allows you to store description and configuration information that is common to a set of things.
+
          ```sh
          aws iot create-thing-type --thing-type-name device_type_name
          ```
