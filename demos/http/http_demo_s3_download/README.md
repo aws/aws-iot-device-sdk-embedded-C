@@ -88,7 +88,7 @@ The IAM role that you have created must be passed to AWS IoT to create a role al
         "iam:GetRole",
         "iam:PassRole"
     ],
-    "Resource": "arn:aws:iam::<your_aws_account_id>:role/dynamodb-access-role"
+    "Resource": "arn:aws:iam::<your_aws_account_id>:role/s3-access-role"
   }
 }
 ```
@@ -110,7 +110,7 @@ RoleArn: This is the Amazon Resource Name (ARN) of the IAM role you have created
 CredentialDurationSeconds: This is an optional attribute specifying the validity (in seconds) of the security token. The minimum value is 900 seconds (15 minutes), and the maximum value is 3,600 seconds (60 minutes); the default value is 3,600 seconds, if not specified.
 Run the following command in the AWS CLI to create a role alias. Use the credentials of the user to whom you have given the iam:PassRole permission.
 ```sh
-aws iot create-role-alias --role-alias thing_name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-seconds 3600
+aws iot create-role-alias --role-alias name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-seconds 3600
 ```
 
 5.  Attach a policy: You created and registered a certificate with AWS IoT earlier for successful authentication of your device. Now, you need to create and attach a policy to the certificate to authorize the request for the security token.
@@ -122,18 +122,18 @@ aws iot create-role-alias --role-alias thing_name-s3-access-role-alias --role-ar
     {
       "Effect": "Allow",
       "Action": "iot:AssumeRoleWithCertificate",
-      "Resource": "arn:aws:iot:<aws_region_name>:<your_aws_account_id>:rolealias/thing_name-s3-access-role-alias",
+      "Resource": "arn:aws:iot:<aws_region_name>:<your_aws_account_id>:rolealias/name-s3-access-role-alias",
     }
   ]
 }
 ```
 Run the following command in the AWS CLI to create the policy in your AWS IoT database.
 ```sh
-aws iot create-policy --policy-name ThingPolicy --policy-document file://thingpolicy.json
+aws iot create-policy --policy-name Thing_Policy_Name --policy-document file://thingpolicy.json
 ```
 Use the following command to attach the policy with the certificate you registered earlier.
 ```sh
-aws iot attach-policy --policy-name ThingPolicy --target <certificate-arn>
+aws iot attach-policy --policy-name Thing_Policy_Name --target <certificate-arn>
 ```
 
 6. Request a security token: Make an HTTPS request to the credentials provider to fetch a security token. You have to supply the following information:
@@ -147,21 +147,39 @@ Run the following command in the AWS CLI to obtain your AWS account-specific end
 ```sh
 aws iot describe-endpoint --endpoint-type iot:CredentialProvider
 ```
+The following is sample output of the describe-endpoint command. It contains the endpointAddress.
+```
+{
+    "endpointAddress": "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
+}
+```
 
-7. Copy and paste the output to `demo_config.h` for macros `S3_PRESIGNED_GET_URL` and `S3_PRESIGNED_PUT_URL`.
+7. Copy and paste the output to `demo_config.h` for macros `AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT`.
    ```c
-   #define S3_PRESIGNED_GET_URL    "https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlABcdEFgfIjK"
-   #define S3_PRESIGNED_PUT_URL    "https://aws-s3-endpoint/object-key.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ABABABABABABABABABAB%2F20201027%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20201027T194726Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=SomeHash12345UrlLMnmOPqrStUvW"
+   #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
    ```
 
+8. After the following the above steps, configure the below macros in `demo.config.h`.
+   ```c
+   #define AWS_IOT_THING_NAME                      "Name of IOT Thing that you provided in STEP 1" 
+   #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Name of ROLE ALIAS that you provided in STEP 4"
+   #define AWS_S3_BUCKET_NAME                      "Name of Bucket that contains the object that needs to be downloaded"
+   #define AWS_S3_BUCKET_REGION                    "Region where Bucket is located"
+   #define AWS_S3_OBJECT_NAME                      "Name of object that needs to be downloaded from AWS S3"
+   ```
 ### Parameters
 
-#### --bucket
+#### device_type_name
+Any custom name that specifies your device type.
+
+#### device_thing_name
+The name of you AWS IOT thing for your device in AWS IOT.
+
+#### thing_name-s3-access-role-alias
+Any custom name to specify role alias for S3.
+
+#### Thing_Policy_Name
+The name of the policy attached to the device certificate in STEP 5.
+
+#### BUCKET_NAME
 The name of the S3 bucket from which the demo will download.
-
-#### --key
-The name of the existing object you wish to download (GET),
-or the name of the object you wish to upload (PUT).
-
-#### --region
-Optional parameter for the AWS region in which the bucket is located.
