@@ -93,7 +93,7 @@
     #error "Please define a AWS IOT credential provider endpoint."
 #endif
 
-/* Check that AWS IOT credential provider endpoint is defined. */
+/* Check that AWS IOT credential provider role is defined. */
 #ifndef AWS_IOT_CREDENTIAL_PROVIDER_ROLE
     #error "Please define a AWS IOT credential provider role."
 #endif
@@ -150,7 +150,7 @@
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
 /**
- * @brief Length in bytes of hash digest. 32 bytes for SHA256.
+ * @brief Length in bytes of hash digest.
  */
 #define SHA256_HASH_DIGEST_LENGTH                ( ( ( uint16_t ) 64 ) )
 
@@ -257,7 +257,7 @@ static size_t serverHostLength;
 static const char * pPath;
 
 /**
- *  @brief mbedTLS Hash Context passed to SIGV4 cryptointerface for generating the signature.
+ *  @brief mbedTLS Hash Context passed to SigV4 cryptointerface for generating the hash digest.
  */
 static mbedtls_sha256_context hashContext = { 0 };
 
@@ -402,7 +402,7 @@ static int32_t sha256( const unsigned char * pInput,
                        unsigned char * pOutput );
 
 /**
- * @brief Application-defined Hash Initialization implementation provided
+ * @brief Application-defined Hash Initialization function provided
  * to the SigV4 library.
  *
  * @note Refer to SigV4CryptoInterface_t interface documentation for this function.
@@ -410,7 +410,7 @@ static int32_t sha256( const unsigned char * pInput,
 static int32_t sha256Init( void * hashContext );
 
 /**
- * @brief Application-defined Hash Update implementation provided to the SigV4 library.
+ * @brief Application-defined Hash Update function provided to the SigV4 library.
  *
  * @note Refer to SigV4CryptoInterface_t interface documentation for this function.
  */
@@ -419,7 +419,7 @@ static int32_t sha256Update( void * hashContext,
                              size_t inputLen );
 
 /**
- * @brief Application-defined Hash Finish implementation provided to the SigV4 library.
+ * @brief Application-defined Hash Final function provided to the SigV4 library.
  *
  * @note Refer to SigV4CryptoInterface_t interface documentation for this function.
  */
