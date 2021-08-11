@@ -15,15 +15,18 @@ Following steps needs to be followed to configure HTTP S3 Download Demo to use S
 
 ### Detailed Steps
 
-1. Create an AWS IoT thing: Register your device in the AWS IoT thing registry database by creating a thing type and a thing. You can use the AWS CLI with the      following command to create a thing type. The thing type allows you to store description and configuration information that is common to a set of things.
-   ```sh
-   aws iot create-thing-type --thing-type-name device_type_name
-   ```
-   Run the following command in the AWS CLI to create a thing.
-   
-   ```sh
-   aws iot create-thing --thing-name device_thing_name --thing-type-name device_type_name
-   ```
+## 1. Create an AWS IoT thing: 
+
+   Register your device in the AWS IoT thing registry database by creating a thing type and a thing. You can use the AWS CLI with the following command to create a 
+   thing type. The thing type allows you to store description and configuration information that is common to a set of things.
+      ```sh
+      aws iot create-thing-type --thing-type-name device_type_name
+      ```
+      Run the following command in the AWS CLI to create a thing.
+
+      ```sh
+      aws iot create-thing --thing-name device_thing_name --thing-type-name device_type_name
+      ```
 
 2. Register a certificate: Now, you need to have a Certificate Authority (CA) certificate, sign a device certificate using the CA certificate, and register both certificates with AWS IoT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as described in Use Your Own Certificate. To register your CA certificate with AWS IoT, follow the steps on Registering Your CA Certificate.
 
