@@ -520,7 +520,7 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
     requestHeaders.pBuffer = response->pBuffer;
     requestHeaders.bufferLen = response->bufferLen;
 
-    /* Temporary token HTTP request parameters. */
+    /* Set HTTP request parameters to get temporary AWS IOT credentials. */
     requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
     requestInfo.pPath = pPath;
@@ -790,10 +790,10 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
         /* Initialize TLS credentials. */
         opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
-
         opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
         opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
 
+        /* Initialize server information. */
         serverInfo.pHostName = serverHost;
         serverInfo.hostNameLength = serverHostLength;
         serverInfo.port = HTTPS_PORT;
@@ -1029,8 +1029,6 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
                 returnStatus = false;
             }
         }
-
-        /********************** 5. Generate HTTP Sigv4 Auth ******************/
 
         /* Move request header pointer past the initial headers which are added by coreHTTP
          * library and are not required by SigV4 library. */
@@ -1557,7 +1555,7 @@ int main( int argc,
 
         /* Initialize response buffer. */
         credentialResponse.pBuffer = pAwsIotHttpBuffer;
-        credentialResponse.bufferLen = 2048;
+        credentialResponse.bufferLen = CREDENTIAL_BUFFER_LENGTH;
 
         credentialStatus = getTemporaryCredentials( &transportInterface, sizeof( pDateISO8601 ), &credentialResponse, pDateISO8601, &sigvCreds );
 
