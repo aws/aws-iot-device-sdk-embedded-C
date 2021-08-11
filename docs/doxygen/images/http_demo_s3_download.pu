@@ -1,5 +1,5 @@
 @startuml
-skinparam dpi 300
+skinparam dpi 100
 skinparam classFontSize 8
 skinparam classFontName Helvetica
 autonumber
