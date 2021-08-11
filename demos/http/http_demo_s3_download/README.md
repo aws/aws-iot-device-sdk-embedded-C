@@ -61,31 +61,31 @@ aws iam create-role --role-name s3-access-role --assume-role-policy-document fil
 ```
 The following s3 access policy allows you to perform actions on S3. Put the following policy in a text document and save the document with the name, accesspolicyfors3.json.
 ```
-         {
-             "Version": "2012-10-17",
-             "Statement": {
-                 "Effect": "Allow",
-                 "Action": [
-                     "s3:GetObject"
-                 ],
-                 "Resource": "arn:aws:s3:::BUCKET_NAME/*"
-             }
-         }
+{
+   "Version": "2012-10-17",
+   "Statement": {
+   "Effect": "Allow",
+   "Action": [
+             "s3:GetObject"
+             ],
+   "Resource": "arn:aws:s3:::BUCKET_NAME/*"
+    }
+}
 ```
 Run the following command in the AWS CLI to create the access policy.
 ```sh
-         aws iam create-policy --policy-name accesspolicyfors3 --policy-document file://accesspolicyfors3.json
+aws iam create-policy --policy-name accesspolicyfors3 --policy-document file://accesspolicyfors3.json
 ```
 Finally, run the following command in the AWS CLI to attach the access policy to your role.
 ```sh
-         aws iam attach-role-policy --role-name s3-access-role --policy-arn arn:aws:iam::<your_aws_account_id>:policy/accesspolicyfors3
+aws iam attach-role-policy --role-name s3-access-role --policy-arn arn:aws:iam::<your_aws_account_id>:policy/accesspolicyfors3
 ```
 
 Configure the PassRole permissions
 
 The IAM role that you have created must be passed to AWS IoT to create a role alias, as described in Step 4. The user who performs the operation requires iam:PassRole permission to authorize this action. You also should add permission for the iam:GetRole action to allow the user to retrieve information about the specified role. Create the following policy to grant iam:PassRole and iam:GetRole permissions. Name this policy, passrolepermission.json.
 ```
-         {
+{
            "Version": "2012-10-17",
            "Statement": {
              "Effect": "Allow",
@@ -95,17 +95,17 @@ The IAM role that you have created must be passed to AWS IoT to create a role al
              ],
              "Resource": "arn:aws:iam::<your_aws_account_id>:role/s3-access-role"
            }
-         }
+}
 ```
 
 Run the following command in the AWS CLI to create the policy in your AWS account.
 ```sh
-         aws iam create-policy --policy-name passrolepermission --policy-document file://passrolepermission.json
+aws iam create-policy --policy-name passrolepermission --policy-document file://passrolepermission.json
 ```
 
 Now, run the following command to attach the policy to the user.
 ```sh
-         aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:policy/passrolepermission --user-name <user_name>
+aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:policy/passrolepermission --user-name <user_name>
 ```
 
 #### 4.  Create a role alias: 
@@ -117,14 +117,13 @@ RoleArn: This is the Amazon Resource Name (ARN) of the IAM role you have created
 CredentialDurationSeconds: This is an optional attribute specifying the validity (in seconds) of the security token. The minimum value is 900 seconds (15 minutes), and the maximum value is 3,600 seconds (60 minutes); the default value is 3,600 seconds, if not specified.
 Run the following command in the AWS CLI to create a role alias. Use the credentials of the user to whom you have given the iam:PassRole permission.
 ```sh
-         aws iot create-role-alias --role-alias name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-
-         seconds 3600
+aws iot create-role-alias --role-alias name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-seconds 3600
 ```
 
 #### 5.  Attach a policy: 
 You created and registered a certificate with AWS IoT earlier for successful authentication of your device. Now, you need to create and attach a policy to the certificate to authorize the request for the security token.
 ```
-         {
+{
            "Version": "2012-10-17",
            "Statement": [
              {
@@ -133,15 +132,15 @@ You created and registered a certificate with AWS IoT earlier for successful aut
                "Resource": "arn:aws:iot:<aws_region_name>:<your_aws_account_id>:rolealias/name-s3-access-role-alias",
              }
            ]
-         }
+}
 ```
 Run the following command in the AWS CLI to create the policy in your AWS IoT database.
 ```sh
-         aws iot create-policy --policy-name Thing_Policy_Name --policy-document file://thingpolicy.json
+aws iot create-policy --policy-name Thing_Policy_Name --policy-document file://thingpolicy.json
 ```
 Use the following command to attach the policy with the certificate you registered earlier.
 ```sh
-         aws iot attach-policy --policy-name Thing_Policy_Name --target <certificate-arn>
+aws iot attach-policy --policy-name Thing_Policy_Name --target <certificate-arn>
 ```
 
 #### 6. Request a security token: 
@@ -155,27 +154,27 @@ ThingName: Provide the thing name that you created earlier in the AWS IoT thing 
 Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the DescribeEndpoint API documentation for further details.
 
 ```sh
-         aws iot describe-endpoint --endpoint-type iot:CredentialProvider
+aws iot describe-endpoint --endpoint-type iot:CredentialProvider
 ```
 The following is sample output of the describe-endpoint command. It contains the endpointAddress.
 ```
-         {
-             "endpointAddress": "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
-         }
+{
+   "endpointAddress": "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
+}
 ```
 
 #### 7. Copy and paste the output to `demo_config.h` for macros `AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT`.
 ```c
-         #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
+#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
 ```
 
 #### 8. After the following the above steps, configure the below macros in `demo.config.h`.
 ```c
-         #define AWS_IOT_THING_NAME                      "Name of IOT Thing that you provided in STEP 1" 
-         #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Name of ROLE ALIAS that you provided in STEP 4"
-         #define AWS_S3_BUCKET_NAME                      "Name of Bucket that contains the object that needs to be downloaded"
-         #define AWS_S3_BUCKET_REGION                    "Region where Bucket is located"
-         #define AWS_S3_OBJECT_NAME                      "Name of object that needs to be downloaded from AWS S3"
+#define AWS_IOT_THING_NAME                      "Name of IOT Thing that you provided in STEP 1" 
+#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Name of ROLE ALIAS that you provided in STEP 4"
+#define AWS_S3_BUCKET_NAME                      "Name of Bucket that contains the object that needs to be downloaded"
+#define AWS_S3_BUCKET_REGION                    "Region where Bucket is located"
+#define AWS_S3_OBJECT_NAME                      "Name of object that needs to be downloaded from AWS S3"
 ```
          
 ### Parameters
