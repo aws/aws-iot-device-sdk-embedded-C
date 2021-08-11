@@ -17,7 +17,7 @@ Following steps needs to be followed to configure HTTP S3 Download Demo to use S
 
 #### 1. Create an AWS IoT thing: 
 
-Register your device in the AWS IoT thing registry database by creating a thing type and a thing. You can use the AWS CLI with the following command to create a thing type. The thing type allows you to store description and configuration information that is common to a set of things.
+Register your device in the AWS IoT thing registry database by creating a thing type and a thing. You can use the AWS CLI with the following command to create a [thing type](https://docs.aws.amazon.com/iot/latest/developerguide/thing-types.html). The thing type allows you to store description and configuration information that is common to a set of things.
 ```sh
 aws iot create-thing-type --thing-type-name device_type_name
 ```
@@ -28,9 +28,9 @@ aws iot create-thing --thing-name device_thing_name --thing-type-name device_typ
 
 #### 2. Register a certificate: 
 
-Now, you need to have a Certificate Authority (CA) certificate, sign a device certificate using the CA certificate, and register both certificates with AWS           IOT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as  described in Use Your Own Certificate. To register your CA certificate with AWS IoT, follow the steps on Registering Your CA Certificate.
+Now, you need to have a Certificate Authority (CA) certificate, sign a device certificate using the CA certificate, and register both certificates with AWS           IOT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as  described in Use [Your Own Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html). To register your CA certificate with AWS IoT, follow the steps on [Registering Your CA Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html#register-CA-cert).
 
-You then have to create a device certificate signed by the CA certificate and register it with AWS IoT, which you can do by following the steps on Creating a Device Certificate Using Your CA Certificate. Save the certificate and the corresponding key pair; you will use them when you request a security token later. Also, remember the password you provide when you create the certificate.
+You then have to create a device certificate signed by the CA certificate and register it with AWS IoT, which you can do by following the steps on [Creating a Device Certificate Using Your CA Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html#create-device-cert). Save the certificate and the corresponding key pair; you will use them when you request a security token later. Also, remember the password you provide when you create the certificate.
 
 Run the following command in the AWS CLI to attach the device certificate to your thing so that you can use thing attributes in policy variables.
 
@@ -113,7 +113,7 @@ aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:polic
 Now that you have configured the IAM role, you will create a role alias with AWS IoT. You must provide the following pieces of information when creating a role alias:
 
 RoleAlias: This is the primary key of the role alias data model and hence a mandatory attribute. It is a string; the minimum length is 1 character, andthe maximum length is 128 characters.
-RoleArn: This is the Amazon Resource Name (ARN) of the IAM role you have created. This is also a mandatory attribute.
+RoleArn: This is the [Amazon Resource Name (ARN)](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) of the IAM role you have created. This is also a mandatory attribute.
 CredentialDurationSeconds: This is an optional attribute specifying the validity (in seconds) of the security token. The minimum value is 900 seconds (15 minutes), and the maximum value is 3,600 seconds (60 minutes); the default value is 3,600 seconds, if not specified.
 Run the following command in the AWS CLI to create a role alias. Use the credentials of the user to whom you have given the iam:PassRole permission.
 ```sh
@@ -151,7 +151,7 @@ Certificate and key pair: Because this is an HTTP request over TLS mutual authen
 RoleAlias: Provide the role alias (in this example, Thermostat-dynamodb-access-role-alias) to be assumed in the request.
 ThingName: Provide the thing name that you created earlier in the AWS IoT thing registry database. This is passed as a header with the name, x-amzn-iot-thingname. Note that the thing name is mandatory only if you have thing attributes as policy variables in AWS IoT or IAM policies.
 
-Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the DescribeEndpoint API documentation for further details.
+Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the [DescribeEndpoint API documentation](https://docs.aws.amazon.com/iot/latest/apireference/API_DescribeEndpoint.html) for further details.
 
 ```sh
 aws iot describe-endpoint --endpoint-type iot:CredentialProvider
