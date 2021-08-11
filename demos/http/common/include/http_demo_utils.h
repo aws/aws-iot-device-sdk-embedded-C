@@ -42,12 +42,6 @@
 /* HTTP API header. */
 #include "core_http_client.h"
 
-/* JSON API header. */
-#include "core_json.h"
-
-/* SIGV4 API header. */
-#include "sigv4.h"
-
 /**
  * @brief Function pointer for establishing connection to a server.
  *
@@ -131,37 +125,6 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             size_t urlLen,
                             const char ** pAddress,
                             size_t * pAddressLen );
-
-/**
- * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API.
- *
- * @param[in] response HTTP response which needs to be parsed to get the credentials.
- * @param[out] sigvCreds Buffer passed to store the parsed credentials.
- *
- * @return #JSONSuccess if the credentials are parsed successfully;
- * #JSONNullParameter if any pointer parameters are NULL;
- * #JSONBadParameter if any of the response parameters that needs to be parsed are empty;
- * #JSONNotFound if the key to be parsed is not in the response.
- */
-JSONStatus_t parseCredentials( HTTPResponse_t * response,
-                               SigV4Credentials_t * sigvCreds );
-
-/**
- * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
- *
- * @param[in] pTransportInterface The transport interface for making network
- * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date.
- * @param[in,out] response Response buffer to store the HTTP response received.
- * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
- * @param[out] sigvCreds Buffer to store the parsed credentials.
- *
- * @return `true` if credentials are retrieved successfully otherwise 'false`.
- */
-bool getTemporaryCredentials( TransportInterface_t * transportInterface,
-                              size_t pDateISO8601Len,
-                              HTTPResponse_t * response,
-                              char * pDateISO8601,
-                              SigV4Credentials_t * sigvCreds );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

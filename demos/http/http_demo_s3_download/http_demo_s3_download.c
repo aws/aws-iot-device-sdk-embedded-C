@@ -349,6 +349,37 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                  const char * pPath );
 
 /**
+ * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API.
+ *
+ * @param[in] response HTTP response which needs to be parsed to get the credentials.
+ * @param[out] sigvCreds Buffer passed to store the parsed credentials.
+ *
+ * @return #JSONSuccess if the credentials are parsed successfully;
+ * #JSONNullParameter if any pointer parameters are NULL;
+ * #JSONBadParameter if any of the response parameters that needs to be parsed are empty;
+ * #JSONNotFound if the key to be parsed is not in the response.
+ */
+static JSONStatus_t parseCredentials( HTTPResponse_t * response,
+                                      SigV4Credentials_t * sigvCreds );
+
+/**
+ * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
+ *
+ * @param[in] pTransportInterface The transport interface for making network
+ * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date.
+ * @param[in,out] response Response buffer to store the HTTP response received.
+ * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
+ * @param[out] sigvCreds Buffer to store the parsed credentials.
+ *
+ * @return `true` if credentials are retrieved successfully otherwise 'false`.
+ */
+static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
+                                     size_t pDateISO8601Len,
+                                     HTTPResponse_t * response,
+                                     char * pDateISO8601,
+                                     SigV4Credentials_t * sigvCreds );
+
+/**
  * @brief Hex digest of provided string parameter.
  *
  * @param[in] pInputStr Input String to encode.
@@ -425,6 +456,248 @@ static SigV4Parameters_t sigv4Params =
     .pCryptoInterface = &cryptoInterface,
     .pHttpParameters  = NULL
 };
+
+/*-----------------------------------------------------------*/
+
+static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
+                                     size_t pDateISO8601Len,
+                                     HTTPResponse_t * response,
+                                     char * pDateISO8601,
+                                     SigV4Credentials_t * sigvCreds )
+{
+    bool returnStatus = true;
+    HTTPRequestHeaders_t requestHeaders = { 0 };
+    HTTPRequestInfo_t requestInfo = { 0 };
+    size_t pathLen = 0;
+    size_t addressLen = 0;
+    HTTPStatus_t httpStatus = HTTPSuccess;
+    SigV4Status_t sigv4Status = SigV4Success;
+    JSONStatus_t jsonStatus = JSONSuccess;
+    const char * pAddress = NULL;
+    const char * pDate;
+    const char * pPath;
+    size_t dateLen;
+
+    assert( transportInterface != NULL );
+    assert( response != NULL );
+    assert( sigvCreds != NULL );
+    assert( pDateISO8601 != NULL );
+    assert( pDateISO8601Len > 0 );
+
+    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    if( returnStatus == true )
+    {
+        httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+                                    sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
+                                    &pAddress,
+                                    &addressLen );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to get Address from URL %s: Error=%s.",
+                        AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    if( returnStatus == true )
+    {
+        /* Retrieve the path and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+        httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
+                                 sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
+                                 &pPath,
+                                 &pathLen );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to get path from URL %s: Error=%s.",
+                        AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    /* Initialize Request header buffer. */
+    requestHeaders.pBuffer = response->pBuffer;
+    requestHeaders.bufferLen = response->bufferLen;
+
+    /* Temporary token HTTP request parameters. */
+    requestInfo.pMethod = HTTP_METHOD_GET;
+    requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
+    requestInfo.pPath = pPath;
+    requestInfo.pathLen = pathLen;
+    requestInfo.pHost = pAddress;
+    requestInfo.hostLen = addressLen;
+    requestInfo.reqFlags = 0;
+
+    response->pHeaderParsingCallback = NULL;
+
+    if( returnStatus == true )
+    {
+        /* Initialize request headers. */
+        httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders, &requestInfo );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to initialize request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    if( returnStatus == true )
+    {
+        /* Add AWS_IOT_THING_NAME_HEADER_FIELD header to the HTTP request headers. */
+        httpStatus = HTTPClient_AddHeader( &requestHeaders,
+                                           AWS_IOT_THING_NAME_HEADER_FIELD,
+                                           sizeof( AWS_IOT_THING_NAME_HEADER_FIELD ) - 1,
+                                           AWS_IOT_THING_NAME,
+                                           sizeof( AWS_IOT_THING_NAME ) );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to add x-amz-iot-thing-name header to request headers: Error=%s.",
+                        HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    if( returnStatus == true )
+    {
+        /* Send the request and receive the response. */
+        httpStatus = HTTPClient_Send( transportInterface,
+                                      &requestHeaders,
+                                      NULL,
+                                      0,
+                                      response, 0 );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+                        pAddress, pPath, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    if( returnStatus == true )
+    {
+        /* Parse the credentials received in the response. */
+        jsonStatus = parseCredentials( response, sigvCreds );
+
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Failed to parse temporary IOT credentials. " ) );
+            returnStatus = false;
+        }
+    }
+
+    /* Get the AWS IOT date from the http response. */
+    if( returnStatus == true )
+    {
+        httpStatus = HTTPClient_ReadHeader( response,
+                                            HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD,
+                                            sizeof( HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD ) - 1,
+                                            ( const char ** ) &pDate,
+                                            &dateLen );
+
+        if( httpStatus != HTTPSuccess )
+        {
+            LogError( ( "Failed to retrieve %s header from response: Error=%s.",
+                        HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, HTTPClient_strerror( httpStatus ) ) );
+            returnStatus = false;
+        }
+    }
+
+    if( returnStatus == true )
+    {
+        /* Convert AWS IOT date retrieved from IOT server to ISO 8601 date format. */
+        sigv4Status = SigV4_AwsIotDateToIso8601( pDate, dateLen, pDateISO8601, pDateISO8601Len );
+
+        if( sigv4Status != SigV4Success )
+        {
+            LogError( ( "Failed to convert AWS IOT date to ISO 8601 format." ) );
+            returnStatus = false;
+        }
+    }
+
+    return returnStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static JSONStatus_t parseCredentials( HTTPResponse_t * response,
+                                      SigV4Credentials_t * sigvCreds )
+{
+    JSONStatus_t jsonStatus = JSONSuccess;
+
+    assert( response != NULL );
+    assert( sigvCreds != NULL );
+
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get accessKeyId from HTTP response. */
+        jsonStatus = JSON_Search( ( char * ) response->pBody,
+                                  response->bodyLen,
+                                  "credentials.accessKeyId",
+                                  strlen( "credentials.accessKeyId" ),
+                                  ( char ** ) &( sigvCreds->pAccessKeyId ),
+                                  &( sigvCreds->accessKeyIdLen ) );
+
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing accessKeyId in the credentials." ) );
+        }
+    }
+
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get secretAccessKey from HTTP response. */
+        jsonStatus = JSON_Search( ( char * ) response->pBody,
+                                  response->bodyLen,
+                                  "credentials.secretAccessKey",
+                                  strlen( "credentials.secretAccessKey" ),
+                                  ( char ** ) &( sigvCreds->pSecretAccessKey ),
+                                  &( sigvCreds->secretAccessKeyLen ) );
+
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing secretAccessKey in the credentials." ) );
+        }
+    }
+
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get sessionToken from HTTP response. */
+        jsonStatus = JSON_Search( ( char * ) response->pBody,
+                                  response->bodyLen,
+                                  "credentials.sessionToken",
+                                  strlen( "credentials.sessionToken" ),
+                                  ( char ** ) &( sigvCreds->pSecurityToken ),
+                                  &( sigvCreds->securityTokenLen ) );
+
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing sessionToken in the credentials." ) );
+        }
+    }
+
+    if( jsonStatus == JSONSuccess )
+    {
+        /* Get expiration date from HTTP response. */
+        jsonStatus = JSON_Search( ( char * ) response->pBody,
+                                  response->bodyLen,
+                                  "credentials.expiration",
+                                  strlen( "credentials.expiration" ),
+                                  ( char ** ) &( sigvCreds->pExpiration ),
+                                  &( sigvCreds->expirationLen ) );
+
+        if( jsonStatus != JSONSuccess )
+        {
+            LogError( ( "Error parsing expiration date in the credentials." ) );
+        }
+    }
+
+    return jsonStatus;
+}
 
 /*-----------------------------------------------------------*/
 
