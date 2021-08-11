@@ -90,7 +90,7 @@
  * @note This certificate should be PEM-encoded.
  */
 #ifndef CLIENT_CERT_PATH
-    #define CLIENT_CERT_PATH    "...insert here..."
+    #define CLIENT_CERT_PATH    "/mnt/c/Users/gshvang/Shivangi_Workspace/Amazon/aws-iot-device-sdk-embedded-C/demos/certificates/thermostat-certificate.pem.crt"
 #endif
 
 /**
@@ -100,13 +100,13 @@
  * @note This key should be PEM-encoded.
  */
 #ifndef CLIENT_PRIVATE_KEY_PATH
-    #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
+    #define CLIENT_PRIVATE_KEY_PATH             "/mnt/c/Users/gshvang/Shivangi_Workspace/Amazon/aws-iot-device-sdk-embedded-C/demos/certificates/thermostat-private.pem.key"
 #endif
 
 /**
  * @brief Define AWS IOT thing name.
  */
-#define AWS_IOT_THING_NAME                      "...insert here..."
+#define AWS_IOT_THING_NAME                      "MyHomeThermostat"
 
 /**
  * @brief Endpoint for the AWS IOT credential provider.
@@ -115,27 +115,27 @@
  * `aws iot describe-endpoint --endpoint-type iot:CredentialProvider` from
  * the AWS CLI.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "...insert here..."
+#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "c3tvrvalb8cjyy.credentials.iot.us-east-2.amazonaws.com"
 
 /**
  * @brief Role alias for accessing the credential provider.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
+#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Thermostat-dynamodb-access-role-alias"
 
 /**
  * @brief Name of bucket in AWS S3 from where file needs to be downloaded.
  */
-#define AWS_S3_BUCKET_NAME                      "...insert here..."
+#define AWS_S3_BUCKET_NAME                      "http-s3-download-demo"
 
 /**
  * @brief AWS Region where the bucket resides.
  */
-#define AWS_S3_BUCKET_REGION                    "...insert here..."
+#define AWS_S3_BUCKET_REGION                    "us-east-2"
 
 /**
  * @brief Name of file that needs to be downloaded from AWS S3.
  */
-#define AWS_S3_OBJECT_NAME                      "...insert here..."
+#define AWS_S3_OBJECT_NAME                      "index.html"
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
@@ -151,7 +151,7 @@
  * be less than USER_BUFFER_LENGTH. We don't expect S3 to send more than 1024
  * bytes of headers.
  */
-#define USER_BUFFER_LENGTH                ( 4096 )
+#define USER_BUFFER_LENGTH                ( 8144 )
 
 /**
  * @brief The size of the range of the file to download, with each request.
