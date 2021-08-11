@@ -407,7 +407,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 
 #### Configuring the S3 demos
 
-#### * Configure S3 Upload and Multithreaded Download HTTP Demos:
+####  Configure S3 Upload and Multithreaded Download HTTP Demos:
 You can pass the following configuration settings as command line options in order to run the S3 upload and mutithreaded download demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
@@ -423,9 +423,9 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 
 You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
 
-#### * Configure S3 Download HTTP Demo using SigV4 Library to generate the authorization HTTP header needed to authenticate the HTTP requests send to S3:
+####  Configure S3 Download HTTP Demo using SigV4 Library:
 
-Refer this [demos/http/http_s3_download/README.md](demos/http/http_s3_download/README.md) for the steps needed to configure and run the S3 Download HTTP Demo using SigV4 Library.
+Refer this [demos/http/http_s3_download/README.md](demos/http/http_s3_download/README.md) for the steps needed to configure and run the S3 Download HTTP Demo using SigV4 Library that generates the authorization HTTP header needed to authenticate the HTTP requests send to S3.
 
 #### Setup for AWS IoT Jobs demo
 
