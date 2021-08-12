@@ -300,7 +300,7 @@ struct NetworkContext
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
-static int32_t connectToServer( NetworkContext_t * pNetworkContext );
+static int32_t connectToIotServer( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Connect to HTTP AWS S3 server with reconnection retries.
@@ -386,7 +386,7 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
  * @param[in] inputStrLen Length of Input String to encode.
  * @param[out] pHexOutput Hex representation of @p pInputStr.
  */
-static void lowercaseHexEncode( unsigned char * pInputStr,
+static void lowercaseHexEncode( const char * pInputStr,
                                 size_t inputStrLen,
                                 char * pHexOutput );
 
@@ -397,9 +397,9 @@ static void lowercaseHexEncode( unsigned char * pInputStr,
  * @param[in] ilen Length of input string.
  * @param[out] pOutput Buffer to store the generated hash.
  */
-static int32_t sha256( const unsigned char * pInput,
+static int32_t sha256( const char * pInput,
                        size_t ilen,
-                       unsigned char * pOutput );
+                       char * pOutput );
 
 /**
  * @brief Application-defined Hash Initialization function provided
@@ -701,7 +701,7 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
 
 /*-----------------------------------------------------------*/
 
-static void lowercaseHexEncode( unsigned char * pInputStr,
+static void lowercaseHexEncode( const char * pInputStr,
                                 size_t inputStrLen,
                                 char * pHexOutput )
 {
@@ -720,11 +720,11 @@ static void lowercaseHexEncode( unsigned char * pInputStr,
 
 /*-----------------------------------------------------------*/
 
-static int32_t sha256( const unsigned char * pInput,
+static int32_t sha256( const char * pInput,
                        size_t ilen,
-                       unsigned char * pOutput )
+                       char * pOutput )
 {
-    return mbedtls_sha256_ret( pInput, ilen, pOutput, 0 );
+    return mbedtls_sha256_ret( ( const unsigned char * ) pInput, ilen, ( unsigned char * ) pOutput, 0 );
 }
 
 /*-----------------------------------------------------------*/
@@ -1011,8 +1011,8 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         }
 
         /* Get the hash of the payload. */
-        sha256( "", 0, pPayloadHashDigest );
-        lowercaseHexEncode( pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
+        sha256( ( const char * ) "", 0, pPayloadHashDigest );
+        lowercaseHexEncode( ( const char * ) pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
 
         if( returnStatus == true )
         {
@@ -1238,8 +1238,8 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     }
 
     /* Get the hash of the payload. */
-    sha256( "", 0, pPayloadHashDigest );
-    lowercaseHexEncode( pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
+    sha256( ( const char * ) "", 0, pPayloadHashDigest );
+    lowercaseHexEncode( ( const char * ) pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
 
     if( returnStatus == true )
     {
