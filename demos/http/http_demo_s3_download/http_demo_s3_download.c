@@ -752,6 +752,7 @@ static int32_t sha256Final( void * hashContext,
                             char * pOutput,
                             size_t outputLen )
 {
+    ( void ) outputLen;
     return mbedtls_sha256_finish_ret( ( mbedtls_sha256_context * ) hashContext,
                                       ( unsigned char * ) pOutput );
 }
@@ -1032,7 +1033,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
 
         /* Move request header pointer past the initial headers which are added by coreHTTP
          * library and are not required by SigV4 library. */
-        pHeaders = requestHeaders.pBuffer;
+        pHeaders = ( const char * ) requestHeaders.pBuffer;
         headersLen = requestHeaders.headersLen;
 
         while( 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
@@ -1310,7 +1311,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 
     /* Move request header pointer past the initial headers which are added by coreHTTP
      * library and are not required by SigV4 library. */
-    pHeaders = requestHeaders.pBuffer;
+    pHeaders = ( const char * ) requestHeaders.pBuffer;
     headersLen = requestHeaders.headersLen;
 
     while( 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
