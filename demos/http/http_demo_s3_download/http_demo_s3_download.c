@@ -160,11 +160,6 @@
 #define CREDENTIAL_BUFFER_LENGTH                 2048U
 
 /**
- * @brief Hex encoded hash digest length.
- */
-#define SHA256_HEX_ENCODED_DIGEST_LENGTH         ( ( ( uint16_t ) 64 ) )
-
-/**
  * @brief AWS Service name to send HTTP request using SigV4 library.
  */
 #define AWS_SERVICE_NAME                         "s3"
@@ -217,6 +212,11 @@
 #define SERVER_HOST_NAME_LENGTH                 65U
 
 /**
+ * @brief Hex encoded hash digest length.
+ */
+#define SHA256_HEX_ENCODED_DIGEST_LENGTH        ( ( ( uint16_t ) 64 ) )
+
+/**
  * @brief Maximum block size of SHA256 Hashing Algorithm used in the demo.
  */
 #define SHA256_HASH_MAX_BLOCK_LENGTH            64U
@@ -224,7 +224,7 @@
 /**
  * @brief Maximum digest length of the SHA256 hash function used in the demo.
  */
-#define SHA256_HASH_MAX_DIGEST_LENGTH           32U
+#define SHA256_HASH_MAX_DIGEST_LENGTH           ( SHA256_HEX_ENCODED_DIGEST_LENGTH / 2 )
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
