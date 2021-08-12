@@ -92,26 +92,40 @@ HTTP S3 Upload Demo Workflow
 @image html http_demo_s3_upload.png width=50%
 
 @section http_demo_s3_download HTTP S3 Download Demo
-@brief A demo of the coreHTTP library that utilizes a user-defined pre-signed
-GET URL to download a file in chunks from the designated S3 object, using range
-requests.
+@brief A demo of the coreHTTP library that utilizes SigV4 Library to generate 
+the authorization header added to HTTP requests sent to S3 to download a file in 
+chunks from the designated S3 object, using range requests.
 
 <p>
-An OpenSSL-based transport interface implementation is used to establish an
-encrypted TLS connection over port 443 to S3. The host address is extracted from
-the pre-signed GET URL using the third-party http-parser library. Only the
-server's certificate is verified using its respective root CA certificate. If a
-connection failure occurs, then the connection establishment is retried for limited
-attempts with exponential and jitter backoff.
+An OpenSSL-based transport interface implementation is used to establish an encrypted 
+TLS connection over port 443 to AWS IOT Credential Provider to fetch the temporary 
+credentials needed to generate the Authorization header via SigV4 Library.
+The host address is extracted from the IOT endpoint (provided by the application 
+as configuration parameter) using the third-party http-parser library. 
+If a connection failure occurs, then the connection establishment is retried for 
+limited attempts with exponential and jitter backoff. The HTTP response from AWS 
+IoT credential provider is parsed to extract credentials using coreJSON Library and passed 
+to SigV4 library to generate the Authorization header and Signature used to authenticate HTTP 
+requests sent to S3.
 </p>
 
 <p>
-Once a connection is established, the GET URL is parsed again to obtain its path
-string, after which an HTTP GET request is sent to obtain and parse the
-content-range header returned from the server, containing the size of the
-uploaded file. Then, using range headers, the application loops until the entire
-file is downloaded, requesting a range of bytes (determined by the user buffer
-length) on each iteration.
+Once the credentials are received, the TLS connection to AWS IOT credential provider is terminated. 
+Another OpenSSL-based transport interface implementation is used to establish an encrypted TLS connection 
+over port 443 to S3. The host address is extracted from the AWS_S3_URL 
+(generated with configuration parameters provided by the application) using the third-party 
+http-parser library. Only the server's certificate is verified using its respective root CA certificate. 
+If a connection failure occurs, then the connection establishment is retried for limited attempts with 
+exponential and jitter backoff.
+</p>
+
+<p>
+Once a connection is established, the AWS_S3_URL is parsed again to obtain its path string, 
+required HTTP headers including the Authorization header generated  using SigV4 library are 
+added to the HTTP GET request which is sent to obtain and parse the content-range header returned 
+from the server, containing the size of the uploaded file. Then, using range headers, the application 
+loops until the entire file is downloaded, requesting a range of bytes (determined by the user buffer length) 
+on each iteration.
 </p>
 
 <div class="caption" style="text-align:center">
