@@ -169,14 +169,18 @@
  */
 #define AWS_SERVICE_NAME                         "s3"
 
-/* Full AWS S3 server endpoint. */
+/**
+ * @brief Full AWS S3 server endpoint.
+ */
 #define AWS_S3_OBJECT_URL                       \
     "https://"                                  \
     AWS_S3_BUCKET_NAME "." AWS_SERVICE_NAME "." \
     AWS_S3_BUCKET_REGION  ".amazonaws.com/"     \
     AWS_S3_OBJECT_NAME
 
-/* Full credentials endpoint including role alias. */
+/**
+ * @brief Full credentials endpoint including role alias.
+ */
 #define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT         \
     "https://"                                            \
     AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/" \
@@ -211,6 +215,16 @@
  * @brief Length for AWS IOT Credential provider server host name.
  */
 #define SERVER_HOST_NAME_LENGTH                 65U
+
+/**
+ * @brief Maximum block size of SHA256 Hashing Algorithm used in the demo.
+ */
+#define SHA256_HASH_MAX_BLOCK_LENGTH            64U
+
+/**
+ * @brief Maximum digest length of the SHA256 hash function used in the demo.
+ */
+#define SHA256_HASH_MAX_DIGEST_LENGTH           32U
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
@@ -437,8 +451,8 @@ static SigV4CryptoInterface_t cryptoInterface =
     .hashUpdate    = sha256Update,
     .hashFinal     = sha256Final,
     .pHashContext  = &hashContext,
-    .hashBlockLen  = SIGV4_HASH_MAX_BLOCK_LENGTH,
-    .hashDigestLen = SIGV4_HASH_MAX_DIGEST_LENGTH,
+    .hashBlockLen  = SHA256_HASH_MAX_BLOCK_LENGTH,
+    .hashDigestLen = SHA256_HASH_MAX_DIGEST_LENGTH,
 };
 
 /**
