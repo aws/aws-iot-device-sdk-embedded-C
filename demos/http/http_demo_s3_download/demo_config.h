@@ -140,8 +140,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 5000 )
 
 /**
  * @brief The length in bytes of the user buffer.
@@ -151,7 +150,7 @@
  * be less than USER_BUFFER_LENGTH. We don't expect S3 to send more than 1024
  * bytes of headers.
  */
-#define USER_BUFFER_LENGTH                ( 4096 )
+#define USER_BUFFER_LENGTH                      ( 4096 )
 
 /**
  * @brief The size of the range of the file to download, with each request.
@@ -160,6 +159,6 @@
  * in the user buffer. We don't expect S3 to send more than 1024 bytes of
  * headers.
  */
-#define RANGE_REQUEST_LENGTH              ( 2048 )
+#define RANGE_REQUEST_LENGTH                    ( 2048 )
 
 #endif /* ifndef DEMO_CONFIG_H_ */
