@@ -165,20 +165,23 @@
 #define AWS_S3_SERVICE_NAME                      "s3"
 
 /**
- * @brief Full AWS S3 server URL.
+ * @brief AWS S3 Endpoint.
  */
-#define AWS_S3_OBJECT_URL                          \
-    "https://"                                     \
+#define AWS_S3_ENDPOINT                            \
     AWS_S3_BUCKET_NAME "." AWS_S3_SERVICE_NAME "." \
-    AWS_S3_BUCKET_REGION  ".amazonaws.com/"        \
-    AWS_S3_OBJECT_NAME
+    AWS_S3_BUCKET_REGION  ".amazonaws.com"
 
 /**
- * @brief Full credentials URL including role alias.
+ * @brief AWS S3 URI PATH.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_URL                   \
-    "https://"                                            \
-    AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/" \
+#define AWS_S3_URI_PATH \
+    "/" AWS_S3_OBJECT_NAME
+
+/**
+ * @brief URI PATH of AWS IoT Credential provider.
+ */
+#define AWS_IOT_CREDENTIAL_PROVIDER_URI_PATH \
+    "/role-aliases/"                         \
     AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
 
 /**
@@ -553,37 +556,11 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
     assert( pDateISO8601 != NULL );
     assert( pDateISO8601Len > 0 );
 
-    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_URL. */
-    if( returnStatus == true )
-    {
-        httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_URL,
-                                    sizeof( AWS_IOT_CREDENTIAL_PROVIDER_URL ) - 1,
-                                    &pAddress,
-                                    &addressLen );
+    pAddress = AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT;
+    addressLen = strlen( AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT );
 
-        if( httpStatus != HTTPSuccess )
-        {
-            LogError( ( "Failed to get Address from URL %s: Error=%s.",
-                        AWS_IOT_CREDENTIAL_PROVIDER_URL, HTTPClient_strerror( httpStatus ) ) );
-            returnStatus = false;
-        }
-    }
-
-    if( returnStatus == true )
-    {
-        /* Retrieve the path and length from AWS_IOT_CREDENTIAL_PROVIDER_URL. */
-        httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_URL,
-                                 sizeof( AWS_IOT_CREDENTIAL_PROVIDER_URL ) - 1,
-                                 &pPath,
-                                 &pathLen );
-
-        if( httpStatus != HTTPSuccess )
-        {
-            LogError( ( "Failed to get path from URL %s: Error=%s.",
-                        AWS_IOT_CREDENTIAL_PROVIDER_URL, HTTPClient_strerror( httpStatus ) ) );
-            returnStatus = false;
-        }
-    }
+    pPath = AWS_IOT_CREDENTIAL_PROVIDER_URI_PATH;
+    pathLen = strlen( AWS_IOT_CREDENTIAL_PROVIDER_URI_PATH );
 
     /* Initialize Request header buffer. */
     requestHeaders.pBuffer = response->pBuffer;
@@ -868,10 +845,9 @@ static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeader
 
 static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 {
-    int32_t returnStatus = EXIT_FAILURE;
+    int32_t returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTPSuccess;
-
-    /* The location of the host address within the AWS_IOT_CREDENTIAL_PROVIDER_URL. */
+    /* Variable to store Host Address of AWS IoT Credential Provider server. */
     const char * pAddress = NULL;
 
     /* Status returned by OpenSSL transport implementation. */
@@ -881,17 +857,11 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
     /* Information about the server to send the HTTP requests. */
     ServerInfo_t serverInfo = { 0 };
 
-    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_URL. */
-    httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_URL,
-                                sizeof( AWS_IOT_CREDENTIAL_PROVIDER_URL ) - 1,
-                                &pAddress,
-                                &serverHostLength );
-    returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    pAddress = AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT;
+    serverHostLength = strlen( AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT );
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* serverHost should consist only of the host address located in
-         * AWS_IOT_CREDENTIAL_PROVIDER_URL. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
 
@@ -907,7 +877,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
         serverInfo.port = HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in AWS_IOT_CREDENTIAL_PROVIDER_URL and HTTPS_PORT in
+         * to the HTTP AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT and HTTPS_PORT in
          * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
@@ -929,10 +899,9 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
 {
-    int32_t returnStatus = EXIT_FAILURE;
+    int32_t returnStatus = EXIT_SUCCESS;
     HTTPStatus_t httpStatus = HTTPSuccess;
-
-    /* The location of the host address within the AWS_S3_OBJECT_URL. */
+    /* Variable to store Host Address of AWS S3 server. */
     const char * pAddress = NULL;
 
     /* Status returned by OpenSSL transport implementation. */
@@ -942,17 +911,11 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
     /* Information about the server to send the HTTP requests. */
     ServerInfo_t serverInfo = { 0 };
 
-    /* Retrieve the address location and length from AWS_S3_OBJECT_URL. */
-    httpStatus = getUrlAddress( AWS_S3_OBJECT_URL,
-                                sizeof( AWS_S3_OBJECT_URL ) - 1,
-                                &pAddress,
-                                &serverHostLength );
-    returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
+    pAddress = AWS_S3_ENDPOINT;
+    serverHostLength = strlen( AWS_S3_ENDPOINT );
 
     if( returnStatus == EXIT_SUCCESS )
     {
-        /* serverHost should consist only of the host address located in
-         * AWS_S3_OBJECT_URL. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
 
@@ -966,7 +929,7 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
         serverInfo.port = HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in AWS_S3_OBJECT_URL and HTTPS_PORT in
+         * to the HTTP AWS_S3_ENDPOINT and HTTPS_PORT in
          * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
@@ -1673,18 +1636,8 @@ int main( int argc,
 
             /******************** Download S3 Object File. **********************/
 
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                /* Retrieve the path location from AWS_S3_OBJECT_URL. This
-                 * function returns the length of the path without the query into
-                 * pathLen, which is left unused in this demo. */
-                httpStatus = getUrlPath( AWS_S3_OBJECT_URL,
-                                         sizeof( AWS_S3_OBJECT_URL ) - 1,
-                                         &pPath,
-                                         &pathLen );
-
-                returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
-            }
+            pPath = AWS_S3_URI_PATH;
+            pathLen = strlen( AWS_S3_URI_PATH );
 
             if( returnStatus == EXIT_SUCCESS )
             {
