@@ -18,8 +18,6 @@ set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdp
 include( ${COREPKCS11_LOCATION}/pkcsFilePaths.cmake )
 
 list(APPEND PKCS_SOURCES
-    "${COREPKCS11_LOCATION}/source/portable/os/posix/core_pkcs11_pal.c"
-    "${COREPKCS11_LOCATION}/source/portable/os/core_pkcs11_pal_utils.c"
     "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c"
 )
 
@@ -33,6 +31,7 @@ add_executable( ${DEMO_NAME}
                 ${MQTT_SERIALIZER_SOURCES}
                 ${BACKOFF_ALGORITHM_SOURCES}
                 ${PKCS_SOURCES}
+                ${PKCS_PAL_POSIX_SOURCES}
                 ${FLEET_PROVISIONING_SOURCES} )
 
 target_link_libraries( ${DEMO_NAME} PRIVATE
@@ -47,8 +46,7 @@ target_include_directories( ${DEMO_NAME}
                               ${MQTT_INCLUDE_PUBLIC_DIRS}
                               ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
                               ${PKCS_INCLUDE_PUBLIC_DIRS}
-                              "${COREPKCS11_LOCATION}/source/portable/os"
-                              "${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11"
+                              ${PKCS_PAL_INCLUDE_PUBLIC_DIRS}
                               "${FLEET_PROVISIONING_INCLUDE_PUBLIC_DIRS}"
                               "${DEMOS_DIR}/pkcs11/common/include" # corePKCS11 config
                               "${CMAKE_SOURCE_DIR}/platform/include"
