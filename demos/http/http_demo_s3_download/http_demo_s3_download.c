@@ -823,7 +823,7 @@ static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeader
                                               size_t * startHeaderLocLen )
 {
     size_t headerLen = requestHeaders.headersLen;
-    char * pHeaders = requestHeaders.pBuffer;
+    char * pHeaders = ( char * ) requestHeaders.pBuffer;
 
     assert( pStartHeaderLoc != NULL );
     assert( startHeaderLocLen != NULL );
@@ -846,7 +846,6 @@ static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeader
 static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 {
     int32_t returnStatus = EXIT_SUCCESS;
-    HTTPStatus_t httpStatus = HTTPSuccess;
     /* Variable to store Host Address of AWS IoT Credential Provider server. */
     const char * pAddress = NULL;
 
@@ -900,7 +899,6 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
 {
     int32_t returnStatus = EXIT_SUCCESS;
-    HTTPStatus_t httpStatus = HTTPSuccess;
     /* Variable to store Host Address of AWS S3 server. */
     const char * pAddress = NULL;
 
@@ -1531,16 +1529,7 @@ int main( int argc,
     int32_t returnStatus = EXIT_SUCCESS;
     /* Return value of private functions. */
     bool ret = false, credentialStatus = false;
-    /* HTTPS Client library return status. */
-    HTTPStatus_t httpStatus = HTTPSuccess;
     int demoRunCount = 0;
-
-    /* The length of the path within the pre-signed URL. This variable is
-     * defined in order to store the length returned from parsing the URL, but
-     * it is unused. The path used for the requests in this demo needs all the
-     * query information following the location of the object, to the end of the
-     * S3 presigned URL. */
-    size_t pathLen = 0;
 
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface;
@@ -1637,7 +1626,6 @@ int main( int argc,
             /******************** Download S3 Object File. **********************/
 
             pPath = AWS_S3_URI_PATH;
-            pathLen = strlen( AWS_S3_URI_PATH );
 
             if( returnStatus == EXIT_SUCCESS )
             {
