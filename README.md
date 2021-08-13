@@ -15,10 +15,12 @@
         * [AWS IoT Device Defender](#aws-iot-device-defender)
         * [AWS IoT Over-the-air Update Library](#aws-iot-over-the-air-update)
         * [AWS IoT Fleet Provisoning](#aws-iot-fleet-provisioning)
+        * [AWS SigV4](#aws-sigv4)
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases and Documentation](#releases-and-documentation)
+    * [202108.00](#20210800)
     * [202103.00](#20210300)
     * [202012.01](#20201201)
     * [202011.00](#20201100)
@@ -149,6 +151,12 @@ The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-a
 
 <!-- See memory requirements for the latest release [here](). -->
 
+#### AWS SigV4
+
+The [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library enables you to sign HTTP requests with [Signature Version Signing Process](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html). Signature Version 4 (SigV4) is the process to add authentication information to HTTP requests to AWS services. For security, most requests to AWS must be signed with an access key. The access key consists of an access key ID and secret access key.
+
+<!-- See memory requirements for the latest release [here](). -->
+
 #### backoffAlgorithm
 
 The [backoffAlgorithm](https://github.com/FreeRTOS/backoffAlgorithm) library is a utility library to calculate backoff period using an exponential backoff with jitter algorithm for retrying network operations (like failed network connection with server). This library uses the "Full Jitter" strategy for the exponential backoff with jitter algorithm. More information about the algorithm can be seen in the [Exponential Backoff and Jitter AWS blog](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/).
@@ -217,6 +225,14 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 ## Releases and Documentation
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
+
+### 202108.00
+
+<!-- [API documentation of 202108.00 release](). -->
+
+This release introduces the refactored [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk)** library and the new [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library.
+
+Additionally, this release brings minor version updates in the [AWS IoT Over-the-Air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) and [corePKCS11](https://github.com/FreeRTOS/corePKCS11) libraries. 
 
 ### 202103.00
 
