@@ -65,8 +65,8 @@
  *
  * @note This certificate should be PEM-encoded.
  */
-#ifndef ROOT_CA_CERT_PATH
-    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
+#ifndef AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH
+    #define AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
 
 /**
@@ -79,8 +79,8 @@
  *
  * @note This certificate should be PEM-encoded.
  */
-#ifndef ROOT_CA_CERT_PATH_S3
-    #define ROOT_CA_CERT_PATH_S3    "certificates/BaltimoreCyberTrustRoot.crt"
+#ifndef AWS_S3_ROOT_CA_CERT_PATH
+    #define AWS_S3_ROOT_CA_CERT_PATH    "certificates/BaltimoreCyberTrustRoot.crt"
 #endif
 
 /**
