@@ -118,11 +118,11 @@
 #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "...insert here..."
 
 /**
- *         * @brief Role alias name for accessing the credential provider.
- *         * 
- *         * @note This is the role alias name that has been created with AWS IoT
- *         * while following the steps in configuring the demo.
- *         */
+ * @brief Role alias name for accessing the credential provider.
+ * 
+ * @note This is the role alias name that has been created with AWS IoT
+ * while following the steps in configuring the demo.
+ */
 #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
 
 /**
