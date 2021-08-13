@@ -580,6 +580,7 @@ psignature
 psk
 pslotlist
 pss
+pstartheaderloc
 pthingname
 pthingnamebuffer
 pthingnamebufferlength
@@ -616,6 +617,7 @@ rangestart
 rc
 rdparty
 readme
+recv
 reasonnable
 registerthing
 reportbuilderbadparameter
@@ -626,6 +628,7 @@ reportlength
 reportstatus
 req
 requestcount
+requestheaders
 requestinfo
 requestqueue
 requesturilen
@@ -690,6 +693,7 @@ sse
 ssl
 sslv
 stackoverflow
+startheaderloclen
 startnextpendingjobexecution
 stat
 statechanged
