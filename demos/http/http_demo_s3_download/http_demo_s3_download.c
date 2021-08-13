@@ -828,23 +828,24 @@ static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeader
     assert( pStartHeaderLoc != NULL );
     assert( pHeadersDataLen != NULL );
 
-    while( headerLen >= 2 && 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
+    while( headerLen >= 2 )
     {
+        if( 0 == strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
+        {
+            newLineFound = true;
+            break;
+        }
+
         pHeaders++;
         headerLen--;
     }
 
-    if( ( headerLen >= 2 ) && ( 0 == strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) ) )
+    if( newLineFound == false )
     {
-        newLineFound = true;
+        LogError( ( "Failed to find starting location of HTTP headers in HTTP request: \"\\r\\n\" missing before start of HTTP headers." ) );
     }
 
     assert( newLineFound != false );
-
-    if( newLineFound == false )
-    {
-        LogError( ( "HTTP Headers missing \"\\r\\n\" at the end of initial HTTP headers added using coreHTTP Library." ) );
-    }
 
     /* Moving header pointer past "\r\n" .*/
     *pHeadersDataLen = headerLen - 2;
