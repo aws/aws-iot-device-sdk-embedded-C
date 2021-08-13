@@ -823,6 +823,7 @@ static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeader
 {
     size_t headerLen = requestHeaders.headersLen;
     char * pHeaders = ( char * ) requestHeaders.pBuffer;
+    bool newLineFound = false;
 
     assert( pStartHeaderLoc != NULL );
     assert( pHeadersDataLen != NULL );
@@ -833,10 +834,23 @@ static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeader
         headerLen--;
     }
 
+    if( ( headerLen >= 2 ) && ( 0 == strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) ) )
+    {
+        newLineFound = true;
+    }
+
+    assert( newLineFound != false );
+
+    if( newLineFound == false )
+    {
+        LogError( ( "HTTP Headers missing \"\\r\\n\" at the end of initial HTTP headers added using coreHTTP Library." ) );
+    }
+
     /* Moving header pointer past "\r\n" .*/
     *pHeadersDataLen = headerLen - 2;
     *pStartHeaderLoc = pHeaders + 2;
 }
+
 /*-----------------------------------------------------------*/
 
 static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
