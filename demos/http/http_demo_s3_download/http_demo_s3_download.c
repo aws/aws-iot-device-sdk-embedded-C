@@ -55,17 +55,17 @@
 
 /* Check that TLS port of the server is defined. */
 #ifndef HTTPS_PORT
-    #error "Please define a HTTPS_PORT in demo_config.h ."
+    #error "Please define the HTTPS_PORT macro in demo_config.h ."
 #endif
 
 /* Check that a path for Root CA Certificate is defined for AWS IOT CREDENTIAL PROVIDER SERVICE. */
 #ifndef AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH
-    #error "Please define a AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH for AWS IOT in demo_config.h."
+    #error "Please define thr AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH macro in demo_config.h."
 #endif
 
 /* Check that a path for Root CA Certificate is defined for AWS S3 Service. */
 #ifndef AWS_S3_ROOT_CA_CERT_PATH
-    #error "Please define a AWS_S3_ROOT_CA_CERT_PATH for AWS S3 in demo_config.h."
+    #error "Please define the AWS_S3_ROOT_CA_CERT_PATH macro for AWS S3 ROOT CA certificate in demo_config.h."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */
@@ -85,32 +85,32 @@
 
 /* Check that AWS IOT Thing Name is defined. */
 #ifndef AWS_IOT_THING_NAME
-    #error "Please define a AWS_IOT_THING_NAME in demo_config.h."
+    #error "Please define the AWS_IOT_THING_NAME macro in demo_config.h."
 #endif
 
 /* Check that AWS IOT credential provider endpoint is defined. */
 #ifndef AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT
-    #error "Please define a AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT in demo_config.h."
+    #error "Please define the AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT macro in demo_config.h."
 #endif
 
 /* Check that AWS IOT credential provider role is defined. */
 #ifndef AWS_IOT_CREDENTIAL_PROVIDER_ROLE
-    #error "Please define a AWS_IOT_CREDENTIAL_PROVIDER_ROLE in demo_config.h."
+    #error "Please define the AWS_IOT_CREDENTIAL_PROVIDER_ROLE macro in demo_config.h."
 #endif
 
 /* Check that AWS S3 BUCKET NAME is defined. */
 #ifndef AWS_S3_BUCKET_NAME
-    #error "Please define a AWS_S3_BUCKET_NAME in demo_config.h."
+    #error "Please define the AWS_S3_BUCKET_NAME macro in demo_config.h."
 #endif
 
 /* Check that AWS S3 OBJECT NAME is defined. */
 #ifndef AWS_S3_OBJECT_NAME
-    #error "Please define a AWS_S3_OBJECT_NAME in demo_config.h."
+    #error "Please define the AWS_S3_OBJECT_NAME macro in demo_config.h."
 #endif
 
 /* Check that AWS S3 BUCKET REGION is defined. */
 #ifndef AWS_S3_BUCKET_REGION
-    #error "Please define a AWS_S3_BUCKET_REGION in which bucket resides in demo_config.h."
+    #error "Please define the AWS_S3_BUCKET_REGION macro in which bucket resides in demo_config.h."
 #endif
 
 /**
@@ -157,7 +157,7 @@
  * 3. Session Token
  * 4. Expiration Date
  */
-#define CREDENTIAL_BUFFER_LENGTH                 2048U
+#define CREDENTIAL_BUFFER_LENGTH                 1500U
 
 /**
  * @brief AWS Service name to send HTTP request using SigV4 library.
@@ -178,7 +178,7 @@
     "/" AWS_S3_OBJECT_NAME
 
 /**
- * @brief URI PATH of AWS IoT Credential provider.
+ * @brief The URI path for HTTP requests to AWS IoT Credential provider.
  */
 #define AWS_IOT_CREDENTIAL_PROVIDER_URI_PATH \
     "/role-aliases/"                         \
@@ -452,16 +452,15 @@ static void lowercaseHexEncode( const char * pInputStr,
                                 char * pHexOutput );
 
 /**
- * @brief Get the starting location of HTTP header from the HTTP
- * requests.
+ * @brief Get the starting location of HTTP header in an HTTP request.
  *
  * @param[in] requestHeaders HTTP request headers that contains the HTTP request information.
  * @param[out] pStartHeaderLoc Buffer to store the start Location of the HTTP header.
- * @param[out] startHeaderLocLen Length of @p pStartHeaderLoc.
+ * @param[out] pHeadersDataLen Length of @p pStartHeaderLoc.
  */
 static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeaders,
                                               char ** pStartHeaderLoc,
-                                              size_t * startHeaderLocLen );
+                                              size_t * pHeadersDataLen );
 
 /**
  * @brief Calculate SHA256 digest.
@@ -630,11 +629,11 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
         /* Parse the credentials received in the response. */
         jsonStatus = parseCredentials( response, sigvCreds );
 
+        LogDebug( ( "AWS IoT credential provider response: %.*s.",
+                    response.bufferLen, response.pBuffer ) );
+
         if( jsonStatus != JSONSuccess )
         {
-            LogDebug( ( "AWS IoT credential provider response: %s.",
-                        response.bufferLen, response.pBuffer ) );
-
             LogError( ( "Failed to parse temporary IoT credentials retrieved from AWS IoT credential provider" ) );
             returnStatus = false;
         }
@@ -820,26 +819,23 @@ static int32_t sha256Final( void * hashContext,
 
 static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeaders,
                                               char ** pStartHeaderLoc,
-                                              size_t * startHeaderLocLen )
+                                              size_t * pHeadersDataLen )
 {
     size_t headerLen = requestHeaders.headersLen;
     char * pHeaders = ( char * ) requestHeaders.pBuffer;
 
     assert( pStartHeaderLoc != NULL );
-    assert( startHeaderLocLen != NULL );
+    assert( pHeadersDataLen != NULL );
 
-    while( pHeaders != NULL && headerLen >= 2 && 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
+    while( headerLen >= 2 && 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
     {
         pHeaders++;
         headerLen--;
     }
 
     /* Moving header pointer past "\r\n" .*/
-    pHeaders = pHeaders + 2;
-    headerLen = headerLen - 2;
-
-    *startHeaderLocLen = headerLen;
-    *pStartHeaderLoc = pHeaders;
+    *pHeadersDataLen = headerLen - 2;
+    *pStartHeaderLoc = pHeaders + 2;
 }
 /*-----------------------------------------------------------*/
 
@@ -876,7 +872,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
         serverInfo.port = HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT and HTTPS_PORT in
+         * to the AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT and HTTPS_PORT in
          * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
@@ -1153,7 +1149,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
                         ( int32_t ) requestHeaders.headersLen,
                         ( char * ) requestHeaders.pBuffer ) );
 
-            /* Send HTTP Get request to AWS S3 with empty request body and receive response. */
+            /* Send HTTP Get request to AWS S3 and receive response. */
             httpStatus = HTTPClient_Send( pTransportInterface,
                                           &requestHeaders,
                                           NULL,
@@ -1405,7 +1401,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 
     if( returnStatus == true )
     {
-        /* Send HTTP Get request to AWS S3 with empty request body to get the file size. */
+        /* Send HTTP Get request to AWS S3 to get the file size. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
                                       NULL,
