@@ -54,20 +54,19 @@
 #include "logging_stack.h"
 
 /**
- * @brief Define the size of the buffer used for generating the canonical
- * request.
+ * @brief The size of the compile time allocated internal library buffer that is used
+ * for generating the canonical request.
  */
-#define SIGV4_PROCESSING_BUFFER_LENGTH    2048U
+#define SIGV4_PROCESSING_BUFFER_LENGTH    1600U
 
 /**
- * @brief Number of HTTP headers does not exceed value 10 in HTTP requests sent to S3
+ * @brief Number of HTTP headers does not exceed a maximum of 10 in HTTP requests sent to S3
  * for the demo application.
  */
 #define SIGV4_MAX_HTTP_HEADER_COUNT       10U
 
 /**
- * @brief No Query parameters are used in requests to S3. Setting SIGV4_MAX_QUERY_PAIR_COUNT to 0
- * for the demo application.
+ * @brief No Query parameters are used in requests to S3. Thus, the macro is set to 0.
  */
 #define SIGV4_MAX_QUERY_PAIR_COUNT        0U
 
