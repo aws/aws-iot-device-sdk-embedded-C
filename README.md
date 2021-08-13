@@ -230,7 +230,7 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 
 <!-- [API documentation of 202108.00 release](). -->
 
-This release introduces the refactored [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk)** library and the new [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library.
+This release introduces the refactored [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library and the new [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library.
 
 Additionally, this release brings minor version updates in the [AWS IoT Over-the-Air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) and [corePKCS11](https://github.com/FreeRTOS/corePKCS11) libraries. 
 
