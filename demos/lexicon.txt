@@ -480,6 +480,7 @@ pfilepath
 pfilesize
 pfixedbuffer
 phash
+pheadersdatalen
 phexoutput
 phost
 php
