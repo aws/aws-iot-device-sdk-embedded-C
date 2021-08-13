@@ -39,6 +39,7 @@
 /* PKCS #11 include. */
 #include "core_pkcs11_config.h"
 #include "core_pki_utils.h"
+#include "mbedtls_utils.h"
 
 /* MbedTLS include. */
 #include "mbedtls/ctr_drbg.h"
@@ -137,14 +138,6 @@ typedef struct SigningCallbackContext
  * our own.
  */
 static SigningCallbackContext_t signingContext = { 0 };
-
-/* Defined in
- * libraries/standard/corePKCS11/source/dependency/3rdparty/mbedtls_utils/mbedtls_utils.c
- */
-extern int convert_pem_to_der( const unsigned char * pucInput,
-                               size_t xLen,
-                               unsigned char * pucOutput,
-                               size_t * pxOlen );
 
 /*-----------------------------------------------------------*/
 
