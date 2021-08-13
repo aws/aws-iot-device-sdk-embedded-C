@@ -55,17 +55,17 @@
 
 /* Check that TLS port of the server is defined. */
 #ifndef HTTPS_PORT
-    #error "Please define a HTTPS_PORT."
+    #error "Please define a HTTPS_PORT in demo_config.h ."
 #endif
 
-/* Check that a path for Root CA Certificate is defined for AWS IOT SERVICE. */
-#ifndef ROOT_CA_CERT_PATH
-    #error "Please define a ROOT_CA_CERT_PATH for AWS IOT."
+/* Check that a path for Root CA Certificate is defined for AWS IOT CREDENTIAL PROVIDER SERVICE. */
+#ifndef AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH
+    #error "Please define a AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH for AWS IOT in demo_config.h."
 #endif
 
 /* Check that a path for Root CA Certificate is defined for AWS S3 Service. */
-#ifndef ROOT_CA_CERT_PATH_S3
-    #error "Please define a ROOT_CA_CERT_PATH_S3 for AWS S3."
+#ifndef AWS_S3_ROOT_CA_CERT_PATH
+    #error "Please define a AWS_S3_ROOT_CA_CERT_PATH for AWS S3 in demo_config.h."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */
@@ -85,32 +85,32 @@
 
 /* Check that AWS IOT Thing Name is defined. */
 #ifndef AWS_IOT_THING_NAME
-    #error "Please define a AWS IOT Thing Name."
+    #error "Please define a AWS_IOT_THING_NAME in demo_config.h."
 #endif
 
 /* Check that AWS IOT credential provider endpoint is defined. */
 #ifndef AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT
-    #error "Please define a AWS IOT credential provider endpoint."
+    #error "Please define a AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT in demo_config.h."
 #endif
 
 /* Check that AWS IOT credential provider role is defined. */
 #ifndef AWS_IOT_CREDENTIAL_PROVIDER_ROLE
-    #error "Please define a AWS IOT credential provider role."
+    #error "Please define a AWS_IOT_CREDENTIAL_PROVIDER_ROLE in demo_config.h."
 #endif
 
 /* Check that AWS S3 BUCKET NAME is defined. */
 #ifndef AWS_S3_BUCKET_NAME
-    #error "Please define a AWS S3 BUCKET NAME."
+    #error "Please define a AWS_S3_BUCKET_NAME in demo_config.h."
 #endif
 
 /* Check that AWS S3 OBJECT NAME is defined. */
 #ifndef AWS_S3_OBJECT_NAME
-    #error "Please define a AWS S3 OBJECT NAME."
+    #error "Please define a AWS_S3_OBJECT_NAME in demo_config.h."
 #endif
 
 /* Check that AWS S3 BUCKET REGION is defined. */
 #ifndef AWS_S3_BUCKET_REGION
-    #error "Please define a AWS S3 REGION in which bucket resides."
+    #error "Please define a AWS_S3_BUCKET_REGION in which bucket resides in demo_config.h."
 #endif
 
 /**
@@ -150,81 +150,105 @@
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_S    ( 5 )
 
 /**
- * @brief Length in bytes of hash digest.
- */
-#define SHA256_HASH_DIGEST_LENGTH                ( ( ( uint16_t ) 64 ) )
-
-/**
- * @brief Buffer Length for AWS IOT Credentials.
+ * @brief Buffer Length for storing the AWS IoT Credentials retrieved from
+ * AWS IoT credential provider which includes the following:
+ * 1. Access Key ID
+ * 2. Secret Access key
+ * 3. Session Token
+ * 4. Expiration Date
  */
 #define CREDENTIAL_BUFFER_LENGTH                 2048U
 
 /**
  * @brief AWS Service name to send HTTP request using SigV4 library.
  */
-#define AWS_SERVICE_NAME                         "s3"
+#define AWS_S3_SERVICE_NAME                      "s3"
 
 /**
- * @brief Full AWS S3 server endpoint.
+ * @brief Full AWS S3 server URL.
  */
-#define AWS_S3_OBJECT_URL                       \
-    "https://"                                  \
-    AWS_S3_BUCKET_NAME "." AWS_SERVICE_NAME "." \
-    AWS_S3_BUCKET_REGION  ".amazonaws.com/"     \
+#define AWS_S3_OBJECT_URL                          \
+    "https://"                                     \
+    AWS_S3_BUCKET_NAME "." AWS_S3_SERVICE_NAME "." \
+    AWS_S3_BUCKET_REGION  ".amazonaws.com/"        \
     AWS_S3_OBJECT_NAME
 
 /**
- * @brief Full credentials endpoint including role alias.
+ * @brief Full credentials URL including role alias.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT         \
+#define AWS_IOT_CREDENTIAL_PROVIDER_URL                   \
     "https://"                                            \
     AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT "/role-aliases/" \
     AWS_IOT_CREDENTIAL_PROVIDER_ROLE "/credentials"
 
 /**
- * @brief Field name of the HTTP thing name header sent in HTTP request to AWS S3.
+ * @brief HTTP header name for specifying the IOT Thing resource name in request to AWS S3.
  */
-#define AWS_IOT_THING_NAME_HEADER_FIELD         "x-amz-iot-thing-name"
+#define AWS_IOT_THING_NAME_HEADER_FIELD               "x-amz-iot-thing-name"
 
 /**
  * @brief Field name of the HTTP date header to read from the AWS IOT credential provider server response.
  */
-#define HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD    "date"
+#define AWS_IOT_CRED_PROVIDER_RESPONSE_DATE_HEADER    "date"
 
 /**
  * @brief Field name of the HTTP Authorization header to add to the request headers.
  */
-#define SIGV4_AUTH_HEADER_FIELD_NAME            "Authorization"
+#define SIGV4_AUTH_HEADER_FIELD_NAME                  "Authorization"
 
 /**
  * @brief IS8601 formatted date length.
  */
-#define SIGV4_ISO_STRING_LEN                    16U
+#define SIGV4_ISO_STRING_LEN                          16U
 
 /**
  * @brief Length of AWS HTTP Authorization header value generated using SigV4 library.
  */
-#define AWS_HTTP_AUTH_HEADER_VALUE_LEN          2048U
+#define AWS_HTTP_AUTH_HEADER_VALUE_LEN                2048U
 
 /**
- * @brief Length for AWS IOT Credential provider server host name.
+ * @brief Maximum Length for AWS IOT Credential provider server host name.
+ *
+ * @note length of the AWS IOT Credential provider server host name string
+ * cannot exceed this value.
  */
-#define SERVER_HOST_NAME_LENGTH                 65U
+#define SERVER_HOST_NAME_MAX_LENGTH                   65U
 
 /**
- * @brief Hex encoded hash digest length.
+ * @brief Length in bytes of hex encoded hash digest.
  */
-#define SHA256_HEX_ENCODED_DIGEST_LENGTH        ( ( ( uint16_t ) 64 ) )
+#define HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH         ( ( ( uint16_t ) 64 ) )
 
 /**
- * @brief Maximum block size of SHA256 Hashing Algorithm used in the demo.
+ * @brief Length in bytes of SHA256 hash digest.
  */
-#define SHA256_HASH_MAX_BLOCK_LENGTH            64U
+#define SHA256_HASH_DIGEST_LENGTH                     ( HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH / 2 )
 
 /**
- * @brief Maximum digest length of the SHA256 hash function used in the demo.
+ * @brief Access Key Id key to be searched in the IoT credentials response.
  */
-#define SHA256_HASH_MAX_DIGEST_LENGTH           ( SHA256_HEX_ENCODED_DIGEST_LENGTH / 2 )
+#define CREDENTIALS_RESPONSE_ACCESS_KEY_ID_KEY        "credentials.accessKeyId"
+
+/**
+ * @brief Secret Access key to be searched in the IoT credentials response.
+ */
+#define CREDENTIALS_RESPONSE_SECRET_ACCESS_KEY        "credentials.secretAccessKey"
+
+/**
+ * @brief Session Token key to be searched in the IoT credentials response.
+ */
+#define CREDENTIALS_RESPONSE_SESSION_TOKEN_KEY        "credentials.sessionToken"
+
+/**
+ * @brief Expiration Date key to be searched in the IoT credentials response.
+ */
+#define CREDENTIALS_RESPONSE_EXPIRATION_DATE_KEY      "credentials.expiration"
+
+/**
+ * @brief Represents empty payload for HTTP GET request sent to AWS S3.
+ */
+#define S3_REQUEST_EMPTY_PAYLOAD                      ""
+
 
 /**
  * @brief A buffer used in the demo for storing HTTP request headers and HTTP
@@ -253,15 +277,15 @@ static HTTPRequestInfo_t requestInfo;
 static HTTPResponse_t response;
 
 /**
- * @brief The host address string extracted from the given server URL.
+ * @brief The host address string extracted from the AWS IOT CREDENTIAL PROVIDER URL.
  *
- * @note SERVER_HOST_NAME_LENGTH is set as the array length here as the
+ * @note SERVER_HOST_NAME_MAX_LENGTH is set as the array length here as the
  * length of the host name string cannot exceed this value.
  */
-static char serverHost[ SERVER_HOST_NAME_LENGTH ];
+static char serverHost[ SERVER_HOST_NAME_MAX_LENGTH ];
 
 /**
- * @brief The length of the host address found in the given server URL.
+ * @brief The length of the host address found in the the AWS IOT CREDENTIAL PROVIDER URL.
  */
 static size_t serverHostLength;
 
@@ -278,23 +302,43 @@ static mbedtls_sha256_context hashContext = { 0 };
 /**
  *  @brief Configurations of the AWS credentials sent to sigV4 library for generating the Authorization Header.
  */
-SigV4Credentials_t sigvCreds = { 0 };
+static SigV4Credentials_t sigvCreds = { 0 };
 
 /**
  * @brief Represents a response returned from an AWS IOT credential provider.
  */
-HTTPResponse_t credentialResponse = { 0 };
+static HTTPResponse_t credentialResponse = { 0 };
 
 /**
  * @brief Buffer used in the demo for storing temporary credentials
  * received from AWS TOT credential provider.
  */
-uint8_t pAwsIotHttpBuffer[ CREDENTIAL_BUFFER_LENGTH ] = { 0 };
+static uint8_t pAwsIotHttpBuffer[ CREDENTIAL_BUFFER_LENGTH ] = { 0 };
 
 /**
  * @brief Represents date in ISO8601 format used in the HTTP requests sent to AWS S3.
  */
 static char pDateISO8601[ SIGV4_ISO_STRING_LEN ] = { 0 };
+
+/**
+ * @brief Represents hash digest of payload.
+ */
+static char pPayloadHashDigest[ SHA256_HASH_DIGEST_LENGTH ];
+
+/**
+ * @brief Represents hex encoded hash digest of payload.
+ */
+static char hexencoded[ HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH ];
+
+/**
+ * @brief Represents Authorization header value generated using SigV4 library.
+ */
+static char pSigv4Auth[ AWS_HTTP_AUTH_HEADER_VALUE_LEN ];
+
+/**
+ * @brief Represents Length of Authorization header value generated using SigV4 library.
+ */
+static size_t sigv4AuthLen = AWS_HTTP_AUTH_HEADER_VALUE_LEN;
 
 /*-----------------------------------------------------------*/
 
@@ -379,7 +423,7 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
 /**
  * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
  *
- * @param[in] pTransportInterface The transport interface for making network
+ * @param[in] pTransportInterface The transport interface for performing network send/recv operations.
  * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date.
  * @param[in,out] response Response buffer to store the HTTP response received.
  * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
@@ -403,6 +447,18 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
 static void lowercaseHexEncode( const char * pInputStr,
                                 size_t inputStrLen,
                                 char * pHexOutput );
+
+/**
+ * @brief Get the starting location of HTTP header from the HTTP
+ * requests.
+ *
+ * @param[in] requestHeaders HTTP request headers that contains the HTTP request information.
+ * @param[out] pStartHeaderLoc Buffer to store the start Location of the HTTP header.
+ * @param[out] startHeaderLocLen Length of @p pStartHeaderLoc.
+ */
+static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeaders,
+                                              char ** pStartHeaderLoc,
+                                              size_t * startHeaderLocLen );
 
 /**
  * @brief Calculate SHA256 digest.
@@ -442,8 +498,7 @@ static int32_t sha256Final( void * hashContext,
                             size_t outputLen );
 
 /**
- * @brief CryptoInterface provided to SigV4 library for generating the hash digest
- * and signature.
+ * @brief CryptoInterface provided to SigV4 library for generating the hash digest.
  */
 static SigV4CryptoInterface_t cryptoInterface =
 {
@@ -451,8 +506,8 @@ static SigV4CryptoInterface_t cryptoInterface =
     .hashUpdate    = sha256Update,
     .hashFinal     = sha256Final,
     .pHashContext  = &hashContext,
-    .hashBlockLen  = SHA256_HASH_MAX_BLOCK_LENGTH,
-    .hashDigestLen = SHA256_HASH_MAX_DIGEST_LENGTH,
+    .hashBlockLen  = HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH,
+    .hashDigestLen = SHA256_HASH_DIGEST_LENGTH,
 };
 
 /**
@@ -465,8 +520,8 @@ static SigV4Parameters_t sigv4Params =
     .pDateIso8601     = pDateISO8601,
     .pRegion          = AWS_S3_BUCKET_REGION,
     .regionLen        = strlen( AWS_S3_BUCKET_REGION ),
-    .pService         = AWS_SERVICE_NAME,
-    .serviceLen       = strlen( AWS_SERVICE_NAME ),
+    .pService         = AWS_S3_SERVICE_NAME,
+    .serviceLen       = strlen( AWS_S3_SERVICE_NAME ),
     .pCryptoInterface = &cryptoInterface,
     .pHttpParameters  = NULL
 };
@@ -488,9 +543,9 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
     SigV4Status_t sigv4Status = SigV4Success;
     JSONStatus_t jsonStatus = JSONSuccess;
     const char * pAddress = NULL;
-    const char * pDate;
-    const char * pPath;
-    size_t dateLen;
+    const char * pDate = NULL;
+    const char * pPath = NULL;
+    size_t dateLen = 0;
 
     assert( transportInterface != NULL );
     assert( response != NULL );
@@ -498,34 +553,34 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
     assert( pDateISO8601 != NULL );
     assert( pDateISO8601Len > 0 );
 
-    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_URL. */
     if( returnStatus == true )
     {
-        httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-                                    sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
+        httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_URL,
+                                    sizeof( AWS_IOT_CREDENTIAL_PROVIDER_URL ) - 1,
                                     &pAddress,
                                     &addressLen );
 
         if( httpStatus != HTTPSuccess )
         {
             LogError( ( "Failed to get Address from URL %s: Error=%s.",
-                        AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT, HTTPClient_strerror( httpStatus ) ) );
+                        AWS_IOT_CREDENTIAL_PROVIDER_URL, HTTPClient_strerror( httpStatus ) ) );
             returnStatus = false;
         }
     }
 
     if( returnStatus == true )
     {
-        /* Retrieve the path and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
-        httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-                                 sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
+        /* Retrieve the path and length from AWS_IOT_CREDENTIAL_PROVIDER_URL. */
+        httpStatus = getUrlPath( AWS_IOT_CREDENTIAL_PROVIDER_URL,
+                                 sizeof( AWS_IOT_CREDENTIAL_PROVIDER_URL ) - 1,
                                  &pPath,
                                  &pathLen );
 
         if( httpStatus != HTTPSuccess )
         {
             LogError( ( "Failed to get path from URL %s: Error=%s.",
-                        AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT, HTTPClient_strerror( httpStatus ) ) );
+                        AWS_IOT_CREDENTIAL_PROVIDER_URL, HTTPClient_strerror( httpStatus ) ) );
             returnStatus = false;
         }
     }
@@ -534,7 +589,7 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
     requestHeaders.pBuffer = response->pBuffer;
     requestHeaders.bufferLen = response->bufferLen;
 
-    /* Set HTTP request parameters to get temporary AWS IOT credentials. */
+    /* Set HTTP request parameters to get temporary AWS IoT credentials. */
     requestInfo.pMethod = HTTP_METHOD_GET;
     requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
     requestInfo.pPath = pPath;
@@ -577,7 +632,8 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
 
     if( returnStatus == true )
     {
-        /* Send the request and receive the response. */
+        /* Send the request to AWS IoT Credentials Provider to obtain temporary credentials
+         * so that the demo application can access configured S3 bucket thereafter. */
         httpStatus = HTTPClient_Send( transportInterface,
                                       &requestHeaders,
                                       NULL,
@@ -586,7 +642,7 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
 
         if( httpStatus != HTTPSuccess )
         {
-            LogError( ( "Failed to send HTTP GET request to %s%s: Error=%s.",
+            LogError( ( "Failed to send HTTP GET request to %s%s  for obtaining temporary credentials: Error=%s.",
                         pAddress, pPath, HTTPClient_strerror( httpStatus ) ) );
             returnStatus = false;
         }
@@ -599,36 +655,39 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
 
         if( jsonStatus != JSONSuccess )
         {
-            LogError( ( "Failed to parse temporary IOT credentials. " ) );
+            LogDebug( ( "AWS IoT credential provider response: %s.",
+                        response.bufferLen, response.pBuffer ) );
+
+            LogError( ( "Failed to parse temporary IoT credentials retrieved from AWS IoT credential provider" ) );
             returnStatus = false;
         }
     }
 
-    /* Get the AWS IOT date from the http response. */
+    /* Get the AWS IoT date from the http response. */
     if( returnStatus == true )
     {
         httpStatus = HTTPClient_ReadHeader( response,
-                                            HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD,
-                                            sizeof( HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD ) - 1,
+                                            AWS_IOT_CRED_PROVIDER_RESPONSE_DATE_HEADER,
+                                            sizeof( AWS_IOT_CRED_PROVIDER_RESPONSE_DATE_HEADER ) - 1,
                                             ( const char ** ) &pDate,
                                             &dateLen );
 
         if( httpStatus != HTTPSuccess )
         {
-            LogError( ( "Failed to retrieve %s header from response: Error=%s.",
-                        HTTP_DEMO_RECEIVED_DATE_HEADER_FIELD, HTTPClient_strerror( httpStatus ) ) );
+            LogError( ( "Failed to retrieve \"%s\" header from response: Error=%s.",
+                        AWS_IOT_CRED_PROVIDER_RESPONSE_DATE_HEADER, HTTPClient_strerror( httpStatus ) ) );
             returnStatus = false;
         }
     }
 
     if( returnStatus == true )
     {
-        /* Convert AWS IOT date retrieved from IOT server to ISO 8601 date format. */
+        /* Convert AWS IoT date retrieved from IoT server to ISO 8601 date format. */
         sigv4Status = SigV4_AwsIotDateToIso8601( pDate, dateLen, pDateISO8601, pDateISO8601Len );
 
         if( sigv4Status != SigV4Success )
         {
-            LogError( ( "Failed to convert AWS IOT date to ISO 8601 format." ) );
+            LogError( ( "Failed to convert AWS IoT date to ISO 8601 format." ) );
             returnStatus = false;
         }
     }
@@ -651,8 +710,8 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
         /* Get accessKeyId from HTTP response. */
         jsonStatus = JSON_Search( ( char * ) response->pBody,
                                   response->bodyLen,
-                                  "credentials.accessKeyId",
-                                  strlen( "credentials.accessKeyId" ),
+                                  CREDENTIALS_RESPONSE_ACCESS_KEY_ID_KEY,
+                                  strlen( CREDENTIALS_RESPONSE_ACCESS_KEY_ID_KEY ),
                                   ( char ** ) &( sigvCreds->pAccessKeyId ),
                                   &( sigvCreds->accessKeyIdLen ) );
 
@@ -667,8 +726,8 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
         /* Get secretAccessKey from HTTP response. */
         jsonStatus = JSON_Search( ( char * ) response->pBody,
                                   response->bodyLen,
-                                  "credentials.secretAccessKey",
-                                  strlen( "credentials.secretAccessKey" ),
+                                  CREDENTIALS_RESPONSE_SECRET_ACCESS_KEY,
+                                  strlen( CREDENTIALS_RESPONSE_SECRET_ACCESS_KEY ),
                                   ( char ** ) &( sigvCreds->pSecretAccessKey ),
                                   &( sigvCreds->secretAccessKeyLen ) );
 
@@ -683,8 +742,8 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
         /* Get sessionToken from HTTP response. */
         jsonStatus = JSON_Search( ( char * ) response->pBody,
                                   response->bodyLen,
-                                  "credentials.sessionToken",
-                                  strlen( "credentials.sessionToken" ),
+                                  CREDENTIALS_RESPONSE_SESSION_TOKEN_KEY,
+                                  strlen( CREDENTIALS_RESPONSE_SESSION_TOKEN_KEY ),
                                   ( char ** ) &( sigvCreds->pSecurityToken ),
                                   &( sigvCreds->securityTokenLen ) );
 
@@ -699,14 +758,18 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
         /* Get expiration date from HTTP response. */
         jsonStatus = JSON_Search( ( char * ) response->pBody,
                                   response->bodyLen,
-                                  "credentials.expiration",
-                                  strlen( "credentials.expiration" ),
+                                  CREDENTIALS_RESPONSE_EXPIRATION_DATE_KEY,
+                                  strlen( CREDENTIALS_RESPONSE_EXPIRATION_DATE_KEY ),
                                   ( char ** ) &( sigvCreds->pExpiration ),
                                   &( sigvCreds->expirationLen ) );
 
         if( jsonStatus != JSONSuccess )
         {
             LogError( ( "Error parsing expiration date in the credentials." ) );
+        }
+        else
+        {
+            LogInfo( ( "AWS IoT credentials will expire after this timestamp: %.*s.", sigvCreds->expirationLen, sigvCreds->pExpiration ) );
         }
     }
 
@@ -722,6 +785,10 @@ static void lowercaseHexEncode( const char * pInputStr,
     static const char digitArr[] = "0123456789abcdef";
     char * hex = pHexOutput;
     size_t i = 0U;
+
+    assert( pInputStr != NULL );
+    assert( inputStrLen > 0 );
+    assert( pHexOutput != NULL );
 
     for( i = 0; i < inputStrLen; i++ )
     {
@@ -766,11 +833,37 @@ static int32_t sha256Final( void * hashContext,
                             char * pOutput,
                             size_t outputLen )
 {
+    assert( outputLen >= SHA256_HASH_DIGEST_LENGTH );
+
     ( void ) outputLen;
+
     return mbedtls_sha256_finish_ret( ( mbedtls_sha256_context * ) hashContext,
                                       ( unsigned char * ) pOutput );
 }
 
+static void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeaders,
+                                              char ** pStartHeaderLoc,
+                                              size_t * startHeaderLocLen )
+{
+    size_t headerLen = requestHeaders.headersLen;
+    char * pHeaders = requestHeaders.pBuffer;
+
+    assert( pStartHeaderLoc != NULL );
+    assert( startHeaderLocLen != NULL );
+
+    while( pHeaders != NULL && headerLen >= 2 && 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
+    {
+        pHeaders++;
+        headerLen--;
+    }
+
+    /* Moving header pointer past "\r\n" .*/
+    pHeaders = pHeaders + 2;
+    headerLen = headerLen - 2;
+
+    *startHeaderLocLen = headerLen;
+    *pStartHeaderLoc = pHeaders;
+}
 /*-----------------------------------------------------------*/
 
 static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
@@ -778,7 +871,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
     int32_t returnStatus = EXIT_FAILURE;
     HTTPStatus_t httpStatus = HTTPSuccess;
 
-    /* The location of the host address within the AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+    /* The location of the host address within the AWS_IOT_CREDENTIAL_PROVIDER_URL. */
     const char * pAddress = NULL;
 
     /* Status returned by OpenSSL transport implementation. */
@@ -788,9 +881,9 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
     /* Information about the server to send the HTTP requests. */
     ServerInfo_t serverInfo = { 0 };
 
-    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
-    httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT,
-                                sizeof( AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT ) - 1,
+    /* Retrieve the address location and length from AWS_IOT_CREDENTIAL_PROVIDER_URL. */
+    httpStatus = getUrlAddress( AWS_IOT_CREDENTIAL_PROVIDER_URL,
+                                sizeof( AWS_IOT_CREDENTIAL_PROVIDER_URL ) - 1,
                                 &pAddress,
                                 &serverHostLength );
     returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -798,12 +891,12 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
     if( returnStatus == EXIT_SUCCESS )
     {
         /* serverHost should consist only of the host address located in
-         * AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT. */
+         * AWS_IOT_CREDENTIAL_PROVIDER_URL. */
         memcpy( serverHost, pAddress, serverHostLength );
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
         opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
         opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
@@ -814,7 +907,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
         serverInfo.port = HTTPS_PORT;
 
         /* Establish a TLS session with the HTTP server. This example connects
-         * to the HTTP server as specified in AWS_IOT_CREDENTIAL_PROVIDER_FULL_ENDPOINT and HTTPS_PORT in
+         * to the HTTP server as specified in AWS_IOT_CREDENTIAL_PROVIDER_URL and HTTPS_PORT in
          * demo_config.h. */
         LogInfo( ( "Establishing a TLS session with %s:%d.",
                    serverHost,
@@ -864,7 +957,7 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH_S3;
+        opensslCredentials.pRootCaPath = AWS_S3_ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
 
         /* Initialize server information. */
@@ -908,23 +1001,15 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
     /* curByte indicates which starting byte we want to download next. */
     size_t curByte = 0;
 
-    /* Variable to store hash digest of payload. */
-    char * pPayloadHashDigest = ( char * ) malloc( SHA256_HASH_DIGEST_LENGTH );
-    /* Variable to store hex encoded hash digest of payload. */
-    char * hexencoded = ( char * ) malloc( SHA256_HEX_ENCODED_DIGEST_LENGTH );
-    /* Store Authorization header value generated using SigV4 library. */
-    char * pSigv4Auth = ( char * ) malloc( AWS_HTTP_AUTH_HEADER_VALUE_LEN );
-    size_t sigv4AuthLen = AWS_HTTP_AUTH_HEADER_VALUE_LEN;
-
     SigV4Status_t sigv4Status = SigV4Success;
     SigV4HttpParameters_t sigv4HttpParams;
 
-    const char * pHeaders = NULL;
+    char * pHeaders = NULL;
     size_t headersLen = 0;
 
     /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
-    char * signature;
-    size_t signatureLen;
+    char * signature = NULL;
+    size_t signatureLen = 0;
 
     assert( pPath != NULL );
 
@@ -1026,7 +1111,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         }
 
         /* Get the hash of the payload. */
-        sha256( ( const char * ) "", 0, pPayloadHashDigest );
+        sha256( ( const char * ) S3_REQUEST_EMPTY_PAYLOAD, 0, pPayloadHashDigest );
         lowercaseHexEncode( ( const char * ) pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
 
         if( returnStatus == true )
@@ -1047,18 +1132,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
 
         /* Move request header pointer past the initial headers which are added by coreHTTP
          * library and are not required by SigV4 library. */
-        pHeaders = ( const char * ) requestHeaders.pBuffer;
-        headersLen = requestHeaders.headersLen;
-
-        while( 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
-        {
-            pHeaders++;
-            headersLen--;
-        }
-
-        /* Moving header pointer past "\r\n" .*/
-        pHeaders = pHeaders + 2;
-        headersLen = headersLen - 2;
+        getHeaderStartLocFromHttpRequest( requestHeaders, &pHeaders, &headersLen );
 
         /* Setup the HTTP parameters. */
         sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
@@ -1067,12 +1141,13 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         sigv4HttpParams.flags = 0;
         sigv4HttpParams.pPath = requestInfo.pPath;
         sigv4HttpParams.pathLen = requestInfo.pathLen;
+        /* AWS S3 request does not require any Query parameters. */
         sigv4HttpParams.pQuery = NULL;
         sigv4HttpParams.queryLen = 0;
         sigv4HttpParams.pHeaders = pHeaders;
         sigv4HttpParams.headersLen = headersLen;
-        sigv4HttpParams.pPayload = "";
-        sigv4HttpParams.payloadLen = 0;
+        sigv4HttpParams.pPayload = S3_REQUEST_EMPTY_PAYLOAD;
+        sigv4HttpParams.payloadLen = strlen( S3_REQUEST_EMPTY_PAYLOAD );
 
         /* Initializing sigv4Params with Http parameters required for the HTTP request. */
         sigv4Params.pHttpParameters = &sigv4HttpParams;
@@ -1086,6 +1161,10 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
             {
                 LogError( ( "SigV4 Library Failed to generate AUTHORIZATION Header." ) );
                 returnStatus = false;
+            }
+            else
+            {
+                LogInfo( ( "AUTHORIZATION Header generated for HTTP request to S3 for downloading the file: %.*s.", sigv4AuthLen, pSigv4Auth ) );
             }
         }
 
@@ -1116,6 +1195,8 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
             LogDebug( ( "Request Headers:\n%.*s",
                         ( int32_t ) requestHeaders.headersLen,
                         ( char * ) requestHeaders.pBuffer ) );
+
+            /* Send HTTP Get request to AWS S3 with empty request body and receive response. */
             httpStatus = HTTPClient_Send( pTransportInterface,
                                           &requestHeaders,
                                           NULL,
@@ -1191,15 +1272,6 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     char * contentRangeValStr = NULL;
     size_t contentRangeValStrLength = 0;
 
-    /* Variable to store hash digest of payload. */
-    char * pPayloadHashDigest = ( char * ) malloc( SHA256_HASH_DIGEST_LENGTH );
-    /* Variable to store hex encoded hash digest of payload. */
-    char * hexencoded = ( char * ) malloc( SHA256_HEX_ENCODED_DIGEST_LENGTH );
-
-    /* Store Authorization header value generated using SigV4 library. */
-    char * pSigv4Auth = ( char * ) malloc( AWS_HTTP_AUTH_HEADER_VALUE_LEN );
-    size_t sigv4AuthLen = AWS_HTTP_AUTH_HEADER_VALUE_LEN;
-
     SigV4Status_t sigv4Status = SigV4Success;
     SigV4HttpParameters_t sigv4HttpParams;
 
@@ -1207,8 +1279,8 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     size_t headersLen = 0;
 
     /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
-    char * signature;
-    size_t signatureLen;
+    char * signature = NULL;
+    size_t signatureLen = 0;
 
     assert( pHost != NULL );
     assert( pPath != NULL );
@@ -1253,7 +1325,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     }
 
     /* Get the hash of the payload. */
-    sha256( ( const char * ) "", 0, pPayloadHashDigest );
+    sha256( ( const char * ) S3_REQUEST_EMPTY_PAYLOAD, 0, pPayloadHashDigest );
     lowercaseHexEncode( ( const char * ) pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
 
     if( returnStatus == true )
@@ -1325,18 +1397,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 
     /* Move request header pointer past the initial headers which are added by coreHTTP
      * library and are not required by SigV4 library. */
-    pHeaders = ( const char * ) requestHeaders.pBuffer;
-    headersLen = requestHeaders.headersLen;
-
-    while( 0 != strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
-    {
-        pHeaders++;
-        headersLen--;
-    }
-
-    /* Moving header pointer past "\r\n" .*/
-    pHeaders = pHeaders + 2;
-    headersLen = headersLen - 2;
+    getHeaderStartLocFromHttpRequest( requestHeaders, &pHeaders, &headersLen );
 
     /* Setup the HTTP parameters. */
     sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
@@ -1345,12 +1406,13 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     sigv4HttpParams.flags = 0;
     sigv4HttpParams.pPath = requestInfo.pPath;
     sigv4HttpParams.pathLen = requestInfo.pathLen;
+    /* AWS S3 request does not require any Query parameters. */
     sigv4HttpParams.pQuery = NULL;
     sigv4HttpParams.queryLen = 0;
     sigv4HttpParams.pHeaders = pHeaders;
     sigv4HttpParams.headersLen = headersLen;
-    sigv4HttpParams.pPayload = "";
-    sigv4HttpParams.payloadLen = 0;
+    sigv4HttpParams.pPayload = S3_REQUEST_EMPTY_PAYLOAD;
+    sigv4HttpParams.payloadLen = strlen( S3_REQUEST_EMPTY_PAYLOAD );
 
     /* Initializing sigv4Params with Http parameters required for the HTTP request. */
     sigv4Params.pHttpParameters = &sigv4HttpParams;
@@ -1364,6 +1426,10 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         {
             LogError( ( "Failed to generate HTTP AUTHORIZATION Header. " ) );
             returnStatus = false;
+        }
+        else
+        {
+            LogInfo( ( "AUTHORIZATION Header generated for HTTP request to S3 for getting the file size: %.*s.", sigv4AuthLen, pSigv4Auth ) );
         }
     }
 
@@ -1386,7 +1452,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 
     if( returnStatus == true )
     {
-        /* Send the request and receive the response. */
+        /* Send HTTP Get request to AWS S3 with empty request body to get the file size. */
         httpStatus = HTTPClient_Send( pTransportInterface,
                                       &requestHeaders,
                                       NULL,
@@ -1555,7 +1621,7 @@ int main( int argc,
         {
             /* Log an error to indicate connection failure after all
              * reconnect attempts are over. */
-            LogError( ( "Failed to connect to AWS IOT CREDENTIAL PROVIDER server %s.",
+            LogError( ( "Failed to connect to AWS IoT CREDENTIAL PROVIDER server %s.",
                         serverHost ) );
         }
 
@@ -1578,7 +1644,7 @@ int main( int argc,
 
         if( returnStatus == EXIT_FAILURE )
         {
-            LogError( ( "Failed to get temporary credentials from AWS IOT CREDENTIALS PROVIDER %s.",
+            LogError( ( "Failed to get temporary credentials from AWS IoT CREDENTIALS PROVIDER %s.",
                         serverHost ) );
         }
 
@@ -1624,7 +1690,7 @@ int main( int argc,
                                          sizeof( AWS_S3_OBJECT_URL ) - 1,
                                          &pPath,
                                          &pathLen );
-
+                LogInfo( ( "pPath: %s", pPath ) );
                 returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
             }
 
