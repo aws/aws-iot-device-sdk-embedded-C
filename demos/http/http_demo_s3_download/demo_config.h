@@ -120,8 +120,10 @@
 /**
  * @brief Role alias name for accessing the credential provider.
  * 
- * @note This is the role alias name that has been created with AWS IoT
- * while following the steps in configuring the demo.
+ * @note This is the name of the role alias created in AWS IoT
+ * while setting up AWS resources before running the demo.
+ * Refer to the demo setup instructions in the README.md file
+ * within the same directory as this file in the repository.
  */
 #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
 
