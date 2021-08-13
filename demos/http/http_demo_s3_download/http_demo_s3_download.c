@@ -769,7 +769,7 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
         }
         else
         {
-            LogInfo( ( "AWS IoT credentials will expire after this timestamp: %.*s.", sigvCreds->expirationLen, sigvCreds->pExpiration ) );
+            LogInfo( ( "AWS IoT credentials will expire after this timestamp: %.*s.", ( int ) sigvCreds->expirationLen, sigvCreds->pExpiration ) );
         }
     }
 
@@ -1162,10 +1162,6 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
                 LogError( ( "SigV4 Library Failed to generate AUTHORIZATION Header." ) );
                 returnStatus = false;
             }
-            else
-            {
-                LogInfo( ( "AUTHORIZATION Header generated for HTTP request to S3 for downloading the file: %.*s.", sigv4AuthLen, pSigv4Auth ) );
-            }
         }
 
         /* Add the authorization header to the HTTP request headers. */
@@ -1275,7 +1271,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     SigV4Status_t sigv4Status = SigV4Success;
     SigV4HttpParameters_t sigv4HttpParams;
 
-    const char * pHeaders = NULL;
+    char * pHeaders = NULL;
     size_t headersLen = 0;
 
     /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
@@ -1426,10 +1422,6 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         {
             LogError( ( "Failed to generate HTTP AUTHORIZATION Header. " ) );
             returnStatus = false;
-        }
-        else
-        {
-            LogInfo( ( "AUTHORIZATION Header generated for HTTP request to S3 for getting the file size: %.*s.", sigv4AuthLen, pSigv4Auth ) );
         }
     }
 
@@ -1690,7 +1682,7 @@ int main( int argc,
                                          sizeof( AWS_S3_OBJECT_URL ) - 1,
                                          &pPath,
                                          &pathLen );
-                LogInfo( ( "pPath: %s", pPath ) );
+
                 returnStatus = ( httpStatus == HTTPSuccess ) ? EXIT_SUCCESS : EXIT_FAILURE;
             }
 
