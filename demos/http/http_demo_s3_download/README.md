@@ -168,7 +168,7 @@ The following is sample output of the describe-endpoint command. It contains the
 #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
 ```
 
-#### 8. After the following the above steps, configure the below macros in `demo.config.h`.
+#### 8. After the following the above steps, configure the below macros in `demo_config.h`.
 ```c
 #define AWS_IOT_THING_NAME                      "Name of IOT Thing that you provided in STEP 1" 
 #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Name of ROLE ALIAS that you provided in STEP 4"
