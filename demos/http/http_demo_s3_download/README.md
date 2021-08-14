@@ -183,7 +183,7 @@ The following is sample output of the describe-endpoint command. It contains the
 Any custom name that specifies your device type.
 
 #### device_thing_name
-The name of you AWS IOT thing for your device in AWS IOT.
+The name of the AWS IoT thing for your device registered with AWS IoT core.
 
 #### thing_name-s3-access-role-alias
 Any custom name to specify role alias for S3.
