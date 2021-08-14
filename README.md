@@ -45,6 +45,7 @@
         * [AWS IoT Account Setup](#aws-iot-account-setup)
         * [Configuring mutual authentication demos of MQTT and HTTP](#configuring-mutual-authentication-demos-of-mqtt-and-http)
         * [Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos](#configuring-aws-iot-device-defender-and-aws-iot-device-shadow-demos)
+        * [Configuring the AWS IoT Fleet Provisioning demo](#configuring-the-aws-iot-fleet-provisioning-demo)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
@@ -369,7 +370,7 @@ It can be very helpful to also have the [AWS Command Line Interface tooling](htt
 
 #### Configuring mutual authentication demos of MQTT and HTTP
 
-You can pass the following configuration settings as command line options in order to run the mutual auth demos. Make sure to run the following command in the root directory of the C SDK:
+You can pass the following configuration settings as command line options in order to run the mutual auth demos. Make sure to run the following command in the root directory of the C-SDK:
 
 ```sh
 ## optionally find your-aws-iot-endpoint from the command line
@@ -389,7 +390,7 @@ It is possible to configure `ROOT_CA_CERT_PATH` to any PEM-encoded Root CA Certi
 
 #### Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos
 
-To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C SDK:
+To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C-SDK:
 
 ```sh
 cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
@@ -397,7 +398,7 @@ cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PA
 
 An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/). 
 
-In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
+In order to set these configurations manually, edit `demo_config.h` in the demo folder to `#define` the following:
 
 * Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
 * Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
@@ -405,9 +406,34 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `THING_NAME` to the name of the Thing created in [AWS IoT Account Setup](#aws-iot-account-setup).
 
+#### Configuring the AWS IoT Fleet Provisioning demo
+
+To build the AWS IoT Fleet Provisioning Demo, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C-SDK:
+
+```sh
+cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLAIM_CERT_PATH="<your-claim-certificate-path>" -DCLAIM_PRIVATE_KEY_PATH="<your-claim-private-key-path>" -DPROVISIONING_TEMPLATE_NAME="<your-template-name>" -DDEVICE_SERIAL_NUMBER="<your-serial-number>"
+```
+
+An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/).
+
+To create a provisioning template and claim credentials, sign into your AWS account and visit [here][create_provtemplate]. Make sure to enable the "Use the AWS IoT registry to manage your device fleet" option. Once
+you have created the template and credentials, modify the claim certificate's policy to match the [sample policy][sample_claim_policy].
+
+In order to set these configurations manually, edit `demo_config.h` in the demo folder to `#define` the following:
+
+* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.us-east-2.amazonaws.com`.
+* Set `ROOT_CA_CERT_PATH` to the path of the root CA certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
+* Set `CLAIM_CERT_PATH` to the path of the claim certificate downloaded when setting up the template and claim credentials.
+* Set `CLAIM_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the template and claim credentials.
+* Set `PROVISIONING_TEMPLATE_NAME` to the name of the provisioning template created.
+* Set `DEVICE_SERIAL_NUMBER` to an arbitrary string representing a device identifier.
+
+[create_provtemplate]: https://console.aws.amazon.com/iot/home#/provisioningtemplate/create/instruction
+[sample_claim_policy]: demos/fleet_provisioning/fleet_provisioning_with_csr/example_claim_policy.json
+
 #### Configuring the S3 demos
 
-You can pass the following configuration settings as command line options in order to run the S3 demos. Make sure to run the following command in the root directory of the C SDK:
+You can pass the following configuration settings as command line options in order to run the S3 demos. Make sure to run the following command in the root directory of the C-SDK:
 
 ```sh
 cmake -S. -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
@@ -478,7 +504,7 @@ sudo apt install build-essential cmake libssl-dev
 ```
 
 #### Build a single demo
-* Go to the root directory of the C SDK.
+* Go to the root directory of the C-SDK.
 * Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
 * Choose a demo from the list below or alternatively, run `make help | grep demo`:
 ```
@@ -507,7 +533,7 @@ shadow_demo_main
 * Go to the `build/bin` directory and run any demo executables from there.
 
 #### Build all configured demos
-* Go to the root directory of the C SDK.
+* Go to the root directory of the C-SDK.
 * Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
 * Run this command to build all configured demos: `make`
 * Go to the `build/bin` directory and run any demo executables from there.
@@ -617,8 +643,8 @@ You must also download the Root CA certificate provided by the ngrok https link 
 
 ### Installation
 
-The C SDK libraries and platform abstractions can be installed to a file system
-through CMake. To do so, run the following command in the root directory of the C SDK.
+The C-SDK libraries and platform abstractions can be installed to a file system
+through CMake. To do so, run the following command in the root directory of the C-SDK.
 Note that installation is not required to run any of the demos.
 ```sh
 cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
@@ -654,7 +680,7 @@ followed by the location of all installed headers:
 ```
 
 You may also set an installation path of your choice by passing the
-following flags through CMake. Make sure to run the following command in the root directory of the C SDK:
+following flags through CMake. Make sure to run the following command in the root directory of the C-SDK:
 ```sh
 cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
 -DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
