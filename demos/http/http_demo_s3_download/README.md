@@ -186,7 +186,7 @@ Any custom name that specifies your device type.
 The name of the AWS IoT thing for your device registered with AWS IoT core.
 
 #### thing_name-s3-access-role-alias
-Any custom name to specify role alias for S3.
+The name for the role alias for S3.
 
 #### Thing_Policy_Name
 The name of the policy attached to the device certificate in STEP 5.
