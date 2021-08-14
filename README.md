@@ -407,7 +407,8 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 
 #### Configuring the S3 demos
 
-You can pass the following configuration settings as command line options in order to run the S3 demos. Make sure to run the following command in the root directory of the C SDK:
+####  Configure S3 Upload and Multithreaded Download HTTP Demos:
+You can pass the following configuration settings as command line options in order to run the S3 upload and mutithreaded download demos. Make sure to run the following command in the root directory of the C SDK:
 
 ```sh
 cmake -S. -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
@@ -415,12 +416,16 @@ cmake -S. -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3
 
 `S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.
 
-In order to set these configurations manually, edit `demo_config.h` in `demos/http/http_demo_s3_download`, `demos/http/http_demo_s3_download_multithreaded`, and `demos/http/http_demo_s3_upload` to `#define` the following:
+In order to set these configurations manually, edit `demo_config.h` in `demos/http/http_demo_s3_download_multithreaded`, and `demos/http/http_demo_s3_upload` to `#define` the following:
 
 * Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
 You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
+
+####  Configure S3 Download HTTP Demo using SigV4 Library:
+
+Refer this [demos/http/http_demo_s3_download/README.md](demos/http/http_demo_s3_download/README.md) to follow the steps needed to configure and run the S3 Download HTTP Demo using SigV4 Library that generates the authorization HTTP header needed to authenticate the HTTP requests send to S3.
 
 #### Setup for AWS IoT Jobs demo
 
