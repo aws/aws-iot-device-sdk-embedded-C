@@ -1,5 +1,5 @@
 @startuml
-skinparam dpi 300
+skinparam dpi 100
 skinparam classFontSize 8
 skinparam classFontName Helvetica
 autonumber
@@ -14,6 +14,8 @@ end box
 
 box "Libraries" #LightBlue
     participant "HTTP Client" as http
+    participant "JSON Client" as json
+    participant "SigV4 Client" as sigv4
 end box
 
 box "HTTP Server" #Yellow
@@ -22,17 +24,17 @@ end box
 
 activate application
 
-application -> parser : Parse configured pre-signed GET URL to extract\n S3 host address
+application -> parser : Parse configured AWS IOT Credential provider URL to extract\n AWS IOT credential provider host address
 activate parser
-parser -> application : Return server host address
+parser -> application : Return AWS IOT credential provider server host address
 deactivate parser
 
 loop until session established or all attempts exhausted
-application -> server : Establish TLS session\n (client verifies server's certificate)
+application -> server : Establish TLS session to AWS IOT credential provider server\n (client verifies server's certificate)
 server -> application : Session established (no client authentication)
 end
 
-application -> parser : Parse configured pre-signed GET URL to extract\n URL path
+application -> parser : Parse configured AWS IOT Credential provider URL to extract\n URL path
 activate parser
 parser -> application : Return path string with request-URI
 deactivate parser
@@ -48,9 +50,62 @@ activate http
 http -> server: Send payload of request through transport interface
 http -> application : Write response to user-provided buffer
 deactivate http
-application -> application: Parse content-range header from response\n to obtain file size
+
+application -> json: Parse response to obtain temporary credentials
+activate json
+json-> application  : Write parsed temporary credentials to the user buffer
+deactivate json
+
+application -> http: Parse date header from response to obtain date
+activate http
+http -> application : Write parsed date to the user provide buffer
+deactivate http
+
+application -> sigv4: Convert Date retrieved to ISO8601 format
+activate sigv4
+http -> application : Write formatted date to the user provide buffer
+deactivate sigv4
+
+application -> server: End TLS session and disconnect from server
+
+application -> parser : Parse configured AWS S3 URL to extract\n S3 host address
+activate parser
+parser -> application : Return server host address
+deactivate parser
+
+loop until session established or all attempts exhausted
+application -> server : Establish TLS session\n (client verifies server's certificate)
+server -> application : Session established (no client authentication)
+end
+
+application -> parser : Parse configured AWS S3 URL to extract\n URL path
+activate parser
+parser -> application : Return path string with request-URI
+deactivate parser
+
+application -> application: Set request info parameters
+application -> application: Set sigv4 parameters
+activate sigv4
+application -> sigv4: Generate HTTP Authorization header (Sigv4_GenerateHTTPAuthorization)
+sigv4 -> application : Write HTTP Authorization header to user-provided buffer
+deactivate sigv4
+application -> http: Initialize request headers\n (HTTPClient_InitializeRequestHeaders)
+activate http
+http -> application : Write request headers to user-provided buffer
+deactivate http
+
+application -> http : Send HTTP GET request (HTTPClient_Send)
+activate http
+http -> server: Send payload of request through transport interface
+http -> application : Write response to user-provided buffer
+deactivate http
+application -> application: Parse content-range\n header from response to obtain file size
 
 loop until entire file is downloaded
+activate sigv4
+application -> sigv4: Generate HTTP Authorization header (Sigv4_GenerateHTTPAuthorization)
+sigv4 -> application : Write HTTP Authorization header to user-provided buffer
+deactivate sigv4
 application -> http: Initialize request headers\n (HTTPClient_InitializeRequestHeaders)
 activate http
 http -> application : Write request headers to user-provided buffer
