@@ -193,7 +193,7 @@ The name of the AWS IoT thing for your device registered with AWS IoT core.
 The name for the role alias for S3.
 
 #### Thing_Policy_Name
-The name of the policy attached to the device certificate in [step 5](#5--attach-a-policy).
+The name of the policy attached to the device certificate in [step 5](#5. attach-a-policy).
 
 #### BUCKET_NAME
 The name of the S3 bucket from which the demo will download.
