@@ -66,9 +66,9 @@
 #define SIGV4_MAX_HTTP_HEADER_COUNT       10U
 
 /**
- * @brief No Query parameters are used in requests to S3. Thus, the macro is set to 0.
+ * @brief Query parameters used in requests to S3.
  */
-#define SIGV4_MAX_QUERY_PAIR_COUNT        0U
+#define SIGV4_MAX_QUERY_PAIR_COUNT        1U
 
 /**
  * @brief Maximum of all the block sizes of hashing algorithms used in the demo for the
