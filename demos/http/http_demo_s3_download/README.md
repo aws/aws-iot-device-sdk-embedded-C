@@ -180,7 +180,7 @@ The following is sample output of the describe-endpoint command. It contains the
 ### Parameters
 
 #### device_type_name
-Any custom name that specifies your device type.
+The name that specifies your device type.
 
 #### device_thing_name
 The name of the AWS IoT thing for your device registered with AWS IoT core.
