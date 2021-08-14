@@ -21,8 +21,6 @@ add_executable(
     ${DEMO_NAME}
     "${DEMO_FILE}"
     ${DEMO_UTILS}
-    "${DEMO_NAME}.c"
-    "${DEMOS_DIR}/http/common/src/http_demo_utils.c"
     ${HTTP_SOURCES}
     ${HTTP_THIRD_PARTY_SOURCES}
     ${BACKOFF_ALGORITHM_SOURCES}
