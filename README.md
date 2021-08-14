@@ -428,6 +428,7 @@ In order to set these configurations manually, edit `demo_config.h` in the demo 
 * Set `DEVICE_SERIAL_NUMBER` to an arbitrary string representing a device identifier.
 
 [create_provtemplate]: https://console.aws.amazon.com/iot/home#/provisioningtemplate/create/instruction
+[sample_claim_policy]: demos/fleet_provisioning/fleet_provisioning_with_csr/example_claim_policy.json
 
 #### Configuring the S3 demos
 
