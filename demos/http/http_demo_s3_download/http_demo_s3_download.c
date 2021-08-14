@@ -629,7 +629,6 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
         /* Parse the credentials received in the response. */
         jsonStatus = parseCredentials( response, sigvCreds );
 
-        
         LogDebug( ( "AWS IoT credential provider response: %.*s.",
                     ( int32_t ) response->bufferLen, response->pBuffer ) );
 
