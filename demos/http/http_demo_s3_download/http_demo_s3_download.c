@@ -487,7 +487,7 @@ static int32_t sha256Init( void * hashContext );
  * @note Refer to SigV4CryptoInterface_t interface documentation for this function.
  */
 static int32_t sha256Update( void * hashContext,
-                             const char * pInput,
+                             const uint8_t * pInput,
                              size_t inputLen );
 
 /**
@@ -496,7 +496,7 @@ static int32_t sha256Update( void * hashContext,
  * @note Refer to SigV4CryptoInterface_t interface documentation for this function.
  */
 static int32_t sha256Final( void * hashContext,
-                            char * pOutput,
+                            uint8_t * pOutput,
                             size_t outputLen );
 
 /**
@@ -795,7 +795,7 @@ static int32_t sha256Init( void * hashContext )
 /*-----------------------------------------------------------*/
 
 static int32_t sha256Update( void * hashContext,
-                             const char * pInput,
+                             const uint8_t * pInput,
                              size_t inputLen )
 {
     return mbedtls_sha256_update_ret( ( mbedtls_sha256_context * ) hashContext,
@@ -806,7 +806,7 @@ static int32_t sha256Update( void * hashContext,
 /*-----------------------------------------------------------*/
 
 static int32_t sha256Final( void * hashContext,
-                            char * pOutput,
+                            uint8_t * pOutput,
                             size_t outputLen )
 {
     assert( outputLen >= SHA256_HASH_DIGEST_LENGTH );
