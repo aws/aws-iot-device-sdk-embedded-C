@@ -629,6 +629,10 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
         /* Parse the credentials received in the response. */
         jsonStatus = parseCredentials( response, sigvCreds );
 
+        int32_t len = ( int32_t ) response.bufferLen;
+        LogDebug( ( "AWS IoT credential provider response: %.*s.",
+                    len, response.pBuffer ) );
+
         if( jsonStatus != JSONSuccess )
         {
             LogError( ( "Failed to parse temporary IoT credentials retrieved from AWS IoT credential provider" ) );
