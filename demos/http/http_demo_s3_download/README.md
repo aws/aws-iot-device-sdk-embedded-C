@@ -166,9 +166,11 @@ The following is sample output of the describe-endpoint command. It contains the
 #### 7. Copy and paste the output to `demo_config.h` for macros `AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT`.
 ```c
 #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "<your_aws_account_specific_prefix>.credentials.iot.us-east-1.amazonaws.com"
+
+#define CLIENT_CERT_PATH "path of the client certificate downloaded when setting up the device certificate in AWS IoT Account Setup"
+
+#define CLIENT_PRIVATE_KEY_PATH "path of the private key downloaded when setting up the device certificate in AWS IoT Account Setup"
 ```
-Set CLIENT_CERT_PATH to the path of the client certificate downloaded when setting up the device certificate in AWS IoT Account Setup.
-Set CLIENT_PRIVATE_KEY_PATH to the path of the private key downloaded when setting up the device certificate in AWS IoT Account Setup.
 
 #### 8. After the following the above steps, configure the below macros in `demo_config.h`.
 ```c
