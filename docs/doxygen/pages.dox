@@ -13,4 +13,5 @@ The following libraries (along with their source repositories) are part of this 
 - [AWS IoT Jobs client](@ref jobs) - [jobs-for-aws-iot-embedded-sdk](https://github.com/aws/jobs-for-aws-iot-embedded-sdk)
 - [AWS IoT Over-the-air Update Library](@ref ota) - [ota-for-aws-iot-embedded-sdk](https://github.com/aws/ota-for-aws-iot-embedded-sdk)
 - [AWS IoT Fleet Provisioning Library](@ref fleet_provisioning) - [fleet-provisioning-for-aws-iot-embedded-sdk](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk)
+- [AWS SigV4 Library](@ref sigv4) - [sigv4-for-aws-iot-embedded-sdk](https://github.com/aws/sigv4-for-aws-iot-embedded-sdk)
 */
