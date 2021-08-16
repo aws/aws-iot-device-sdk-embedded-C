@@ -153,7 +153,7 @@ The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-a
 
 #### AWS SigV4
 
-The [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library enables you to sign HTTP requests with [Signature Version Signing Process](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html). Signature Version 4 (SigV4) is the process to add authentication information to HTTP requests to AWS services. For security, most requests to AWS must be signed with an access key. The access key consists of an access key ID and secret access key.
+The [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library enables you to sign HTTP requests with [Signature Version 4 Signing Process](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html). Signature Version 4 (SigV4) is the process to add authentication information to HTTP requests to AWS services. For security, most requests to AWS must be signed with an access key. The access key consists of an access key ID and secret access key.
 
 <!-- See memory requirements for the latest release [here](). -->
 
