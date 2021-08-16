@@ -78,7 +78,12 @@ jobs:
           -DCLIENT_IDENTIFIER="ci-identifier" \
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
-          -DS3_PRESIGNED_PUT_URL="put-url"
+          -DS3_PRESIGNED_PUT_URL="put-url" \
+          -DCLAIM_CERT_PATH="cert/path" \
+          -DCLAIM_PRIVATE_KEY_PATH="key/path" \
+          -DPROVISIONING_TEMPLATE_NAME="template-name" \
+          -DDEVICE_SERIAL_NUMBER="00000" \
+          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo"
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/ -j8
           make -C demos/jobs/jobs_demo_mosquitto -j8
       - name : Build Check Tests
