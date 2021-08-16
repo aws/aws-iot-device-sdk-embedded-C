@@ -343,6 +343,30 @@ static char pSigv4Auth[ AWS_HTTP_AUTH_HEADER_VALUE_LEN ];
  */
 static size_t sigv4AuthLen = AWS_HTTP_AUTH_HEADER_VALUE_LEN;
 
+/**
+ * @brief The security token retrieved from AWS IoT credential provider
+ * required for making HTTP requests to AWS S3.
+ */
+static const char * pSecurityToken;
+
+/**
+ * @brief Length of security token retrieved from AWS IoT credential provider
+ * required for making HTTP requests to AWS S3.
+ */
+static size_t securityTokenLen;
+
+/**
+ * @brief The expiration time for the temporary credentials retrieved
+ * from AWS IoT credential provider service.
+ */
+static const char * pExpiration;
+
+/**
+ * @brief Length of expiration time for the temporary credentials retrieved
+ * from AWS IoT credential provider service.
+ */
+static size_t expirationLen;
+
 /*-----------------------------------------------------------*/
 
 /* Each compilation unit must define the NetworkContext struct. */
@@ -720,8 +744,8 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
                                   response->bodyLen,
                                   CREDENTIALS_RESPONSE_SESSION_TOKEN_KEY,
                                   strlen( CREDENTIALS_RESPONSE_SESSION_TOKEN_KEY ),
-                                  ( char ** ) &( sigvCreds->pSecurityToken ),
-                                  &( sigvCreds->securityTokenLen ) );
+                                  ( char ** ) &( pSecurityToken ),
+                                  &( securityTokenLen ) );
 
         if( jsonStatus != JSONSuccess )
         {
@@ -736,8 +760,8 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
                                   response->bodyLen,
                                   CREDENTIALS_RESPONSE_EXPIRATION_DATE_KEY,
                                   strlen( CREDENTIALS_RESPONSE_EXPIRATION_DATE_KEY ),
-                                  ( char ** ) &( sigvCreds->pExpiration ),
-                                  &( sigvCreds->expirationLen ) );
+                                  ( char ** ) &( pExpiration ),
+                                  &( expirationLen ) );
 
         if( jsonStatus != JSONSuccess )
         {
@@ -745,7 +769,7 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
         }
         else
         {
-            LogInfo( ( "AWS IoT credentials will expire after this timestamp: %.*s.", ( int ) sigvCreds->expirationLen, sigvCreds->pExpiration ) );
+            LogInfo( ( "AWS IoT credentials will expire after this timestamp: %.*s.", ( int ) expirationLen, pExpiration ) );
         }
     }
 
@@ -1059,8 +1083,8 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
             httpStatus = HTTPClient_AddHeader( &requestHeaders,
                                                ( const char * ) SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER,
                                                ( size_t ) ( sizeof( SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER ) - 1 ),
-                                               ( const char * ) sigvCreds.pSecurityToken,
-                                               ( size_t ) sigvCreds.securityTokenLen );
+                                               ( const char * ) pSecurityToken,
+                                               ( size_t ) securityTokenLen );
 
             if( httpStatus != HTTPSuccess )
             {
@@ -1320,8 +1344,8 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
         httpStatus = HTTPClient_AddHeader( &requestHeaders,
                                            ( const char * ) SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER,
                                            ( size_t ) ( sizeof( SIGV4_HTTP_X_AMZ_SECURITY_TOKEN_HEADER ) - 1 ),
-                                           ( const char * ) sigvCreds.pSecurityToken,
-                                           ( size_t ) sigvCreds.securityTokenLen );
+                                           ( const char * ) pSecurityToken,
+                                           ( size_t ) securityTokenLen );
 
         if( httpStatus != HTTPSuccess )
         {
