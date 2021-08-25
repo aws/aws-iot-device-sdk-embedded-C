@@ -417,7 +417,7 @@ MetricsCollectorStatus_t GetUptime( uint64_t * pUptime )
 
             /* Parse the output. */
             filledVariables = sscanf( &( lineBuffer[ 0 ] ),
-                                      "%lu.%*lu %*lu.%*lu",
+                                      "%lu",
                                       pUptime );
 
             /* sscanf should fill pUptime successfully. */
@@ -539,7 +539,7 @@ MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNa
     if( status == MetricsCollectorSuccess )
     {
         /* Skip header line */
-        fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle );
+        ( void ) fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle );
 
         while( ( *pOutNumNetworkInterfaces < bufferLength ) &&
                ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
