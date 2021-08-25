@@ -24,6 +24,7 @@
 #define METRICS_COLLECTOR_H_
 
 /* Standard includes. */
+#include <stdlib.h>
 #include <stdint.h>
 
 /**
@@ -35,7 +36,7 @@ typedef enum
     MetricsCollectorBadParameter,
     MetricsCollectorFileOpenFailed,
     MetricsCollectorParsingFailed,
-    MetricsCollectorDataNotFound,
+    MetricsCollectorDataNotFound
 } MetricsCollectorStatus_t;
 
 /**
@@ -169,33 +170,58 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
                                                     uint32_t * pOutNumEstablishedConnections );
 
 /**
- * @brief Get CPU usage data of uptime and idle time from the system.
+ * @brief Get system uptime.
  *
- * This function finds the system CPU information by reading the "/proc/uptime" file.
+ * This function finds the system uptime by reading the "/proc/uptime" file.
  *
- * @param[out] pCpuUsage The memory to write the CPU usage statistics into.
+ * @param[out] pUptime The uptime of the system.
  *
- * @return #MetricsCollectorSuccess if CPU usage data is successfully obtained;
+ * @return #MetricsCollectorSuccess if uptime is successfully obtained;
  * #MetricsCollectorBadParameter if invalid parameter is passed;
  * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/uptime";
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/uptime".
  */
-MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage );
+MetricsCollectorStatus_t GetUptime( uint64_t * pUptime );
 
 /**
- * @brief Gets data of total and available memory from the system.
+ * @brief Gets user usage for each CPU from the system.
  *
- * This function finds the memory information by reading the "/proc/meminfo" file.
+ * This function finds the usage information by reading the "/proc/stat" file.
  *
- * @param[out] pMemoryStats The memory to write the memory information into.
+ * @param[out] pOutCpuUserUsage The memory to write the CPU usage into.
+ * @param[in] cpuUserUsageLength The length of pOutCpuUserUsage.
+ * @param[out] pOutNumCpuUserUsage Number of items written.
  *
  * @return #MetricsCollectorSuccess if memory data statistic is successfully calculated;
  * #MetricsCollectorBadParameter if invalid parameter is passed;
- * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/meminfo";
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/stat";
  * MetricsCollectorParsingFailed if the function fails to parses the data read
- * from "/proc/meminfo".
+ * from "/proc/stat".
  */
-MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats );
+MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
+                                          size_t  cpuUserUsageLength,
+                                          size_t * pOutNumCpuUserUsage );
+
+/**
+ * @brief Gets names and addresses of network interfaces from the system.
+ *
+ * This function finds the network interface information by reading the "/proc/net/arp" file.
+ *
+ * @param[out] pOutNetworkInterfaceNames The memory to write the interface names into.
+ * @param[out] pOutNetworkInterfaceAddresses The memory to write the interface addresses into.
+ * @param[in] bufferLength The length of pOutNetworkInterfaceNames and pOutNetworkInterfaceAddresses.
+ * @param[out] pOutNumNetworkInterfaces Number of network interfaces written.
+ *
+ * @return #MetricsCollectorSuccess if memory data statistic is successfully calculated;
+ * #MetricsCollectorBadParameter if invalid parameter is passed;
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/net/arp";
+ * MetricsCollectorParsingFailed if the function fails to parses the data read
+ * from "/proc/net/arp".
+ */
+MetricsCollectorStatus_t GetNetworkInferfaceInfo( char (* pOutNetworkInterfaceNames)[16],
+                                                  uint32_t * pOutNetworkInterfaceAddresses,
+                                                  size_t  bufferLength,
+                                                  size_t * pOutNumNetworkInterfaces );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */

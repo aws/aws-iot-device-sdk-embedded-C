@@ -141,10 +141,19 @@ static uint16_t openUdpPorts[ OPEN_UDP_PORTS_ARRAY_SIZE ];
 static Connection_t establishedConnections[ ESTABLISHED_CONNECTIONS_ARRAY_SIZE ];
 
 /**
- * @brief Memory to represent custom metrics of CPU usage time and memory statistics
- * that this demo sends to the AWS IoT Defender service.
+ * @brief CPU usage array.
  */
-static CustomMetrics_t customMetrics;
+static uint64_t cpuUserUsage[ CPU_USER_USAGE_ARRAY_SIZE ];
+
+/**
+ * @brief Network interface names array.
+ */
+static char (networkInterfaceNames[ NETWORK_INTERFACE_ARRAY_SIZE ])[16];
+
+/**
+ * @brief Network interface addresses array.
+ */
+static uint32_t networkInterfaceAddresses[ NETWORK_INTERFACE_ARRAY_SIZE ];
 
 /**
  * @brief All the metrics sent in the device defender report.
@@ -368,7 +377,8 @@ static bool collectDeviceMetrics( void )
 {
     bool status = false;
     MetricsCollectorStatus_t metricsCollectorStatus;
-    uint32_t numOpenTcpPorts, numOpenUdpPorts, numEstablishedConnections;
+    uint32_t numOpenTcpPorts = 0, numOpenUdpPorts = 0, numEstablishedConnections = 0;
+    size_t cpuCount = 0, networkInterfaceCount = 0;
 
     /* Collect bytes and packets sent and received. */
     metricsCollectorStatus = GetNetworkStats( &( networkStats ) );
@@ -421,28 +431,46 @@ static bool collectDeviceMetrics( void )
         }
     }
 
-    /* Collect CPU usage time metrics from the system.
-     * This is an example of a custom metric of number-list type. */
+    /* Collect uptime from the system.
+     * This is an example of a custom metric of number type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetCpuUsageStats( &( customMetrics.cpuUsageStats ) );
+        metricsCollectorStatus = GetUptime( &( deviceMetrics.customMetrics.uptime ) );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
-            LogError( ( "GetCpuUsageStats failed. Status: %d.",
+            LogError( ( "GetUptime failed. Status: %d.",
                         metricsCollectorStatus ) );
         }
     }
 
-    /* Collect metrics of memory statistics from the system.
-     * This is an example of a custom metric of string-list type. */
+    /* Collect CPU usage metrics from the system.
+     * This is an example of a custom metric of number-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetMemoryStats( &( customMetrics.memoryStats ) );
+        metricsCollectorStatus = GetCpuUserUsage( &(cpuUserUsage[0]),
+                                                  CPU_USER_USAGE_ARRAY_SIZE,
+                                                  &cpuCount );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
-            LogError( ( "GetMemoryStats failed. Status: %d.",
+            LogError( ( "GetCpuUserUsage failed. Status: %d.",
+                        metricsCollectorStatus ) );
+        }
+    }
+
+    /* Collect network interface names and addresses from the system.
+     * This is an example of custom metrics of the string-list and ip-address-list types. */
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
+    {
+        metricsCollectorStatus = GetNetworkInferfaceInfo( &(networkInterfaceNames[0]),
+                     &(networkInterfaceAddresses[0]),
+                                                  NETWORK_INTERFACE_ARRAY_SIZE,
+                                                  &networkInterfaceCount );
+
+        if( metricsCollectorStatus != MetricsCollectorSuccess )
+        {
+            LogError( ( "GetUptime failed. Status: %d.",
                         metricsCollectorStatus ) );
         }
     }
@@ -458,7 +486,11 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
-        deviceMetrics.pCustomMetrics = &( customMetrics );
+        deviceMetrics.customMetrics.pCpuUserUsage = &( cpuUserUsage[0]);
+        deviceMetrics.customMetrics.cpuCount = cpuCount;
+        deviceMetrics.customMetrics.pNetworkInterfaceNames = &( networkInterfaceNames[0]);
+        deviceMetrics.customMetrics.pNetworkInterfaceAddresses = &( networkInterfaceAddresses[0]);
+        deviceMetrics.customMetrics.networkInterfaceCount = networkInterfaceCount;
     }
 
     return status;
