@@ -311,7 +311,7 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= (unsigned) charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -382,7 +382,7 @@ static ReportBuilderStatus_t writeCpuUsage( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       "%lu,",
-                                      pCpuUserUsage[i] );
+                                      pCpuUserUsage[ i ] );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -391,7 +391,7 @@ static ReportBuilderStatus_t writeCpuUsage( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= (unsigned) charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -430,7 +430,7 @@ static ReportBuilderStatus_t writeCpuUsage( char * pBuffer,
 
 static ReportBuilderStatus_t writeNetworkInterfaceNames( char * pBuffer,
                                                          uint32_t bufferLength,
-                                                         char (* pNetworkInterfaceNames)[16],
+                                                         char ( *pNetworkInterfaceNames )[ 16 ],
                                                          size_t networkInterfaceCount,
                                                          uint32_t * pOutCharsWritten )
 {
@@ -462,7 +462,7 @@ static ReportBuilderStatus_t writeNetworkInterfaceNames( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       "\"%s\",",
-                                      pNetworkInterfaceNames[i] );
+                                      pNetworkInterfaceNames[ i ] );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -471,7 +471,7 @@ static ReportBuilderStatus_t writeNetworkInterfaceNames( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= (unsigned) charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -542,10 +542,10 @@ static ReportBuilderStatus_t writeNetworkInterfaceAddresses( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       "\"%u.%u.%u.%u\",",
-                                      ( pNetworkInterfaceAddresses[i] >> 24 ) & 0xFF,
-                                      ( pNetworkInterfaceAddresses[i] >> 16 ) & 0xFF,
-                                      ( pNetworkInterfaceAddresses[i] >> 8 ) & 0xFF,
-                                      ( pNetworkInterfaceAddresses[i] ) & 0xFF );
+                                      ( pNetworkInterfaceAddresses[ i ] >> 24 ) & 0xFF,
+                                      ( pNetworkInterfaceAddresses[ i ] >> 16 ) & 0xFF,
+                                      ( pNetworkInterfaceAddresses[ i ] >> 8 ) & 0xFF,
+                                      ( pNetworkInterfaceAddresses[ i ] ) & 0xFF );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -554,7 +554,7 @@ static ReportBuilderStatus_t writeNetworkInterfaceAddresses( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= (unsigned) charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }

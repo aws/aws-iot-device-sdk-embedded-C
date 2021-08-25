@@ -199,7 +199,7 @@
  * A maximum of these many CPUs will be counted for custom metrics in the
  * device defender report.
  */
-#define CPU_USER_USAGE_ARRAY_SIZE     10
+#define CPU_USER_USAGE_ARRAY_SIZE              10
 
 /**
  * @brief Size of the network interface names and addresses arrays.
@@ -207,7 +207,7 @@
  * A maximum of these many network interfaces will be counted for custom
  * metrics in the device defender report.
  */
-#define NETWORK_INTERFACE_ARRAY_SIZE     10
+#define NETWORK_INTERFACE_ARRAY_SIZE           10
 
 /**
  * @brief Size of the buffer which contains the generated device defender report.

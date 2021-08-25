@@ -439,7 +439,7 @@ MetricsCollectorStatus_t GetUptime( uint64_t * pUptime )
 /*-----------------------------------------------------------*/
 
 MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
-                                          size_t  cpuUserUsageLength,
+                                          size_t cpuUserUsageLength,
                                           size_t * pOutNumCpuUserUsage )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
@@ -479,7 +479,7 @@ MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
             {
                 filledVariables = sscanf( lineBuffer,
                                           "%*s %lu",
-                                          &(pOutCpuUserUsage[*pOutNumCpuUserUsage]) );
+                                          &( pOutCpuUserUsage[ *pOutNumCpuUserUsage ] ) );
 
                 if( filledVariables != 1 )
                 {
@@ -493,7 +493,6 @@ MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
                     *pOutNumCpuUserUsage += 1;
                 }
             }
-
         }
     }
 
@@ -506,9 +505,9 @@ MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
 }
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetNetworkInferfaceInfo( char (* pOutNetworkInterfaceNames)[16],
+MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNames )[ 16 ],
                                                   uint32_t * pOutNetworkInterfaceAddresses,
-                                                  size_t  bufferLength,
+                                                  size_t bufferLength,
                                                   size_t * pOutNumNetworkInterfaces )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
@@ -547,26 +546,26 @@ MetricsCollectorStatus_t GetNetworkInferfaceInfo( char (* pOutNetworkInterfaceNa
         {
             LogDebug( ( "File: /proc/net/arp, Content: %s.", &( lineBuffer[ 0 ] ) ) );
 
-                filledVariables = sscanf( lineBuffer,
-                                          "%u.%u.%u.%u %*s %*s %*s %*s %s",
-                                          &ipPart1,
-                                          &ipPart2,
-                                          &ipPart3,
-                                          &ipPart4,
-                                          pOutNetworkInterfaceNames[*pOutNumNetworkInterfaces] );
+            filledVariables = sscanf( lineBuffer,
+                                      "%u.%u.%u.%u %*s %*s %*s %*s %s",
+                                      &ipPart1,
+                                      &ipPart2,
+                                      &ipPart3,
+                                      &ipPart4,
+                                      pOutNetworkInterfaceNames[ *pOutNumNetworkInterfaces ] );
 
-                if( filledVariables != 5 )
-                {
-                    LogError( ( "Failed to parse data. File: /proc/net/arp, Content: %s", lineBuffer ) );
-                    status = MetricsCollectorParsingFailed;
+            if( filledVariables != 5 )
+            {
+                LogError( ( "Failed to parse data. File: /proc/net/arp, Content: %s", lineBuffer ) );
+                status = MetricsCollectorParsingFailed;
 
-                    break;
-                }
-                else
-                {
-                    pOutNetworkInterfaceAddresses[*pOutNumNetworkInterfaces] = ( ipPart1 << 24 ) | (ipPart2 << 16)|(ipPart3<<8)|ipPart4;
-                    *pOutNumNetworkInterfaces += 1;
-                }
+                break;
+            }
+            else
+            {
+                pOutNetworkInterfaceAddresses[ *pOutNumNetworkInterfaces ] = ( ipPart1 << 24 ) | ( ipPart2 << 16 ) | ( ipPart3 << 8 ) | ipPart4;
+                *pOutNumNetworkInterfaces += 1;
+            }
         }
     }
 

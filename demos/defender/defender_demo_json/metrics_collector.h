@@ -200,7 +200,7 @@ MetricsCollectorStatus_t GetUptime( uint64_t * pUptime );
  * from "/proc/stat".
  */
 MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
-                                          size_t  cpuUserUsageLength,
+                                          size_t cpuUserUsageLength,
                                           size_t * pOutNumCpuUserUsage );
 
 /**
@@ -219,9 +219,9 @@ MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
  * MetricsCollectorParsingFailed if the function fails to parses the data read
  * from "/proc/net/arp".
  */
-MetricsCollectorStatus_t GetNetworkInferfaceInfo( char (* pOutNetworkInterfaceNames)[16],
+MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNames )[ 16 ],
                                                   uint32_t * pOutNetworkInterfaceAddresses,
-                                                  size_t  bufferLength,
+                                                  size_t bufferLength,
                                                   size_t * pOutNumNetworkInterfaces );
 
 #endif /* ifndef METRICS_COLLECTOR_H_ */

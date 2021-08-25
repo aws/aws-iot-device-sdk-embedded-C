@@ -56,9 +56,10 @@ typedef struct CustomMetrics
     uint64_t * pCpuUserUsage;
     /* Length of cpu_user_usage. */
     size_t cpuCount;
+
     /* Names of the network interfaces.
      * These have max length 15 on Linux, not including trailing null. */
-    char (* pNetworkInterfaceNames)[16];
+    char ( *pNetworkInterfaceNames )[ 16 ];
     /* Addresses of the network interfaces. */
     uint32_t * pNetworkInterfaceAddresses;
     /* Length of network_interface_names and network_interface_addresses. */

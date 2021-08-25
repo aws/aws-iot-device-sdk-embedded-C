@@ -148,7 +148,7 @@ static uint64_t cpuUserUsage[ CPU_USER_USAGE_ARRAY_SIZE ];
 /**
  * @brief Network interface names array.
  */
-static char (networkInterfaceNames[ NETWORK_INTERFACE_ARRAY_SIZE ])[16];
+static char ( networkInterfaceNames[ NETWORK_INTERFACE_ARRAY_SIZE ] )[ 16 ];
 
 /**
  * @brief Network interface addresses array.
@@ -448,7 +448,7 @@ static bool collectDeviceMetrics( void )
      * This is an example of a custom metric of number-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetCpuUserUsage( &(cpuUserUsage[0]),
+        metricsCollectorStatus = GetCpuUserUsage( &( cpuUserUsage[ 0 ] ),
                                                   CPU_USER_USAGE_ARRAY_SIZE,
                                                   &cpuCount );
 
@@ -463,10 +463,10 @@ static bool collectDeviceMetrics( void )
      * This is an example of custom metrics of the string-list and ip-address-list types. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
     {
-        metricsCollectorStatus = GetNetworkInferfaceInfo( &(networkInterfaceNames[0]),
-                     &(networkInterfaceAddresses[0]),
-                                                  NETWORK_INTERFACE_ARRAY_SIZE,
-                                                  &networkInterfaceCount );
+        metricsCollectorStatus = GetNetworkInferfaceInfo( &( networkInterfaceNames[ 0 ] ),
+                                                          &( networkInterfaceAddresses[ 0 ] ),
+                                                          NETWORK_INTERFACE_ARRAY_SIZE,
+                                                          &networkInterfaceCount );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
@@ -486,10 +486,10 @@ static bool collectDeviceMetrics( void )
         deviceMetrics.openUdpPortsArrayLength = numOpenUdpPorts;
         deviceMetrics.pEstablishedConnectionsArray = &( establishedConnections[ 0 ] );
         deviceMetrics.establishedConnectionsArrayLength = numEstablishedConnections;
-        deviceMetrics.customMetrics.pCpuUserUsage = &( cpuUserUsage[0]);
+        deviceMetrics.customMetrics.pCpuUserUsage = &( cpuUserUsage[ 0 ] );
         deviceMetrics.customMetrics.cpuCount = cpuCount;
-        deviceMetrics.customMetrics.pNetworkInterfaceNames = &( networkInterfaceNames[0]);
-        deviceMetrics.customMetrics.pNetworkInterfaceAddresses = &( networkInterfaceAddresses[0]);
+        deviceMetrics.customMetrics.pNetworkInterfaceNames = &( networkInterfaceNames[ 0 ] );
+        deviceMetrics.customMetrics.pNetworkInterfaceAddresses = &( networkInterfaceAddresses[ 0 ] );
         deviceMetrics.customMetrics.networkInterfaceCount = networkInterfaceCount;
     }
 
