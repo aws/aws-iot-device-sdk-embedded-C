@@ -20,6 +20,13 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file metrics_collector.c
+ *
+ * @brief This file provides an implementation of the metrics_collector interface
+ * for Linux systems.
+ */
+
 /* Standard includes. */
 #include <stdio.h>
 #include <ctype.h>
@@ -37,7 +44,7 @@
 
 /**
  * @brief The maximum length of line read from any of /proc/net/dev, /proc/net/tcp,
- * /proc/net/udp, /proc/uptime and /proc/meminfo files.
+ * /proc/net/udp, /proc/uptime, /proc/stat, and /proc/net/arp files.
  */
 #define MAX_LINE_LENGTH                  ( 256 )
 
@@ -53,6 +60,7 @@
  * This function finds the open ports by reading pProcFile. It can be called
  * with pOutPortsArray NULL to get the number of the open ports.
  *
+ * @param[in] pProcFile The file to read from; either /proc/net/tcp or /proc/net/udp.
  * @param[in] pOutPortsArray The array to write the open ports into. Can be
  * NULL, if only number of open ports is needed.
  * @param[in] portsArrayLength Length of the pOutPortsArray, if it is not NULL.
