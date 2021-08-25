@@ -539,32 +539,33 @@ MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNa
     if( status == MetricsCollectorSuccess )
     {
         /* Skip header line */
-        ( void ) fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle );
-
-        while( ( *pOutNumNetworkInterfaces < bufferLength ) &&
-               ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
+        if( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
-            LogDebug( ( "File: /proc/net/arp, Content: %s.", &( lineBuffer[ 0 ] ) ) );
-
-            filledVariables = sscanf( lineBuffer,
-                                      "%u.%u.%u.%u %*s %*s %*s %*s %s",
-                                      &ipPart1,
-                                      &ipPart2,
-                                      &ipPart3,
-                                      &ipPart4,
-                                      pOutNetworkInterfaceNames[ *pOutNumNetworkInterfaces ] );
-
-            if( filledVariables != 5 )
+            while( ( *pOutNumNetworkInterfaces < bufferLength ) &&
+                   ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
             {
-                LogError( ( "Failed to parse data. File: /proc/net/arp, Content: %s", lineBuffer ) );
-                status = MetricsCollectorParsingFailed;
+                LogDebug( ( "File: /proc/net/arp, Content: %s.", &( lineBuffer[ 0 ] ) ) );
 
-                break;
-            }
-            else
-            {
-                pOutNetworkInterfaceAddresses[ *pOutNumNetworkInterfaces ] = ( ipPart1 << 24 ) | ( ipPart2 << 16 ) | ( ipPart3 << 8 ) | ipPart4;
-                *pOutNumNetworkInterfaces += 1;
+                filledVariables = sscanf( lineBuffer,
+                                          "%u.%u.%u.%u %*s %*s %*s %*s %s",
+                                          &ipPart1,
+                                          &ipPart2,
+                                          &ipPart3,
+                                          &ipPart4,
+                                          pOutNetworkInterfaceNames[ *pOutNumNetworkInterfaces ] );
+
+                if( filledVariables != 5 )
+                {
+                    LogError( ( "Failed to parse data. File: /proc/net/arp, Content: %s", lineBuffer ) );
+                    status = MetricsCollectorParsingFailed;
+
+                    break;
+                }
+                else
+                {
+                    pOutNetworkInterfaceAddresses[ *pOutNumNetworkInterfaces ] = ( ipPart1 << 24 ) | ( ipPart2 << 16 ) | ( ipPart3 << 8 ) | ipPart4;
+                    *pOutNumNetworkInterfaces += 1;
+                }
             }
         }
     }
