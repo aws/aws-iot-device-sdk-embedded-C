@@ -26,7 +26,7 @@ aws iot create-thing --thing-name device_thing_name
 
 #### 2. Register a certificate:
 
-If your AWS IoT Thing already has a certificate attached to it, then that certificate's ARN can be used in [step 5](#5. attach-a-policy). Otherwise, you can create a certificate and attach it to the thing through IoT Core in the AWS Management Console UI. By doing any of these, you may skip to [step 3](#3--configure-an-iam-role).
+If your AWS IoT Thing already has a certificate attached to it, then that certificate's ARN can be used in [step 5](#5. attach-a-policy). Otherwise, you can create a certificate and attach it to the thing through IoT Core in the AWS Management Console UI. By doing any of these, you may skip to [step 3](#3-configure-an-iam-role).
 
 It is also possible to sign the Thing's certificate using your own Certificate Authority (CA) certificate, and register both certificates with AWS IoT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as described in [Use Your Own Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html). To register your CA certificate with AWS IoT, follow the steps on [Registering Your CA Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html#register-CA-cert).
 
@@ -108,7 +108,7 @@ Now, run the following command to attach the policy to the IAM user.
 aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:policy/passrolepermission --user-name <user_name>
 ```
 
-#### 4.  Create a role alias: 
+#### 4. Create a role alias: 
          
 Now that you have configured the IAM role, you will create a role alias with AWS IoT. You must provide the following pieces of information when creating a role alias:
 
@@ -120,7 +120,7 @@ Run the following command in the AWS CLI to create a role alias. Use the credent
 aws iot create-role-alias --role-alias name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-seconds 3600
 ```
 
-#### 5.  Attach a policy: 
+#### 5. Attach a policy: 
 You created and registered a certificate with AWS IoT earlier for successful authentication of your device. Now, you need to create and attach a policy to the certificate to authorize the request for the security token.
 ```
 {
@@ -190,7 +190,7 @@ The name of the AWS IoT thing for your device registered with AWS IoT core.
 The name for the role alias for S3.
 
 #### Thing_Policy_Name
-The name of the policy attached to the device certificate in [step 5](#5--attach-a-policy).
+The name of the policy attached to the device certificate in [step 5](#5-attach-a-policy).
 
 #### BUCKET_NAME
 The name of the S3 bucket from which the demo will download.
