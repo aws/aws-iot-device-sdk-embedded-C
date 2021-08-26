@@ -187,7 +187,7 @@ MetricsCollectorStatus_t GetUptime( uint64_t * pUptime );
 /**
  * @brief Get system free memory.
  *
- * This function finds the freememory by reading the "/proc/meminfo" file.
+ * This function finds the free memory by reading the "/proc/meminfo" file.
  *
  * @param[out] pMemFree The free memory on the system.
  *

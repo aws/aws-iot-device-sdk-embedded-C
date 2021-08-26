@@ -504,6 +504,7 @@ plabel
 plaintext
 platformimagestate
 pleace
+pmemfree
 pmemorystats
 pmessage
 pmethod
