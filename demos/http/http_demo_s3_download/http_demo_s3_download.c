@@ -1107,7 +1107,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
 
         /* Get the hash of the payload. */
         sha256( ( const char * ) S3_REQUEST_EMPTY_PAYLOAD, 0, pPayloadHashDigest );
-        lowercaseHexEncode( ( const char * ) pPayloadHashDigest, sizeof( pPayloadHashDigest ), hexencoded );
+        lowercaseHexEncode( ( const char * ) pPayloadHashDigest, SHA256_HASH_DIGEST_LENGTH, hexencoded );
 
         if( returnStatus == true )
         {
@@ -1317,7 +1317,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 
     /* Get the hash of the payload. */
     sha256( ( const char * ) S3_REQUEST_EMPTY_PAYLOAD, 0, pPayloadHashDigest );
-    lowercaseHexEncode( ( const char * ) pPayloadHashDigest, sizeof( pPayloadHashDigest ), hexencoded );
+    lowercaseHexEncode( ( const char * ) pPayloadHashDigest, SHA256_HASH_DIGEST_LENGTH, hexencoded );
 
     if( returnStatus == true )
     {
