@@ -200,11 +200,6 @@
 #define SIGV4_AUTH_HEADER_FIELD_NAME                  "Authorization"
 
 /**
- * @brief IS8601 formatted date length.
- */
-#define SIGV4_ISO_STRING_LEN                          16U
-
-/**
  * @brief Length of AWS HTTP Authorization header value generated using SigV4 library.
  */
 #define AWS_HTTP_AUTH_HEADER_VALUE_LEN                2048U
