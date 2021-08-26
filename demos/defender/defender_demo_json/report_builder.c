@@ -98,6 +98,9 @@
     "\"uptime\": [{"                              \
     "\""DEFENDER_REPORT_NUMBER_KEY"\": %lu"       \
     "}],"                                         \
+    "\"free_mem\": [{"                            \
+    "\""DEFENDER_REPORT_NUMBER_KEY"\": %lu"       \
+    "}],"                                         \
     "\"cpu_user_usage\": [{"                      \
     "\""DEFENDER_REPORT_NUMBER_LIST_KEY"\": "
 
@@ -751,7 +754,8 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART4,
                                       pMetrics->establishedConnectionsArrayLength,
-                                      pMetrics->customMetrics.uptime );
+                                      pMetrics->customMetrics.uptime,
+                                      pMetrics->customMetrics.memFree );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {

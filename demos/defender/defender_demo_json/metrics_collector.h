@@ -185,6 +185,21 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 MetricsCollectorStatus_t GetUptime( uint64_t * pUptime );
 
 /**
+ * @brief Get system free memory.
+ *
+ * This function finds the freememory by reading the "/proc/meminfo" file.
+ *
+ * @param[out] pMemFree The free memory on the system.
+ *
+ * @return #MetricsCollectorSuccess if free memory is successfully obtained;
+ * #MetricsCollectorBadParameter if invalid parameter is passed;
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/uptime";
+ * MetricsCollectorParsingFailed if the function fails to parses the data read
+ * from "/proc/uptime".
+ */
+MetricsCollectorStatus_t GetFreeMemory( uint64_t * pMemFree );
+
+/**
  * @brief Gets user usage for each CPU from the system.
  *
  * This function finds the usage information by reading the "/proc/stat" file.

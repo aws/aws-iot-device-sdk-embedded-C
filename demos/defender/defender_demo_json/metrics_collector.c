@@ -44,7 +44,7 @@
 
 /**
  * @brief The maximum length of line read from any of /proc/net/dev, /proc/net/tcp,
- * /proc/net/udp, /proc/uptime, /proc/stat, and /proc/net/arp files.
+ * /proc/net/udp, /proc/uptime, /proc/meminfo, /proc/stat, and /proc/net/arp files.
  */
 #define MAX_LINE_LENGTH                  ( 256 )
 
@@ -433,6 +433,61 @@ MetricsCollectorStatus_t GetUptime( uint64_t * pUptime )
             {
                 LogError( ( "Failed to parse CPU usage data. File: /proc/uptime, Data: %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
+            }
+        }
+    }
+
+    if( fileHandle != NULL )
+    {
+        fclose( fileHandle );
+    }
+
+    return status;
+}
+/*-----------------------------------------------------------*/
+
+MetricsCollectorStatus_t GetFreeMemory( uint64_t * pMemFree )
+{
+    MetricsCollectorStatus_t status = MetricsCollectorSuccess;
+    FILE * fileHandle = NULL;
+    int32_t filledVariables;
+    char lineBuffer[ MAX_LINE_LENGTH ];
+
+    if( pMemFree == NULL )
+    {
+        LogError( ( "Invalid parameter; pMemFree is null." ) );
+        status = MetricsCollectorBadParameter;
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        fileHandle = fopen( "/proc/meminfo", "r" );
+
+        if( fileHandle == NULL )
+        {
+            LogError( ( "Failed to open /proc/meminfo." ) );
+            status = MetricsCollectorFileOpenFailed;
+        }
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        while( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
+        {
+            /* Check if the line read is for free memory. */
+            if( strncmp( lineBuffer, "MemFree:", 8 ) == 0 )
+            {
+                filledVariables = sscanf( lineBuffer,
+                                          "%*s %lu",
+                                          pMemFree );
+
+                if( filledVariables != 1 )
+                {
+                    LogError( ( "Failed to parse memory data. File: /proc/memfree, Data: %s.", &( lineBuffer[ 0 ] ) ) );
+                    status = MetricsCollectorParsingFailed;
+                }
+
+                break;
             }
         }
     }

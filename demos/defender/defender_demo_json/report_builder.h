@@ -52,6 +52,8 @@ typedef struct CustomMetrics
 {
     /* System uptime. */
     uint64_t uptime;
+    /* System free memory. */
+    uint64_t memFree;
     /* Userspace usage of each CPU. */
     uint64_t * pCpuUserUsage;
     /* Length of cpu_user_usage. */

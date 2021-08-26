@@ -444,6 +444,19 @@ static bool collectDeviceMetrics( void )
         }
     }
 
+    /* Collect free memory from the system.
+     * This is an example of a custom metric of number type. */
+    if( metricsCollectorStatus == MetricsCollectorSuccess )
+    {
+        metricsCollectorStatus = GetFreeMemory( &( deviceMetrics.customMetrics.memFree ) );
+
+        if( metricsCollectorStatus != MetricsCollectorSuccess )
+        {
+            LogError( ( "GetFreeMemory failed. Status: %d.",
+                        metricsCollectorStatus ) );
+        }
+    }
+
     /* Collect CPU usage metrics from the system.
      * This is an example of a custom metric of number-list type. */
     if( metricsCollectorStatus == MetricsCollectorSuccess )
