@@ -418,8 +418,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
  * @param[out] pFileSize The size of the S3 object.
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
- * @param[in] pHost The server host address. This string must be
- * null-terminated.
+ * @param[in] pHost The server host address.
  * @param[in] hostLen The length of the server host address.
  * @param[in] pPath The Request-URI to the objects of interest. This string
  * should be null-terminated.
@@ -451,17 +450,17 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
  * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
  *
  * @param[in] pTransportInterface The transport interface for performing network send/recv operations.
+ * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
  * @param[in] pDateISO8601Len Length of the buffer provided to store ISO8601 formatted date.
  * @param[in,out] response Response buffer to store the HTTP response received.
- * @param[out] pDateISO8601 Buffer to store the ISO8601 formatted date.
  * @param[out] sigvCreds Buffer to store the parsed credentials.
  *
  * @return `true` if credentials are retrieved successfully otherwise 'false`.
  */
 static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
+                                     char * pDateISO8601,
                                      size_t pDateISO8601Len,
                                      HTTPResponse_t * response,
-                                     char * pDateISO8601,
                                      SigV4Credentials_t * sigvCreds );
 
 /**
@@ -555,9 +554,9 @@ static SigV4Parameters_t sigv4Params =
 /*-----------------------------------------------------------*/
 
 static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
+                                     char * pDateISO8601,
                                      size_t pDateISO8601Len,
                                      HTTPResponse_t * response,
-                                     char * pDateISO8601,
                                      SigV4Credentials_t * sigvCreds )
 {
     bool returnStatus = true;
@@ -618,9 +617,9 @@ static bool getTemporaryCredentials( TransportInterface_t * transportInterface,
         /* Add AWS_IOT_THING_NAME_HEADER_FIELD header to the HTTP request headers. */
         httpStatus = HTTPClient_AddHeader( &requestHeaders,
                                            AWS_IOT_THING_NAME_HEADER_FIELD,
-                                           sizeof( AWS_IOT_THING_NAME_HEADER_FIELD ) - 1,
+                                           sizeof( AWS_IOT_THING_NAME_HEADER_FIELD ) - 1U,
                                            AWS_IOT_THING_NAME,
-                                           sizeof( AWS_IOT_THING_NAME ) );
+                                           sizeof( AWS_IOT_THING_NAME ) - 1U );
 
         if( httpStatus != HTTPSuccess )
         {
@@ -1067,7 +1066,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
                                                ( const char * ) SIGV4_HTTP_X_AMZ_DATE_HEADER,
                                                ( size_t ) sizeof( SIGV4_HTTP_X_AMZ_DATE_HEADER ) - 1,
                                                ( const char * ) pDateISO8601,
-                                               ( size_t ) strlen( pDateISO8601 ) );
+                                               SIGV4_ISO_STRING_LEN );
 
             if( httpStatus != HTTPSuccess )
             {
@@ -1108,7 +1107,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
 
         /* Get the hash of the payload. */
         sha256( ( const char * ) S3_REQUEST_EMPTY_PAYLOAD, 0, pPayloadHashDigest );
-        lowercaseHexEncode( ( const char * ) pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
+        lowercaseHexEncode( ( const char * ) pPayloadHashDigest, sizeof( pPayloadHashDigest ), hexencoded );
 
         if( returnStatus == true )
         {
@@ -1143,7 +1142,7 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
         sigv4HttpParams.pHeaders = pHeaders;
         sigv4HttpParams.headersLen = headersLen;
         sigv4HttpParams.pPayload = S3_REQUEST_EMPTY_PAYLOAD;
-        sigv4HttpParams.payloadLen = strlen( S3_REQUEST_EMPTY_PAYLOAD );
+        sigv4HttpParams.payloadLen = sizeof( S3_REQUEST_EMPTY_PAYLOAD ) - 1U;
 
         /* Initializing sigv4Params with Http parameters required for the HTTP request. */
         sigv4Params.pHttpParameters = &sigv4HttpParams;
@@ -1318,7 +1317,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 
     /* Get the hash of the payload. */
     sha256( ( const char * ) S3_REQUEST_EMPTY_PAYLOAD, 0, pPayloadHashDigest );
-    lowercaseHexEncode( ( const char * ) pPayloadHashDigest, strlen( pPayloadHashDigest ), hexencoded );
+    lowercaseHexEncode( ( const char * ) pPayloadHashDigest, sizeof( pPayloadHashDigest ), hexencoded );
 
     if( returnStatus == true )
     {
@@ -1327,7 +1326,7 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
                                            ( const char * ) SIGV4_HTTP_X_AMZ_DATE_HEADER,
                                            ( size_t ) sizeof( SIGV4_HTTP_X_AMZ_DATE_HEADER ) - 1,
                                            ( const char * ) pDateISO8601,
-                                           ( size_t ) strlen( pDateISO8601 ) );
+                                           SIGV4_ISO_STRING_LEN );
 
         if( httpStatus != HTTPSuccess )
         {
@@ -1617,7 +1616,7 @@ int main( int argc,
         credentialResponse.pBuffer = pAwsIotHttpBuffer;
         credentialResponse.bufferLen = CREDENTIAL_BUFFER_LENGTH;
 
-        credentialStatus = getTemporaryCredentials( &transportInterface, sizeof( pDateISO8601 ), &credentialResponse, pDateISO8601, &sigvCreds );
+        credentialStatus = getTemporaryCredentials( &transportInterface, pDateISO8601, sizeof( pDateISO8601 ), &credentialResponse, &sigvCreds );
 
         returnStatus = ( credentialStatus == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
 

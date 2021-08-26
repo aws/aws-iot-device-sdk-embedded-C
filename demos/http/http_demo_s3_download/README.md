@@ -17,18 +17,18 @@ Following steps needs to be followed to configure HTTP S3 Download Demo to use S
 
 #### 1. Create an AWS IoT thing: 
 
-Register your device in the AWS IoT Thing Registry by creating a Thing Type and a Thing. You can use the AWS CLI with the following command to create a [Thing Type](https://docs.aws.amazon.com/iot/latest/developerguide/thing-types.html). The Thing Type allows you to store description and configuration information that is common to a set of Things.
+You may utilize an already existing AWS IoT Thing or create a new one in the IoT Core section of the AWS Management Console UI.
+
+You may also use the AWS CLI with the following command to create a Thing, keeping track of its name:
 ```sh
-aws iot create-thing-type --thing-type-name device_type_name
-```
-Run the following command in the AWS CLI to create a thing.
-```sh
-aws iot create-thing --thing-name device_thing_name --thing-type-name device_type_name
+aws iot create-thing --thing-name device_thing_name
 ```
 
-#### 2. Register a certificate: 
+#### 2. Register a certificate:
 
-Now, you need to have a Certificate Authority (CA) certificate, sign a device certificate using the CA certificate, and register both certificates with AWS           IOT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as  described in Use [Your Own Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html). To register your CA certificate with AWS IoT, follow the steps on [Registering Your CA Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html#register-CA-cert).
+If your AWS IoT Thing already has a certificate attached to it, then that certificate's ARN can be used in [step 5](#5. attach-a-policy). Otherwise, you can create a certificate and attach it to the thing through IoT Core in the AWS Management Console UI. By doing any of these, you may skip to [step 3](#3. configure-an-iam-role).
+
+It is also possible to sign the Thing's certificate using your own Certificate Authority (CA) certificate, and register both certificates with AWS IoT before your device can authenticate to AWS IoT. If you do not already have a CA certificate, you can use OpenSSL to create a CA certificate, as described in [Use Your Own Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html). To register your CA certificate with AWS IoT, follow the steps on [Registering Your CA Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html#register-CA-cert).
 
 You then have to create a device certificate signed by the CA certificate and register it with AWS IoT, which you can do by following the steps on [Creating a Device Certificate Using Your CA Certificate](https://docs.aws.amazon.com/iot/latest/developerguide/device-certs-your-own.html#create-device-cert). Save the certificate and the corresponding key pair; you will use them when you request a security token later. Also, remember the password you provide when you create the certificate.
 
@@ -38,7 +38,7 @@ Run the following command in the AWS CLI to attach the device certificate to you
 aws iot attach-thing-principal --thing-name device_thing_name --principal <certificate-arn>
 ```
     
-#### 3.  Configure an IAM role: 
+#### 3. Configure an IAM role: 
 
 Next, configure an IAM role in your AWS account that will be assumed by the credentials provider on behalf of your device. You are required to associate two policies with the role: a trust policy that controls who can assume the role, and an access policy that controls which actions can be performed on which resources by assuming the role.
 
@@ -83,7 +83,7 @@ aws iam attach-role-policy --role-name s3-access-role --policy-arn arn:aws:iam::
 
 Configure the PassRole permissions
 
-The IAM role that you have created must be passed to AWS IoT to create a role alias, as described in Step 4. The user who performs the operation requires `iam:PassRole` permission to authorize this action. You also should add permission for the `iam:GetRole` action to allow the user to retrieve information about the specified role. Create the following policy to grant `iam:PassRole` and `iam:GetRole` permissions. Name this policy `passrolepermission.json`.
+The IAM role that you have created must be passed to AWS IoT to create a role alias, as described in Step 4. The IAM user who performs the operation requires `iam:PassRole` permission to authorize this action. You also should add permission for the `iam:GetRole` action to allow the IAM user to retrieve information about the specified role. Create the following policy to grant `iam:PassRole` and `iam:GetRole` permissions. Name this policy `passrolepermission.json`.
 ```
 {
            "Version": "2012-10-17",
@@ -103,7 +103,7 @@ Run the following command in the AWS CLI to create the policy in your AWS accoun
 aws iam create-policy --policy-name passrolepermission --policy-document file://passrolepermission.json
 ```
 
-Now, run the following command to attach the policy to the user.
+Now, run the following command to attach the policy to the IAM user.
 ```sh
 aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:policy/passrolepermission --user-name <user_name>
 ```
@@ -112,7 +112,7 @@ aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:polic
          
 Now that you have configured the IAM role, you will create a role alias with AWS IoT. You must provide the following pieces of information when creating a role alias:
 
-RoleAlias: This is the primary key of the role alias data model and hence a mandatory attribute. It is a string; the minimum length is 1 character, andthe maximum length is 128 characters.
+RoleAlias: This is the primary key of the role alias data model and hence a mandatory attribute. It is a string; the minimum length is 1 character, and the maximum length is 128 characters.
 RoleArn: This is the [Amazon Resource Name (ARN)](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) of the IAM role you have created. This is also a mandatory attribute.
 CredentialDurationSeconds: This is an optional attribute specifying the validity (in seconds) of the security token. The minimum value is 900 seconds (15 minutes), and the maximum value is 3,600 seconds (60 minutes); the default value is 3,600 seconds, if not specified.
 Run the following command in the AWS CLI to create a role alias. Use the credentials of the user to whom you have given the iam:PassRole permission.
@@ -129,7 +129,7 @@ You created and registered a certificate with AWS IoT earlier for successful aut
              {
                "Effect": "Allow",
                "Action": "iot:AssumeRoleWithCertificate",
-               "Resource": "arn:aws:iot:<aws_region_name>:<your_aws_account_id>:rolealias/name-s3-access-role-alias",
+               "Resource": "arn:aws:iot:<aws_region_name>:<your_aws_account_id>:rolealias/name-s3-access-role-alias"
              }
            ]
 }
