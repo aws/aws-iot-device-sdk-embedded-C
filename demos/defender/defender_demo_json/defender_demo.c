@@ -463,7 +463,7 @@ static bool collectDeviceMetrics( void )
     {
         metricsCollectorStatus = GetCpuUserUsage( &( cpuUserUsage[ 0 ] ),
                                                   CPU_USER_USAGE_ARRAY_SIZE,
-                                                  &cpuCount );
+                                                  &( cpuCount ) );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {
@@ -479,7 +479,7 @@ static bool collectDeviceMetrics( void )
         metricsCollectorStatus = GetNetworkInferfaceInfo( &( networkInterfaceNames[ 0 ] ),
                                                           &( networkInterfaceAddresses[ 0 ] ),
                                                           NETWORK_INTERFACE_ARRAY_SIZE,
-                                                          &networkInterfaceCount );
+                                                          &( networkInterfaceCount ) );
 
         if( metricsCollectorStatus != MetricsCollectorSuccess )
         {

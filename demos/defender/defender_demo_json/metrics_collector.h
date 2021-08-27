@@ -193,9 +193,9 @@ MetricsCollectorStatus_t GetUptime( uint64_t * pUptime );
  *
  * @return #MetricsCollectorSuccess if free memory is successfully obtained;
  * #MetricsCollectorBadParameter if invalid parameter is passed;
- * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/uptime";
+ * #MetricsCollectorFileOpenFailed if the function fails to open "/proc/meminfo";
  * MetricsCollectorParsingFailed if the function fails to parses the data read
- * from "/proc/uptime".
+ * from "/proc/meminfo".
  */
 MetricsCollectorStatus_t GetFreeMemory( uint64_t * pMemFree );
 

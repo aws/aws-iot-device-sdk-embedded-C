@@ -56,7 +56,7 @@ typedef struct CustomMetrics
     uint64_t memFree;
     /* Userspace usage of each CPU. */
     uint64_t * pCpuUserUsage;
-    /* Length of cpu_user_usage. */
+    /* Length of pCpuUserUsage. */
     size_t cpuCount;
 
     /* Names of the network interfaces.
