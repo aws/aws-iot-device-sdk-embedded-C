@@ -44,7 +44,7 @@
  */
 typedef struct
 {
-    char * str;
+    const char * str;
     size_t length;
 } CborPrintContext_t;
 
@@ -404,7 +404,7 @@ static CborError cborPrinter( void * token,
 {
     int result;
     va_list args;
-    CborPrintContext_t * ctx = token;
+    CborPrintContext_t * ctx = ( CborPrintContext_t * ) token;
 
     va_start( args, fmt );
 
@@ -424,7 +424,7 @@ static CborError cborPrinter( void * token,
         char * newPtr;
 
         ctx->length = oldLen + newLen;
-        newPtr = realloc( ctx->str, ctx->length + 1 );
+        newPtr = ( char * ) realloc( ( void * ) ctx->str, ctx->length + 1 );
 
         if( newPtr == NULL )
         {
@@ -433,13 +433,13 @@ static CborError cborPrinter( void * token,
         }
         else
         {
-            ctx->str = newPtr;
-
             va_start( args, fmt );
 
-            result = vsnprintf( ( ctx->str ) + oldLen, newLen + 1, fmt, args );
+            result = vsnprintf( newPtr + oldLen, newLen + 1, fmt, args );
 
             va_end( args );
+
+            ctx->str = newPtr;
 
             if( result < 0 )
             {
@@ -452,8 +452,8 @@ static CborError cborPrinter( void * token,
 }
 /*-----------------------------------------------------------*/
 
-char * getStringFromCbor( const uint8_t * cbor,
-                          size_t length )
+const char * getStringFromCbor( const uint8_t * cbor,
+                                size_t length )
 {
     CborPrintContext_t printCtx = { 0 };
     CborParser parser;
