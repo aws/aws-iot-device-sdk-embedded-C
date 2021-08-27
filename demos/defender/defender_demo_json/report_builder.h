@@ -23,6 +23,9 @@
 #ifndef REPORT_BUILDER_H_
 #define REPORT_BUILDER_H_
 
+/* Standard includes. */
+#include <stdlib.h>
+
 /* Metrics collector. */
 #include "metrics_collector.h"
 
@@ -39,16 +42,30 @@ typedef enum
 /**
  * @brief Represents the set of custom metrics to send to AWS IoT Device Defender service.
  *
- * This demo shows how the CPU usage time and memory data of the system can be sent
- * as custom metrics to AWS IoT Device Defender service.
+ * This demo shows how various system metrics can be sent as custom metrics to
+ * AWS IoT Device Defender service.
  *
  * For more information on custom metrics, refer to the following AWS document:
  * https://docs.aws.amazon.com/iot/latest/developerguide/dd-detect-custom-metrics.html
  */
 typedef struct CustomMetrics
 {
-    CpuUsageStats_t cpuUsageStats;
-    MemoryStats_t memoryStats;
+    /* System uptime. */
+    uint64_t uptime;
+    /* System free memory. */
+    uint64_t memFree;
+    /* Userspace usage of each CPU. */
+    uint64_t * pCpuUserUsage;
+    /* Length of pCpuUserUsage. */
+    size_t cpuCount;
+
+    /* Names of the network interfaces.
+     * These have max length 15 on Linux, not including trailing null. */
+    char ( *pNetworkInterfaceNames )[ 16 ];
+    /* Addresses of the network interfaces. */
+    uint32_t * pNetworkInterfaceAddresses;
+    /* Length of network_interface_names and network_interface_addresses. */
+    size_t networkInterfaceCount;
 } CustomMetrics_t;
 
 /**
@@ -63,7 +80,7 @@ typedef struct ReportMetrics
     uint32_t openUdpPortsArrayLength;
     Connection_t * pEstablishedConnectionsArray;
     uint32_t establishedConnectionsArrayLength;
-    CustomMetrics_t * pCustomMetrics;
+    CustomMetrics_t customMetrics;
 } ReportMetrics_t;
 
 /**

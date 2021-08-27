@@ -20,6 +20,13 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * @file metrics_collector.c
+ *
+ * @brief This file provides an implementation of the metrics_collector interface
+ * for Linux systems.
+ */
+
 /* Standard includes. */
 #include <stdio.h>
 #include <ctype.h>
@@ -37,7 +44,7 @@
 
 /**
  * @brief The maximum length of line read from any of /proc/net/dev, /proc/net/tcp,
- * /proc/net/udp, /proc/uptime and /proc/meminfo files.
+ * /proc/net/udp, /proc/uptime, /proc/meminfo, /proc/stat, and /proc/net/arp files.
  */
 #define MAX_LINE_LENGTH                  ( 256 )
 
@@ -48,17 +55,12 @@
 #define CONNECTION_STATUS_ESTABLISHED    ( 1 )
 
 /**
- * @brief Fields from /proc/meminfo to use for memory statistics.
- */
-#define TOTAL_MEM_FIELD                  "MemTotal"
-#define AVAILABLE_MEM_FIELD              "MemAvailable"
-
-/**
  * @brief Get a list of the open ports.
  *
  * This function finds the open ports by reading pProcFile. It can be called
  * with pOutPortsArray NULL to get the number of the open ports.
  *
+ * @param[in] pProcFile The file to read from; either /proc/net/tcp or /proc/net/udp.
  * @param[in] pOutPortsArray The array to write the open ports into. Can be
  * NULL, if only number of open ports is needed.
  * @param[in] portsArrayLength Length of the pOutPortsArray, if it is not NULL.
@@ -83,7 +85,8 @@ static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
-    uint32_t lineNumber = 0, filledVariables;
+    uint32_t lineNumber = 0;
+    int32_t filledVariables;
     uint32_t connectionStatus, localPort, numOpenPorts = 0;
     char lineBuffer[ MAX_LINE_LENGTH ];
 
@@ -93,7 +96,7 @@ static MetricsCollectorStatus_t getOpenPorts( const char * pProcFile,
     {
         LogError( ( "Invalid parameters. pProcFile: %p, pOutPortsArray: %p,"
                     " portsArrayLength: %u, pOutNumOpenPorts: %p.",
-                    ( void * ) pProcFile,
+                    ( const void * ) pProcFile,
                     ( void * ) pOutPortsArray,
                     portsArrayLength,
                     ( void * ) pOutNumOpenPorts ) );
@@ -181,7 +184,8 @@ MetricsCollectorStatus_t GetNetworkStats( NetworkStats_t * pOutNetworkStats )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
-    uint32_t lineNumber = 0, filledVariables;
+    uint32_t lineNumber = 0;
+    int32_t filledVariables;
     uint32_t bytesReceived, bytesSent, packetsReceived, packetsSent;
     char lineBuffer[ MAX_LINE_LENGTH ];
 
@@ -284,7 +288,8 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
-    uint32_t lineNumber = 0, filledVariables, connectionStatus;
+    uint32_t lineNumber = 0, connectionStatus;
+    int32_t filledVariables;
     uint32_t localIp, localPort, remoteIp, remotePort, numEstablishedConnections = 0;
     Connection_t * pEstablishedConnection;
     char lineBuffer[ MAX_LINE_LENGTH ];
@@ -387,16 +392,16 @@ MetricsCollectorStatus_t GetEstablishedConnections( Connection_t * pOutConnectio
 
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
+MetricsCollectorStatus_t GetUptime( uint64_t * pUptime )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
-    uint32_t filledVariables;
+    int32_t filledVariables;
     char lineBuffer[ MAX_LINE_LENGTH ];
 
-    if( pCpuUsage == NULL )
+    if( pUptime == NULL )
     {
-        LogError( ( "Invalid parameter. pCpuUsage: %p", ( void * ) pCpuUsage ) );
+        LogError( ( "Invalid parameter; pUptime is null." ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -420,12 +425,11 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
 
             /* Parse the output. */
             filledVariables = sscanf( &( lineBuffer[ 0 ] ),
-                                      "%u.%*u %u.%*u",
-                                      &( pCpuUsage->upTime ),
-                                      &( pCpuUsage->idleTime ) );
+                                      "%lu",
+                                      pUptime );
 
-            /* sscanf should fill all the 2 variables successfully. */
-            if( filledVariables != 2 )
+            /* sscanf should fill pUptime successfully. */
+            if( filledVariables != 1 )
             {
                 LogError( ( "Failed to parse CPU usage data. File: /proc/uptime, Data: %s.", &( lineBuffer[ 0 ] ) ) );
                 status = MetricsCollectorParsingFailed;
@@ -442,18 +446,16 @@ MetricsCollectorStatus_t GetCpuUsageStats( CpuUsageStats_t * pCpuUsage )
 }
 /*-----------------------------------------------------------*/
 
-MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
+MetricsCollectorStatus_t GetFreeMemory( uint64_t * pMemFree )
 {
     MetricsCollectorStatus_t status = MetricsCollectorSuccess;
     FILE * fileHandle = NULL;
-    /* Variables for reading and processing data from "/proc/meminfo" file. */
+    int32_t filledVariables;
     char lineBuffer[ MAX_LINE_LENGTH ];
-    bool readTotalMem = false, readAvailableMem = false;
-    int filledVariables = 0;
 
-    if( ( pMemoryStats == NULL ) )
+    if( pMemFree == NULL )
     {
-        LogError( ( "Invalid parameter. pMemoryStats: %p", ( void * ) pMemoryStats ) );
+        LogError( ( "Invalid parameter; pMemFree is null." ) );
         status = MetricsCollectorBadParameter;
     }
 
@@ -470,61 +472,165 @@ MetricsCollectorStatus_t GetMemoryStats( MemoryStats_t * pMemoryStats )
 
     if( status == MetricsCollectorSuccess )
     {
-        while( ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
+        while( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
         {
-            LogDebug( ( "File: /proc/meminfo, Content: %s.", &( lineBuffer[ 0 ] ) ) );
-
-            /* Check if the line read represents information for total memory in the system. */
-            if( strncmp( lineBuffer, TOTAL_MEM_FIELD, ( sizeof( TOTAL_MEM_FIELD ) - 1UL ) ) == 0 )
+            /* Check if the line read is for free memory. */
+            if( strncmp( lineBuffer, "MemFree:", 8 ) == 0 )
             {
-                /* Extract the total memory value from the line. */
                 filledVariables = sscanf( lineBuffer,
-                                          "%*[^1-9]%u kB",
-                                          ( &pMemoryStats->totalMemory ) );
+                                          "%*s %lu",
+                                          pMemFree );
 
                 if( filledVariables != 1 )
                 {
-                    LogError( ( "Failed to parse data. File: /proc/meminfo, Content: %s", lineBuffer ) );
+                    LogError( ( "Failed to parse memory data. File: /proc/memfree, Data: %s.", &( lineBuffer[ 0 ] ) ) );
                     status = MetricsCollectorParsingFailed;
-
-                    break;
                 }
-                else
-                {
-                    readTotalMem = true;
-                }
-            }
-            /* Check if the line read represents information for available memory in the system. */
-            else if( strncmp( lineBuffer, AVAILABLE_MEM_FIELD, ( sizeof( AVAILABLE_MEM_FIELD ) - 1UL ) ) == 0 )
-            {
-                /* Extract the total memory value from the line. */
-                filledVariables = sscanf( lineBuffer,
-                                          "%*[^1-9]%u kB",
-                                          ( &pMemoryStats->availableMemory ) );
-
-                if( filledVariables != 1 )
-                {
-                    LogError( ( "Failed to parse data. File: /proc/meminfo, Content: %s", lineBuffer ) );
-                    status = MetricsCollectorParsingFailed;
-
-                    break;
-                }
-                else
-                {
-                    readAvailableMem = true;
-                }
-            }
-
-            if( readTotalMem && readAvailableMem )
-            {
-                /* We have obtained data for both total and available memory in the system. */
-                status = MetricsCollectorSuccess;
 
                 break;
             }
-            else
+        }
+    }
+
+    if( fileHandle != NULL )
+    {
+        fclose( fileHandle );
+    }
+
+    return status;
+}
+/*-----------------------------------------------------------*/
+
+MetricsCollectorStatus_t GetCpuUserUsage( uint64_t * pOutCpuUserUsage,
+                                          size_t cpuUserUsageLength,
+                                          size_t * pOutNumCpuUserUsage )
+{
+    MetricsCollectorStatus_t status = MetricsCollectorSuccess;
+    FILE * fileHandle = NULL;
+    /* Variables for reading and processing data from "/proc/stat" file. */
+    char lineBuffer[ MAX_LINE_LENGTH ];
+    int32_t filledVariables = 0;
+
+    *pOutNumCpuUserUsage = 0;
+
+    if( pOutCpuUserUsage == NULL )
+    {
+        LogError( ( "Invalid parameter. pOutCpuUserUsage: %p", ( void * ) pOutCpuUserUsage ) );
+        status = MetricsCollectorBadParameter;
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        fileHandle = fopen( "/proc/stat", "r" );
+
+        if( fileHandle == NULL )
+        {
+            LogError( ( "Failed to open /proc/stat." ) );
+            status = MetricsCollectorFileOpenFailed;
+        }
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        while( ( *pOutNumCpuUserUsage < cpuUserUsageLength ) &&
+               ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
+        {
+            LogDebug( ( "File: /proc/stat, Content: %s.", &( lineBuffer[ 0 ] ) ) );
+
+            /* Check if the line read is for a CPU. */
+            if( strncmp( lineBuffer, "cpu", 3 ) == 0 )
             {
-                status = MetricsCollectorDataNotFound;
+                filledVariables = sscanf( lineBuffer,
+                                          "%*s %lu",
+                                          &( pOutCpuUserUsage[ *pOutNumCpuUserUsage ] ) );
+
+                if( filledVariables != 1 )
+                {
+                    LogError( ( "Failed to parse data. File: /proc/stat, Content: %s", lineBuffer ) );
+                    status = MetricsCollectorParsingFailed;
+
+                    break;
+                }
+                else
+                {
+                    *pOutNumCpuUserUsage += 1;
+                }
+            }
+        }
+    }
+
+    if( fileHandle != NULL )
+    {
+        fclose( fileHandle );
+    }
+
+    return status;
+}
+/*-----------------------------------------------------------*/
+
+MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNames )[ 16 ],
+                                                  uint32_t * pOutNetworkInterfaceAddresses,
+                                                  size_t bufferLength,
+                                                  size_t * pOutNumNetworkInterfaces )
+{
+    MetricsCollectorStatus_t status = MetricsCollectorSuccess;
+    FILE * fileHandle = NULL;
+    /* Variables for reading and processing data from "/proc/net/arp" file. */
+    char lineBuffer[ MAX_LINE_LENGTH ];
+    int32_t filledVariables = 0;
+    uint32_t ipPart1, ipPart2, ipPart3, ipPart4;
+
+    *pOutNumNetworkInterfaces = 0;
+
+    if( ( pOutNetworkInterfaceNames == NULL ) || ( pOutNetworkInterfaceAddresses == NULL ) )
+    {
+        LogError( ( "Invalid parameter. pOutNetworkInterfaceNames: %p, pOutNetworkInterfaceAddresses: %p",
+                    ( void * ) pOutNetworkInterfaceNames,
+                    ( void * ) pOutNetworkInterfaceAddresses ) );
+        status = MetricsCollectorBadParameter;
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        fileHandle = fopen( "/proc/net/arp", "r" );
+
+        if( fileHandle == NULL )
+        {
+            LogError( ( "Failed to open /proc/net/arp." ) );
+            status = MetricsCollectorFileOpenFailed;
+        }
+    }
+
+    if( status == MetricsCollectorSuccess )
+    {
+        /* Skip header line */
+        if( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL )
+        {
+            while( ( *pOutNumNetworkInterfaces < bufferLength ) &&
+                   ( fgets( &( lineBuffer[ 0 ] ), MAX_LINE_LENGTH, fileHandle ) != NULL ) )
+            {
+                LogDebug( ( "File: /proc/net/arp, Content: %s.", &( lineBuffer[ 0 ] ) ) );
+
+                filledVariables = sscanf( lineBuffer,
+                                          "%u.%u.%u.%u %*s %*s %*s %*s %s",
+                                          &ipPart1,
+                                          &ipPart2,
+                                          &ipPart3,
+                                          &ipPart4,
+                                          pOutNetworkInterfaceNames[ *pOutNumNetworkInterfaces ] );
+
+                if( filledVariables != 5 )
+                {
+                    LogError( ( "Failed to parse data. File: /proc/net/arp, Content: %s", lineBuffer ) );
+                    status = MetricsCollectorParsingFailed;
+
+                    break;
+                }
+                else
+                {
+                    pOutNetworkInterfaceAddresses[ *pOutNumNetworkInterfaces ] = ( ipPart1 << 24 ) | ( ipPart2 << 16 ) | ( ipPart3 << 8 ) | ipPart4;
+                    *pOutNumNetworkInterfaces += 1;
+                }
             }
         }
     }

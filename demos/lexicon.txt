@@ -26,6 +26,7 @@ argc
 args
 argv
 arn
+arp
 ascii
 asm
 asn
@@ -101,8 +102,6 @@ clienttoken
 closesession
 cmac
 cmake
-credentialprovider
-cryptointerface
 codesigner
 com
 compat
@@ -124,16 +123,20 @@ coremqtt
 corepkcs
 correclty
 cpu
+cpus
+cpuuserusagelength
 createcertificatefromcsr
 createcleansession
 createkeysandcertificate
 creatething
+credentialprovider
 crl
 crls
 crt
 crypotki
 crypto
 cryptoapi
+cryptointerface
 cryptoki
 csr
 csrbufferlength
@@ -466,6 +469,7 @@ pclientsessionpresent
 pconnectionsarray
 pcontext
 pcpuusage
+pcpuuserusage
 pcsr
 pcsrbuffer
 pctx
@@ -501,6 +505,7 @@ plabel
 plaintext
 platformimagestate
 pleace
+pmemfree
 pmemorystats
 pmessage
 pmethod
@@ -518,10 +523,15 @@ posix
 potainterfaces
 poutcharswritten
 poutconnectionsarray
+poutcpuuserusage
 poutcsrlength
 poutlengthwritten
+poutnetworkinterfaceaddresses
+poutnetworkinterfacenames
 poutnetworkstats
+poutnumcpuuserusage
 poutnumestablishedconnections
+poutnumnetworkinterfaces
 poutnumopenports
 poutnumtcpopenports
 poutnumudpopenports
@@ -607,6 +617,7 @@ pubrel
 pucdata
 pulcount
 puldigestlen
+puptime
 pxknownmessage
 pxsession
 pxslotid
@@ -618,8 +629,8 @@ rangestart
 rc
 rdparty
 readme
-recv
 reasonnable
+recv
 registerthing
 reportbuilderbadparameter
 reportbuilderbuffertoosmall
@@ -763,6 +774,7 @@ urls
 usa
 usb
 userguide
+userspace
 util
 utils
 v1

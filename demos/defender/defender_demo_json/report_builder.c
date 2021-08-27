@@ -88,42 +88,38 @@
     "\""DEFENDER_REPORT_ESTABLISHED_CONNECTIONS_KEY"\": {" \
     "\""DEFENDER_REPORT_CONNECTIONS_KEY"\": "
 
-#define JSON_REPORT_FORMAT_PART4          \
-    ","                                   \
-    "\""DEFENDER_REPORT_TOTAL_KEY"\": %u" \
-    "}"                                   \
-    "}"                                   \
-    "},"
+#define JSON_REPORT_FORMAT_PART4                  \
+    ","                                           \
+    "\""DEFENDER_REPORT_TOTAL_KEY"\": %u"         \
+    "}"                                           \
+    "}"                                           \
+    "},"                                          \
+    "\""DEFENDER_REPORT_CUSTOM_METRICS_KEY"\": {" \
+    "\"uptime\": [{"                              \
+    "\""DEFENDER_REPORT_NUMBER_KEY"\": %lu"       \
+    "}],"                                         \
+    "\"free_mem\": [{"                            \
+    "\""DEFENDER_REPORT_NUMBER_KEY"\": %lu"       \
+    "}],"                                         \
+    "\"cpu_user_usage\": [{"                      \
+    "\""DEFENDER_REPORT_NUMBER_LIST_KEY"\": "
+
+#define JSON_REPORT_FORMAT_PART5      \
+    "}],"                             \
+    "\"network_interface_names\": [{" \
+    "\""DEFENDER_REPORT_STRING_LIST_KEY"\": "
+
+#define JSON_REPORT_FORMAT_PART6          \
+    "}],"                                 \
+    "\"network_interface_addresses\": [{" \
+    "\""DEFENDER_REPORT_IP_LIST_KEY"\": "
+
+#define JSON_REPORT_FORMAT_PART7 \
+    "}]"                         \
+    "}"                          \
+    "}"
 
 /* *INDENT-ON* */
-
-/**
- * @brief The format for custom metrics of CPU usage time
- * and system memory statistics in the JSON report that will be sent
- * to the AWS IoT Device Defender service.
- *
- * @note This demo reports the CPU usage time statistics as a "number-list"
- * type of custom metric, while the system memory statistics as a "string-list"
- * type of custom metric.
- */
-#define JSON_REPORT_CUSTOM_METRICS_FORMAT_PART5 \
-    "\"%s\":{"                                  \
-    "\"cpu-usage\": ["                          \
-    "{"                                         \
-    "\"%s\": ["                                 \
-    "%u, %u"                                    \
-    "]"                                         \
-    "}"                                         \
-    "],"                                        \
-    "\"memory-info\": ["                        \
-    "{"                                         \
-    "\"%s\": ["                                 \
-    "\"%ukB\",\"%ukB\""                         \
-    "]"                                         \
-    "}"                                         \
-    "]"                                         \
-    "}"                                         \
-    "}"
 
 /*-----------------------------------------------------------*/
 
@@ -318,7 +314,7 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -327,6 +323,249 @@ static ReportBuilderStatus_t writeConnectionsArray( char * pBuffer,
     {
         /* Discard the last comma. */
         if( connectionsArrayLength > 0 )
+        {
+            pCurrentWritePos -= 1;
+            remainingBufferLength += 1;
+        }
+
+        /* Write the JSON array close marker. */
+        if( remainingBufferLength > 1 )
+        {
+            *pCurrentWritePos = JSON_ARRAY_CLOSE_MARKER;
+            remainingBufferLength -= 1;
+            pCurrentWritePos += 1;
+        }
+        else
+        {
+            status = ReportBuilderBufferTooSmall;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        *pOutCharsWritten = bufferLength - remainingBufferLength;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static ReportBuilderStatus_t writeCpuUsage( char * pBuffer,
+                                            uint32_t bufferLength,
+                                            uint64_t * pCpuUserUsage,
+                                            size_t cpuCount,
+                                            uint32_t * pOutCharsWritten )
+{
+    char * pCurrentWritePos = pBuffer;
+    uint32_t i, remainingBufferLength = bufferLength;
+    int charactersWritten;
+    ReportBuilderStatus_t status = ReportBuilderSuccess;
+
+    assert( pBuffer != NULL );
+    assert( bufferLength != 0 );
+    assert( pCpuUserUsage != NULL );
+    assert( pOutCharsWritten != NULL );
+
+    /* Write the JSON array open marker. */
+    if( remainingBufferLength > 1 )
+    {
+        *pCurrentWritePos = JSON_ARRAY_OPEN_MARKER;
+        remainingBufferLength -= 1;
+        pCurrentWritePos += 1;
+    }
+    else
+    {
+        status = ReportBuilderBufferTooSmall;
+    }
+
+    /* Write the array elements. */
+    for( i = 0; ( ( i < cpuCount ) && ( status == ReportBuilderSuccess ) ); i++ )
+    {
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      "%lu,",
+                                      pCpuUserUsage[ i ] );
+
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+        {
+            status = ReportBuilderBufferTooSmall;
+            break;
+        }
+        else
+        {
+            remainingBufferLength -= ( unsigned ) charactersWritten;
+            pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        /* Discard the last comma. */
+        if( cpuCount > 0 )
+        {
+            pCurrentWritePos -= 1;
+            remainingBufferLength += 1;
+        }
+
+        /* Write the JSON array close marker. */
+        if( remainingBufferLength > 1 )
+        {
+            *pCurrentWritePos = JSON_ARRAY_CLOSE_MARKER;
+            remainingBufferLength -= 1;
+            pCurrentWritePos += 1;
+        }
+        else
+        {
+            status = ReportBuilderBufferTooSmall;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        *pOutCharsWritten = bufferLength - remainingBufferLength;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static ReportBuilderStatus_t writeNetworkInterfaceNames( char * pBuffer,
+                                                         uint32_t bufferLength,
+                                                         char ( *pNetworkInterfaceNames )[ 16 ],
+                                                         size_t networkInterfaceCount,
+                                                         uint32_t * pOutCharsWritten )
+{
+    char * pCurrentWritePos = pBuffer;
+    uint32_t i, remainingBufferLength = bufferLength;
+    int charactersWritten;
+    ReportBuilderStatus_t status = ReportBuilderSuccess;
+
+    assert( pBuffer != NULL );
+    assert( bufferLength != 0 );
+    assert( pNetworkInterfaceNames != NULL );
+    assert( pOutCharsWritten != NULL );
+
+    /* Write the JSON array open marker. */
+    if( remainingBufferLength > 1 )
+    {
+        *pCurrentWritePos = JSON_ARRAY_OPEN_MARKER;
+        remainingBufferLength -= 1;
+        pCurrentWritePos += 1;
+    }
+    else
+    {
+        status = ReportBuilderBufferTooSmall;
+    }
+
+    /* Write the array elements. */
+    for( i = 0; ( ( i < networkInterfaceCount ) && ( status == ReportBuilderSuccess ) ); i++ )
+    {
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      "\"%s\",",
+                                      pNetworkInterfaceNames[ i ] );
+
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+        {
+            status = ReportBuilderBufferTooSmall;
+            break;
+        }
+        else
+        {
+            remainingBufferLength -= ( unsigned ) charactersWritten;
+            pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        /* Discard the last comma. */
+        if( networkInterfaceCount > 0 )
+        {
+            pCurrentWritePos -= 1;
+            remainingBufferLength += 1;
+        }
+
+        /* Write the JSON array close marker. */
+        if( remainingBufferLength > 1 )
+        {
+            *pCurrentWritePos = JSON_ARRAY_CLOSE_MARKER;
+            remainingBufferLength -= 1;
+            pCurrentWritePos += 1;
+        }
+        else
+        {
+            status = ReportBuilderBufferTooSmall;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        *pOutCharsWritten = bufferLength - remainingBufferLength;
+    }
+
+    return status;
+}
+
+/*-----------------------------------------------------------*/
+
+static ReportBuilderStatus_t writeNetworkInterfaceAddresses( char * pBuffer,
+                                                             uint32_t bufferLength,
+                                                             uint32_t * pNetworkInterfaceAddresses,
+                                                             size_t networkInterfaceCount,
+                                                             uint32_t * pOutCharsWritten )
+{
+    char * pCurrentWritePos = pBuffer;
+    uint32_t i, remainingBufferLength = bufferLength;
+    int charactersWritten;
+    ReportBuilderStatus_t status = ReportBuilderSuccess;
+
+    assert( pBuffer != NULL );
+    assert( bufferLength != 0 );
+    assert( pNetworkInterfaceAddresses != NULL );
+    assert( pOutCharsWritten != NULL );
+
+    /* Write the JSON array open marker. */
+    if( remainingBufferLength > 1 )
+    {
+        *pCurrentWritePos = JSON_ARRAY_OPEN_MARKER;
+        remainingBufferLength -= 1;
+        pCurrentWritePos += 1;
+    }
+    else
+    {
+        status = ReportBuilderBufferTooSmall;
+    }
+
+    /* Write the array elements. */
+    for( i = 0; ( ( i < networkInterfaceCount ) && ( status == ReportBuilderSuccess ) ); i++ )
+    {
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      "\"%u.%u.%u.%u\",",
+                                      ( pNetworkInterfaceAddresses[ i ] >> 24 ) & 0xFF,
+                                      ( pNetworkInterfaceAddresses[ i ] >> 16 ) & 0xFF,
+                                      ( pNetworkInterfaceAddresses[ i ] >> 8 ) & 0xFF,
+                                      ( pNetworkInterfaceAddresses[ i ] ) & 0xFF );
+
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+        {
+            status = ReportBuilderBufferTooSmall;
+            break;
+        }
+        else
+        {
+            remainingBufferLength -= ( unsigned ) charactersWritten;
+            pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    if( status == ReportBuilderSuccess )
+    {
+        /* Discard the last comma. */
+        if( networkInterfaceCount > 0 )
         {
             pCurrentWritePos -= 1;
             remainingBufferLength += 1;
@@ -377,7 +616,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
                     " pMetrics: %p, pOutReportLength: %p.",
                     ( void * ) pBuffer,
                     bufferLength,
-                    ( void * ) pMetrics,
+                    ( const void * ) pMetrics,
                     ( void * ) pOutReportLength ) );
         status = ReportBuilderBadParameter;
     }
@@ -399,7 +638,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -439,7 +678,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -483,7 +722,7 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
@@ -514,7 +753,9 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
                                       JSON_REPORT_FORMAT_PART4,
-                                      pMetrics->establishedConnectionsArrayLength );
+                                      pMetrics->establishedConnectionsArrayLength,
+                                      pMetrics->customMetrics.uptime,
+                                      pMetrics->customMetrics.memFree );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
@@ -523,33 +764,124 @@ ReportBuilderStatus_t GenerateJsonReport( char * pBuffer,
         }
         else
         {
-            remainingBufferLength -= charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
 
-    /* Write custom metrics. */
+    /* Write CPU usage array. */
+    if( status == ReportBuilderSuccess )
+    {
+        status = writeCpuUsage( pCurrentWritePos,
+                                remainingBufferLength,
+                                pMetrics->customMetrics.pCpuUserUsage,
+                                pMetrics->customMetrics.cpuCount,
+                                &( bufferWritten ) );
+
+        if( status == ReportBuilderSuccess )
+        {
+            pCurrentWritePos += bufferWritten;
+            remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write CPU usage array." ) );
+        }
+    }
+
+    /* Write part5. */
     if( status == ReportBuilderSuccess )
     {
         charactersWritten = snprintf( pCurrentWritePos,
                                       remainingBufferLength,
-                                      JSON_REPORT_CUSTOM_METRICS_FORMAT_PART5,
-                                      DEFENDER_REPORT_CUSTOM_METRICS_KEY,
-                                      DEFENDER_REPORT_NUMBER_LIST_KEY,
-                                      pMetrics->pCustomMetrics->cpuUsageStats.upTime,
-                                      pMetrics->pCustomMetrics->cpuUsageStats.idleTime,
-                                      DEFENDER_REPORT_STRING_LIST_KEY,
-                                      pMetrics->pCustomMetrics->memoryStats.totalMemory,
-                                      pMetrics->pCustomMetrics->memoryStats.availableMemory );
+                                      JSON_REPORT_FORMAT_PART5 );
 
         if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
         {
-            LogError( ( "Failed to write custom metrics (part 5)." ) );
+            LogError( ( "Failed to write part 5." ) );
             status = ReportBuilderBufferTooSmall;
         }
         else
         {
-            remainingBufferLength -= charactersWritten;
+            remainingBufferLength -= ( unsigned ) charactersWritten;
+            pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    /* Write network interface name array. */
+    if( status == ReportBuilderSuccess )
+    {
+        status = writeNetworkInterfaceNames( pCurrentWritePos,
+                                             remainingBufferLength,
+                                             pMetrics->customMetrics.pNetworkInterfaceNames,
+                                             pMetrics->customMetrics.networkInterfaceCount,
+                                             &( bufferWritten ) );
+
+        if( status == ReportBuilderSuccess )
+        {
+            pCurrentWritePos += bufferWritten;
+            remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write network interface name array." ) );
+        }
+    }
+
+    /* Write part6. */
+    if( status == ReportBuilderSuccess )
+    {
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      JSON_REPORT_FORMAT_PART6 );
+
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+        {
+            LogError( ( "Failed to write part 6." ) );
+            status = ReportBuilderBufferTooSmall;
+        }
+        else
+        {
+            remainingBufferLength -= ( unsigned ) charactersWritten;
+            pCurrentWritePos += charactersWritten;
+        }
+    }
+
+    /* Write network interface address array. */
+    if( status == ReportBuilderSuccess )
+    {
+        status = writeNetworkInterfaceAddresses( pCurrentWritePos,
+                                                 remainingBufferLength,
+                                                 pMetrics->customMetrics.pNetworkInterfaceAddresses,
+                                                 pMetrics->customMetrics.networkInterfaceCount,
+                                                 &( bufferWritten ) );
+
+        if( status == ReportBuilderSuccess )
+        {
+            pCurrentWritePos += bufferWritten;
+            remainingBufferLength -= bufferWritten;
+        }
+        else
+        {
+            LogError( ( "Failed to write network interface address array." ) );
+        }
+    }
+
+    /* Write part7. */
+    if( status == ReportBuilderSuccess )
+    {
+        charactersWritten = snprintf( pCurrentWritePos,
+                                      remainingBufferLength,
+                                      JSON_REPORT_FORMAT_PART7 );
+
+        if( !SNPRINTF_SUCCESS( charactersWritten, remainingBufferLength ) )
+        {
+            LogError( ( "Failed to write part 7." ) );
+            status = ReportBuilderBufferTooSmall;
+        }
+        else
+        {
+            remainingBufferLength -= ( unsigned ) charactersWritten;
             pCurrentWritePos += charactersWritten;
         }
     }
