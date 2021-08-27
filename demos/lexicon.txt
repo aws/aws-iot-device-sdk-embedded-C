@@ -469,6 +469,7 @@ pclientsessionpresent
 pconnectionsarray
 pcontext
 pcpuusage
+pcpuuserusage
 pcsr
 pcsrbuffer
 pctx

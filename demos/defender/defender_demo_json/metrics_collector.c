@@ -585,8 +585,8 @@ MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNa
     if( ( pOutNetworkInterfaceNames == NULL ) || ( pOutNetworkInterfaceAddresses == NULL ) )
     {
         LogError( ( "Invalid parameter. pOutNetworkInterfaceNames: %p, pOutNetworkInterfaceAddresses: %p",
-                          ( void * ) pOutNetworkInterfaceNames,
-                          ( void * ) pOutNetworkInterfaceAddresses ) );
+                    ( void * ) pOutNetworkInterfaceNames,
+                    ( void * ) pOutNetworkInterfaceAddresses ) );
         status = MetricsCollectorBadParameter;
     }
 

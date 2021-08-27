@@ -148,7 +148,7 @@ static uint64_t cpuUserUsage[ CPU_USER_USAGE_ARRAY_SIZE ];
 /**
  * @brief Network interface names array.
  */
-static char ( networkInterfaceNames[ NETWORK_INTERFACE_ARRAY_SIZE ] )[ 16 ];
+static char networkInterfaceNames[ NETWORK_INTERFACE_ARRAY_SIZE ][ 16 ];
 
 /**
  * @brief Network interface addresses array.
