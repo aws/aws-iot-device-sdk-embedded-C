@@ -66,6 +66,7 @@ cas
 cb
 cbc
 cbor
+cborprinter
 ccm
 ccs
 cdn
@@ -101,8 +102,6 @@ clienttoken
 closesession
 cmac
 cmake
-credentialprovider
-cryptointerface
 codesigner
 com
 compat
@@ -128,12 +127,14 @@ createcertificatefromcsr
 createcleansession
 createkeysandcertificate
 creatething
+credentialprovider
 crl
 crls
 crt
 crypotki
 crypto
 cryptoapi
+cryptointerface
 cryptoki
 csr
 csrbufferlength
@@ -618,8 +619,8 @@ rangestart
 rc
 rdparty
 readme
-recv
 reasonnable
+recv
 registerthing
 reportbuilderbadparameter
 reportbuilderbuffertoosmall
