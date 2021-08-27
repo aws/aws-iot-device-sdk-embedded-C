@@ -52,6 +52,13 @@ typedef struct
 
 /**
  * @brief Printing function to pass to tinyCBOR.
+ *
+ * cbor_value_to_pretty_stream calls it multiple times to print a textual CBOR
+ * representation.
+ *
+ * @param token Context for the function.
+ * @param fmt Printf style format string.
+ * @param ... Printf style args after format string.
  */
 static CborError cborPrinter( void * token,
                               const char * fmt,
