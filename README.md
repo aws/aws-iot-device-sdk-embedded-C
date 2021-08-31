@@ -391,7 +391,7 @@ You can pass the following configuration settings as command line options in ord
 ```sh
 ## optionally find your-aws-iot-endpoint from the command line
 aws iot describe-endpoint --endpoint-type iot:Data-ATS
-cmake -S. -Bbuild
+cmake -S . -Bbuild
 -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
 ```
 
@@ -409,7 +409,7 @@ It is possible to configure `ROOT_CA_CERT_PATH` to any PEM-encoded Root CA Certi
 To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C-SDK:
 
 ```sh
-cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
+cmake -S . -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
 ```
 
 An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/). 
@@ -427,7 +427,7 @@ In order to set these configurations manually, edit `demo_config.h` in the demo 
 To build the AWS IoT Fleet Provisioning Demo, you can pass the following configuration settings as command line options. Make sure to run the following command in the root directory of the C-SDK:
 
 ```sh
-cmake -S. -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLAIM_CERT_PATH="<your-claim-certificate-path>" -DCLAIM_PRIVATE_KEY_PATH="<your-claim-private-key-path>" -DPROVISIONING_TEMPLATE_NAME="<your-template-name>" -DDEVICE_SERIAL_NUMBER="<your-serial-number>"
+cmake -S . -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLAIM_CERT_PATH="<your-claim-certificate-path>" -DCLAIM_PRIVATE_KEY_PATH="<your-claim-private-key-path>" -DPROVISIONING_TEMPLATE_NAME="<your-template-name>" -DDEVICE_SERIAL_NUMBER="<your-serial-number>"
 ```
 
 An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/).
@@ -452,7 +452,7 @@ In order to set these configurations manually, edit `demo_config.h` in the demo 
 You can pass the following configuration settings as command line options in order to run the S3 demos. Make sure to run the following command in the root directory of the C-SDK:
 
 ```sh
-cmake -S. -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
+cmake -S . -Bbuild -DS3_PRESIGNED_GET_URL="s3-get-url" -DS3_PRESIGNED_PUT_URL="s3-put-url"
 ```
 
 `S3_PRESIGNED_PUT_URL` is only needed for the S3 upload demo.
@@ -525,7 +525,7 @@ sudo apt install build-essential cmake libssl-dev
 
 #### Build a single demo
 * Go to the root directory of the C-SDK.
-* Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
+* Run *cmake* to generate the Makefiles: `cmake -S . -Bbuild && cd build`
 * Choose a demo from the list below or alternatively, run `make help | grep demo`:
 ```
 defender_demo
@@ -554,7 +554,7 @@ shadow_demo_main
 
 #### Build all configured demos
 * Go to the root directory of the C-SDK.
-* Run *cmake* to generate the Makefiles: `cmake -S. -Bbuild && cd build`
+* Run *cmake* to generate the Makefiles: `cmake -S . -Bbuild && cd build`
 * Run this command to build all configured demos: `make`
 * Go to the `build/bin` directory and run any demo executables from there.
 
@@ -667,7 +667,7 @@ The C-SDK libraries and platform abstractions can be installed to a file system
 through CMake. To do so, run the following command in the root directory of the C-SDK.
 Note that installation is not required to run any of the demos.
 ```sh
-cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
+cmake -S . -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
 cd build
 sudo make install
 ```
@@ -702,7 +702,7 @@ followed by the location of all installed headers:
 You may also set an installation path of your choice by passing the
 following flags through CMake. Make sure to run the following command in the root directory of the C-SDK:
 ```sh
-cmake -S. -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+cmake -S . -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
 -DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
 cd build
 sudo make install
