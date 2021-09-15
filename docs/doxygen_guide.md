@@ -1,6 +1,6 @@
 # Creating Doxygen documentation for a new library
-1. All supporting files were created with Doxygen version 1.8.20. Please download
-from https://sourceforge.net/projects/doxygen/files/rel-1.8.20/.
+1. All supporting files were created with Doxygen version 1.9.2. Please download
+from https://sourceforge.net/projects/doxygen/files/rel-1.9.2/.
 
 1. Your library API should have each function, data type, and constant documented
 according to the Doxygen format using **@brief** and **@param**. Doxygen will output
