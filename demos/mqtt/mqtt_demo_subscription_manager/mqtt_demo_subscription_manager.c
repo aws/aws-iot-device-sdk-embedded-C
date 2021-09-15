@@ -1367,6 +1367,9 @@ int main( int argc,
         {
             /* If TLS session is established, execute Subscribe/Publish loop. */
             returnStatus = subscribePublishLoop( &mqttContext );
+
+            /* End TLS session, then close TCP connection. */
+            ( void ) Openssl_Disconnect( &networkContext );
         }
 
         if( returnStatus == EXIT_SUCCESS )
@@ -1374,9 +1377,6 @@ int main( int argc,
             /* Log message indicating an iteration completed successfully. */
             LogInfo( ( "Demo completed successfully." ) );
         }
-
-        /* End TLS session, then close TCP connection. */
-        ( void ) Openssl_Disconnect( &networkContext );
 
         LogInfo( ( "Short delay (of %u seconds) before starting the next iteration ....\n",
                    MQTT_SUBPUB_LOOP_DELAY_SECONDS ) );

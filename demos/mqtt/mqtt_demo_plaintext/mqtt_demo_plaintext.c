@@ -1064,6 +1064,9 @@ int main( int argc,
         {
             /* If TCP connection is successful, execute Subscribe/Publish loop. */
             returnStatus = subscribePublishLoop( &mqttContext );
+
+            /* Close the TCP connection.  */
+            ( void ) Plaintext_Disconnect( &networkContext );
         }
 
         if( returnStatus == EXIT_SUCCESS )
@@ -1071,9 +1074,6 @@ int main( int argc,
             /* Log message indicating an iteration completed successfully. */
             LogInfo( ( "Demo completed successfully." ) );
         }
-
-        /* Close the TCP connection.  */
-        ( void ) Plaintext_Disconnect( &networkContext );
 
         LogInfo( ( "Short delay before starting the next iteration....\n" ) );
         sleep( MQTT_SUBPUB_LOOP_DELAY_SECONDS );
