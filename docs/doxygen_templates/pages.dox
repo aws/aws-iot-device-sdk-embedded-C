@@ -8,29 +8,7 @@
 @section [<FIXME: Lowercase library name>]_memory_requirements Memory Requirements
 @brief Memory requirements of the [<FIXME: Library name>] library.
 
-<table>
-    <tr>
-        <td colspan="4"><center><b>Code size of [<FIXME: Library name>] library files (sizes generated with [GCC for ARM Cortex-M toolchain 20191025](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads/9-2019-q4-major))</b></center></td>
-    </tr>
-    <tr>
-        <td><b>File</b></td>
-        <td><b>No Optimization (asserts enabled)</b></td>
-        <td><b>With -O1 Optimization</b></td>
-        <td><b>With -Os Optimization</b></td>
-    </tr>
-    <tr>
-        <td>[<FIXME: library source, add more rows for more source>]</td>
-        <td>[<FIXME: Code size>]</td>
-        <td>[<FIXME: Code size>]</td>
-        <td>[<FIXME: Code size>]</td>
-    </tr>
-    <tr>
-        <td><b>Total estimates</b></td>
-        <td>[<FIXME: Total code size>]</td>
-        <td>[<FIXME: Total code size>]</td>
-        <td>[<FIXME: Total code size>]</td>
-    </tr>
-</table>
+@include{doc} size_table.md
  */
 
 /**
