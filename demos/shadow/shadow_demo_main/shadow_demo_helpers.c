@@ -599,7 +599,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
 
     /* Initialize the mqtt context and network context. */
     ( void ) memset( pMqttContext, 0U, sizeof( MQTTContext_t ) );
-    ( void ) memset( pMqttContext, 0U, sizeof( NetworkContext_t ) );
+    ( void ) memset( pNetworkContext, 0U, sizeof( NetworkContext_t ) );
 
     returnStatus = connectToServerWithBackoffRetries( pNetworkContext );
 
