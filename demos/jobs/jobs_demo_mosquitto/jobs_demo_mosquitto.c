@@ -952,8 +952,7 @@ void on_message( struct mosquitto * m,
             }
             else
             {
-                jobid[ jobidLength ] = '\0';
-                warnx( "update failure for unknown job id: %s", jobid );
+                warnx( "update failure for unknown job id: %.*s", jobidLength, jobid );
             }
 
             break;
