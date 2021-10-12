@@ -20,7 +20,15 @@ function(create_test test_name
     link_directories(${CMAKE_CURRENT_BINARY_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
-    add_executable(${test_name} ${test_src} ${test_name}_runner.c)
+
+    if(TEST_AGAINST_IOT_CORE)
+        add_executable(${test_name} ${test_src} ${test_name}.c)
+    else()
+        add_executable(${test_name} ${test_src} ${test_name}_runner.c)
+    endif()
+
+    unset(TEST_AGAINST_IOT_CORE)
+
     set_target_properties(${test_name} PROPERTIES
             COMPILE_FLAG "-O0 -ggdb"
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"

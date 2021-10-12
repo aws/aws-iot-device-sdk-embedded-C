@@ -69,6 +69,11 @@
     #error "CLIENT_IDENTIFIER should be defined for the MQTT integration tests."
 #endif
 
+/* If the TEST_AGAINST_IOT_CORE macro has not been defined, ensure that it defaults to false (Mosquitto broker) */
+#ifndef TEST_AGAINST_IOT_CORE
+    #define TEST_AGAINST_IOT_CORE               false
+#endif
+
 /**
  * @brief Length of MQTT server host name.
  */
@@ -1260,6 +1265,11 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     /* Reset the transport receive function in the context. */
     context.transportInterface.recv = Openssl_Recv;
 
+    /* IoT Core requires additional delay to resend an unacked publish */
+    if (TEST_AGAINST_IOT_CORE) {
+        sleep(30);
+    }
+
     /* We will re-establish an MQTT over TLS connection with the broker to restore
      * the persistent session. */
     resumePersistentSession();
@@ -1541,4 +1551,12 @@ void test_MQTT_Publish_With_Retain_Flag( void )
 
     /* Make sure that the library did not receive an incoming PUBLISH from the broker. */
     TEST_ASSERT_FALSE( receivedRetainedMessage );
+}
+
+/** @brief Main entry point for use when testing against IoT Core
+ */
+int main(int argc, char *argv[])
+{
+
+    
 }
