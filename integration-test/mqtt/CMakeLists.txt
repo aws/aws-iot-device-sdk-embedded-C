@@ -57,6 +57,7 @@ create_test(${stest_name}
             "${stest_link_list}"
             "${stest_dep_list}"
             "${test_include_directories}"
+            BYPASS_RUNNER 1
         )
 
 set_macro_definitions(TARGETS ${stest_name}
