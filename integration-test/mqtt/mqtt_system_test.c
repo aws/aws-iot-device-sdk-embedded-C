@@ -1379,7 +1379,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
                            MQTT_GetPacketId( &context ) ) );
 
     /* Setup the MQTT connection to terminate to simulate incomplete PUBLISH operation. */
-    context.transportInterface.recv = Openssl_Recv;
+    context.transportInterface.recv = failedRecv;
 
     /* Attempt to complete the PUBLISH operation at QoS1 which should fail due
      * to terminated network connection.
@@ -1724,7 +1724,8 @@ TEST( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag )
 /** @brief Main entry point which runs test groups according to compatibility */
 int main(int argc, char *argv[])
 {
-    UnityBegin();
+    UnityBegin(__FILE__);
+
     if (TEST_AGAINST_IOT_CORE) {
         RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
     } else {
