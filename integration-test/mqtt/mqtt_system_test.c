@@ -1721,8 +1721,7 @@ TEST( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag )
 
 
 /** @brief Main entry point which runs test groups according to compatibility */
-int main( int argc,
-          char * argv[] )
+int main()
 {
     UnityBegin( __FILE__ );
 
