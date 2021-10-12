@@ -8,24 +8,20 @@ function(create_test test_name
                      include_list)
     set(mocks_dir "${CMAKE_CURRENT_BINARY_DIR}/mocks")
     include (CTest)
-    set(oneValueArgs BYPASS_RUNNER)
-    cmake_parse_arguments(KEY_PARAMS "" "${oneValueArgs}" "" ${ARGN})
     get_filename_component(test_src_absolute ${test_src} ABSOLUTE)
-    if(NOT(BYPASS_RUNNER))
-        add_custom_command(OUTPUT ${test_name}_runner.c
-                    COMMAND ruby
-                        ${CMAKE_SOURCE_DIR}/libraries/3rdparty/CMock/vendor/unity/auto/generate_test_runner.rb
-                        ${CMAKE_SOURCE_DIR}/tools/cmock/project.yml
-                        ${test_src_absolute}
-                        ${test_name}_runner.c
-                    DEPENDS ${test_src}
-            )
+    add_custom_command(OUTPUT ${test_name}_runner.c
+                COMMAND ruby
+                    ${CMAKE_SOURCE_DIR}/libraries/3rdparty/CMock/vendor/unity/auto/generate_test_runner.rb
+                    ${CMAKE_SOURCE_DIR}/tools/cmock/project.yml
+                    ${test_src_absolute}
+                    ${test_name}_runner.c
+                DEPENDS ${test_src}
     endif()
     link_directories(${CMAKE_CURRENT_BINARY_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
 
-    if(BYPASS_RUNNER)
+    if("BYPASS_RUNNER" IN_LIST ${ARGN})
         add_executable(${test_name} ${test_src} ${test_name}.c)
     else()
         add_executable(${test_name} ${test_src} ${test_name}_runner.c)
