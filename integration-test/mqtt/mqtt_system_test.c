@@ -1551,7 +1551,7 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
     if( testingAgainstAWS )
     {
         /* Add 30 seconds of delay to wait for AWS IoT Core to resend the PUBLISH. */
-        sleep( 30 );
+        Clock_SleepMs( 30000 );
     }
 
     /* We will re-establish an MQTT over TLS connection with the broker to restore
