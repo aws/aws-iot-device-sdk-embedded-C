@@ -1725,14 +1725,13 @@ TEST( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag )
     test_MQTT_Publish_With_Retain_Flag();
 }
 
- 
+
+/* Main function for use only when not using coreMQTT_Integration test group */
 int main(int argc, char *argv[])
 {
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Subscribe_Publish_With_Qos_0 );
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Subscribe_Publish_With_Qos_1 );
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Connect_LWT );
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_ProcessLoop_KeepAlive );
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Resend_Unacked_Publish_QoS1 );
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1 );
-    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Publish_With_Retain_Flag );
+    if (TEST_AGAINST_IOT_CORE) {
+        RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
+    } else {
+        RUN_TEST_GROUP( coreMQTT_Integration );
+    }
 }

@@ -21,12 +21,7 @@ function(create_test test_name
                      ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
 
-    if(TEST_AGAINST_IOT_CORE)
-        add_executable(${test_name} ${test_src} ${test_name}.c)
-    else()
-        add_executable(${test_name} ${test_src} ${test_name}_runner.c)
-    endif()
-
+    add_executable(${test_name} ${test_src} ${test_name}.c)
     unset(TEST_AGAINST_IOT_CORE)
 
     set_target_properties(${test_name} PROPERTIES
