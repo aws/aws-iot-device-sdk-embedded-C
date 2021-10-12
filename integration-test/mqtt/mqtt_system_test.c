@@ -75,7 +75,7 @@
 
 /* If the TEST_AGAINST_IOT_CORE macro has not been defined, ensure that it defaults to false (Mosquitto broker) */
 #ifndef TEST_AGAINST_IOT_CORE
-    #define TEST_AGAINST_IOT_CORE               false
+    #define TEST_AGAINST_IOT_CORE    false
 #endif
 
 /**
@@ -992,7 +992,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
-/* Include test_MQTT_Subscribe_Publish_With_Qos_0 test case in both test groups to 
+/* Include test_MQTT_Subscribe_Publish_With_Qos_0 test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Subscribe_Publish_With_Qos_0 )
 {
@@ -1065,7 +1065,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
-/* Include test_MQTT_Subscribe_Publish_With_Qos_1 test case in both test groups to 
+/* Include test_MQTT_Subscribe_Publish_With_Qos_1 test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Subscribe_Publish_With_Qos_1 )
 {
@@ -1213,7 +1213,7 @@ void test_MQTT_Connect_LWT( void )
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
-/* Include test_MQTT_Connect_LWT test case in both test groups to 
+/* Include test_MQTT_Connect_LWT test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Connect_LWT )
 {
@@ -1247,7 +1247,7 @@ void test_MQTT_ProcessLoop_KeepAlive( void )
     TEST_ASSERT_LESS_OR_EQUAL( MQTT_KEEP_ALIVE_INTERVAL_SECONDS * 1500, elapsedTime );
 }
 
-/* Include test_MQTT_ProcessLoop_KeepAlive test case in both test groups to 
+/* Include test_MQTT_ProcessLoop_KeepAlive test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_ProcessLoop_KeepAlive )
 {
@@ -1427,7 +1427,7 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.outgoingPublishRecords[ 0 ].packetId );
 }
 
-/* Include test_MQTT_Resend_Unacked_Publish_QoS1 test case in both test groups to 
+/* Include test_MQTT_Resend_Unacked_Publish_QoS1 test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Resend_Unacked_Publish_QoS1 )
 {
@@ -1548,8 +1548,7 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
     /* Make sure that a record was created for the incoming PUBLISH packet. */
     TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
 
-
-    if ( testingAgainstAWS ) 
+    if( testingAgainstAWS )
     {
         /* Add 30 seconds of delay to wait for AWS IoT Core to resend the PUBLISH. */
         sleep( 30 );
@@ -1572,7 +1571,7 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
     TEST_ASSERT_EQUAL( MQTT_PACKET_ID_INVALID, context.incomingPublishRecords[ 0 ].packetId );
 }
 
-/* Include test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1 test case in both test groups to 
+/* Include test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1 test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1 )
 {
@@ -1708,7 +1707,7 @@ void test_MQTT_Publish_With_Retain_Flag( void )
     TEST_ASSERT_FALSE( receivedRetainedMessage );
 }
 
-/* Include test_MQTT_Publish_With_Retain_Flag test case in both test groups to 
+/* Include test_MQTT_Publish_With_Retain_Flag test case in both test groups to
  * run it against AWS IoT and a different broker */
 TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Publish_With_Retain_Flag )
 {
@@ -1722,14 +1721,19 @@ TEST( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag )
 
 
 /** @brief Main entry point which runs test groups according to compatibility */
-int main(int argc, char *argv[])
+int main( int argc,
+          char * argv[] )
 {
-    UnityBegin(__FILE__);
+    UnityBegin( __FILE__ );
 
-    if (TEST_AGAINST_IOT_CORE) {
+    if( TEST_AGAINST_IOT_CORE )
+    {
         RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
-    } else {
+    }
+    else
+    {
         RUN_TEST_GROUP( coreMQTT_Integration );
     }
+
     return UnityEnd();
 }
