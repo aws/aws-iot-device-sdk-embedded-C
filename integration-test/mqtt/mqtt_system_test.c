@@ -1381,11 +1381,6 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
     /* Setup the MQTT connection to terminate to simulate incomplete PUBLISH operation. */
     context.transportInterface.recv = Openssl_Recv;
 
-    /* IoT Core requires additional delay to resend an unacked publish */
-    if (TEST_AGAINST_IOT_CORE) {
-        sleep(30);
-    }
-
     /* Attempt to complete the PUBLISH operation at QoS1 which should fail due
      * to terminated network connection.
      * The abrupt network disconnection should cause the PUBLISH packet to be left
@@ -1729,9 +1724,11 @@ TEST( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag )
 /** @brief Main entry point which runs test groups according to compatibility */
 int main(int argc, char *argv[])
 {
+    UnityBegin();
     if (TEST_AGAINST_IOT_CORE) {
         RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
     } else {
         RUN_TEST_GROUP( coreMQTT_Integration );
     }
+    return UnityEnd();
 }
