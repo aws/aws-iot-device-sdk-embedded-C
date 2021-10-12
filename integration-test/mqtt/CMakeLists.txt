@@ -67,5 +67,7 @@ set_macro_definitions(TARGETS ${stest_name}
                         "CLIENT_IDENTIFIER"
                         "BROKER_ENDPOINT"
                         "BROKER_PORT"
+                      OPTIONAL
+                        "TEST_AGAINST_IOT_CORE"
                       FILES_TO_CHECK
                         "test_config.h")
