@@ -5,6 +5,11 @@
 #include "unity_fixture_internals.h"
 #include <string.h>
 
+/**
+ * @brief A custom runner that makes the standard output of
+ * multiple test groups match the standard output of the default
+ * runner for a single test group.
+ */
 void CustomUnityTestRunner( unityfunction * setup,
                             unityfunction * testBody,
                             unityfunction * teardown,
