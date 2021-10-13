@@ -1,5 +1,26 @@
 #include "custom_unity_runner.h"
 
+static int selected( const char * filter,
+                     const char * name )
+{
+    if( filter == 0 )
+    {
+        return 1;
+    }
+
+    return strstr( name, filter ) ? 1 : 0;
+}
+
+static int testSelected( const char * test )
+{
+    return selected( UnityFixture.NameFilter, test );
+}
+
+static int groupSelected( const char * group )
+{
+    return selected( UnityFixture.GroupFilter, group );
+}
+
 void CustomUnityTestRunner( unityfunction * setup,
                             unityfunction * testBody,
                             unityfunction * teardown,
