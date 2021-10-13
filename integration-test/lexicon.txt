@@ -171,6 +171,7 @@ https
 hw
 ia
 ietf
+ifdef
 ifndef
 inc
 init
@@ -367,6 +368,7 @@ udbl
 udp
 uint
 un
+undefine
 unix
 unsuback
 urandom
