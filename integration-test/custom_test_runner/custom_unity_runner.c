@@ -36,11 +36,6 @@ void CustomUnityTestRunner( unityfunction * setup,
         Unity.CurrentTestName = printableName;
         Unity.CurrentTestLineNumber = line;
 
-        if( !UnityFixture.Verbose )
-        {
-            UNITY_OUTPUT_CHAR( '.' );
-        }
-
         Unity.NumberOfTests++;
         UnityMalloc_StartTest();
         UnityPointer_Init();
@@ -67,6 +62,7 @@ void CustomUnityTestRunner( unityfunction * setup,
                 UnityMalloc_EndTest();
             }
         }
+
         UNITY_EXEC_TIME_STOP();
         UnityConcludeTest();
     }
