@@ -72,3 +72,7 @@ set_macro_definitions(TARGETS ${stest_name}
                         "TEST_AGAINST_IOT_CORE"
                       FILES_TO_CHECK
                         "test_config.h")
+
+if(${TEST_AGAINST_IOT_CORE})
+    target_compile_definitions(${stest_name} PUBLIC -DTEST_AGAINST_IOT_CORE=1)
+endif()

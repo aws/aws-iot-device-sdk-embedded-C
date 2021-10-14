@@ -78,6 +78,11 @@
     #define TEST_AGAINST_IOT_CORE    false
 #endif
 
+/* If multiple test groups are included, a custom runner must be used rather than the default Ruby script */
+#if (defined(USE_CUSTOM_RUNNER) && USE_CUSTOM_RUNNER)
+    #include "custom_unity_runner.h"
+#endif
+
 /**
  * @brief Length of MQTT server host name.
  */
@@ -1723,7 +1728,7 @@ TEST( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag )
 /** @brief Main entry point which runs test groups according to compatibility */
 int main()
 {
-    UnityBegin( "filename" );
+    UnityBegin( __FILE__ );
 
     #if ( TEST_AGAINST_IOT_CORE )
     {
