@@ -73,11 +73,6 @@
     #error "CLIENT_IDENTIFIER should be defined for the MQTT integration tests."
 #endif
 
-/* If the TEST_AGAINST_IOT_CORE macro has not been defined, ensure that it defaults to false (Mosquitto broker) */
-#ifndef TEST_AGAINST_IOT_CORE
-    #define TEST_AGAINST_IOT_CORE    false
-#endif
-
 /* If multiple test groups are included, a custom runner must be used rather than the default Ruby script */
 #if ( defined( USE_CUSTOM_RUNNER ) && USE_CUSTOM_RUNNER )
     #include "custom_unity_runner.h"
