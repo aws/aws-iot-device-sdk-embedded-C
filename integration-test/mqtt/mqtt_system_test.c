@@ -79,7 +79,7 @@
 #endif
 
 /* If multiple test groups are included, a custom runner must be used rather than the default Ruby script */
-#if (defined(USE_CUSTOM_RUNNER) && USE_CUSTOM_RUNNER)
+#if ( defined( USE_CUSTOM_RUNNER ) && USE_CUSTOM_RUNNER )
     #include "custom_unity_runner.h"
 #endif
 
@@ -1731,13 +1731,13 @@ int main()
     UnityBegin( __FILE__ );
 
     #if ( TEST_AGAINST_IOT_CORE )
-    {
-        RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
-    }
+        {
+            RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
+        }
     #else
-    {
-        RUN_TEST_GROUP( coreMQTT_Integration );
-    }
+        {
+            RUN_TEST_GROUP( coreMQTT_Integration );
+        }
     #endif
 
     return UnityEnd();
