@@ -20,7 +20,22 @@ function(create_test test_name
     link_directories(${CMAKE_CURRENT_BINARY_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
-    add_executable(${test_name} ${test_src} ${test_name}_runner.c)
+
+    set(singleValueArgs "USE_CUSTOM_RUNNER")
+    cmake_parse_arguments(VARGS "" "${singleValueArgs}" "" ${ARGN})
+    if((DEFINED VARGS_USE_CUSTOM_RUNNER) AND (${VARGS_USE_CUSTOM_RUNNER}))
+        add_executable(${test_name}
+                         ${test_src}
+                         ${test_name}.c
+                         ${CMAKE_SOURCE_DIR}/integration-test/custom_test_runner/custom_unity_runner.c)
+        target_include_directories(${test_name}
+                                     PUBLIC
+                                     ${CMAKE_SOURCE_DIR}/integration-test/custom_test_runner)
+        target_compile_definitions(${test_name} PUBLIC -DUSE_CUSTOM_RUNNER=1)
+    else()
+        add_executable(${test_name} ${test_src} ${test_name}_runner.c)
+    endif()
+
     set_target_properties(${test_name} PROPERTIES
             COMPILE_FLAG "-O0 -ggdb"
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
