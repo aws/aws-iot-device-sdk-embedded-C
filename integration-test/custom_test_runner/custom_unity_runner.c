@@ -38,9 +38,7 @@ void CustomUnityTestRunner( unityfunction * setup,
 
         Unity.NumberOfTests++;
 
-        /* UnityMalloc test disabled until the memory leak in
-         * MQTT integration tests can be found */
-        /* UnityMalloc_StartTest(); */
+        UnityMalloc_StartTest();
         UnityPointer_Init();
 
         UNITY_EXEC_TIME_START();
@@ -62,7 +60,7 @@ void CustomUnityTestRunner( unityfunction * setup,
 
             if( !Unity.CurrentTestFailed )
             {
-                /* UnityMalloc_EndTest(); */
+                UnityMalloc_EndTest();
             }
         }
 

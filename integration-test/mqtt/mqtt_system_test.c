@@ -629,6 +629,17 @@ static void eventCallback( MQTTContext_t * pContext,
             assert( pPublishInfo != NULL );
             /* Handle incoming publish. */
 
+            /* Free memory when multiple messages have been received in a single test case */
+            if( incomingInfo.pTopicName != NULL )
+            {
+                free( ( void * ) incomingInfo.pTopicName );
+            }
+
+            if( incomingInfo.pPayload != NULL )
+            {
+                free( ( void * ) incomingInfo.pPayload );
+            }
+            
             /* Cache information about the incoming PUBLISH message to process
              * in test case. */
             memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
