@@ -2,6 +2,7 @@
 #define UNITY_RUNNER_H
 
 #include "unity.h"
+#include "unity_memory.h"
 #include "unity_fixture_internals.h"
 #include <string.h>
 
