@@ -70,9 +70,3 @@ set_macro_definitions(TARGETS ${stest_name}
                         "BROKER_PORT"
                       FILES_TO_CHECK
                         "test_config.h")
-
-if(${TEST_AGAINST_IOT_CORE})
-    target_compile_definitions(${stest_name} PUBLIC -DTEST_AGAINST_IOT_CORE=1)
-else()
-    target_compile_definitions(${stest_name} PUBLIC -DTEST_AGAINST_IOT_CORE=0)
-endif()
