@@ -639,7 +639,7 @@ static void eventCallback( MQTTContext_t * pContext,
             {
                 free( ( void * ) incomingInfo.pPayload );
             }
-            
+
             /* Cache information about the incoming PUBLISH message to process
              * in test case. */
             memcpy( &incomingInfo, pPublishInfo, sizeof( MQTTPublishInfo_t ) );
