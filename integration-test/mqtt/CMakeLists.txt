@@ -57,6 +57,7 @@ create_test(${stest_name}
             "${stest_link_list}"
             "${stest_dep_list}"
             "${test_include_directories}"
+            USE_CUSTOM_RUNNER 1
         )
 
 set_macro_definitions(TARGETS ${stest_name}
@@ -69,3 +70,7 @@ set_macro_definitions(TARGETS ${stest_name}
                         "BROKER_PORT"
                       FILES_TO_CHECK
                         "test_config.h")
+
+if(${TEST_AGAINST_IOT_CORE})
+    target_compile_definitions(${stest_name} PUBLIC -DTEST_AGAINST_IOT_CORE=1)
+endif()

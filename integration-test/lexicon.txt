@@ -74,6 +74,7 @@ configlabel
 configs
 connack
 const
+coremqtt
 correclty
 cpu
 createcleansession
@@ -227,6 +228,7 @@ milli
 min
 mis
 montgomery
+mosquitto
 mpi
 mpis
 mqtt
@@ -370,6 +372,7 @@ uint
 un
 undefine
 unix
+unitymalloc
 unsuback
 urandom
 uri

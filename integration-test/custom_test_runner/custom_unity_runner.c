@@ -37,6 +37,7 @@ void CustomUnityTestRunner( unityfunction * setup,
         Unity.CurrentTestLineNumber = line;
 
         Unity.NumberOfTests++;
+
         UnityMalloc_StartTest();
         UnityPointer_Init();
 
