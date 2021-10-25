@@ -80,7 +80,7 @@
 
 /* If testing against IoT Core, a subset of tests which are compatible should be used */
 #if ( !defined( TEST_AGAINST_IOT_CORE ) )
-    #define TEST_AGAINST_IOT_CORE               false
+    #define TEST_AGAINST_IOT_CORE    false
 #endif
 
 /**
