@@ -26,7 +26,6 @@ function(create_test test_name
     if((DEFINED VARGS_USE_CUSTOM_RUNNER) AND (${VARGS_USE_CUSTOM_RUNNER}))
         add_executable(${test_name}
                          ${test_src}
-                         ${test_name}.c
                          ${CMAKE_SOURCE_DIR}/integration-test/custom_test_runner/custom_unity_runner.c)
         target_include_directories(${test_name}
                                      PUBLIC
