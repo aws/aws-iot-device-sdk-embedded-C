@@ -170,7 +170,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     }
     else if( bytesReceived < 0 )
     {
-        /* The timeout and no data is received situaition. Return zero to indicate
+        /* The timeout and no data is received situation. Return zero to indicate
          * this operation can be retried. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
@@ -246,7 +246,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     }
     else if( bytesSent < 0 )
     {
-        /* The timeout and no data is sent situaition. Return zero to indicate
+        /* The timeout and no data is sent situation. Return zero to indicate
          * this operation can be retried. */
         if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
         {
