@@ -170,7 +170,16 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     }
     else if( bytesReceived < 0 )
     {
-        logTransportError( errno );
+        /* The timeout and no data is received situaition. Return zero to indicate
+         * this operation can be retried. */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            bytesReceived = 0;
+        }
+        else
+        {
+            logTransportError( errno );
+        }
     }
     else
     {
@@ -237,7 +246,16 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     }
     else if( bytesSent < 0 )
     {
-        logTransportError( errno );
+        /* The timeout and no data is sent situaition. Return zero to indicate
+         * this operation can be retried. */
+        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        {
+            bytesSent = 0;
+        }
+        else
+        {
+            logTransportError( errno );
+        }
     }
     else
     {
