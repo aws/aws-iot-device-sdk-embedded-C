@@ -172,7 +172,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     {
         /* The timeout and no data is received situation. Return zero to indicate
          * this operation can be retried. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        if( ( pollStatus > 0 ) && ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) )
         {
             bytesReceived = 0;
         }
@@ -248,7 +248,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     {
         /* The timeout and no data is sent situation. Return zero to indicate
          * this operation can be retried. */
-        if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+        if( ( pollStatus > 0 ) && ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) )
         {
             bytesSent = 0;
         }

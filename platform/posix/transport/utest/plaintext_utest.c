@@ -73,7 +73,7 @@ static uint8_t errorNumbers[] =
     EBADF,     ECONNRESET,  EDESTADDRREQ, EINTR,
     EINVAL,    ENOTCONN,    ENOTSOCK,     EOPNOTSUPP,
     ETIMEDOUT, EMSGSIZE,    EPIPE,
-    EAGAIN,    EWOULDBLOCK, UNKNOWN_ERRNO
+    UNKNOWN_ERRNO
 };
 
 /* ============================   UNITY FIXTURES ============================ */
