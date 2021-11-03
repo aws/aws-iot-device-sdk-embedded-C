@@ -163,23 +163,37 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
 
     /* Note: A zero value return from recv() represents
      * closure of TCP connection by the peer. */
-    if( ( pollStatus > 0 ) && ( bytesReceived == 0 ) )
+    if( pollStatus > 0 )
     {
-        /* Peer has closed the connection. Treat as an error. */
-        bytesReceived = -1;
-    }
-    else if( bytesReceived < 0 )
-    {
-        /* The socket blocked for timeout and no data is received situation.
-         * Return zero to indicate this operation can be retried. */
-        if( ( pollStatus > 0 ) && ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) )
+        if( bytesReceived == 0 )
         {
-            bytesReceived = 0;
+            /* Peer has closed the connection. Treat as an error. */
+            bytesReceived = -1;
+        }
+        else if( bytesReceived < 0 )
+        {
+            /* The socket blocked for timeout and no data is received situation.
+             * Return zero to indicate this operation can be retried. */
+            #if EAGAIN == EWOULDBLOCK
+                if( errno == EAGAIN )
+                {
+                    bytesReceived = 0;
+                }
+            #else
+                if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+                {
+                    bytesReceived = 0;
+                }
+            #endif
         }
         else
         {
-            logTransportError( errno );
+            /* Empty else MISRA 15.7 */
         }
+    }
+    else if( bytesReceived < 0 )
+    {
+        logTransportError( errno );
     }
     else
     {
@@ -239,23 +253,37 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
         bytesSent = 0;
     }
 
-    if( ( pollStatus > 0 ) && ( bytesSent == 0 ) )
+    if( pollStatus > 0 )
     {
-        /* Peer has closed the connection. Treat as an error. */
-        bytesSent = -1;
-    }
-    else if( bytesSent < 0 )
-    {
-        /* The socket blocked for timeout and no data is sent situation.
-         * Return zero to indicate this operation can be retried. */
-        if( ( pollStatus > 0 ) && ( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) ) )
+        if( bytesSent == 0 )
         {
-            bytesSent = 0;
+            /* Peer has closed the connection. Treat as an error. */
+            bytesSent = -1;
+        }
+        else if( bytesSent < 0 )
+        {
+            /* The socket blocked for timeout and no data is received situation.
+             * Return zero to indicate this operation can be retried. */
+            #if EAGAIN == EWOULDBLOCK
+                if( errno == EAGAIN )
+                {
+                    bytesSent = 0;
+                }
+            #else
+                if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+                {
+                    bytesSent = 0;
+                }
+            #endif
         }
         else
         {
-            logTransportError( errno );
+            /* Empty else MISRA 15.7 */
         }
+    }
+    else if( bytesSent < 0 )
+    {
+        logTransportError( errno );
     }
     else
     {
