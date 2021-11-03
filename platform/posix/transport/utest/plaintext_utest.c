@@ -70,9 +70,9 @@ static uint8_t plaintextBuffer[ BUFFER_LEN ] = { 0 };
  * one is used for the default case. */
 static uint8_t errorNumbers[] =
 {
-    EBADF,     ECONNRESET,  EDESTADDRREQ, EINTR,
-    EINVAL,    ENOTCONN,    ENOTSOCK,     EOPNOTSUPP,
-    ETIMEDOUT, EMSGSIZE,    EPIPE,
+    EBADF,     ECONNRESET, EDESTADDRREQ, EINTR,
+    EINVAL,    ENOTCONN,   ENOTSOCK,     EOPNOTSUPP,
+    ETIMEDOUT, EMSGSIZE,   EPIPE,
     UNKNOWN_ERRNO
 };
 
@@ -256,6 +256,31 @@ void test_Plaintext_Recv_Network_Error( void )
 }
 
 /**
+ * @brief Test that #Plaintext_Recv returns 0 bytes when the socket has blocked for
+ * timeout.
+ */
+void test_Plaintext_Recv_Socket_Timeout_Blocked( void )
+{
+    int32_t bytesReceived;
+
+    poll_ExpectAnyArgsAndReturn( 1 );
+    recv_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
+    errno = EAGAIN;
+    bytesReceived = Plaintext_Recv( &networkContext,
+                                    plaintextBuffer,
+                                    1U );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+
+    poll_ExpectAnyArgsAndReturn( 1 );
+    recv_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
+    errno = EWOULDBLOCK;
+    bytesReceived = Plaintext_Recv( &networkContext,
+                                    plaintextBuffer,
+                                    1U );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+}
+
+/**
  * @brief Test the happy path case when #Plaintext_Send is able to send all bytes
  * over the network stack successfully.
  */
@@ -336,4 +361,29 @@ void test_Plaintext_Send_Poll_Error( void )
                                 plaintextBuffer,
                                 BYTES_TO_SEND );
     TEST_ASSERT_EQUAL( SEND_RECV_ERROR, bytesSent );
+}
+
+/**
+ * @brief Test that #Plaintext_Send returns 0 bytes when the socket has blocked for
+ * timeout.
+ */
+void test_Plaintext_Send_Socket_Timeout_Blocked( void )
+{
+    int32_t bytesSent;
+
+    poll_ExpectAnyArgsAndReturn( 1 );
+    send_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
+    errno = EAGAIN;
+    bytesSent = Plaintext_Send( &networkContext,
+                                plaintextBuffer,
+                                BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
+
+    poll_ExpectAnyArgsAndReturn( 1 );
+    send_ExpectAnyArgsAndReturn( SEND_RECV_ERROR );
+    errno = EWOULDBLOCK;
+    bytesSent = Plaintext_Send( &networkContext,
+                                plaintextBuffer,
+                                BYTES_TO_SEND );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
 }
