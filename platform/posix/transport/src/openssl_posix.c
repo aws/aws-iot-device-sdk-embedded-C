@@ -725,11 +725,23 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
     {
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        bytesReceived = -1;
     }
     else if( pNetworkContext->pParams->pSsl == NULL )
     {
         LogError( ( "Failed to receive data over network: "
                     "SSL object in network context is NULL." ) );
+        bytesReceived = -1;
+    }
+    else if( pBuffer == NULL )
+    {
+        LogError( ( "Failed to receive data over network: "
+                    "pBuffer is NULL." ) );
+        bytesReceived = -1;
+    }
+    else if( bytesToRecv == 0 )
+    {
+        LogError( ( "Parameter check failed: bytesToRecv is 0." ) );
     }
     else
     {
@@ -842,6 +854,16 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
     {
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        bytesSent = -1;
+    }
+    else if( pBuffer == NULL )
+    {
+        LogError( ( "Parameter check failed: pBuffer is NULL." ) );
+        bytesSent = -1;
+    }
+    else if( bytesToSend == 0 )
+    {
+        LogError( ( "Parameter check failed: bytesToSend is 0." ) );
     }
     else if( pNetworkContext->pParams->pSsl != NULL )
     {
