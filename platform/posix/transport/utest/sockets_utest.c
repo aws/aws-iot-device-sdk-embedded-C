@@ -342,6 +342,10 @@ void test_Sockets_Connect_Fail_setsockopt( void )
         {
             expectedSocketStatus = SOCKETS_INVALID_PARAMETER;
         }
+        else if( errno == ENOPROTOOPT )
+        {
+            expectedSocketStatus = SOCKETS_SUCCESS;
+        }
         else
         {
             expectedSocketStatus = SOCKETS_API_ERROR;
