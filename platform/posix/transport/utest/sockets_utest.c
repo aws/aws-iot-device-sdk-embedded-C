@@ -321,9 +321,11 @@ void test_Sockets_Connect_Fail_setsockopt( void )
         for( j = 0; j < 2; j++ )
         {
             expectSocketsConnectCalls( NUM_ADDR_INFO );
+
             if( j == 0 )
             {
                 setsockopt_ExpectAnyArgsAndReturn( -1 );
+
                 /* for ENOPROTOOPT case, Sockets_Connect continues
                  * despite setsockopt returning error. */
                 if( errno == ENOPROTOOPT )
