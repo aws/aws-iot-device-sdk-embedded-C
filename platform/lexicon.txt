@@ -53,6 +53,7 @@ eagain
 ecdsa
 endcode
 endif
+enoprotoopt
 enum
 enums
 eof
@@ -256,6 +257,7 @@ sdk
 sendtimeout
 sendtimeoutms
 serverinfo
+setsockopt
 sha
 sha256
 sigalrm
