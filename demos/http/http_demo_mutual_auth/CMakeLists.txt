@@ -39,7 +39,6 @@ target_include_directories(
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
                       REQUIRED
-                        "SERVER_HOST"
                         "AWS_HTTPS_PORT"
                         "ROOT_CA_CERT_PATH")
 set_macro_definitions(TARGETS ${DEMO_NAME}
