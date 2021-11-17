@@ -43,6 +43,11 @@ set_target_properties(tinycbor PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# Use C99 for tinycbor as it is incompatible with C90
+if(CMAKE_C_STANDARD LESS 99)
+    set_target_properties(tinycbor PROPERTIES C_STANDARD 99)
+endif()
+
 target_include_directories(tinycbor PUBLIC
     "${ROOT_DIR}/libraries/3rdparty/tinycbor/src"
 )
