@@ -754,7 +754,7 @@ void test_Openssl_Send_Invalid_Params( void )
     opensslParams.pSsl = &ssl;
 
     bytesSent = Openssl_Send( &networkContext, NULL, BYTES_TO_SEND );
-    TEST_ASSERT_EQUAL( -1, bytesSent ); 
+    TEST_ASSERT_EQUAL( -1, bytesSent );
 
     bytesSent = Openssl_Send( &networkContext, opensslBuffer, 0 );
     TEST_ASSERT_EQUAL( 0, bytesSent );

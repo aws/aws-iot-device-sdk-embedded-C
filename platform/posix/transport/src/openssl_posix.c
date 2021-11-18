@@ -559,21 +559,21 @@ static void setOptionalConfigurations( SSL * pSsl,
 
 static int32_t isValidNetworkContext( const NetworkContext_t * pNetworkContext )
 {
-    int32_t isValidNetworkContext = 1;
+    int32_t isValid = 1;
 
-    if( !pNetworkContext || !pNetworkContext->pParams )
+    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
     {
         LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
-        isValidNetworkContext = 0;
+        isValid = 0;
     }
     else if( pNetworkContext->pParams->pSsl == NULL )
     {
         LogError( ( "Failed to receive data over network: "
                     "SSL object in network context is NULL." ) );
-        isValidNetworkContext = 0;
+        isValid = 0;
     }
 
-    return isValidNetworkContext;
+    return isValid;
 }
 /*-----------------------------------------------------------*/
 
@@ -754,11 +754,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     {
         LogDebug( ( "bytesToRecv is 0." ) );
     }
-    else if( !isValidNetworkContext(pNetworkContext) || pBuffer == NULL )
+    else if( !isValidNetworkContext( pNetworkContext ) || ( pBuffer == NULL ) )
     {
         LogError( ( "Parameter check failed: invalid pNetworkContext or pBuffer is NULL." ) );
         bytesReceived = -1;
-    } 
+    }
     else
     {
         int32_t pollStatus = 1, readStatus = 1, sslError = 0;
@@ -870,8 +870,8 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     if( bytesToSend == 0 )
     {
         LogDebug( ( "bytesToSend is 0." ) );
-    } 
-    else if( !isValidNetworkContext(pNetworkContext) || pBuffer == NULL )
+    }
+    else if( !isValidNetworkContext( pNetworkContext ) || ( pBuffer == NULL ) )
     {
         LogError( ( "Parameter check failed: invalid pNetworkContext or pBuffer is NULL." ) );
         bytesSent = -1;
