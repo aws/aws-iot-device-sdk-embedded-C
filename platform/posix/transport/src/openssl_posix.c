@@ -164,6 +164,14 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
                                      OpensslParams_t * pOpensslParams,
                                      const OpensslCredentials_t * pOpensslCredentials );
 
+/**
+ * @brief Check if the network context is valid
+ *
+ * @param[in] pNetworkContext The network context created using Openssl_Connect API..
+ *
+ * @return 1 on success; 0 on failure;
+ */
+static int32_t isValidNetworkContext( const NetworkContext_t * pNetworkContext );
 /*-----------------------------------------------------------*/
 
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
@@ -549,6 +557,26 @@ static void setOptionalConfigurations( SSL * pSsl,
 }
 /*-----------------------------------------------------------*/
 
+static int32_t isValidNetworkContext( const NetworkContext_t * pNetworkContext )
+{
+    int32_t isValidNetworkContext = 1;
+
+    if( !pNetworkContext || !pNetworkContext->pParams )
+    {
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        isValidNetworkContext = 0;
+    }
+    else if( pNetworkContext->pParams->pSsl == NULL )
+    {
+        LogError( ( "Failed to receive data over network: "
+                    "SSL object in network context is NULL." ) );
+        isValidNetworkContext = 0;
+    }
+
+    return isValidNetworkContext;
+}
+/*-----------------------------------------------------------*/
+
 OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                  const ServerInfo_t * pServerInfo,
                                  const OpensslCredentials_t * pOpensslCredentials,
@@ -722,27 +750,15 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesReceived = 0;
 
-    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    if( bytesToRecv == 0 )
     {
-        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        LogDebug( ( "bytesToRecv is 0." ) );
+    }
+    else if( !isValidNetworkContext(pNetworkContext) || pBuffer == NULL )
+    {
+        LogError( ( "Parameter check failed: invalid pNetworkContext or pBuffer is NULL." ) );
         bytesReceived = -1;
-    }
-    else if( pNetworkContext->pParams->pSsl == NULL )
-    {
-        LogError( ( "Failed to receive data over network: "
-                    "SSL object in network context is NULL." ) );
-        bytesReceived = -1;
-    }
-    else if( pBuffer == NULL )
-    {
-        LogError( ( "Failed to receive data over network: "
-                    "pBuffer is NULL." ) );
-        bytesReceived = -1;
-    }
-    else if( bytesToRecv == 0 )
-    {
-        LogError( ( "Parameter check failed: bytesToRecv is 0." ) );
-    }
+    } 
     else
     {
         int32_t pollStatus = 1, readStatus = 1, sslError = 0;
@@ -851,21 +867,16 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesSent = 0;
 
-    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    if( bytesToSend == 0 )
     {
-        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        LogDebug( ( "bytesToSend is 0." ) );
+    } 
+    else if( !isValidNetworkContext(pNetworkContext) || pBuffer == NULL )
+    {
+        LogError( ( "Parameter check failed: invalid pNetworkContext or pBuffer is NULL." ) );
         bytesSent = -1;
     }
-    else if( pBuffer == NULL )
-    {
-        LogError( ( "Parameter check failed: pBuffer is NULL." ) );
-        bytesSent = -1;
-    }
-    else if( bytesToSend == 0 )
-    {
-        LogError( ( "Parameter check failed: bytesToSend is 0." ) );
-    }
-    else if( pNetworkContext->pParams->pSsl != NULL )
+    else
     {
         struct pollfd pollFds;
         int32_t pollStatus;
@@ -929,11 +940,6 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
             /* Socket is not available for sending data. Set return code for retrying send. */
             bytesSent = 0;
         }
-    }
-    else
-    {
-        LogError( ( "Failed to send data over network: "
-                    "SSL object in network context is NULL." ) );
     }
 
     return bytesSent;
