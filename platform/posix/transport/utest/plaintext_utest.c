@@ -176,6 +176,30 @@ void test_Plaintext_Disconnect_Invalid_Params( void )
 }
 
 /**
+ * @brief Test that invalid parameters returns an error.
+ */
+void test_Plaintext_Recv_Invalid_Params( void )
+{
+    int32_t bytesReceived;
+    NetworkContext_t networkContext = { 0 };
+
+    bytesReceived = Plaintext_Recv( NULL, plaintextBuffer, BUFFER_LEN );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
+
+    networkContext.pParams = NULL;
+    bytesReceived = Plaintext_Recv( &networkContext, plaintextBuffer, BUFFER_LEN );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
+
+    networkContext.pParams = &plaintextParams;
+    bytesReceived = Plaintext_Recv( &networkContext, NULL, BUFFER_LEN );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
+
+    networkContext.pParams = &plaintextParams;
+    bytesReceived = Plaintext_Recv( &networkContext, plaintextBuffer, 0 );
+    TEST_ASSERT_EQUAL( 0, bytesReceived );
+}
+
+/**
  * @brief Test that #Plaintext_Recv returns an error when #recv fails to
  * receive data over the network stack.
  */
@@ -278,6 +302,29 @@ void test_Plaintext_Recv_Socket_Timeout_Blocked( void )
                                     plaintextBuffer,
                                     1U );
     TEST_ASSERT_EQUAL( 0, bytesReceived );
+}
+
+/**
+ * @brief Test that invalid parameters returns an error.
+ */
+void test_Plaintext_Send_Invalid_Params( void )
+{
+    int32_t bytesSent;
+    NetworkContext_t networkContext = { 0 };
+
+    bytesSent = Plaintext_Send( NULL, plaintextBuffer, BUFFER_LEN );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
+
+    networkContext.pParams = NULL;
+    bytesSent = Plaintext_Send( &networkContext, plaintextBuffer, BUFFER_LEN );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
+
+    networkContext.pParams = &plaintextParams;
+    bytesSent = Plaintext_Send( &networkContext, NULL, BUFFER_LEN );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
+
+    bytesSent = Plaintext_Send( &networkContext, plaintextBuffer, 0 );
+    TEST_ASSERT_EQUAL( 0, bytesSent );
 }
 
 /**
