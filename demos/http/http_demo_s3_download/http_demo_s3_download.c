@@ -539,9 +539,9 @@ static SigV4Parameters_t sigv4Params =
     .pCredentials     = &sigvCreds,
     .pDateIso8601     = pDateISO8601,
     .pRegion          = AWS_S3_BUCKET_REGION,
-    .regionLen        = strlen( AWS_S3_BUCKET_REGION ),
+    .regionLen        = sizeof( AWS_S3_BUCKET_REGION ) - 1,
     .pService         = AWS_S3_SERVICE_NAME,
-    .serviceLen       = strlen( AWS_S3_SERVICE_NAME ),
+    .serviceLen       = sizeof( AWS_S3_SERVICE_NAME ) - 1,
     .pCryptoInterface = &cryptoInterface,
     .pHttpParameters  = NULL
 };
