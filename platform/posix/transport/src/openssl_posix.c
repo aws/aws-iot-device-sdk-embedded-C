@@ -84,7 +84,7 @@ struct NetworkContext
  * be added.
  * @param[in] pRootCaPath Filepath string to the trusted server root CA.
  *
- * @return 1 on success; -1, 0 on failure;
+ * @return 1 on success; -1, 0 on failure.
  */
 static int32_t setRootCa( const SSL_CTX * pSslContext,
                           const char * pRootCaPath );
@@ -97,7 +97,7 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
  * set.
  * @param[in] pClientCertPath Filepath string to the client certificate.
  *
- * @return 1 on success; 0 failure;
+ * @return 1 on success; 0 failure.
  */
 static int32_t setClientCertificate( SSL_CTX * pSslContext,
                                      const char * pClientCertPath );
@@ -108,7 +108,7 @@ static int32_t setClientCertificate( SSL_CTX * pSslContext,
  * @param[out] pSslContext SSL context to which the private key is to be added.
  * @param[in] pPrivateKeyPath Filepath string to the client private key.
  *
- * @return 1 on success; 0 on failure;
+ * @return 1 on success; 0 on failure.
  */
 static int32_t setPrivateKey( SSL_CTX * pSslContext,
                               const char * pPrivateKeyPath );
@@ -124,7 +124,7 @@ static int32_t setPrivateKey( SSL_CTX * pSslContext,
  * imported.
  * @param[in] pOpensslCredentials TLS credentials to be imported.
  *
- * @return 1 on success; -1, 0 on failure;
+ * @return 1 on success; -1, 0 on failure.
  */
 static int32_t setCredentials( SSL_CTX * pSslContext,
                                const OpensslCredentials_t * pOpensslCredentials );
@@ -164,6 +164,14 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
                                      OpensslParams_t * pOpensslParams,
                                      const OpensslCredentials_t * pOpensslCredentials );
 
+/**
+ * @brief Check if the network context is valid.
+ *
+ * @param[in] pNetworkContext The network context created using Openssl_Connect API.
+ *
+ * @return 1 on success; 0 on failure.
+ */
+static int32_t isValidNetworkContext( const NetworkContext_t * pNetworkContext );
 /*-----------------------------------------------------------*/
 
 #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
@@ -549,6 +557,28 @@ static void setOptionalConfigurations( SSL * pSsl,
 }
 /*-----------------------------------------------------------*/
 
+static int32_t isValidNetworkContext( const NetworkContext_t * pNetworkContext )
+{
+    int32_t isValid = 0;
+
+    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    {
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+    }
+    else if( pNetworkContext->pParams->pSsl == NULL )
+    {
+        LogError( ( "Failed to receive data over network: "
+                    "SSL object in network context is NULL." ) );
+    }
+    else
+    {
+        isValid = 1;
+    }
+
+    return isValid;
+}
+/*-----------------------------------------------------------*/
+
 OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                  const ServerInfo_t * pServerInfo,
                                  const OpensslCredentials_t * pOpensslCredentials,
@@ -722,14 +752,14 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesReceived = 0;
 
-    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    if( bytesToRecv == 0 )
     {
-        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        LogDebug( ( "bytesToRecv is 0." ) );
     }
-    else if( pNetworkContext->pParams->pSsl == NULL )
+    else if( !isValidNetworkContext( pNetworkContext ) || ( pBuffer == NULL ) )
     {
-        LogError( ( "Failed to receive data over network: "
-                    "SSL object in network context is NULL." ) );
+        LogError( ( "Parameter check failed: invalid pNetworkContext or pBuffer is NULL." ) );
+        bytesReceived = -1;
     }
     else
     {
@@ -839,11 +869,16 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesSent = 0;
 
-    if( ( pNetworkContext == NULL ) || ( pNetworkContext->pParams == NULL ) )
+    if( bytesToSend == 0 )
     {
-        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        LogDebug( ( "bytesToSend is 0." ) );
     }
-    else if( pNetworkContext->pParams->pSsl != NULL )
+    else if( !isValidNetworkContext( pNetworkContext ) || ( pBuffer == NULL ) )
+    {
+        LogError( ( "Parameter check failed: invalid pNetworkContext or pBuffer is NULL." ) );
+        bytesSent = -1;
+    }
+    else
     {
         struct pollfd pollFds;
         int32_t pollStatus;
@@ -907,11 +942,6 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
             /* Socket is not available for sending data. Set return code for retrying send. */
             bytesSent = 0;
         }
-    }
-    else
-    {
-        LogError( ( "Failed to send data over network: "
-                    "SSL object in network context is NULL." ) );
     }
 
     return bytesSent;

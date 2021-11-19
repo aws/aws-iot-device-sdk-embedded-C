@@ -1613,7 +1613,7 @@ static OtaHttpStatus_t httpRequest( uint32_t rangeStart,
         /* Try establishing connection to S3 server again. */
         if( connectToS3Server( &networkContextHttp, NULL ) == EXIT_SUCCESS )
         {
-            ret = HTTPSuccess;
+            ret = OtaHttpSuccess;
         }
         else
         {
