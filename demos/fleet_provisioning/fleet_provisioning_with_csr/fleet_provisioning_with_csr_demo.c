@@ -280,7 +280,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
             payloadLength = pPublishInfo->payloadLength;
         }
-        else if( api == FleetProvCborCreateCertFromCsrRejected )
+        else if( api == FleetProvCborRegisterThingRejected )
         {
             LogError( ( "Received rejected response from Fleet Provisioning RegisterThing API." ) );
 
