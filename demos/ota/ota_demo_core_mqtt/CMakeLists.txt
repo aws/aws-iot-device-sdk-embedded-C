@@ -25,7 +25,7 @@ target_link_libraries(
     PRIVATE
         ${LIB_RT}
         ota_pal
-        pthread
+        Threads::Threads
         clock_posix
         openssl_posix
 )
