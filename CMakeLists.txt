@@ -123,6 +123,10 @@ else()
 endif()
 install(DIRECTORY DESTINATION ${CSDK_LIB_INSTALL_PATH})
 
+# Find thread library.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+
 # Add libraries.
 add_subdirectory( libraries )
 
