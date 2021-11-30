@@ -5,6 +5,8 @@ if( NOT DEFINED PLATFORM_NAME )
     else()
         message( FATAL_ERROR "${CMAKE_SYSTEM_NAME} is not a supported platform." )
     endif()
+else()
+    set( PLATFORM_NAME ${PLATFORM_NAME} CACHE STRING "Port to use for building the SDK." )
 endif()
 
 # Include each subdirectory that has a CMakeLists.txt file in it
