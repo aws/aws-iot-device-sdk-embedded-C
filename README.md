@@ -347,7 +347,7 @@ different commit from a submodule.
 
 ### Configuring Demos
 
-The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a Linux platform. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
+The libraries in this SDK are not dependent on any operating system. However, the demos for the libraries in this SDK are built and tested on a POSIX platform like Linux or VxWorks. The demos build with [CMake](https://cmake.org/), a cross-platform build tool.
 
 #### Prerequisites
 
@@ -357,6 +357,7 @@ The libraries in this SDK are not dependent on any operating system. However, th
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`, while `stdbool.h` is required for boolean parameters in coreMQTT. For compilers that do not provide these header files, [coreMQTT](https://github.com/FreeRTOS/coreMQTT) provides the files [stdint.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdint.readme) and [stdbool.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdbool.readme), which can be renamed to `stdint.h` and `stdbool.h`, respectively, to provide the required type definitions.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
+    * VxWorks RTOS, release 21.11 or above.
 
 ##### Build Dependencies
 

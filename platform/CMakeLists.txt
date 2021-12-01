@@ -10,8 +10,13 @@ endif()
 
 set(OpenSSL_FOUND ${OpenSSL_FOUND} CACHE INTERNAL "Indicates whether OpenSSL library was found.")
 
-find_library(LIB_RT rt)
-
+if(VXWORKS)
+    # VxWorks does not provide a separate librt library.
+    # All POSIX defined librt APIs are provided in libc instead.
+    find_library(LIB_RT c)
+else()
+    find_library(LIB_RT rt)
+endif()
 
 # Add the posix targets
 add_subdirectory( ${PLATFORM_DIR}/posix )
