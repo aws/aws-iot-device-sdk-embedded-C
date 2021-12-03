@@ -10,7 +10,11 @@ endif()
 
 set(OpenSSL_FOUND ${OpenSSL_FOUND} CACHE INTERNAL "Indicates whether OpenSSL library was found.")
 
-find_library(LIB_RT rt)
+if( NOT DEFINED LIB_RT_NAME )
+    set( LIB_RT_NAME "rt" CACHE STRING "Name of the POSIX.1b Realtime Extensions library." )
+endif()
+
+find_library(LIB_RT ${LIB_RT_NAME})
 
 
 # Add the posix targets
