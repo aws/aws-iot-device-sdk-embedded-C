@@ -110,7 +110,7 @@
  * @note This certificate should be PEM-encoded.
  */
 #ifndef ROOT_CA_CERT_PATH_HTTP
-    #define ROOT_CA_CERT_PATH_HTTP    "certificates/BaltimoreCyberTrustRoot.crt"
+    #define ROOT_CA_CERT_PATH_HTTP    "certificates/AmazonRootCA1.crt"
 #endif
 
 /**
