@@ -1,0 +1,26 @@
+var core__pkcs11__config__defaults_8h =
+[
+    [ "pkcs11configPKCS11_MALLOC", "core__pkcs11__config__defaults_8h.html#a6d5da44ea9d035279bbc70c8f9e1053f", null ],
+    [ "pkcs11configPKCS11_FREE", "core__pkcs11__config__defaults_8h.html#ae0f5eadb42c07654a509a7180576746b", null ],
+    [ "pkcs11configPKCS11_DEFAULT_USER_PIN", "core__pkcs11__config__defaults_8h.html#a7624fa4b2ddc9e1efb4ca2da73bac6d2", null ],
+    [ "pkcs11configMAX_LABEL_LENGTH", "core__pkcs11__config__defaults_8h.html#a8722be46b52a5dd4e5b320f9c16f4e00", null ],
+    [ "pkcs11configMAX_NUM_OBJECTS", "core__pkcs11__config__defaults_8h.html#a579bd74b5a1b91411b472ae56eb94977", null ],
+    [ "pkcs11configMAX_SESSIONS", "core__pkcs11__config__defaults_8h.html#ad0b85ca62291e1954b4b46fb80511428", null ],
+    [ "pkcs11configPAL_DESTROY_SUPPORTED", "core__pkcs11__config__defaults_8h.html#a625350f68c74d81277747a80bb5b4141", null ],
+    [ "pkcs11configOTA_SUPPORTED", "core__pkcs11__config__defaults_8h.html#af049ab760e0240985b1efbc44dae7811", null ],
+    [ "pkcs11configJITP_CODEVERIFY_ROOT_CERT_SUPPORTED", "core__pkcs11__config__defaults_8h.html#a1e1ba27edf13fe7a178d6396ae956fbc", null ],
+    [ "pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS", "core__pkcs11__config__defaults_8h.html#a38f9707de35016d7d7c52a6113f0d0df", null ],
+    [ "pkcs11configLABEL_DEVICE_PUBLIC_KEY_FOR_TLS", "core__pkcs11__config__defaults_8h.html#aabcf202a3a7ccad95b4388de2fccaee3", null ],
+    [ "pkcs11configLABEL_DEVICE_CERTIFICATE_FOR_TLS", "core__pkcs11__config__defaults_8h.html#ad133b446f4dd937c7361ef008ebb5f28", null ],
+    [ "pkcs11configLABEL_ROOT_CERTIFICATE", "core__pkcs11__config__defaults_8h.html#a94fb7a945dcdcbd0311da3aaaf1d2e2c", null ],
+    [ "pkcs11configLABEL_HMAC_KEY", "core__pkcs11__config__defaults_8h.html#a1040b62c3c0ac0cf4b6374bfeb47222f", null ],
+    [ "pkcs11configLABEL_CMAC_KEY", "core__pkcs11__config__defaults_8h.html#a6414673937702f03cc3c84f3a1066be5", null ],
+    [ "pkcs11configLABEL_CODE_VERIFICATION_KEY", "core__pkcs11__config__defaults_8h.html#a16c1ed3b5df5f3bebb363f49ef29fc20", null ],
+    [ "pkcs11configLABEL_JITP_CERTIFICATE", "core__pkcs11__config__defaults_8h.html#a6687a6580a35d8b23bbbc9b678126885", null ],
+    [ "pkcs11configLABEL_CLAIM_CERTIFICATE", "core__pkcs11__config__defaults_8h.html#aec4c1ded6fb618b6a07d8ee08cb5fd2c", null ],
+    [ "pkcs11configLABEL_CLAIM_PRIVATE_KEY", "core__pkcs11__config__defaults_8h.html#a327fe68a3e65324a355c23408e1406b0", null ],
+    [ "LogError", "core__pkcs11__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1", null ],
+    [ "LogWarn", "core__pkcs11__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05", null ],
+    [ "LogInfo", "core__pkcs11__config__defaults_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba", null ],
+    [ "LogDebug", "core__pkcs11__config__defaults_8h.html#af60e8ffc327d136e5d0d8441ed98c98d", null ]
+];
