@@ -1,0 +1,14 @@
+<map id="OtaAgentContext_t" name="OtaAgentContext_t">
+<area shape="rect" id="node1" title="The OTA agent is a singleton today. The structure keeps it nice and organized." alt="" coords="819,465,965,492"/>
+<area shape="rect" id="node2" href="$struct_ota_file_context__t.html" title="OTA File Context Information." alt="" coords="740,95,871,121"/>
+<area shape="rect" id="node12" href="$struct_ota_pal_interface__t.html" title="OTA pal Interface structure." alt="" coords="686,287,821,313"/>
+<area shape="rect" id="node3" href="$struct_sig256__t.html" title="OTA File Signature info." alt="" coords="766,5,845,32"/>
+<area shape="rect" id="node4" href="$struct_ota_agent_statistics__t.html" title="This is the OTA statistics structure to hold useful info." alt="" coords="929,376,1084,403"/>
+<area shape="rect" id="node5" href="$struct_ota_interfaces__t.html" title="OTA Interface for referencing different components." alt="" coords="529,376,652,403"/>
+<area shape="rect" id="node6" href="$struct_ota_o_s_interface__t.html" title="OTA OS Interface." alt="" coords="192,287,325,313"/>
+<area shape="rect" id="node7" href="$struct_ota_event_interface__t.html" title=" " alt="" coords="5,95,157,121"/>
+<area shape="rect" id="node8" href="$struct_ota_timer_interface__t.html" title="OTA Retry Timer Interface." alt="" coords="182,95,335,121"/>
+<area shape="rect" id="node9" href="$struct_ota_malloc_interface__t.html" title="OTA memory allocation interface." alt="" coords="359,95,518,121"/>
+<area shape="rect" id="node10" href="$struct_ota_mqtt_interface__t.html" title="OTA Event Interface structure." alt="" coords="350,287,495,313"/>
+<area shape="rect" id="node11" href="$struct_ota_http_interface__t.html" title="OTA Event Interface structure." alt="" coords="519,287,662,313"/>
+</map>

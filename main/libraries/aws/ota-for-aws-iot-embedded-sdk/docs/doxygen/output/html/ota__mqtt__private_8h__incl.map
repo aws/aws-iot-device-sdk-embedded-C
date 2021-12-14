@@ -1,0 +1,15 @@
+<map id="ota_mqtt_private.h" name="ota_mqtt_private.h">
+<area shape="rect" id="node1" title="Contains function definitions of routines for OTA download and control using MQTT data plane." alt="" coords="139,5,285,32"/>
+<area shape="rect" id="node2" href="$ota_8h.html" title="OTA Agent Interface." alt="" coords="339,80,394,107"/>
+<area shape="rect" id="node5" href="$ota__private_8h.html" title="Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo..." alt="" coords="159,229,267,256"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,304,72,331"/>
+<area shape="rect" id="node4" title=" " alt="" coords="514,304,585,331"/>
+<area shape="rect" id="node9" href="$ota__os__interface_8h.html" title="Contains OTA OS Functional Interface statuses, type definitions and structures to store interface rou..." alt="" coords="830,155,973,181"/>
+<area shape="rect" id="node10" href="$ota__mqtt__interface_8h.html" title="Contains OTA MQTT Statuses, function type definitions and mqtt interface structure." alt="" coords="470,155,629,181"/>
+<area shape="rect" id="node12" href="$ota__http__interface_8h.html" title="Contains OTA HTTP Statuses, function type definitions and http interface structure." alt="" coords="653,155,806,181"/>
+<area shape="rect" id="node13" href="$ota__platform__interface_8h.html" title="Contains PAL interface statuses, type definitions and structure to store interface routines." alt="" coords="211,155,394,181"/>
+<area shape="rect" id="node6" title=" " alt="" coords="96,304,179,331"/>
+<area shape="rect" id="node7" title=" " alt="" coords="203,304,304,331"/>
+<area shape="rect" id="node8" href="$ota__config__defaults_8h.html" title="This represents the default values for the configuration macros for the OTA library." alt="" coords="329,304,490,331"/>
+<area shape="rect" id="node11" title=" " alt="" coords="601,229,676,256"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="ota_http_private.h" name="ota_http_private.h">
+<area shape="rect" id="node1" title="Contains definitions of routines for OTA download using HTTP data plane." alt="" coords="5,5,147,32"/>
+<area shape="rect" id="node2" href="$ota__http_8c.html" title="Data transfer over HTTP routines." alt="" coords="33,80,119,107"/>
+</map>
