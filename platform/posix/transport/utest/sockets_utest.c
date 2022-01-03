@@ -307,7 +307,7 @@ void test_Sockets_Connect_Fail_setsockopt( void )
 {
     SocketStatus_t socketStatus, expectedSocketStatus;
     int tcpSocket = 1;
-    uint16_t i = 1;
+    uint16_t i, j;
     int32_t allErrorCases[] =
     {
         EBADF,       EDOM,     EINVAL, EISCONN,
@@ -316,38 +316,53 @@ void test_Sockets_Connect_Fail_setsockopt( void )
 
     for( i = 0; i < ( sizeof( allErrorCases ) / sizeof( int32_t ) ); i++ )
     {
-        expectSocketsConnectCalls( NUM_ADDR_INFO );
         errno = allErrorCases[ i ];
 
-        if( i % 2 )
+        for( j = 0; j < 2; j++ )
         {
-            setsockopt_ExpectAnyArgsAndReturn( -1 );
-        }
-        else
-        {
-            setsockopt_ExpectAnyArgsAndReturn( 0 );
-            setsockopt_ExpectAnyArgsAndReturn( -1 );
-        }
+            expectSocketsConnectCalls( NUM_ADDR_INFO );
 
-        socketStatus = Sockets_Connect( &tcpSocket,
-                                        &serverInfo,
-                                        SEND_RECV_TIMEOUT,
-                                        SEND_RECV_TIMEOUT );
+            if( j == 0 )
+            {
+                setsockopt_ExpectAnyArgsAndReturn( -1 );
 
-        if( ( errno == ENOMEM ) || ( errno == ENOBUFS ) )
-        {
-            expectedSocketStatus = SOCKETS_INSUFFICIENT_MEMORY;
-        }
-        else if( ( errno == ENOTSOCK ) || ( errno == EDOM ) || ( errno == EBADF ) )
-        {
-            expectedSocketStatus = SOCKETS_INVALID_PARAMETER;
-        }
-        else
-        {
-            expectedSocketStatus = SOCKETS_API_ERROR;
-        }
+                /* for ENOPROTOOPT case, Sockets_Connect continues
+                 * despite setsockopt returning error. */
+                if( errno == ENOPROTOOPT )
+                {
+                    setsockopt_ExpectAnyArgsAndReturn( -1 );
+                }
+            }
+            else
+            {
+                setsockopt_ExpectAnyArgsAndReturn( 0 );
+                setsockopt_ExpectAnyArgsAndReturn( -1 );
+            }
 
-        TEST_ASSERT_EQUAL( expectedSocketStatus, socketStatus );
+            socketStatus = Sockets_Connect( &tcpSocket,
+                                            &serverInfo,
+                                            SEND_RECV_TIMEOUT,
+                                            SEND_RECV_TIMEOUT );
+
+            if( ( errno == ENOMEM ) || ( errno == ENOBUFS ) )
+            {
+                expectedSocketStatus = SOCKETS_INSUFFICIENT_MEMORY;
+            }
+            else if( ( errno == ENOTSOCK ) || ( errno == EDOM ) || ( errno == EBADF ) )
+            {
+                expectedSocketStatus = SOCKETS_INVALID_PARAMETER;
+            }
+            else if( errno == ENOPROTOOPT )
+            {
+                expectedSocketStatus = SOCKETS_SUCCESS;
+            }
+            else
+            {
+                expectedSocketStatus = SOCKETS_API_ERROR;
+            }
+
+            TEST_ASSERT_EQUAL( expectedSocketStatus, socketStatus );
+        }
     }
 }
 
