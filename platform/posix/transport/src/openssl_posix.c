@@ -752,7 +752,7 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesReceived = 0;
 
-    if( !isValidNetworkContext( pNetworkContext ) || 
+    if( !isValidNetworkContext( pNetworkContext ) ||
         ( pBuffer == NULL ) ||
         ( bytesToRecv == 0 ) )
     {
@@ -867,7 +867,7 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesSent = 0;
 
-    if( !isValidNetworkContext( pNetworkContext ) || 
+    if( !isValidNetworkContext( pNetworkContext ) ||
         ( pBuffer == NULL ) ||
         ( bytesToSend == 0 ) )
     {
