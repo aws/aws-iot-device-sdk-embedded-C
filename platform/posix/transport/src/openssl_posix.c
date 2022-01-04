@@ -752,19 +752,11 @@ int32_t Openssl_Recv( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesReceived = 0;
 
-    if( !isValidNetworkContext( pNetworkContext ) )
+    if( !isValidNetworkContext( pNetworkContext ) ||
+        ( pBuffer == NULL ) ||
+        ( bytesToRecv == 0 ) )
     {
-        LogError( ( "Parameter check failed: invalid pNetworkContext." ) );
-        bytesReceived = -1;
-    }
-    else if( pBuffer == NULL )
-    {
-        LogError( ( "pBuffer is NULL." ) );
-        bytesReceived = -1;
-    }
-    else if( bytesToRecv == 0 )
-    {
-        LogError( ( "bytesToRecv is 0." ) );
+        LogError( ( "Parameter check failed: invalid input, pNetworkContext is invalid or pBuffer = %p, bytesToRecv = %lu", pBuffer, bytesToRecv ) );
         bytesReceived = -1;
     }
     else
@@ -875,19 +867,11 @@ int32_t Openssl_Send( NetworkContext_t * pNetworkContext,
     OpensslParams_t * pOpensslParams = NULL;
     int32_t bytesSent = 0;
 
-    if( !isValidNetworkContext( pNetworkContext ) )
+    if( !isValidNetworkContext( pNetworkContext ) ||
+        ( pBuffer == NULL ) ||
+        ( bytesToSend == 0 ) )
     {
-        LogError( ( "Parameter check failed: invalid pNetworkContext." ) );
-        bytesSent = -1;
-    }
-    else if( pBuffer == NULL )
-    {
-        LogError( ( "pBuffer is NULL." ) );
-        bytesSent = -1;
-    }
-    else if( bytesToSend == 0 )
-    {
-        LogError( ( "bytesToSend is 0." ) );
+        LogError( ( "Parameter check failed: invalid input, pNetworkContext is invalid or pBuffer = %p, bytesToSend = %lu", pBuffer, bytesToSend ) );
         bytesSent = -1;
     }
     else
