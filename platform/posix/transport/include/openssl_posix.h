@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * IMPLIED, INCLUDINqG BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
@@ -69,7 +69,7 @@
  * implementation that uses OpenSSL and POSIX sockets.
  *
  * @note For this transport implementation, the socket descriptor and
- * SSL context is used.
+ * SSL context are kept.
  */
 typedef struct OpensslParams
 {
@@ -137,7 +137,15 @@ typedef struct OpensslCredentials
      */
     const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root CA. */
     const char * pClientCertPath; /**< @brief Filepath string to the client certificate. */
-    const char * pPrivateKeyPath; /**< @brief Filepath string to the client certificate's private key. */
+    const char * pPrivateKeyPath; /**< @brief Filepath string or PKCS11 URI to the client certificate's private key. */
+
+    /**
+     * @brief Configuration options when using a pkcs11 module.
+     *
+     * @note These strings must be NULL-terminated because the OpenSSL API requires them to be.
+     */
+    const char * pP11ModulePath;  /**< @brief Filepath string to the desired pkcs11 module. */
+    const char * pP11ModulePin;    /**< @brief String containing the pin (if required) for the referenced pkcs11 module */
 } OpensslCredentials_t;
 
 /**
