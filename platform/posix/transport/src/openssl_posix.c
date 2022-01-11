@@ -631,13 +631,13 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
                                        const char * pP11ModulePath,
                                        const char * pP11ModulePin )
 {
-    int32_t sslStatus = 0;
+    int32_t sslStatus = 1;
     ENGINE * pEngine = NULL;
 
     assert( ppEngine != NULL );
 
     /* Initialize pkcs11 config and engine */
-    ENGINE_add_conf_module();
+    // ENGINE_add_conf_module();
 
     ENGINE_load_builtin_engines();
 
@@ -652,8 +652,8 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
 
     /* Increase log level if necessary */
     #if LIBRARY_LOG_LEVEL >= LOG_INFO
-        if( ( sslStatus == 0 ) &&
-            ( ENGINE_ctrl_cmd_string(engine, "VERBOSE", NULL, 0 ) != 0 ) )
+        if( ( sslStatus == 1 ) &&
+            ( ENGINE_ctrl_cmd_string(engine, "VERBOSE", NULL, 0 ) != 1 ) )
         {
             LogError( ( "Failed to increment the pkcs11 engine verbosity level." ) );
             sslStatus = opensslError();
@@ -661,19 +661,19 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
     #endif
 
     /* Set module path if specified */
-    if( sslStatus == 0 && pP11ModulePath != NULL )
+    if( sslStatus == 1 && pP11ModulePath != NULL )
     {
-        if( ENGINE_ctrl_cmd_string( pEngine, "MODULE_PATH", pP11ModulePath, 0 ) != 0 )
+        if( ENGINE_ctrl_cmd_string( pEngine, "MODULE_PATH", pP11ModulePath, 0 ) != 1 )
         {
             LogError( ( "Failed to set the pkcs11 module path: %s.", pP11ModulePath ) );
             sslStatus = opensslError();
         }
     }
 
-    if( sslStatus == 0 )
+    if( sslStatus == 1 )
     {
         /* Initialize the pkcs11 engine and acquire a functional reference to it */
-        if( ENGINE_init( pEngine ) != 0 )
+        if( ENGINE_init( pEngine ) != 1 )
         {
             LogError( ( "Failed to initialize the openssl pkcs11 engine." ) );
             sslStatus = opensslError();
@@ -681,16 +681,16 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
     }
 
     /* Unlock with pin code if specified */
-    if( sslStatus == 0 && pP11ModulePin != NULL )
+    if( sslStatus == 1 && pP11ModulePin != NULL )
     {
-        if( ENGINE_ctrl_cmd_string( pEngine, "PIN", pP11ModulePin, 0 ) != 0 )
+        if( ENGINE_ctrl_cmd_string( pEngine, "PIN", pP11ModulePin, 0 ) != 1 )
         {
             LogError( ( "Failed to unlock the pkcs11 module with the given pin code." ) );
             sslStatus = opensslError();
         }
     }
 
-    if( sslStatus == 0 )
+    if( sslStatus == 1 )
     {
         *ppEngine = pEngine;
     }
@@ -706,7 +706,7 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
 static int32_t setCredentials( SSL_CTX * pSslContext,
                                const OpensslCredentials_t * pOpensslCredentials )
 {
-    int32_t sslStatus = 0;
+    int32_t sslStatus = 1;
     ENGINE * pEngine = NULL;
     bool certFromEngine = false;
     bool pkeyFromEngine = false;
