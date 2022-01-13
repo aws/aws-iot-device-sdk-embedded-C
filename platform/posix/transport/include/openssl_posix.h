@@ -135,17 +135,9 @@ typedef struct OpensslCredentials
      *
      * @note These strings must be NULL-terminated because the OpenSSL API requires them to be.
      */
-    const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root CA. */
-    const char * pClientCertPath; /**< @brief Filepath string to the client certificate. */
-    const char * pPrivateKeyPath; /**< @brief Filepath string or PKCS11 URI to the client certificate's private key. */
-
-    /**
-     * @brief Configuration options when using a pkcs11 module.
-     *
-     * @note These strings must be NULL-terminated because the OpenSSL API requires them to be.
-     */
-    const char * pP11ModulePath;  /**< @brief Filepath string to the desired pkcs11 module. */
-    const char * pP11ModulePin;    /**< @brief String containing the pin (if required) for the referenced pkcs11 module */
+    const char * pRootCaPath;     /**< @brief File path or PKCS#11 URI to the trusted server root CA certificate. */
+    const char * pClientCertPath; /**< @brief File path or PKCS#11 URI to the tls client certificate. */
+    const char * pPrivateKeyPath; /**< @brief File path or PKCS#11 URI to the tls client private key. */
 } OpensslCredentials_t;
 
 /**

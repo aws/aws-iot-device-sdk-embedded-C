@@ -91,6 +91,19 @@ struct NetworkContext
 static int32_t opensslError( void );
 
 /**
+ * @brief Load a certificate with the given PKCS#11 URI and return the resulting openssl X509 object.
+ *
+ * @param[out] ppX509Cert Location to store a pointer to the created X509 certificate object.
+ * @param[in] pEngine Pointer to the pre-initialized openssl PKCS11 engine.
+ * @param[in] pCertURI PKCS#11 URI for the desired certificate.
+ *
+ * @return 1 on success; -1, 0 on failure.
+ */
+static int32_t loadCertificateFromPkcs11( X509 ** ppX509Cert,
+                                          ENGINE * pEngine,
+                                          const char * pCertURI );
+
+/**
  * @brief Add X509 certificate from a file to the trusted list of root certificates.
  *
  * @param[out] pSslContext SSL context to which the trusted server root CA is to
@@ -168,17 +181,10 @@ static int32_t setPrivateKeyFromPkcs11( SSL_CTX * pSslContext,
  * @brief Initialize the openssl pkcs11 engine.
  *
  * @param[out] ppEngine Pointer to write the resulting ENGINE object pointer to.
- * @param[in] pP11ModulePath String containing the path to the PKCS11 module.
- * @param[in] pP11ModulePin String containing the pin code (if needed).
- *
- * The pP11ModulePath and pP11ModulePin parameters may be NULL if spcified
- *  in the relevant URI or openssl configuration file.
  *
  * @return 1 on success; 0 on failure.
  */
-static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
-                                       const char * pP11ModulePath,
-                                       const char * pP11ModulePin );
+static int32_t initializePkcs11Engine( ENGINE ** ppEngine );
 
 /**
  * @brief Passes TLS credentials to the OpenSSL library.
@@ -690,9 +696,7 @@ static int32_t opensslError( void )
 }
 
 /*-----------------------------------------------------------*/
-static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
-                                       const char * pP11ModulePath,
-                                       const char * pP11ModulePin )
+static int32_t initializePkcs11Engine( ENGINE ** ppEngine )
 {
     int32_t sslStatus = 1;
     ENGINE * pEngine = NULL;
@@ -713,22 +717,12 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
     /* Increase log level if necessary */
     #if LIBRARY_LOG_LEVEL >= LOG_INFO
         if( ( sslStatus == 1 ) &&
-            ( ENGINE_ctrl_cmd_string(engine, "VERBOSE", NULL, 0 ) != 1 ) )
+            ( ENGINE_ctrl_cmd_string(pEngine, "VERBOSE", NULL, 0 ) != 1 ) )
         {
             LogError( ( "Failed to increment the pkcs11 engine verbosity level." ) );
             sslStatus = opensslError();
         }
     #endif
-
-    /* Set module path if specified */
-    if( sslStatus == 1 && pP11ModulePath != NULL )
-    {
-        if( ENGINE_ctrl_cmd_string( pEngine, "MODULE_PATH", pP11ModulePath, 0 ) != 1 )
-        {
-            LogError( ( "Failed to set the pkcs11 module path: %s.", pP11ModulePath ) );
-            sslStatus = opensslError();
-        }
-    }
 
     if( sslStatus == 1 )
     {
@@ -736,16 +730,6 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine,
         if( ENGINE_init( pEngine ) != 1 )
         {
             LogError( ( "Failed to initialize the openssl pkcs11 engine." ) );
-            sslStatus = opensslError();
-        }
-    }
-
-    /* Unlock with pin code if specified */
-    if( sslStatus == 1 && pP11ModulePin != NULL )
-    {
-        if( ENGINE_ctrl_cmd_string( pEngine, "PIN", pP11ModulePin, 0 ) != 1 )
-        {
-            LogError( ( "Failed to unlock the pkcs11 module with the given pin code." ) );
             sslStatus = opensslError();
         }
     }
@@ -799,9 +783,7 @@ static int32_t setCredentials( SSL_CTX * pSslContext,
 
         if( pkeyFromP11 == true || certFromP11 == true || rootCaFromP11 == true )
         {
-            sslStatus = initializePkcs11Engine( &pEngine,
-                                                pOpensslCredentials->pP11ModulePath,
-                                                pOpensslCredentials->pP11ModulePin );
+            sslStatus = initializePkcs11Engine( &pEngine );
         }
     }
 
