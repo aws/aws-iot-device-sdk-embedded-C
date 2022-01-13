@@ -191,8 +191,11 @@ pbuffer
 pcdata
 pcertfilepath
 pcertificatecontext
-pclientcertlabel
-pclientcertpath
+pclientcerturi
+pEngine
+ppEngine
+pPrivateKeyURI
+pRootCaURI
 pcontext
 pctx
 pdata
@@ -300,6 +303,7 @@ ulblockindex
 ulblocksize
 uloffset
 unistd
+uri
 utest
 utils
 v1
