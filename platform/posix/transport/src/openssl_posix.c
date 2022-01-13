@@ -373,7 +373,7 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
 /*-----------------------------------------------------------*/
 
 static int32_t setRootCaFromFile( const SSL_CTX * pSslContext,
-                          const char * pRootCaPath )
+                                  const char * pRootCaPath )
 {
     int32_t sslStatus = 1;
     FILE * pRootCaFile = NULL;
@@ -466,11 +466,13 @@ static int32_t loadCertificateFromPkcs11( X509 ** ppX509Cert,
                                           const char * pCertURI )
 {
     int32_t sslStatus = 1;
+
     struct
-	{
-		const char * pCertURI;
-		X509 * pX509Cert;
-	} loadCertParams;
+    {
+        const char * pCertURI;
+        X509 * pX509Cert;
+    }
+    loadCertParams;
 
     assert( ppX509Cert != NULL );
     assert( pEngine != NULL );
@@ -498,6 +500,7 @@ static int32_t loadCertificateFromPkcs11( X509 ** ppX509Cert,
     {
         *ppX509Cert = loadCertParams.pX509Cert;
     }
+
     return sslStatus;
 }
 /*-----------------------------------------------------------*/
@@ -690,9 +693,9 @@ static int32_t opensslError( void )
                   pFile, line, errorCode, pErrorString ) );
 
         return errorCode;
-    #else
+    #else /* if LIBRARY_LOG_LEVEL >= LOG_ERROR */
         return ( int32_t ) ERR_peek_last_error();
-    #endif
+    #endif /* if LIBRARY_LOG_LEVEL >= LOG_ERROR */
 }
 
 /*-----------------------------------------------------------*/
@@ -706,7 +709,7 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine )
     ENGINE_load_builtin_engines();
 
     /* Acquire a structural reference for the pkcs11 engine */
-    pEngine = ENGINE_by_id(PKCS11_ENGINE_ID);
+    pEngine = ENGINE_by_id( PKCS11_ENGINE_ID );
 
     if( pEngine == NULL )
     {
@@ -717,7 +720,7 @@ static int32_t initializePkcs11Engine( ENGINE ** ppEngine )
     /* Increase log level if necessary */
     #if LIBRARY_LOG_LEVEL >= LOG_INFO
         if( ( sslStatus == 1 ) &&
-            ( ENGINE_ctrl_cmd_string(pEngine, "VERBOSE", NULL, 0 ) != 1 ) )
+            ( ENGINE_ctrl_cmd_string( pEngine, "VERBOSE", NULL, 0 ) != 1 ) )
         {
             LogError( ( "Failed to increment the pkcs11 engine verbosity level." ) );
             sslStatus = opensslError();
@@ -781,7 +784,7 @@ static int32_t setCredentials( SSL_CTX * pSslContext,
             certFromP11 = true;
         }
 
-        if( pkeyFromP11 == true || certFromP11 == true || rootCaFromP11 == true )
+        if( ( pkeyFromP11 == true ) || ( certFromP11 == true ) || ( rootCaFromP11 == true ) )
         {
             sslStatus = initializePkcs11Engine( &pEngine );
         }
