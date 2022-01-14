@@ -114,10 +114,6 @@
 #define MBEDTLS_HAVE_TIME_DATE
 #define MBEDTLS_HAVE_TIME
 
-/* Include due to bug when building shared library:
- * See https://github.com/ARMmbed/mbedtls/issues/4411 */
-#define MBEDTLS_PSA_CRYPTO_C
-
 #include "mbedtls/check_config.h"
 
 #endif /* ifndef MBEDTLS_CONFIG_H_ */
