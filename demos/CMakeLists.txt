@@ -5,6 +5,8 @@ if( NOT DEFINED PLATFORM_NAME )
     else()
         message( FATAL_ERROR "${CMAKE_SYSTEM_NAME} is not a supported platform." )
     endif()
+else()
+    set( PLATFORM_NAME ${PLATFORM_NAME} CACHE STRING "Port to use for building the SDK." )
 endif()
 
 # Include each subdirectory that has a CMakeLists.txt file in it
@@ -14,6 +16,9 @@ foreach(demo_dir IN LISTS demo_dirs)
         add_subdirectory(${demo_dir})
     endif()
 endforeach()
+
+# Check for function fork
+check_symbol_exists(fork "unistd.h" HAVE_FORK)
 
 # Filter demos based on what packages or library exist.
 if(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND")
@@ -54,6 +59,16 @@ if(NOT ${Threads_FOUND})
     )
     message( WARNING "Threads library could not be found. Demos that use it will be excluded from the default target." )
     foreach(demo_name ${thread_demos})
+        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
+    endforeach()
+endif()
+if(NOT HAVE_FORK)
+    set(fork_demos
+            "http_demo_s3_download_multithreaded"
+            "jobs_demo_mosquitto"
+    )
+    message( WARNING "fork() could not be found. Demos that use it will be excluded from the default target." )
+    foreach(demo_name ${fork_demos})
         set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
     endforeach()
 endif()

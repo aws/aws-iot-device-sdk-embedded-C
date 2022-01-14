@@ -123,6 +123,10 @@ else()
 endif()
 install(DIRECTORY DESTINATION ${CSDK_LIB_INSTALL_PATH})
 
+# Find thread library.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+
 # Add libraries.
 add_subdirectory( libraries )
 
@@ -158,12 +162,6 @@ if(DOWNLOAD_CERTS)
     execute_process(
         COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
         -o ${CERT_DOWNLOAD_DIR}/AmazonRootCA1.crt
-    )
-    # Download the Baltimore Cybertrust Root CA certificate.
-    message( "Downloading the Baltimore Cybertrust Root CA certificate..." )
-    execute_process(
-        COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
-        -o ${CERT_DOWNLOAD_DIR}/BaltimoreCyberTrustRoot.crt
     )
     # Copy certificates to the build directory.
     file(COPY "${CERT_DOWNLOAD_DIR}"

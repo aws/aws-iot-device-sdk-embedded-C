@@ -61,17 +61,22 @@
 #endif
 
 /**
- * @brief Path of the file containing the server's root CA certificate for TLS
- * authentication.
+ * @brief Path of the file containing the server's root CA certificate.
  *
- * The Baltimore Cybertrust Root CA Certificate is automatically downloaded to
- * the certificates directory using the CMake build system, from @ref
- * https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem.
+ * This certificate is used to identify the AWS endpoints and is publicly
+ * available. Refer to the AWS documentation available in the link below
+ * https://docs.aws.amazon.com/iot/latest/developerguide/server-authentication.html#server-authentication-certs
+ *
+ * Amazon's root CA certificate is automatically downloaded to the certificates
+ * directory from @ref https://www.amazontrust.com/repository/AmazonRootCA1.pem
+ * using the CMake build system.
  *
  * @note This certificate should be PEM-encoded.
+ * @note This path is relative from the demo binary created. Update
+ * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
 #ifndef ROOT_CA_CERT_PATH
-    #define ROOT_CA_CERT_PATH    "certificates/BaltimoreCyberTrustRoot.crt"
+    #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif
 
 /**

@@ -29,10 +29,10 @@ add_library( openssl_posix
 target_link_libraries( openssl_posix
                        PUBLIC
                           sockets_posix
-                       PRIVATE
                           # This variable is set by the built-in FindOpenSSL.cmake
                           # and contains the path to the actual library.
                           ${OPENSSL_LIBRARIES}
+                       PRIVATE
                           # SSL uses Threads and on some platforms require
                           # explicit linking.
                           Threads::Threads
