@@ -196,7 +196,7 @@ void test_Plaintext_Recv_Invalid_Params( void )
 
     networkContext.pParams = &plaintextParams;
     bytesReceived = Plaintext_Recv( &networkContext, plaintextBuffer, 0 );
-    TEST_ASSERT_EQUAL( 0, bytesReceived );
+    TEST_ASSERT_EQUAL( -1, bytesReceived );
 }
 
 /**
@@ -324,7 +324,7 @@ void test_Plaintext_Send_Invalid_Params( void )
     TEST_ASSERT_EQUAL( -1, bytesSent );
 
     bytesSent = Plaintext_Send( &networkContext, plaintextBuffer, 0 );
-    TEST_ASSERT_EQUAL( 0, bytesSent );
+    TEST_ASSERT_EQUAL( -1, bytesSent );
 }
 
 /**
