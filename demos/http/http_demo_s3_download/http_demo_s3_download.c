@@ -60,7 +60,7 @@
 
 /* Check that a path for Root CA Certificate is defined. */
 #ifndef ROOT_CA_CERT_PATH
-    #error "Please define thr ROOT_CA_CERT_PATH macro in demo_config.h."
+    #error "Please define the ROOT_CA_CERT_PATH macro in demo_config.h."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */

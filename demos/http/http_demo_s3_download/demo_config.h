@@ -62,7 +62,7 @@
 /**
  * @brief Path of the file containing the server's root CA certificate.
  *
- * This certificate is used to identify the AWS IoT server and is publicly
+ * This certificate is used to identify the AWS endpoints and is publicly
  * available. Refer to the AWS documentation available in the link below
  * https://docs.aws.amazon.com/iot/latest/developerguide/server-authentication.html#server-authentication-certs
  *
