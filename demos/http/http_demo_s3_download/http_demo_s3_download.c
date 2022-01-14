@@ -58,14 +58,9 @@
     #error "Please define the HTTPS_PORT macro in demo_config.h ."
 #endif
 
-/* Check that a path for Root CA Certificate is defined for AWS IOT CREDENTIAL PROVIDER SERVICE. */
-#ifndef AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH
-    #error "Please define thr AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH macro in demo_config.h."
-#endif
-
-/* Check that a path for Root CA Certificate is defined for AWS S3 Service. */
-#ifndef AWS_S3_ROOT_CA_CERT_PATH
-    #error "Please define the AWS_S3_ROOT_CA_CERT_PATH macro for AWS S3 ROOT CA certificate in demo_config.h."
+/* Check that a path for Root CA Certificate is defined. */
+#ifndef ROOT_CA_CERT_PATH
+    #error "Please define the ROOT_CA_CERT_PATH macro in demo_config.h."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */
@@ -894,7 +889,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
         opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
         opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
@@ -947,7 +942,7 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = AWS_S3_ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
 
         /* Initialize server information. */
