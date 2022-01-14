@@ -135,7 +135,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     }
     else if( bytesToRecv == 0 )
     {
-        LogError( ( "Parameter check failed: bytesReceived is zero." ) );
+        LogError( ( "Parameter check failed: bytesToRecv is zero." ) );
         bytesReceived = -1;
     }
     else
@@ -244,7 +244,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     }
     else if( bytesToSend == 0 )
     {
-        LogError( ( "Parameter check failed: bytesReceived is zero." ) );
+        LogError( ( "Parameter check failed: bytesToSend is zero." ) );
         bytesSent = -1;
     }
     else
