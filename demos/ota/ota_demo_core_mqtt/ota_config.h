@@ -175,4 +175,12 @@
  */
 #define configOTA_PRIMARY_DATA_PROTOCOL         ( OTA_DATA_OVER_MQTT )
 
+/**
+ * @brief Data type to represent a file.
+ *
+ * It is used to represent a file received via OTA. The file is declared as
+ * the pointer of this type: otaconfigOTA_FILE_TYPE * pFile.
+ */
+#define otaconfigOTA_FILE_TYPE                  FILE
+
 #endif /* OTA_CONFIG_H_ */

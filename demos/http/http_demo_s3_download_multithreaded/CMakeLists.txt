@@ -25,7 +25,7 @@ target_link_libraries(
     PRIVATE
         clock_posix
         openssl_posix
-        rt
+        ${LIB_RT}
 )
 
 target_include_directories(

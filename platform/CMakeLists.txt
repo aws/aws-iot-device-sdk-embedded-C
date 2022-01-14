@@ -8,13 +8,13 @@ if( ${OPENSSL_FOUND} AND ( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MAT
     message( WARNING "OpenSSL 1.1.0 or later required: OpenSSL ${OPENSSL_VERSION} found." )
 endif()
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads)
-
 set(OpenSSL_FOUND ${OpenSSL_FOUND} CACHE INTERNAL "Indicates whether OpenSSL library was found.")
-set(Threads_FOUND ${Threads_FOUND} CACHE INTERNAL "Indicates whether Threads library was found.")
 
-find_library(LIB_RT rt)
+if( NOT DEFINED LIB_RT_NAME )
+    set( LIB_RT_NAME "rt" CACHE STRING "Name of the POSIX.1b Realtime Extensions library." )
+endif()
+
+find_library(LIB_RT ${LIB_RT_NAME})
 
 
 # Add the posix targets
