@@ -290,7 +290,7 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
         }
         else if( ( pollStatus > 0 ) && ( bytesSent < 0 ) )
         {
-            /* The socket blocked for timeout and no data is received situation.
+            /* The socket blocked for timeout and no data is sent situation.
              * Return zero to indicate this operation can be retried. */
             #if EAGAIN == EWOULDBLOCK
                 if( errno == EAGAIN )
