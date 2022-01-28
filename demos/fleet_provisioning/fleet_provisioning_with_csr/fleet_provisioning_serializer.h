@@ -110,3 +110,14 @@ bool parseRegisterThingResponse( const uint8_t * pResponse,
                                  size_t length,
                                  char * pThingNameBuffer,
                                  size_t * pThingNameBufferLength );
+
+/**
+ * @brief Converts a CBOR document into a pretty printed string.
+ *
+ * @param[in] cbor The CBOR document.
+ * @param[in] length The length of the CBOR document.
+ *
+ * @returns The pretty printed string on success. "" on error.
+ */
+const char * getStringFromCbor( const uint8_t * cbor,
+                                size_t length );

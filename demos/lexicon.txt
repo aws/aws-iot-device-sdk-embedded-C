@@ -1,4 +1,5 @@
 accel
+fmt
 accesskeyid
 ack
 acks
@@ -67,6 +68,7 @@ cas
 cb
 cbc
 cbor
+cborprinter
 ccm
 ccs
 cdn

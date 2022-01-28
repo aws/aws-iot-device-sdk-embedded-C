@@ -21,6 +21,9 @@
  * SOFTWARE.
  */
 
+/* Standard includes */
+#include <stdarg.h>
+
 /* TinyCBOR library for CBOR encoding and decoding operations. */
 #include "cbor.h"
 
@@ -32,6 +35,35 @@
 
 /* Header include. */
 #include "fleet_provisioning_serializer.h"
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Context passed to tinyCBOR for #cborPrinter. Initial
+ * state should be zeroed.
+ */
+typedef struct
+{
+    const char * str;
+    size_t length;
+} CborPrintContext_t;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Printing function to pass to tinyCBOR.
+ *
+ * cbor_value_to_pretty_stream calls it multiple times to print a textual CBOR
+ * representation.
+ *
+ * @param token Context for the function.
+ * @param fmt Printf style format string.
+ * @param ... Printf style args after format string.
+ */
+static CborError cborPrinter( void * token,
+                              const char * fmt,
+                              ... );
+
 /*-----------------------------------------------------------*/
 
 bool generateCsrRequest( uint8_t * pBuffer,
@@ -370,5 +402,84 @@ bool parseRegisterThingResponse( const uint8_t * pResponse,
     }
 
     return( cborRet == CborNoError );
+}
+/*-----------------------------------------------------------*/
+
+static CborError cborPrinter( void * token,
+                              const char * fmt,
+                              ... )
+{
+    int result;
+    va_list args;
+    CborPrintContext_t * ctx = ( CborPrintContext_t * ) token;
+
+    va_start( args, fmt );
+
+    /* Compute length to write. */
+    result = vsnprintf( NULL, 0, fmt, args );
+
+    va_end( args );
+
+    if( result < 0 )
+    {
+        LogError( ( "Error formatting CBOR string." ) );
+    }
+    else
+    {
+        size_t newLen = ( unsigned ) result;
+        size_t oldLen = ctx->length;
+        char * newPtr;
+
+        ctx->length = oldLen + newLen;
+        newPtr = ( char * ) realloc( ( void * ) ctx->str, ctx->length + 1 );
+
+        if( newPtr == NULL )
+        {
+            LogError( ( "Failed to reallocate CBOR string." ) );
+            result = -1;
+        }
+        else
+        {
+            va_start( args, fmt );
+
+            result = vsnprintf( newPtr + oldLen, newLen + 1, fmt, args );
+
+            va_end( args );
+
+            ctx->str = newPtr;
+
+            if( result < 0 )
+            {
+                LogError( ( "Error printing CBOR string." ) );
+            }
+        }
+    }
+
+    return ( result < 0 ) ? CborErrorIO : CborNoError;
+}
+/*-----------------------------------------------------------*/
+
+const char * getStringFromCbor( const uint8_t * cbor,
+                                size_t length )
+{
+    CborPrintContext_t printCtx = { 0 };
+    CborParser parser;
+    CborValue value;
+    CborError error;
+
+    error = cbor_parser_init( cbor, length, 0, &parser, &value );
+
+    if( error == CborNoError )
+    {
+        error = cbor_value_to_pretty_stream( cborPrinter, &printCtx, &value, CborPrettyDefaultFlags );
+    }
+
+    if( error != CborNoError )
+    {
+        LogError( ( "Error printing CBOR payload." ) );
+        printCtx.str = "";
+    }
+
+    return printCtx.str;
 }
 /*-----------------------------------------------------------*/
