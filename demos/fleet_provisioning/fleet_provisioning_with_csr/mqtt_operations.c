@@ -161,7 +161,7 @@
 /**
  * @brief Timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 100U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 1000U )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT MQTT Broker.
