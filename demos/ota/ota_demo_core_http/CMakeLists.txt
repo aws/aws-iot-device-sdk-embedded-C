@@ -8,6 +8,13 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 # Include backoffAlgorithm library file path configuration.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
+# Disable some warnings for llhttp sources.
+set_source_files_properties(
+    ${HTTP_SOURCES}
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-unused-parameter"
+)
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
