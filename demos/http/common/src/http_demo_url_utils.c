@@ -21,10 +21,17 @@
  */
 
 /* Standard includes. */
+#include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
+/* Include Demo Config as the first non-system header. */
+#include "demo_config.h"
+
 /* Demo utils header. */
-#include "http_demo_utils.h"
+#include "http_demo_url_utils.h"
+
+/*-----------------------------------------------------------*/
 
 /**
  * @brief The separator between the "https" scheme and the host in a URL.
