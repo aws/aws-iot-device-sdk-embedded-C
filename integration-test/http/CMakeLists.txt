@@ -51,7 +51,8 @@ target_include_directories(${real_name} PUBLIC
 set_target_properties(${real_name} PROPERTIES
             COMPILE_FLAGS "-Wextra \
                 -fprofile-arcs -ftest-coverage -fprofile-generate \
-                -Wno-unused-but-set-variable"
+                -Wno-unused-but-set-variable \
+                -Wno-unused-parameter"
             LINK_FLAGS "-fprofile-arcs -ftest-coverage \
                 -fprofile-generate "
             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
