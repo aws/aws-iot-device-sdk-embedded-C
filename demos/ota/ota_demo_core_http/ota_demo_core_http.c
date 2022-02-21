@@ -52,7 +52,7 @@
 #include "core_http_client.h"
 
 /* Common HTTP demo utilities. */
-#include "http_demo_utils.h"
+#include "http_demo_url_utils.h"
 
 /*Include backoff algorithm header for retry logic.*/
 #include "backoff_algorithm.h"
