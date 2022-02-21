@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.0.2</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -106,8 +106,10 @@ $(document).ready(function(){initNavTree('struct_h_t_t_p_parsing_context__t.html
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a2eec93f35846f77ae76346b9cfd2f929"><td class="memItemLeft" align="right" valign="top">http_parser&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_parsing_context__t.html#a2eec93f35846f77ae76346b9cfd2f929">httpParser</a></td></tr>
-<tr class="separator:a2eec93f35846f77ae76346b9cfd2f929"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73ed274cc7cab9491aac1f1a1d02b38e"><td class="memItemLeft" align="right" valign="top">llhttp_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_parsing_context__t.html#a73ed274cc7cab9491aac1f1a1d02b38e">llhttpParser</a></td></tr>
+<tr class="separator:a73ed274cc7cab9491aac1f1a1d02b38e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5bdb96134074a3afd9816263445d591"><td class="memItemLeft" align="right" valign="top">llhttp_settings_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_parsing_context__t.html#ae5bdb96134074a3afd9816263445d591">llhttpSettings</a></td></tr>
+<tr class="separator:ae5bdb96134074a3afd9816263445d591"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acecc99ec16396a6a5f2fae9aeb77c11f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="core__http__client__private_8h.html#a9b42138b048d030fe583c0dd0b487b4c">HTTPParsingState_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_parsing_context__t.html#acecc99ec16396a6a5f2fae9aeb77c11f">state</a></td></tr>
 <tr class="separator:acecc99ec16396a6a5f2fae9aeb77c11f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82a9ef99d459edda5b28bd970e431756"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_h_t_t_p_response__t.html">HTTPResponse_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_parsing_context__t.html#a82a9ef99d459edda5b28bd970e431756">pResponse</a></td></tr>
@@ -154,18 +156,33 @@ Data Fields</h2></td></tr>
 </table>
 <p>v +-----&mdash;+---------&mdash;+ |onBody +&lt;&mdash;+ +-----&mdash;+-----&mdash;+&mdash;+ | | | |(Transfer-encoding chunked body) | | | | +-----&mdash;+ | v +-----&mdash;+---------&mdash;+ |onMessageComplete | +------------------&mdash;+ </p>
 </div><h2 class="groupheader">Field Documentation</h2>
-<a id="a2eec93f35846f77ae76346b9cfd2f929" name="a2eec93f35846f77ae76346b9cfd2f929"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2eec93f35846f77ae76346b9cfd2f929">&#9670;&nbsp;</a></span>httpParser</h2>
+<a id="a73ed274cc7cab9491aac1f1a1d02b38e" name="a73ed274cc7cab9491aac1f1a1d02b38e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73ed274cc7cab9491aac1f1a1d02b38e">&#9670;&nbsp;</a></span>llhttpParser</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">http_parser HTTPParsingContext_t::httpParser</td>
+          <td class="memname">llhttp_t HTTPParsingContext_t::llhttpParser</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p >Third-party http-parser context. </p>
+<p >Third-party llhttp context. </p>
+
+</div>
+</div>
+<a id="ae5bdb96134074a3afd9816263445d591" name="ae5bdb96134074a3afd9816263445d591"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5bdb96134074a3afd9816263445d591">&#9670;&nbsp;</a></span>llhttpSettings</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">llhttp_settings_t HTTPParsingContext_t::llhttpSettings</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Third-party parser settings. </p>
 
 </div>
 </div>

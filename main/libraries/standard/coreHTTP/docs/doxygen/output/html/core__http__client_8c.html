@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.0.2</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -151,48 +151,48 @@ Functions</h2></td></tr>
 <tr class="memitem:a9318ad3c65f775d5fb3467de19320a58"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58">findHeaderInResponse</a> (const uint8_t *pBuffer, size_t bufferLen, const char *pField, size_t fieldLen, const char **pValueLoc, size_t *pValueLen)</td></tr>
 <tr class="memdesc:a9318ad3c65f775d5fb3467de19320a58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the specified header field in the response buffer.  <a href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58">More...</a><br /></td></tr>
 <tr class="separator:a9318ad3c65f775d5fb3467de19320a58"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73f3186eba2edadf19cf264566f3bb18"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a73f3186eba2edadf19cf264566f3bb18">findHeaderFieldParserCallback</a> (http_parser *pHttpParser, const char *pFieldLoc, size_t fieldLen)</td></tr>
-<tr class="memdesc:a73f3186eba2edadf19cf264566f3bb18"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "on_header_field" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function. The callback checks whether the parser header field matched the header being searched for, and sets a flag to represent reception of the header accordingly.  <a href="core__http__client_8c.html#a73f3186eba2edadf19cf264566f3bb18">More...</a><br /></td></tr>
-<tr class="separator:a73f3186eba2edadf19cf264566f3bb18"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f8da60e8a7694171f1962f106a8b318"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a9f8da60e8a7694171f1962f106a8b318">findHeaderValueParserCallback</a> (http_parser *pHttpParser, const char *pValueLoc, size_t valueLen)</td></tr>
-<tr class="memdesc:a9f8da60e8a7694171f1962f106a8b318"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "on_header_value" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function. The callback sets the user-provided output parameters for header value if the requested header's field was found in the <a class="el" href="core__http__client_8c.html#a73f3186eba2edadf19cf264566f3bb18">findHeaderFieldParserCallback</a> function.  <a href="core__http__client_8c.html#a9f8da60e8a7694171f1962f106a8b318">More...</a><br /></td></tr>
-<tr class="separator:a9f8da60e8a7694171f1962f106a8b318"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2faae933523718600b6ae64f6ae022bd"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a2faae933523718600b6ae64f6ae022bd">findHeaderOnHeaderCompleteCallback</a> (http_parser *pHttpParser)</td></tr>
-<tr class="memdesc:a2faae933523718600b6ae64f6ae022bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "on_header_complete" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function.  <a href="core__http__client_8c.html#a2faae933523718600b6ae64f6ae022bd">More...</a><br /></td></tr>
-<tr class="separator:a2faae933523718600b6ae64f6ae022bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61b259c7549a0b1ad384984e5606ef96"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a61b259c7549a0b1ad384984e5606ef96">findHeaderFieldParserCallback</a> (llhttp_t *pHttpParser, const char *pFieldLoc, size_t fieldLen)</td></tr>
+<tr class="memdesc:a61b259c7549a0b1ad384984e5606ef96"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "on_header_field" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function. The callback checks whether the parser header field matched the header being searched for, and sets a flag to represent reception of the header accordingly.  <a href="core__http__client_8c.html#a61b259c7549a0b1ad384984e5606ef96">More...</a><br /></td></tr>
+<tr class="separator:a61b259c7549a0b1ad384984e5606ef96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cfdb96985547d0cf5455a09591b1ad6"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a3cfdb96985547d0cf5455a09591b1ad6">findHeaderValueParserCallback</a> (llhttp_t *pHttpParser, const char *pValueLoc, size_t valueLen)</td></tr>
+<tr class="memdesc:a3cfdb96985547d0cf5455a09591b1ad6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "on_header_value" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function. The callback sets the user-provided output parameters for header value if the requested header's field was found in the <a class="el" href="core__http__client_8c.html#a61b259c7549a0b1ad384984e5606ef96">findHeaderFieldParserCallback</a> function.  <a href="core__http__client_8c.html#a3cfdb96985547d0cf5455a09591b1ad6">More...</a><br /></td></tr>
+<tr class="separator:a3cfdb96985547d0cf5455a09591b1ad6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af220add6fe8cf67876f3118c7ce3a82c"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#af220add6fe8cf67876f3118c7ce3a82c">findHeaderOnHeaderCompleteCallback</a> (llhttp_t *pHttpParser)</td></tr>
+<tr class="memdesc:af220add6fe8cf67876f3118c7ce3a82c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The "on_header_complete" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function.  <a href="core__http__client_8c.html#af220add6fe8cf67876f3118c7ce3a82c">More...</a><br /></td></tr>
+<tr class="separator:af220add6fe8cf67876f3118c7ce3a82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a859ffd50bb4dbc6728bf0acb8d4da962"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a859ffd50bb4dbc6728bf0acb8d4da962">initializeParsingContextForFirstResponse</a> (<a class="el" href="struct_h_t_t_p_parsing_context__t.html">HTTPParsingContext_t</a> *pParsingContext, const <a class="el" href="struct_h_t_t_p_request_headers__t.html">HTTPRequestHeaders_t</a> *pRequestHeaders)</td></tr>
 <tr class="memdesc:a859ffd50bb4dbc6728bf0acb8d4da962"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the parsing context for parsing a response fresh from the server.  <a href="core__http__client_8c.html#a859ffd50bb4dbc6728bf0acb8d4da962">More...</a><br /></td></tr>
 <tr class="separator:a859ffd50bb4dbc6728bf0acb8d4da962"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e8340bff0f3311f5cad2009039f1dcf"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a5e8340bff0f3311f5cad2009039f1dcf">parseHttpResponse</a> (<a class="el" href="struct_h_t_t_p_parsing_context__t.html">HTTPParsingContext_t</a> *pParsingContext, <a class="el" href="struct_h_t_t_p_response__t.html">HTTPResponse_t</a> *pResponse, size_t parseLen)</td></tr>
 <tr class="memdesc:a5e8340bff0f3311f5cad2009039f1dcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses the response buffer in <code>pResponse</code>.  <a href="core__http__client_8c.html#a5e8340bff0f3311f5cad2009039f1dcf">More...</a><br /></td></tr>
 <tr class="separator:a5e8340bff0f3311f5cad2009039f1dcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9967a0058c6a281ba712e53b006c794b"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a9967a0058c6a281ba712e53b006c794b">httpParserOnMessageBeginCallback</a> (http_parser *pHttpParser)</td></tr>
-<tr class="memdesc:a9967a0058c6a281ba712e53b006c794b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() to indicate the start of the HTTP response message.  <a href="core__http__client_8c.html#a9967a0058c6a281ba712e53b006c794b">More...</a><br /></td></tr>
-<tr class="separator:a9967a0058c6a281ba712e53b006c794b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65e3484868f697a7ddbaea66f60208c4"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a65e3484868f697a7ddbaea66f60208c4">httpParserOnStatusCallback</a> (http_parser *pHttpParser, const char *pLoc, size_t length)</td></tr>
-<tr class="memdesc:a65e3484868f697a7ddbaea66f60208c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() when the HTTP response status-code and its associated reason-phrase are found.  <a href="core__http__client_8c.html#a65e3484868f697a7ddbaea66f60208c4">More...</a><br /></td></tr>
-<tr class="separator:a65e3484868f697a7ddbaea66f60208c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accc77efd739f6f83734a735e2a994aa0"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#accc77efd739f6f83734a735e2a994aa0">httpParserOnHeaderFieldCallback</a> (http_parser *pHttpParser, const char *pLoc, size_t length)</td></tr>
-<tr class="memdesc:accc77efd739f6f83734a735e2a994aa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() when an HTTP response header field is found.  <a href="core__http__client_8c.html#accc77efd739f6f83734a735e2a994aa0">More...</a><br /></td></tr>
-<tr class="separator:accc77efd739f6f83734a735e2a994aa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a248fecda36ee7b7ff5c958aa47014e8d"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a248fecda36ee7b7ff5c958aa47014e8d">httpParserOnHeaderValueCallback</a> (http_parser *pHttpParser, const char *pLoc, size_t length)</td></tr>
-<tr class="memdesc:a248fecda36ee7b7ff5c958aa47014e8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() when an HTTP response header value is found.  <a href="core__http__client_8c.html#a248fecda36ee7b7ff5c958aa47014e8d">More...</a><br /></td></tr>
-<tr class="separator:a248fecda36ee7b7ff5c958aa47014e8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a893094c266a87942923409b4f8a918bb"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a893094c266a87942923409b4f8a918bb">httpParserOnHeadersCompleteCallback</a> (http_parser *pHttpParser)</td></tr>
-<tr class="memdesc:a893094c266a87942923409b4f8a918bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() when the end of the headers are found.  <a href="core__http__client_8c.html#a893094c266a87942923409b4f8a918bb">More...</a><br /></td></tr>
-<tr class="separator:a893094c266a87942923409b4f8a918bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05d8d29ff2474a611bedc010c95220e8"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a05d8d29ff2474a611bedc010c95220e8">httpParserOnBodyCallback</a> (http_parser *pHttpParser, const char *pLoc, size_t length)</td></tr>
-<tr class="memdesc:a05d8d29ff2474a611bedc010c95220e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() when the HTTP response body is found.  <a href="core__http__client_8c.html#a05d8d29ff2474a611bedc010c95220e8">More...</a><br /></td></tr>
-<tr class="separator:a05d8d29ff2474a611bedc010c95220e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53c5a2693d5006b4becd10e039ff4795"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a53c5a2693d5006b4becd10e039ff4795">httpParserOnMessageCompleteCallback</a> (http_parser *pHttpParser)</td></tr>
-<tr class="memdesc:a53c5a2693d5006b4becd10e039ff4795"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during http_parser_execute() to indicate the the completion of an HTTP response message.  <a href="core__http__client_8c.html#a53c5a2693d5006b4becd10e039ff4795">More...</a><br /></td></tr>
-<tr class="separator:a53c5a2693d5006b4becd10e039ff4795"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b80abb861e4a3c932f7654965d048e2"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a3b80abb861e4a3c932f7654965d048e2">httpParserOnMessageBeginCallback</a> (llhttp_t *pHttpParser)</td></tr>
+<tr class="memdesc:a3b80abb861e4a3c932f7654965d048e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() to indicate the start of the HTTP response message.  <a href="core__http__client_8c.html#a3b80abb861e4a3c932f7654965d048e2">More...</a><br /></td></tr>
+<tr class="separator:a3b80abb861e4a3c932f7654965d048e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9969e1962576e00282f5c89d3c3f0c7"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#af9969e1962576e00282f5c89d3c3f0c7">httpParserOnStatusCallback</a> (llhttp_t *pHttpParser, const char *pLoc, size_t length)</td></tr>
+<tr class="memdesc:af9969e1962576e00282f5c89d3c3f0c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() when the HTTP response status-code and its associated reason-phrase are found.  <a href="core__http__client_8c.html#af9969e1962576e00282f5c89d3c3f0c7">More...</a><br /></td></tr>
+<tr class="separator:af9969e1962576e00282f5c89d3c3f0c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abca956d6f2e363079ae75b4866237fbd"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#abca956d6f2e363079ae75b4866237fbd">httpParserOnHeaderFieldCallback</a> (llhttp_t *pHttpParser, const char *pLoc, size_t length)</td></tr>
+<tr class="memdesc:abca956d6f2e363079ae75b4866237fbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() when an HTTP response header field is found.  <a href="core__http__client_8c.html#abca956d6f2e363079ae75b4866237fbd">More...</a><br /></td></tr>
+<tr class="separator:abca956d6f2e363079ae75b4866237fbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af84a3a54b962a2fb729a1baed2855980"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#af84a3a54b962a2fb729a1baed2855980">httpParserOnHeaderValueCallback</a> (llhttp_t *pHttpParser, const char *pLoc, size_t length)</td></tr>
+<tr class="memdesc:af84a3a54b962a2fb729a1baed2855980"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() when an HTTP response header value is found.  <a href="core__http__client_8c.html#af84a3a54b962a2fb729a1baed2855980">More...</a><br /></td></tr>
+<tr class="separator:af84a3a54b962a2fb729a1baed2855980"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c11a16ffd30a501b33f0bd82d9221aa"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a6c11a16ffd30a501b33f0bd82d9221aa">httpParserOnHeadersCompleteCallback</a> (llhttp_t *pHttpParser)</td></tr>
+<tr class="memdesc:a6c11a16ffd30a501b33f0bd82d9221aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() when the end of the headers are found.  <a href="core__http__client_8c.html#a6c11a16ffd30a501b33f0bd82d9221aa">More...</a><br /></td></tr>
+<tr class="separator:a6c11a16ffd30a501b33f0bd82d9221aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa205efbafedf906ea7a82cb110fcf34"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#aaa205efbafedf906ea7a82cb110fcf34">httpParserOnBodyCallback</a> (llhttp_t *pHttpParser, const char *pLoc, size_t length)</td></tr>
+<tr class="memdesc:aaa205efbafedf906ea7a82cb110fcf34"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() when the HTTP response body is found.  <a href="core__http__client_8c.html#aaa205efbafedf906ea7a82cb110fcf34">More...</a><br /></td></tr>
+<tr class="separator:aaa205efbafedf906ea7a82cb110fcf34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e49b695c98e39c3b5c62102371a236c"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a0e49b695c98e39c3b5c62102371a236c">httpParserOnMessageCompleteCallback</a> (llhttp_t *pHttpParser)</td></tr>
+<tr class="memdesc:a0e49b695c98e39c3b5c62102371a236c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback invoked during llhttp_execute() to indicate the the completion of an HTTP response message.  <a href="core__http__client_8c.html#a0e49b695c98e39c3b5c62102371a236c">More...</a><br /></td></tr>
+<tr class="separator:a0e49b695c98e39c3b5c62102371a236c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b52dd3324e97b23af678200d7aa0489"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a5b52dd3324e97b23af678200d7aa0489">processCompleteHeader</a> (<a class="el" href="struct_h_t_t_p_parsing_context__t.html">HTTPParsingContext_t</a> *pParsingContext)</td></tr>
 <tr class="memdesc:a5b52dd3324e97b23af678200d7aa0489"><td class="mdescLeft">&#160;</td><td class="mdescRight">When a complete header is found the HTTP response header count increases and the application is notified.  <a href="core__http__client_8c.html#a5b52dd3324e97b23af678200d7aa0489">More...</a><br /></td></tr>
 <tr class="separator:a5b52dd3324e97b23af678200d7aa0489"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a038d58442b6626dc81b596e538d49e44"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a038d58442b6626dc81b596e538d49e44">processHttpParserError</a> (const http_parser *pHttpParser)</td></tr>
-<tr class="memdesc:a038d58442b6626dc81b596e538d49e44"><td class="mdescLeft">&#160;</td><td class="mdescRight">When parsing is complete an error could be indicated in pHttpParser-&gt;http_errno. This function translates that error into a library specific error code.  <a href="core__http__client_8c.html#a038d58442b6626dc81b596e538d49e44">More...</a><br /></td></tr>
-<tr class="separator:a038d58442b6626dc81b596e538d49e44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37308fd95d37932ee4111833c81fd387"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a37308fd95d37932ee4111833c81fd387">processLlhttpError</a> (const llhttp_t *pHttpParser)</td></tr>
+<tr class="memdesc:a37308fd95d37932ee4111833c81fd387"><td class="mdescLeft">&#160;</td><td class="mdescRight">When parsing is complete an error could be indicated in pHttpParser-&gt;error. This function translates that error into a library specific error code.  <a href="core__http__client_8c.html#a37308fd95d37932ee4111833c81fd387">More...</a><br /></td></tr>
+<tr class="separator:a37308fd95d37932ee4111833c81fd387"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15e2e903453a26272e26e4d6f8678cb6"><td class="memItemLeft" align="right" valign="top">static int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__client_8c.html#a15e2e903453a26272e26e4d6f8678cb6">caseInsensitiveStringCmp</a> (const char *str1, const char *str2, size_t n)</td></tr>
 <tr class="memdesc:a15e2e903453a26272e26e4d6f8678cb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares at most the first n bytes of str1 and str2 without case sensitivity and n must be less than the actual size of either string.  <a href="core__http__client_8c.html#a15e2e903453a26272e26e4d6f8678cb6">More...</a><br /></td></tr>
 <tr class="separator:a15e2e903453a26272e26e4d6f8678cb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1041,8 +1041,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a73f3186eba2edadf19cf264566f3bb18" name="a73f3186eba2edadf19cf264566f3bb18"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73f3186eba2edadf19cf264566f3bb18">&#9670;&nbsp;</a></span>findHeaderFieldParserCallback()</h2>
+<a id="a61b259c7549a0b1ad384984e5606ef96" name="a61b259c7549a0b1ad384984e5606ef96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61b259c7549a0b1ad384984e5606ef96">&#9670;&nbsp;</a></span>findHeaderFieldParserCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1053,7 +1053,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int findHeaderFieldParserCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em>, </td>
         </tr>
         <tr>
@@ -1090,12 +1090,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns <a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> to indicate continuation with parsing. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns <a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> to indicate continuation with parsing. </dd></dl>
 
 </div>
 </div>
-<a id="a9f8da60e8a7694171f1962f106a8b318" name="a9f8da60e8a7694171f1962f106a8b318"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f8da60e8a7694171f1962f106a8b318">&#9670;&nbsp;</a></span>findHeaderValueParserCallback()</h2>
+<a id="a3cfdb96985547d0cf5455a09591b1ad6" name="a3cfdb96985547d0cf5455a09591b1ad6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3cfdb96985547d0cf5455a09591b1ad6">&#9670;&nbsp;</a></span>findHeaderValueParserCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1106,7 +1106,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int findHeaderValueParserCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em>, </td>
         </tr>
         <tr>
@@ -1134,7 +1134,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>The "on_header_value" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function. The callback sets the user-provided output parameters for header value if the requested header's field was found in the <a class="el" href="core__http__client_8c.html#a73f3186eba2edadf19cf264566f3bb18">findHeaderFieldParserCallback</a> function. </p>
+<p>The "on_header_value" callback for the HTTP parser used by the <a class="el" href="core__http__client_8c.html#a9318ad3c65f775d5fb3467de19320a58" title="Find the specified header field in the response buffer.">findHeaderInResponse</a> function. The callback sets the user-provided output parameters for header value if the requested header's field was found in the <a class="el" href="core__http__client_8c.html#a61b259c7549a0b1ad384984e5606ef96">findHeaderFieldParserCallback</a> function. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pHttpParser</td><td>Parsing object containing state and callback context. </td></tr>
@@ -1143,12 +1143,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns <a class="el" href="core__http__client__private_8h.html#a4235a9eef858e49d3be23e92b4398aee" title="Return value for the http-parser registered callback to signal halting further execution.">HTTP_PARSER_STOP_PARSING</a>, if the header field/value pair are found, otherwise <a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> is returned. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns <a class="el" href="core__http__client__private_8h.html#af5a36ead2ea9999b4c8a8de264971e37" title="Return value for llhttp registered callback to signal halting further execution.">LLHTTP_STOP_PARSING</a>, if the header field/value pair are found, otherwise <a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> is returned. </dd></dl>
 
 </div>
 </div>
-<a id="a2faae933523718600b6ae64f6ae022bd" name="a2faae933523718600b6ae64f6ae022bd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2faae933523718600b6ae64f6ae022bd">&#9670;&nbsp;</a></span>findHeaderOnHeaderCompleteCallback()</h2>
+<a id="af220add6fe8cf67876f3118c7ce3a82c" name="af220add6fe8cf67876f3118c7ce3a82c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af220add6fe8cf67876f3118c7ce3a82c">&#9670;&nbsp;</a></span>findHeaderOnHeaderCompleteCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1159,7 +1159,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int findHeaderOnHeaderCompleteCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1179,7 +1179,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns <a class="el" href="core__http__client__private_8h.html#a4235a9eef858e49d3be23e92b4398aee" title="Return value for the http-parser registered callback to signal halting further execution.">HTTP_PARSER_STOP_PARSING</a> for the parser to halt further execution, as all headers have been parsed in the response. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns <a class="el" href="core__http__client__private_8h.html#af00ceeb764d42e14b056c1b9c21e57c0" title="Return value for llhttp_t.on_headers_complete to signal halting further execution....">LLHTTP_STOP_PARSING_NO_HEADER</a> for the parser to halt further execution, as all headers have been parsed in the response. </dd></dl>
 
 </div>
 </div>
@@ -1281,14 +1281,14 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>One of the following:<ul>
 <li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd" title="The HTTP Client library function completed successfully.">HTTPSuccess</a></li>
 <li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faed61c0d831bc64e24db373b803837138" title="The HTTP Client library function input an invalid parameter.">HTTPInvalidParameter</a></li>
-<li>Please see <a class="el" href="core__http__client_8c.html#a038d58442b6626dc81b596e538d49e44" title="When parsing is complete an error could be indicated in pHttpParser-&gt;http_errno. This function transl...">processHttpParserError</a> for parsing errors returned. </li>
+<li>Please see <a class="el" href="core__http__client_8c.html#a37308fd95d37932ee4111833c81fd387" title="When parsing is complete an error could be indicated in pHttpParser-&gt;error. This function translates ...">processLlhttpError</a> for parsing errors returned. </li>
 </ul>
 </dd></dl>
 
 </div>
 </div>
-<a id="a9967a0058c6a281ba712e53b006c794b" name="a9967a0058c6a281ba712e53b006c794b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9967a0058c6a281ba712e53b006c794b">&#9670;&nbsp;</a></span>httpParserOnMessageBeginCallback()</h2>
+<a id="a3b80abb861e4a3c932f7654965d048e2" name="a3b80abb861e4a3c932f7654965d048e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b80abb861e4a3c932f7654965d048e2">&#9670;&nbsp;</a></span>httpParserOnMessageBeginCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1299,7 +1299,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnMessageBeginCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1311,7 +1311,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() to indicate the start of the HTTP response message. </p>
+<p>Callback invoked during llhttp_execute() to indicate the start of the HTTP response message. </p>
 <p >This callback is invoked when an "H" in the "HTTP/1.1" that starts a response is found.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1319,12 +1319,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
 
 </div>
 </div>
-<a id="a65e3484868f697a7ddbaea66f60208c4" name="a65e3484868f697a7ddbaea66f60208c4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a65e3484868f697a7ddbaea66f60208c4">&#9670;&nbsp;</a></span>httpParserOnStatusCallback()</h2>
+<a id="af9969e1962576e00282f5c89d3c3f0c7" name="af9969e1962576e00282f5c89d3c3f0c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9969e1962576e00282f5c89d3c3f0c7">&#9670;&nbsp;</a></span>httpParserOnStatusCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1335,7 +1335,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnStatusCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em>, </td>
         </tr>
         <tr>
@@ -1363,7 +1363,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() when the HTTP response status-code and its associated reason-phrase are found. </p>
+<p>Callback invoked during llhttp_execute() when the HTTP response status-code and its associated reason-phrase are found. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pHttpParser</td><td>Parsing object containing state and callback context. </td></tr>
@@ -1372,12 +1372,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
 
 </div>
 </div>
-<a id="accc77efd739f6f83734a735e2a994aa0" name="accc77efd739f6f83734a735e2a994aa0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#accc77efd739f6f83734a735e2a994aa0">&#9670;&nbsp;</a></span>httpParserOnHeaderFieldCallback()</h2>
+<a id="abca956d6f2e363079ae75b4866237fbd" name="abca956d6f2e363079ae75b4866237fbd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abca956d6f2e363079ae75b4866237fbd">&#9670;&nbsp;</a></span>httpParserOnHeaderFieldCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1388,7 +1388,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnHeaderFieldCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em>, </td>
         </tr>
         <tr>
@@ -1416,7 +1416,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() when an HTTP response header field is found. </p>
+<p>Callback invoked during llhttp_execute() when an HTTP response header field is found. </p>
 <p >If only part of the header field was found, then parsing of the next part of the response message will invoke this callback in succession.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1426,12 +1426,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
 
 </div>
 </div>
-<a id="a248fecda36ee7b7ff5c958aa47014e8d" name="a248fecda36ee7b7ff5c958aa47014e8d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a248fecda36ee7b7ff5c958aa47014e8d">&#9670;&nbsp;</a></span>httpParserOnHeaderValueCallback()</h2>
+<a id="af84a3a54b962a2fb729a1baed2855980" name="af84a3a54b962a2fb729a1baed2855980"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af84a3a54b962a2fb729a1baed2855980">&#9670;&nbsp;</a></span>httpParserOnHeaderValueCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1442,7 +1442,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnHeaderValueCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em>, </td>
         </tr>
         <tr>
@@ -1470,8 +1470,8 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() when an HTTP response header value is found. </p>
-<p >This header value corresponds to the header field that was found in the immediately preceding <a class="el" href="core__http__client_8c.html#accc77efd739f6f83734a735e2a994aa0" title="Callback invoked during http_parser_execute() when an HTTP response header field is found.">httpParserOnHeaderFieldCallback()</a>.</p>
+<p>Callback invoked during llhttp_execute() when an HTTP response header value is found. </p>
+<p >This header value corresponds to the header field that was found in the immediately preceding <a class="el" href="core__http__client_8c.html#abca956d6f2e363079ae75b4866237fbd" title="Callback invoked during llhttp_execute() when an HTTP response header field is found.">httpParserOnHeaderFieldCallback()</a>.</p>
 <p >If only part of the header value was found, then parsing of the next part of the response message will invoke this callback in succession.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1481,12 +1481,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> to continue parsing. </dd></dl>
 
 </div>
 </div>
-<a id="a893094c266a87942923409b4f8a918bb" name="a893094c266a87942923409b4f8a918bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a893094c266a87942923409b4f8a918bb">&#9670;&nbsp;</a></span>httpParserOnHeadersCompleteCallback()</h2>
+<a id="a6c11a16ffd30a501b33f0bd82d9221aa" name="a6c11a16ffd30a501b33f0bd82d9221aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c11a16ffd30a501b33f0bd82d9221aa">&#9670;&nbsp;</a></span>httpParserOnHeadersCompleteCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1497,7 +1497,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnHeadersCompleteCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1509,7 +1509,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() when the end of the headers are found. </p>
+<p>Callback invoked during llhttp_execute() when the end of the headers are found. </p>
 <p >The end of the headers is signaled in a HTTP response message by another "\r\n" after the final header line.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1517,12 +1517,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1" title="Return value for http_parser registered callback to signal continuation of HTTP response parsing.">HTTP_PARSER_CONTINUE_PARSING</a> to continue parsing. <a class="el" href="core__http__client__private_8h.html#a4235a9eef858e49d3be23e92b4398aee" title="Return value for the http-parser registered callback to signal halting further execution.">HTTP_PARSER_STOP_PARSING</a> is returned if the response is for a HEAD request. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51" title="Return value for llhttp registered callback to signal continuation of HTTP response parsing....">LLHTTP_CONTINUE_PARSING</a> to continue parsing. <a class="el" href="core__http__client__private_8h.html#a13cccade58f709272a38241313d5dad5" title="Return value for llhttp_t.on_headers_complete to signal that the HTTP response has no body and to hal...">LLHTTP_STOP_PARSING_NO_BODY</a> is returned if the response is for a HEAD request. </dd></dl>
 
 </div>
 </div>
-<a id="a05d8d29ff2474a611bedc010c95220e8" name="a05d8d29ff2474a611bedc010c95220e8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05d8d29ff2474a611bedc010c95220e8">&#9670;&nbsp;</a></span>httpParserOnBodyCallback()</h2>
+<a id="aaa205efbafedf906ea7a82cb110fcf34" name="aaa205efbafedf906ea7a82cb110fcf34"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa205efbafedf906ea7a82cb110fcf34">&#9670;&nbsp;</a></span>httpParserOnBodyCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1533,7 +1533,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnBodyCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em>, </td>
         </tr>
         <tr>
@@ -1561,7 +1561,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() when the HTTP response body is found. </p>
+<p>Callback invoked during llhttp_execute() when the HTTP response body is found. </p>
 <p >If only part of the response body was found, then parsing of the next part of the response message will invoke this callback in succession.</p>
 <p >This callback will be also invoked in succession if the response body is of type "Transfer-Encoding: chunked". This callback will be invoked after each chunk header.</p>
 <p >The follow is an example of a Transfer-Encoding chunked response:</p>
@@ -1586,12 +1586,12 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Zero to continue parsing. All other return values will stop parsing and http_parser_execute() will return with status HPE_CB_body. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Zero to continue parsing. All other return values will stop parsing and llhttp_execute() will return with the same value. </dd></dl>
 
 </div>
 </div>
-<a id="a53c5a2693d5006b4becd10e039ff4795" name="a53c5a2693d5006b4becd10e039ff4795"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a53c5a2693d5006b4becd10e039ff4795">&#9670;&nbsp;</a></span>httpParserOnMessageCompleteCallback()</h2>
+<a id="a0e49b695c98e39c3b5c62102371a236c" name="a0e49b695c98e39c3b5c62102371a236c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e49b695c98e39c3b5c62102371a236c">&#9670;&nbsp;</a></span>httpParserOnMessageCompleteCallback()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1602,7 +1602,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">static int httpParserOnMessageCompleteCallback </td>
           <td>(</td>
-          <td class="paramtype">http_parser *&#160;</td>
+          <td class="paramtype">llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1614,18 +1614,18 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Callback invoked during http_parser_execute() to indicate the the completion of an HTTP response message. </p>
+<p>Callback invoked during llhttp_execute() to indicate the the completion of an HTTP response message. </p>
 <p >When there is no response body, the end of the response message is when the headers end. This is indicated by another "\r\n" after the final header line.</p>
-<p >When there is response body, the end of the response message is when the full "Content-Length" value is parsed following the end of the headers. If there is no Content-Length header, then http_parser_execute() expects a zero length-ed parsing data to indicate the end of the response.</p>
+<p >When there is response body, the end of the response message is when the full "Content-Length" value is parsed following the end of the headers. If there is no Content-Length header, then llhttp_execute() expects a zero length-ed parsing data to indicate the end of the response.</p>
 <p >For a "Transfer-Encoding: chunked" type of response message, the complete response message is signaled by a terminating chunk header with length zero.</p>
-<p >See <a href="https://github.com/nodejs/http-parser">https://github.com/nodejs/http-parser</a> for more information.</p>
+<p >See <a href="https://github.com/nodejs/llhttp">https://github.com/nodejs/llhttp</a> for more information.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pHttpParser</td><td>Parsing object containing state and callback context.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Zero to continue parsing. All other return values will stop parsing and http_parser_execute() will return with status HPE_CB_message_complete. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Zero to continue parsing. All other return values will stop parsing and llhttp_execute() will return with the same value. </dd></dl>
 
 </div>
 </div>
@@ -1654,7 +1654,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>When a complete header is found the HTTP response header count increases and the application is notified. </p>
-<p >This function is invoked only in callbacks that could follow <a class="el" href="core__http__client_8c.html#a248fecda36ee7b7ff5c958aa47014e8d" title="Callback invoked during http_parser_execute() when an HTTP response header value is found.">httpParserOnHeaderValueCallback</a>. These callbacks are <a class="el" href="core__http__client_8c.html#accc77efd739f6f83734a735e2a994aa0" title="Callback invoked during http_parser_execute() when an HTTP response header field is found.">httpParserOnHeaderFieldCallback</a> and <a class="el" href="core__http__client_8c.html#a893094c266a87942923409b4f8a918bb" title="Callback invoked during http_parser_execute() when the end of the headers are found.">httpParserOnHeadersCompleteCallback</a>. A header field and value is not is not known to be complete until <a class="el" href="core__http__client_8c.html#a248fecda36ee7b7ff5c958aa47014e8d" title="Callback invoked during http_parser_execute() when an HTTP response header value is found.">httpParserOnHeaderValueCallback</a> is not called in succession.</p>
+<p >This function is invoked only in callbacks that could follow <a class="el" href="core__http__client_8c.html#af84a3a54b962a2fb729a1baed2855980" title="Callback invoked during llhttp_execute() when an HTTP response header value is found.">httpParserOnHeaderValueCallback</a>. These callbacks are <a class="el" href="core__http__client_8c.html#abca956d6f2e363079ae75b4866237fbd" title="Callback invoked during llhttp_execute() when an HTTP response header field is found.">httpParserOnHeaderFieldCallback</a> and <a class="el" href="core__http__client_8c.html#a6c11a16ffd30a501b33f0bd82d9221aa" title="Callback invoked during llhttp_execute() when the end of the headers are found.">httpParserOnHeadersCompleteCallback</a>. A header field and value is not is not known to be complete until <a class="el" href="core__http__client_8c.html#af84a3a54b962a2fb729a1baed2855980" title="Callback invoked during llhttp_execute() when an HTTP response header value is found.">httpParserOnHeaderValueCallback</a> is not called in succession.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pParsingContext</td><td>Parsing state containing information to notify the application of a complete header. </td></tr>
@@ -1664,8 +1664,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a038d58442b6626dc81b596e538d49e44" name="a038d58442b6626dc81b596e538d49e44"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a038d58442b6626dc81b596e538d49e44">&#9670;&nbsp;</a></span>processHttpParserError()</h2>
+<a id="a37308fd95d37932ee4111833c81fd387" name="a37308fd95d37932ee4111833c81fd387"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37308fd95d37932ee4111833c81fd387">&#9670;&nbsp;</a></span>processLlhttpError()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1674,9 +1674,9 @@ Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a> processHttpParserError </td>
+          <td class="memname">static <a class="el" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a> processLlhttpError </td>
           <td>(</td>
-          <td class="paramtype">const http_parser *&#160;</td>
+          <td class="paramtype">const llhttp_t *&#160;</td>
           <td class="paramname"><em>pHttpParser</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1688,7 +1688,7 @@ Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>When parsing is complete an error could be indicated in pHttpParser-&gt;http_errno. This function translates that error into a library specific error code. </p>
+<p>When parsing is complete an error could be indicated in pHttpParser-&gt;error. This function translates that error into a library specific error code. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pHttpParser</td><td>Third-party HTTP parsing context.</td></tr>
@@ -1697,7 +1697,6 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>One of the following:<ul>
 <li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd" title="The HTTP Client library function completed successfully.">HTTPSuccess</a></li>
-<li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac9de51dc48124bbbc331a9161afe3862" title="The server sent more headers than the configured HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES.">HTTPSecurityAlertResponseHeadersSizeLimitExceeded</a></li>
 <li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf6441d45e373b7686e45c2d9a0d12dd3" title="A response contained the &quot;Connection: close&quot; header, but there was more data at the end of the comple...">HTTPSecurityAlertExtraneousResponseData</a></li>
 <li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faef569c934115aa105cc2cff1f72ef78b" title="The server sent a chunk header containing an invalid character.">HTTPSecurityAlertInvalidChunkHeader</a></li>
 <li><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fab6ed7f7e24e250896a7b35825006d460" title="The server sent a response with an invalid character in the HTTP protocol version.">HTTPSecurityAlertInvalidProtocolVersion</a></li>
@@ -1829,7 +1828,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line">httpLibraryStatus = <a class="code hl_function" href="core__http__client_8c.html#ab523c4d4e3b756928d463bd864361a9c">HTTPClient_InitializeRequestHeaders</a>( &amp;requestHeaders,</div>
 <div class="line">                                                         &amp;requestInfo );</div>
-<div class="ttc" id="acore__http__client_8c_html_ab523c4d4e3b756928d463bd864361a9c"><div class="ttname"><a href="core__http__client_8c.html#ab523c4d4e3b756928d463bd864361a9c">HTTPClient_InitializeRequestHeaders</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_InitializeRequestHeaders(HTTPRequestHeaders_t *pRequestHeaders, const HTTPRequestInfo_t *pRequestInfo)</div><div class="ttdoc">Initialize the request headers, stored in HTTPRequestHeaders_t.pBuffer, with initial configurations f...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1557</div></div>
+<div class="ttc" id="acore__http__client_8c_html_ab523c4d4e3b756928d463bd864361a9c"><div class="ttname"><a href="core__http__client_8c.html#ab523c4d4e3b756928d463bd864361a9c">HTTPClient_InitializeRequestHeaders</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_InitializeRequestHeaders(HTTPRequestHeaders_t *pRequestHeaders, const HTTPRequestInfo_t *pRequestInfo)</div><div class="ttdoc">Initialize the request headers, stored in HTTPRequestHeaders_t.pBuffer, with initial configurations f...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1541</div></div>
 <div class="ttc" id="agroup__http__constants_html_ga91faefe43f8d3577719ba174c8a5ebcd"><div class="ttname"><a href="group__http__constants.html#ga91faefe43f8d3577719ba174c8a5ebcd">HTTP_METHOD_GET</a></div><div class="ttdeci">#define HTTP_METHOD_GET</div><div class="ttdef"><b>Definition:</b> core_http_client.h:60</div></div>
 <div class="ttc" id="agroup__http__enum__types_html_ga39fad9050063a355ffd95e95381e743f"><div class="ttname"><a href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a></div><div class="ttdeci">HTTPStatus_t</div><div class="ttdoc">The HTTP Client library return status.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:162</div></div>
 <div class="ttc" id="agroup__http__enum__types_html_gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd"><div class="ttname"><a href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd">HTTPSuccess</a></div><div class="ttdeci">@ HTTPSuccess</div><div class="ttdoc">The HTTP Client library function completed successfully.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:173</div></div>
@@ -1925,7 +1924,7 @@ Functions</h2></td></tr>
 <div class="line">                                          <span class="keyword">sizeof</span>( <span class="stringliteral">&quot;Request-Header-Field&quot;</span> ) - 1U,</div>
 <div class="line">                                          <span class="stringliteral">&quot;Request-Header-Value&quot;</span>,</div>
 <div class="line">                                          <span class="keyword">sizeof</span>(<span class="stringliteral">&quot;Request-Header-Value&quot;</span>) - 1U );</div>
-<div class="ttc" id="acore__http__client_8c_html_a451c30912fcdf48c71f9144788250916"><div class="ttname"><a href="core__http__client_8c.html#a451c30912fcdf48c71f9144788250916">HTTPClient_AddHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddHeader(HTTPRequestHeaders_t *pRequestHeaders, const char *pField, size_t fieldLen, const char *pValue, size_t valueLen)</div><div class="ttdoc">Add a header to the request headers stored in HTTPRequestHeaders_t.pBuffer.</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1654</div></div>
+<div class="ttc" id="acore__http__client_8c_html_a451c30912fcdf48c71f9144788250916"><div class="ttname"><a href="core__http__client_8c.html#a451c30912fcdf48c71f9144788250916">HTTPClient_AddHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddHeader(HTTPRequestHeaders_t *pRequestHeaders, const char *pField, size_t fieldLen, const char *pValue, size_t valueLen)</div><div class="ttdoc">Add a header to the request headers stored in HTTPRequestHeaders_t.pBuffer.</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1638</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -1974,7 +1973,7 @@ Functions</h2></td></tr>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Request for bytes 0 to 1023.</span></div>
 <div class="line">httpLibraryStatus = <a class="code hl_function" href="core__http__client_8c.html#af91c4a57452556db2be926743aa02b81">HTTPClient_AddRangeHeader</a>( &amp;requestHeaders, 0, 1023 );</div>
-<div class="ttc" id="acore__http__client_8c_html_af91c4a57452556db2be926743aa02b81"><div class="ttname"><a href="core__http__client_8c.html#af91c4a57452556db2be926743aa02b81">HTTPClient_AddRangeHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddRangeHeader(HTTPRequestHeaders_t *pRequestHeaders, int32_t rangeStartOrlastNbytes, int32_t rangeEnd)</div><div class="ttdoc">Add the byte range request header to the request headers store in HTTPRequestHeaders_t....</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1714</div></div>
+<div class="ttc" id="acore__http__client_8c_html_af91c4a57452556db2be926743aa02b81"><div class="ttname"><a href="core__http__client_8c.html#af91c4a57452556db2be926743aa02b81">HTTPClient_AddRangeHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddRangeHeader(HTTPRequestHeaders_t *pRequestHeaders, int32_t rangeStartOrlastNbytes, int32_t rangeEnd)</div><div class="ttdoc">Add the byte range request header to the request headers store in HTTPRequestHeaders_t....</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1698</div></div>
 </div><!-- fragment --></li>
 <li>Request for the last N bytes, represented by <code>rangeStartOrlastNbytes</code>. <code>rangeStartOrlastNbytes</code> should be negative and <code>rangeEnd</code> should be <a class="el" href="group__http__constants.html#ga4719dc6fd6e1b92739e1c3a88efa7046" title="Flag that represents End of File byte in the range specification of a Range Request....">HTTP_RANGE_REQUEST_END_OF_FILE</a>. Example request header line: <code>Range: bytes=-512\r\n</code> for requesting the last 512 bytes (or bytes in the range [512, 1023] for a 1KB sized file).<br  />
  <b>Example</b> <div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a> httpLibraryStatus = <a class="code hl_enumvalue" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd">HTTPSuccess</a>;</div>
@@ -2137,7 +2136,7 @@ Security alerts are listed below, please see <a class="el" href="group__http__en
 <div class="line">        <span class="comment">// Handle a response Status-Code of 200 OK.</span></div>
 <div class="line">    }</div>
 <div class="line">}</div>
-<div class="ttc" id="acore__http__client_8c_html_aa33b3334128496487d820f0da7ae5601"><div class="ttname"><a href="core__http__client_8c.html#aa33b3334128496487d820f0da7ae5601">HTTPClient_Send</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_Send(const TransportInterface_t *pTransport, HTTPRequestHeaders_t *pRequestHeaders, const uint8_t *pRequestBodyBuf, size_t reqBodyBufLen, HTTPResponse_t *pResponse, uint32_t sendFlags)</div><div class="ttdoc">Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:2154</div></div>
+<div class="ttc" id="acore__http__client_8c_html_aa33b3334128496487d820f0da7ae5601"><div class="ttname"><a href="core__http__client_8c.html#aa33b3334128496487d820f0da7ae5601">HTTPClient_Send</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_Send(const TransportInterface_t *pTransport, HTTPRequestHeaders_t *pRequestHeaders, const uint8_t *pRequestBodyBuf, size_t reqBodyBufLen, HTTPResponse_t *pResponse, uint32_t sendFlags)</div><div class="ttdoc">Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:2138</div></div>
 <div class="ttc" id="astruct_h_t_t_p_response__t_html"><div class="ttname"><a href="struct_h_t_t_p_response__t.html">HTTPResponse_t</a></div><div class="ttdoc">Represents an HTTP response.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:434</div></div>
 <div class="ttc" id="astruct_transport_interface__t_html"><div class="ttname"><a href="struct_transport_interface__t.html">TransportInterface_t</a></div><div class="ttdoc">The transport layer interface.</div><div class="ttdef"><b>Definition:</b> transport_interface.h:252</div></div>
 <div class="ttc" id="astruct_transport_interface__t_html_a01cd9935e9a5266ca196243a0054d489"><div class="ttname"><a href="struct_transport_interface__t.html#a01cd9935e9a5266ca196243a0054d489">TransportInterface_t::send</a></div><div class="ttdeci">TransportSend_t send</div><div class="ttdef"><b>Definition:</b> transport_interface.h:254</div></div>
@@ -2225,7 +2224,7 @@ Security alerts are listed below, please see <a class="el" href="group__http__en
 <div class="line">                                           <span class="keyword">sizeof</span>(<span class="stringliteral">&quot;Date&quot;</span>) - 1,</div>
 <div class="line">                                           &amp;pDateLoc,</div>
 <div class="line">                                           &amp;dateLen );</div>
-<div class="ttc" id="acore__http__client_8c_html_ac621a0756f290f1437e2c72a24e5b0f9"><div class="ttname"><a href="core__http__client_8c.html#ac621a0756f290f1437e2c72a24e5b0f9">HTTPClient_ReadHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_ReadHeader(const HTTPResponse_t *pResponse, const char *pField, size_t fieldLen, const char **pValueLoc, size_t *pValueLen)</div><div class="ttdoc">Read a header from a buffer containing a complete HTTP response. This will return the location of the...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:2496</div></div>
+<div class="ttc" id="acore__http__client_8c_html_ac621a0756f290f1437e2c72a24e5b0f9"><div class="ttname"><a href="core__http__client_8c.html#ac621a0756f290f1437e2c72a24e5b0f9">HTTPClient_ReadHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_ReadHeader(const HTTPResponse_t *pResponse, const char *pField, size_t fieldLen, const char **pValueLoc, size_t *pValueLen)</div><div class="ttdoc">Read a header from a buffer containing a complete HTTP response. This will return the location of the...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:2483</div></div>
 </div><!-- fragment --> 
 </div>
 </div>

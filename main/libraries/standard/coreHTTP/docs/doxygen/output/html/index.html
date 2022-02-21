@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.0.2</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <p >This HTTP Client library implements a subset of the HTTP/1.1 protocol. Features of this library include:</p><ul>
 <li>Fully synchronous API, to allow applications to completely manage their concurrency and multi-threading.</li>
 <li>Operations on user supplied buffers, so that applications have complete control of their memory allocation strategy.</li>
-<li>Integration with <a href="https://github.com/nodejs/http-parser">http-parser</a> to handle chunked encoding.</li>
+<li>Integration with <a href="https://github.com/nodejs/llhttp">llhttp</a> to handle chunked encoding.</li>
 </ul>
 <p >Feature of HTTP/1.1 not supported in this library:</p><ul>
 <li>Streaming uploads and downloads. Range requests for partial content responses are highly encouraged with this API.</li>
@@ -116,11 +116,15 @@ Memory Requirements</h1>
 <tr>
 <td><b>File</b> </td><td><b><center>With -O1 Optimization</center></b> </td><td><b><center>With -Os Optimization</center></b>  </td></tr>
 <tr>
-<td><a class="el" href="core__http__client_8c.html" title="Implements the user-facing functions in core_http_client.h.">core_http_client.c</a> </td><td><center>3.2K</center> </td><td><center>2.6K</center>  </td></tr>
+<td><a class="el" href="core__http__client_8c.html" title="Implements the user-facing functions in core_http_client.h.">core_http_client.c</a> </td><td><center>3.2K</center> </td><td><center>2.5K</center>  </td></tr>
 <tr>
-<td>http_parser.c (http-parser) </td><td><center>15.7K</center> </td><td><center>13.0K</center>  </td></tr>
+<td>api.c (llhttp) </td><td><center>2.6K</center> </td><td><center>2.0K</center>  </td></tr>
 <tr>
-<td><b>Total estimates</b> </td><td><b><center>18.9K</center></b> </td><td><b><center>15.6K</center></b>  </td></tr>
+<td>http.c (llhttp) </td><td><center>0.3K</center> </td><td><center>0.3K</center>  </td></tr>
+<tr>
+<td>llhttp.c (llhttp) </td><td><center>17.9K</center> </td><td><center>15.9K</center>  </td></tr>
+<tr>
+<td><b>Total estimates</b> </td><td><b><center>24.0K</center></b> </td><td><b><center>20.7K</center></b>  </td></tr>
 </table>
  </p>
 </div></div><!-- PageDoc -->

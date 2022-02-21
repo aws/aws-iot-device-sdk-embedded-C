@@ -1,6 +1,7 @@
 var struct_h_t_t_p_parsing_context__t =
 [
-    [ "httpParser", "struct_h_t_t_p_parsing_context__t.html#a2eec93f35846f77ae76346b9cfd2f929", null ],
+    [ "llhttpParser", "struct_h_t_t_p_parsing_context__t.html#a73ed274cc7cab9491aac1f1a1d02b38e", null ],
+    [ "llhttpSettings", "struct_h_t_t_p_parsing_context__t.html#ae5bdb96134074a3afd9816263445d591", null ],
     [ "state", "struct_h_t_t_p_parsing_context__t.html#acecc99ec16396a6a5f2fae9aeb77c11f", null ],
     [ "pResponse", "struct_h_t_t_p_parsing_context__t.html#a82a9ef99d459edda5b28bd970e431756", null ],
     [ "isHeadResponse", "struct_h_t_t_p_parsing_context__t.html#ad76fd5c0284963414074fad62eb0cd02", null ],

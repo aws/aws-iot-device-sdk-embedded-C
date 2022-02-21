@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.0.2</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('httpclient_addrangeheader_function.htm
 <div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a> <a class="code hl_function" href="core__http__client_8c.html#af91c4a57452556db2be926743aa02b81">HTTPClient_AddRangeHeader</a>( <a class="code hl_struct" href="struct_h_t_t_p_request_headers__t.html">HTTPRequestHeaders_t</a> * pRequestHeaders,</div>
 <div class="line">                                        int32_t rangeStartOrlastNbytes,</div>
 <div class="line">                                        int32_t rangeEnd );</div>
-<div class="ttc" id="acore__http__client_8c_html_af91c4a57452556db2be926743aa02b81"><div class="ttname"><a href="core__http__client_8c.html#af91c4a57452556db2be926743aa02b81">HTTPClient_AddRangeHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddRangeHeader(HTTPRequestHeaders_t *pRequestHeaders, int32_t rangeStartOrlastNbytes, int32_t rangeEnd)</div><div class="ttdoc">Add the byte range request header to the request headers store in HTTPRequestHeaders_t....</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1714</div></div>
+<div class="ttc" id="acore__http__client_8c_html_af91c4a57452556db2be926743aa02b81"><div class="ttname"><a href="core__http__client_8c.html#af91c4a57452556db2be926743aa02b81">HTTPClient_AddRangeHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddRangeHeader(HTTPRequestHeaders_t *pRequestHeaders, int32_t rangeStartOrlastNbytes, int32_t rangeEnd)</div><div class="ttdoc">Add the byte range request header to the request headers store in HTTPRequestHeaders_t....</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1698</div></div>
 <div class="ttc" id="agroup__http__enum__types_html_ga39fad9050063a355ffd95e95381e743f"><div class="ttname"><a href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a></div><div class="ttdeci">HTTPStatus_t</div><div class="ttdoc">The HTTP Client library return status.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:162</div></div>
 <div class="ttc" id="astruct_h_t_t_p_request_headers__t_html"><div class="ttname"><a href="struct_h_t_t_p_request_headers__t.html">HTTPRequestHeaders_t</a></div><div class="ttdoc">Represents header data that will be sent in an HTTP request.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:329</div></div>
 </div><!-- fragment --><p> For example, if requesting for the first 1kB of a file the following would be written: <code>Range: bytes=0-1023\r\n\r\n</code>.</p>

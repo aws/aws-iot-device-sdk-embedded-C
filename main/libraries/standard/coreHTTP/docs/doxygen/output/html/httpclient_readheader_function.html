@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.0.2</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -102,7 +102,7 @@ $(document).ready(function(){initNavTree('httpclient_readheader_function.html','
 <div class="line">                                    <span class="keywordtype">size_t</span> fieldLen,</div>
 <div class="line">                                    <span class="keyword">const</span> <span class="keywordtype">char</span> ** pValueLoc,</div>
 <div class="line">                                    <span class="keywordtype">size_t</span> * pValueLen );</div>
-<div class="ttc" id="acore__http__client_8c_html_ac621a0756f290f1437e2c72a24e5b0f9"><div class="ttname"><a href="core__http__client_8c.html#ac621a0756f290f1437e2c72a24e5b0f9">HTTPClient_ReadHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_ReadHeader(const HTTPResponse_t *pResponse, const char *pField, size_t fieldLen, const char **pValueLoc, size_t *pValueLen)</div><div class="ttdoc">Read a header from a buffer containing a complete HTTP response. This will return the location of the...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:2496</div></div>
+<div class="ttc" id="acore__http__client_8c_html_ac621a0756f290f1437e2c72a24e5b0f9"><div class="ttname"><a href="core__http__client_8c.html#ac621a0756f290f1437e2c72a24e5b0f9">HTTPClient_ReadHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_ReadHeader(const HTTPResponse_t *pResponse, const char *pField, size_t fieldLen, const char **pValueLoc, size_t *pValueLen)</div><div class="ttdoc">Read a header from a buffer containing a complete HTTP response. This will return the location of the...</div><div class="ttdef"><b>Definition:</b> core_http_client.c:2483</div></div>
 <div class="ttc" id="agroup__http__enum__types_html_ga39fad9050063a355ffd95e95381e743f"><div class="ttname"><a href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a></div><div class="ttdeci">HTTPStatus_t</div><div class="ttdoc">The HTTP Client library return status.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:162</div></div>
 <div class="ttc" id="astruct_h_t_t_p_response__t_html"><div class="ttname"><a href="struct_h_t_t_p_response__t.html">HTTPResponse_t</a></div><div class="ttdoc">Represents an HTTP response.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:434</div></div>
 </div><!-- fragment --><p> The location, within <a class="el" href="struct_h_t_t_p_response__t.html#a8198002b2a936b784cd791560c1a3ca8" title="Buffer for both the raw HTTP header and body.">HTTPResponse_t.pBuffer</a>, of the value found, will be returned in <code>pValue</code>. If the header value is empty for the found <code>pField</code>, then this function will return <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd" title="The HTTP Client library function completed successfully.">HTTPSuccess</a>, and set the values for <code>pValueLoc</code> and <code>pValueLen</code> as NULL and zero respectively. According to RFC 2616, it is not invalid to have an empty value for some header fields.</p>

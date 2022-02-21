@@ -38,8 +38,10 @@ var core__http__client__private_8h =
     [ "HTTP_RANGE_REQUEST_HEADER_VALUE_PREFIX_LEN", "core__http__client__private_8h.html#a7f2644dba5716326d6bb991c5ffa2a72", null ],
     [ "MAX_INT32_NO_OF_DECIMAL_DIGITS", "core__http__client__private_8h.html#a4f52500045ff77d717544fdb6811d556", null ],
     [ "HTTP_MAX_RANGE_REQUEST_VALUE_LEN", "core__http__client__private_8h.html#a713caa09b72a5f9343d91ec678a7d0e8", null ],
-    [ "HTTP_PARSER_STOP_PARSING", "core__http__client__private_8h.html#a4235a9eef858e49d3be23e92b4398aee", null ],
-    [ "HTTP_PARSER_CONTINUE_PARSING", "core__http__client__private_8h.html#a76d44c456271458717b05c30a54ac6d1", null ],
+    [ "LLHTTP_CONTINUE_PARSING", "core__http__client__private_8h.html#a1b218c7c34e87f9153c1bce969248d51", null ],
+    [ "LLHTTP_STOP_PARSING", "core__http__client__private_8h.html#af5a36ead2ea9999b4c8a8de264971e37", null ],
+    [ "LLHTTP_STOP_PARSING_NO_BODY", "core__http__client__private_8h.html#a13cccade58f709272a38241313d5dad5", null ],
+    [ "LLHTTP_STOP_PARSING_NO_HEADER", "core__http__client__private_8h.html#af00ceeb764d42e14b056c1b9c21e57c0", null ],
     [ "HTTP_MINIMUM_REQUEST_LINE_LENGTH", "core__http__client__private_8h.html#aa33a015440859bb10f946a2837972072", null ],
     [ "HTTPParsingState_t", "core__http__client__private_8h.html#a9b42138b048d030fe583c0dd0b487b4c", [
       [ "HTTP_PARSING_NONE", "core__http__client__private_8h.html#a9b42138b048d030fe583c0dd0b487b4caf6b11469258d9bca75e36a7a99287217", null ],

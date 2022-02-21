@@ -19,7 +19,7 @@ var searchData=
   ['ppath_16',['pPath',['../struct_h_t_t_p_request_info__t.html#a9bd015fcfe7ed1f5f1781d83417468a8',1,'HTTPRequestInfo_t']]],
   ['presponse_17',['pResponse',['../struct_h_t_t_p_parsing_context__t.html#a82a9ef99d459edda5b28bd970e431756',1,'HTTPParsingContext_t']]],
   ['processcompleteheader_18',['processCompleteHeader',['../core__http__client_8c.html#a5b52dd3324e97b23af678200d7aa0489',1,'core_http_client.c']]],
-  ['processhttpparsererror_19',['processHttpParserError',['../core__http__client_8c.html#a038d58442b6626dc81b596e538d49e44',1,'core_http_client.c']]],
+  ['processllhttperror_19',['processLlhttpError',['../core__http__client_8c.html#a37308fd95d37932ee4111833c81fd387',1,'core_http_client.c']]],
   ['pvaluelen_20',['pValueLen',['../structfind_header_context__t.html#ab570a632683ff451d7dd5fa03ae4fe60',1,'findHeaderContext_t']]],
   ['pvalueloc_21',['pValueLoc',['../structfind_header_context__t.html#a1426be39bf89d99c7b1ae54589968e20',1,'findHeaderContext_t']]]
 ];
