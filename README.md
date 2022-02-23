@@ -496,6 +496,9 @@ The following creates a job that specifies a Linux Kernel link for downloading.
    
 1. To perform a successful OTA update, you need to complete the prerequisites mentioned [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html).
 1. A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html).
+1. The code signing certificate can be either baked into firmware as a string, or stored as a file.
+    1. For baked in certificate method, copy the certificate to signingcredentialSIGNING_CERTIFICATE_PEM in [ota_pal_posix.c](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/main/platform/posix/ota_pal/source/ota_pal_posix.c).
+    2. For file storage method, store the certificate as a file and supply the file path in "Path name of code signing certificate on device" field when creating the OTA job in AWS IoT Console.
 
 #### Scheduling an OTA Update Job
 
