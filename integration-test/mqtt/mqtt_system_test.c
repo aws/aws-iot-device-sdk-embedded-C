@@ -191,7 +191,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 200U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 1000U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -210,7 +210,7 @@
  * PUBLISH message and ack responses for QoS 1 and QoS 2 communications
  * with the broker.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS            ( 700U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS            ( 1000U )
 
 /**
  * @brief The MQTT message published in this example.
