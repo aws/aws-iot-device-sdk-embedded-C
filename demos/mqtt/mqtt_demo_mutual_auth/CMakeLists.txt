@@ -30,8 +30,9 @@ target_include_directories(
     PUBLIC
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
-        ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}

@@ -47,6 +47,7 @@ target_include_directories( ${DEMO_NAME}
                               ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
                               ${PKCS_INCLUDE_PUBLIC_DIRS}
                               ${PKCS_PAL_INCLUDE_PUBLIC_DIRS}
+                              ${AWS_DEMO_INCLUDE_DIRS}
                               "${FLEET_PROVISIONING_INCLUDE_PUBLIC_DIRS}"
                               "${DEMOS_DIR}/pkcs11/common/include" # corePKCS11 config
                               "${CMAKE_SOURCE_DIR}/platform/include"
