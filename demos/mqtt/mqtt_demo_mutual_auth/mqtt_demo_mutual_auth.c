@@ -75,6 +75,9 @@
 /* Clock for timer. */
 #include "clock.h"
 
+/* AWS IoT Core TLS ALPN definitions for MQTT authentication */
+#include "aws_iot_alpn_defs.h"
+
 /**
  * These configuration settings are required to run the mutual auth demo.
  * Throw compilation error if the below configs are not defined.
@@ -139,47 +142,12 @@
 /**
  * @brief Length of MQTT server host name.
  */
-#define AWS_IOT_ENDPOINT_LENGTH         ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
+#define AWS_IOT_ENDPOINT_LENGTH                  ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
 
 /**
  * @brief Length of client identifier.
  */
-#define CLIENT_IDENTIFIER_LENGTH        ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
-
-/**
- * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
- *
- * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
- * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
- * in the link below.
- * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
- *
- * @note OpenSSL requires that the protocol string passed to it for configuration be encoded
- * with the prefix of 8-bit length information of the string. Thus, the 14 byte (0x0e) length
- * information is prefixed to the string.
- */
-#define AWS_IOT_MQTT_ALPN               "\x0ex-amzn-mqtt-ca"
-
-/**
- * @brief Length of ALPN protocol name.
- */
-#define AWS_IOT_MQTT_ALPN_LENGTH        ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
-
-/**
- * @brief This is the ALPN (Application-Layer Protocol Negotiation) string
- * required by AWS IoT for password-based authentication using TCP port 443.
- *
- * @note OpenSSL requires that the protocol string passed to it for configuration
- * be encoded with the prefix of 8-bit length information of the string. Thus, the
- * 4 byte (0x04) length information is prefixed to the string.
- */
-#define AWS_IOT_PASSWORD_ALPN           "\x04mqtt"
-
-/**
- * @brief Length of password ALPN.
- */
-#define AWS_IOT_PASSWORD_ALPN_LENGTH    ( ( uint16_t ) ( sizeof( AWS_IOT_PASSWORD_ALPN ) - 1 ) )
-
+#define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
 
 /**
  * @brief The maximum number of retries for connecting to server.
@@ -201,46 +169,45 @@
  */
 #define CONNACK_RECV_TIMEOUT_MS                  ( 1000U )
 
-
 /**
  * @brief The topic to subscribe and publish to in the example.
  *
  * The topic name starts with the client identifier to ensure that each demo
  * interacts with a unique topic name.
  */
-#define MQTT_EXAMPLE_TOPIC                  CLIENT_IDENTIFIER "/example/topic"
+#define MQTT_EXAMPLE_TOPIC                       CLIENT_IDENTIFIER "/example/topic"
 
 /**
  * @brief Length of client MQTT topic.
  */
-#define MQTT_EXAMPLE_TOPIC_LENGTH           ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
+#define MQTT_EXAMPLE_TOPIC_LENGTH                ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_TOPIC ) - 1 ) )
 
 /**
  * @brief The MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE                "Hello World!"
+#define MQTT_EXAMPLE_MESSAGE                     "Hello World!"
 
 /**
  * @brief The length of the MQTT message published in this example.
  */
-#define MQTT_EXAMPLE_MESSAGE_LENGTH         ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
+#define MQTT_EXAMPLE_MESSAGE_LENGTH              ( ( uint16_t ) ( sizeof( MQTT_EXAMPLE_MESSAGE ) - 1 ) )
 
 /**
  * @brief Maximum number of outgoing publishes maintained in the application
  * until an ack is received from the broker.
  */
-#define MAX_OUTGOING_PUBLISHES              ( 5U )
+#define MAX_OUTGOING_PUBLISHES                   ( 5U )
 
 /**
  * @brief Invalid packet identifier for the MQTT packets. Zero is always an
  * invalid packet identifier as per MQTT 3.1.1 spec.
  */
-#define MQTT_PACKET_ID_INVALID              ( ( uint16_t ) 0U )
+#define MQTT_PACKET_ID_INVALID                   ( ( uint16_t ) 0U )
 
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 500U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -251,37 +218,37 @@
  *  absence of sending any other Control Packets, the Client MUST send a
  *  PINGREQ Packet.
  */
-#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
+#define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
  * @brief Delay between MQTT publishes in seconds.
  */
-#define DELAY_BETWEEN_PUBLISHES_SECONDS     ( 1U )
+#define DELAY_BETWEEN_PUBLISHES_SECONDS          ( 1U )
 
 /**
  * @brief Number of PUBLISH messages sent per iteration.
  */
-#define MQTT_PUBLISH_COUNT_PER_LOOP         ( 5U )
+#define MQTT_PUBLISH_COUNT_PER_LOOP              ( 5U )
 
 /**
  * @brief Delay in seconds between two iterations of subscribePublishLoop().
  */
-#define MQTT_SUBPUB_LOOP_DELAY_SECONDS      ( 5U )
+#define MQTT_SUBPUB_LOOP_DELAY_SECONDS           ( 5U )
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 500 )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING                      "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define METRICS_STRING                           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
-#define METRICS_STRING_LENGTH               ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+#define METRICS_STRING_LENGTH                    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
 
 #ifdef CLIENT_USERNAME
@@ -673,22 +640,22 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
     if( AWS_MQTT_PORT == 443 )
     {
-        /* Pass the ALPN protocol name depending on the port being used.
+        /* Pass the ALPN protocol name depending on the port and auth type being used.
          * Please see more details about the ALPN protocol for the AWS IoT MQTT
          * endpoint in the link below.
          * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
          *
          * For username and password based authentication in AWS IoT,
-         * #AWS_IOT_PASSWORD_ALPN is used. More details can be found in the
+         * #AWS_IOT_ALPN_MQTT_CUSTOM_AUTH is used. More details can be found in the
          * link below.
          * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
          */
         #ifdef CLIENT_USERNAME
-            opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
-            opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_MQTT_CUSTOM_AUTH_OPENSSL;
+            opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CUSTOM_AUTH_OPENSSL_LEN;
         #else
-            opensslCredentials.pAlpnProtos = AWS_IOT_MQTT_ALPN;
-            opensslCredentials.alpnProtosLen = AWS_IOT_MQTT_ALPN_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL;
+            opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL_LEN;
         #endif
     }
 

@@ -69,6 +69,9 @@
 /* Include firmware version struct definition. */
 #include "ota_appversion32.h"
 
+/* AWS IoT Core TLS ALPN definitions for MQTT authentication */
+#include "aws_iot_alpn_defs.h"
+
 /**
  * These configuration settings are required to run the OTA demo which uses mutual authentication.
  * Throw compilation error if the below configs are not defined.
@@ -91,25 +94,6 @@
 #ifndef CLIENT_PRIVATE_KEY_PATH
     #error "Please define path to client private key(CLIENT_PRIVATE_KEY_PATH) in demo_config.h."
 #endif
-
-/**
- * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
- *
- * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
- * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
- * in the link below.
- * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
- *
- * @note OpenSSL requires that the protocol string passed to it for configuration be encoded
- * with the prefix of 8-bit length information of the string. Thus, the 14 byte (0x0e) length
- * information is prefixed to the string.
- */
-#define AWS_IOT_MQTT_ALPN                        "\x0ex-amzn-mqtt-ca"
-
-/**
- * @brief Length of ALPN protocol name.
- */
-#define AWS_IOT_MQTT_ALPN_LENGTH                 ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
 
 /**
  * @brief Length of MQTT server host name.
@@ -1129,11 +1113,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
          * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
          */
         #ifdef CLIENT_USERNAME
-            opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
-            opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_MQTT_CUSTOM_AUTH_OPENSSL;
+            opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CUSTOM_AUTH_OPENSSL_LEN;
         #else
-            opensslCredentials.pAlpnProtos = AWS_IOT_MQTT_ALPN;
-            opensslCredentials.alpnProtosLen = AWS_IOT_MQTT_ALPN_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL;
+            opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL_LEN;
         #endif
     }
 
