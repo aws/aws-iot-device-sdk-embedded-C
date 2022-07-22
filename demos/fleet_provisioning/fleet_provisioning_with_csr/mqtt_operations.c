@@ -56,6 +56,9 @@
 /* Clock for timer. */
 #include "clock.h"
 
+/* AWS IoT Core TLS ALPN definitions for MQTT authentication */
+#include "aws_iot_alpn_defs.h"
+
 /**
  * These configurations are required. Throw compilation error if the below
  * configs are not defined.
@@ -90,25 +93,6 @@
  * @brief Length of the client identifier.
  */
 #define CLIENT_IDENTIFIER_LENGTH                 ( ( uint16_t ) ( sizeof( CLIENT_IDENTIFIER ) - 1 ) )
-
-/**
- * @brief ALPN protocol name for AWS IoT MQTT.
- *
- * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT
- * broker. Please see more details about the ALPN protocol for AWS IoT MQTT
- * endpoint in the link below.
- * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
- *
- * @note OpenSSL requires that the protocol string passed to it for configuration be encoded
- * with the prefix of 8-bit length information of the string. Thus, the 14 byte (0x0e) length
- * information is prefixed to the string.
- */
-#define ALPN_PROTOCOL_NAME                       "\x0ex-amzn-mqtt-ca"
-
-/**
- * @brief Length of ALPN protocol name.
- */
-#define ALPN_PROTOCOL_NAME_LENGTH                ( ( uint16_t ) ( sizeof( ALPN_PROTOCOL_NAME ) - 1 ) )
 
 /**
  * @brief The maximum number of retries for connecting to server.
@@ -356,7 +340,6 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
     BackoffAlgorithmContext_t reconnectParams;
     MbedtlsPkcs11Credentials_t tlsCredentials = { 0 };
     uint16_t nextRetryBackOff = 0U;
-    const char * alpn[] = { ALPN_PROTOCOL_NAME, NULL };
 
     /* Set the pParams member of the network context with desired transport. */
     pNetworkContext->pParams = &tlsContext;
@@ -377,12 +360,14 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
     if( AWS_MQTT_PORT == 443 )
     {
+        static const char * alpnProtoArray[] = AWS_IOT_ALPN_MQTT_CA_AUTH_MBEDTLS;
+
         /* Pass the ALPN protocol name depending on the port being used.
          * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
          * in the link below.
          * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
          */
-        tlsCredentials.pAlpnProtos = alpn;
+        tlsCredentials.pAlpnProtos = alpnProtoArray;
     }
 
     /* Initialize reconnect attempts and interval */
