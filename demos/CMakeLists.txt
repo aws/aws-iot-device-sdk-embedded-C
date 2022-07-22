@@ -9,6 +9,8 @@ else()
     set( PLATFORM_NAME ${PLATFORM_NAME} CACHE STRING "Port to use for building the SDK." )
 endif()
 
+set(AWS_DEMO_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include)
+
 # Include each subdirectory that has a CMakeLists.txt file in it
 file(GLOB demo_dirs "${DEMOS_DIR}/*/*")
 foreach(demo_dir IN LISTS demo_dirs)

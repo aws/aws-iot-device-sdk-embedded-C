@@ -40,8 +40,9 @@ target_include_directories(
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
         ${SHADOW_INCLUDE_PUBLIC_DIRS}
-        ${CMAKE_CURRENT_LIST_DIR}
         ${JSON_INCLUDE_PUBLIC_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}

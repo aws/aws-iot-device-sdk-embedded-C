@@ -56,6 +56,7 @@ target_include_directories(
         ${OTA_INCLUDE_OS_POSIX_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${HTTP_INCLUDE_PUBLIC_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
