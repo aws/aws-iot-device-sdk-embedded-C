@@ -56,7 +56,7 @@
 /* Clock for timer. */
 #include "clock.h"
 
-/* AWS IoT Core TLS ALPN definitions for MQTT authentication */
+/* AWS IoT Core TLS ALPN definitions for MQTT authentication. */
 #include "aws_iot_alpn_defs.h"
 
 /**
