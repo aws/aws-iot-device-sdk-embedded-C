@@ -244,12 +244,15 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
     int32_t sslStatus = -1;
 
     /* Validate the hostname against the server's certificate. */
-    sslStatus = SSL_set1_host( pOpensslParams->pSsl, pServerInfo->pHostName );
-
-    if( sslStatus != 1 )
+    if( pOpensslCredentials->disableHostnameCheck == 0U )
     {
-        LogError( ( "SSL_set1_host failed to set the hostname to validate." ) );
-        returnStatus = OPENSSL_API_ERROR;
+        sslStatus = SSL_set1_host( pOpensslParams->pSsl, pServerInfo->pHostName );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "SSL_set1_host failed to set the hostname to validate." ) );
+            returnStatus = OPENSSL_API_ERROR;
+        }
     }
 
     /* Enable SSL peer verification. */
