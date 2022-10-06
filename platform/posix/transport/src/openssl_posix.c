@@ -241,7 +241,7 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
                                      const OpensslCredentials_t * pOpensslCredentials )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    int32_t sslStatus = -1, verifyPeerCertStatus = X509_V_OK;
+    int32_t sslStatus = -1;
 
     /* Validate the hostname against the server's certificate. */
     sslStatus = SSL_set1_host( pOpensslParams->pSsl, pServerInfo->pHostName );
@@ -278,19 +278,6 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
         if( sslStatus != 1 )
         {
             LogError( ( "SSL_connect failed to perform TLS handshake." ) );
-            returnStatus = OPENSSL_HANDSHAKE_FAILED;
-        }
-    }
-
-    /* Verify X509 certificate from peer. */
-    if( returnStatus == OPENSSL_SUCCESS )
-    {
-        verifyPeerCertStatus = ( int32_t ) SSL_get_verify_result( pOpensslParams->pSsl );
-
-        if( verifyPeerCertStatus != X509_V_OK )
-        {
-            LogError( ( "SSL_get_verify_result failed to verify X509 "
-                        "certificate from peer." ) );
             returnStatus = OPENSSL_HANDSHAKE_FAILED;
         }
     }
