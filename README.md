@@ -491,6 +491,9 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 
+#### Setup for the Greengrass local auth demo
+
+For setting up the Greengrass local auth demo, see [the README in the demo folder](./demos/greengrass/greengrass_demo_local_auth/README.md).
 
 #### Prerequisites for the AWS Over-The-Air Update (OTA) demos
    
