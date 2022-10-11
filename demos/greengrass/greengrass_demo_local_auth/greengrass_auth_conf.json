@@ -1,0 +1,46 @@
+{
+	"certificateAuthority": {
+		"privateKeyUri": "file:///home/user/ca.key",
+		"certificateUri": "file:///home/user/ca.crt"
+	},
+	"deviceGroups": {
+		"formatVersion": "2021-03-05",
+		"definitions": {
+			"MyDeviceGroup": {
+				"selectionRule": "thingName: *",
+				"policyName": "DemoClientDevicePolicy"
+			}
+		},
+		"policies": {
+			"DemoClientDevicePolicy": {
+				"AllowConnect": {
+					"statementDescription": "Allow client devices to connect.",
+					"operations": [
+						"mqtt:connect"
+					],
+					"resources": [
+						"*"
+					]
+				},
+				"AllowPublish": {
+					"statementDescription": "Allow client devices to publish to all topics.",
+					"operations": [
+						"mqtt:publish"
+					],
+					"resources": [
+						"*"
+					]
+				},
+				"AllowSubscribe": {
+					"statementDescription": "Allow client devices to subscribe to all topics.",
+					"operations": [
+						"mqtt:subscribe"
+					],
+					"resources": [
+						"*"
+					]
+				}
+			}
+		}
+	}
+}
