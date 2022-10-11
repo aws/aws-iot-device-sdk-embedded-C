@@ -48,6 +48,7 @@ if(NOT ${OpenSSL_FOUND})
             "ota_demo_core_http"
             "ota_demo_core_mqtt"
             "shadow_demo_main"
+            "greengrass_demo_local_auth"
     )
     message( WARNING "OpenSSL library could not be found. Demos that use it will be excluded from the default target." )
     foreach(demo_name ${openssl_demos})
