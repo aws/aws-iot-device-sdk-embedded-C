@@ -170,6 +170,13 @@
 
 /*-----------------------------------------------------------*/
 
+#define OUTGOING_PUBLISH_RECORD_COUNT 20
+#define INCOMING_PUBLISH_RECORD_COUNT 20
+
+static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_COUNT ];
+static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_COUNT ];
+
+
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
  * it is used to match received Subscribe ACK to the transmitted subscribe.
@@ -340,6 +347,32 @@ static void updateSubAckStatus( MQTTPacketInfo_t * pPacketInfo );
 static int handleResubscribe( MQTTContext_t * pMqttContext );
 
 /*-----------------------------------------------------------*/
+
+static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
+                                            uint32_t timeout )
+{
+    MQTTStatus_t eMqttStatus;
+    uint32_t timeoutMs;
+
+    timeoutMs = pMqttContext->getTime() + timeout;
+
+    while( 1 )
+    {
+        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
+
+        if( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) )
+        {
+            break;
+        }
+
+        if( pMqttContext->getTime() >= timeoutMs )
+        {
+            break;
+        }
+    }
+
+    return eMqttStatus;
+}
 
 static uint32_t generateRandomNumber()
 {
@@ -524,9 +557,9 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
                    MQTT_EXAMPLE_TOPIC ) );
 
         /* Process incoming packet. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-        if( mqttStatus != MQTTSuccess )
+        if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
         {
             LogError( ( "MQTT_ProcessLoop returned with status = %s.",
                         MQTT_Status_strerror( mqttStatus ) ) );
@@ -671,6 +704,8 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
                             Clock_GetTimeMs,
                             eventCallback,
                             &networkBuffer );
+
+    mqttStatus = MQTT_InitStatefulQoS(pMqttContext, pOutgoingPublishRecords, OUTGOING_PUBLISH_RECORD_COUNT, pIncomingPublishRecords, INCOMING_PUBLISH_RECORD_COUNT);
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -904,9 +939,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-        if( mqttStatus != MQTTSuccess )
+        if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "MQTT_ProcessLoop returned with status = %s.",
@@ -944,9 +979,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
              * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
              * has expired since the last MQTT packet sent and receive
              * ping responses. */
-            mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-            if( mqttStatus != MQTTSuccess )
+            if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
             {
                 LogWarn( ( "MQTT_ProcessLoop returned with status = %s.",
                            MQTT_Status_strerror( mqttStatus ) ) );
@@ -971,9 +1006,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Process Incoming UNSUBACK packet from the broker. */
-        mqttStatus = MQTT_ProcessLoop( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-        if( mqttStatus != MQTTSuccess )
+        if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
         {
             returnStatus = EXIT_FAILURE;
             LogError( ( "MQTT_ProcessLoop returned with status = %s.",
