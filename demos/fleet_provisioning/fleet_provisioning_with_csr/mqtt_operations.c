@@ -1126,7 +1126,7 @@ bool ProcessLoopWithTimeout( void )
     MQTTStatus_t eMqttStatus = MQTTSuccess;
     bool returnStatus = false;
 
-    ulCurrentTime = pMqttContext->getTime();
+    ulCurrentTime = mqttContext.getTime();
     ulMqttProcessLoopTimeoutTime = ulCurrentTime + MQTT_PROCESS_LOOP_TIMEOUT_MS;
 
     /* Call MQTT_ProcessLoop multiple times until the timeout expires or
@@ -1135,13 +1135,13 @@ bool ProcessLoopWithTimeout( void )
            ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
     {
         eMqttStatus = MQTT_ProcessLoop( &mqttContext );
-        ulCurrentTime = pMqttContext->getTime();
+        ulCurrentTime = mqttContext.getTime();
     }
 
     if( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) )
     {
         LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                    MQTT_Status_strerror( mqttStatus ) ) );
+                    MQTT_Status_strerror( eMqttStatus ) ) );
     }
     else
     {
