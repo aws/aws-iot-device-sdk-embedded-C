@@ -1118,7 +1118,7 @@ bool PublishToTopic( const char * pTopicFilter,
 }
 /*-----------------------------------------------------------*/
 
-bool ProcessLoopWithTimeout( uint32_t ulTimeoutMs );
+bool ProcessLoopWithTimeout( uint32_t ulTimeoutMs )
 {
     uint32_t ulMqttProcessLoopTimeoutTime;
     uint32_t ulCurrentTime;
