@@ -499,7 +499,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext );
  *
  * @return true if the expected ACK packet was received, false otherwise.
  */
-static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
+static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
                                  uint16_t usPacketIdentifier,
                                  uint32_t ulTimeout );
 
@@ -514,7 +514,7 @@ static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
  */
 static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs );
-                                            
+
 /*-----------------------------------------------------------*/
 
 static uint32_t generateRandomNumber()
