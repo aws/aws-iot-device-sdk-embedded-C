@@ -1120,7 +1120,6 @@ bool PublishToTopic( const char * pTopicFilter,
 
 bool ProcessLoopWithTimeout( void )
 {
-    uint32_t ulMqttProcessLoopEntryTime;
     uint32_t ulMqttProcessLoopTimeoutTime;
     uint32_t ulCurrentTime;
 
@@ -1128,7 +1127,6 @@ bool ProcessLoopWithTimeout( void )
     bool returnStatus = false;
 
     ulCurrentTime = pMqttContext->getTime();
-    ulMqttProcessLoopEntryTime = ulCurrentTime;
     ulMqttProcessLoopTimeoutTime = ulCurrentTime + MQTT_PROCESS_LOOP_TIMEOUT_MS;
 
     /* Call MQTT_ProcessLoop multiple times until the timeout expires or
