@@ -177,13 +177,13 @@
  * @brief The length of the outgoing publish records array used by the coreMQTT
  * library to track QoS > 0 packet ACKS for outgoing publishes.
  */
-#define OUTGOING_PUBLISH_RECORD_LEN              20
+#define OUTGOING_PUBLISH_RECORD_LEN              ( 10U )
 
 /**
  * @brief The length of the incoming publish records array used by the coreMQTT
  * library to track QoS > 0 packet ACKS for incoming publishes.
  */
-#define INCOMING_PUBLISH_RECORD_LEN              20
+#define INCOMING_PUBLISH_RECORD_LEN              ( 10U )
 /*-----------------------------------------------------------*/
 
 /**
@@ -390,7 +390,6 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext );
 static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
                                  uint16_t usPacketIdentifier,
                                  uint32_t ulTimeout );
-
 /*-----------------------------------------------------------*/
 
 static uint32_t generateRandomNumber()
