@@ -389,7 +389,7 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext );
  */
 static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
                                  uint16_t usPacketIdentifier,
-                                 uint32_t ulTimeout )
+                                 uint32_t ulTimeout );
 
 /*-----------------------------------------------------------*/
 
