@@ -500,8 +500,8 @@ static int handleResubscribe( MQTTContext_t * pMqttContext );
  * @return true if the expected ACK packet was received, false otherwise.
  */
 static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                 uint16_t usPacketIdentifier,
-                                 uint32_t ulTimeout );
+                                uint16_t usPacketIdentifier,
+                                uint32_t ulTimeout );
 
 /**
  * @brief Call #MQTT_ProcessLoop in a loop for the duration of a timeout or
@@ -947,6 +947,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
 
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( globalSubscribePacketIdentifier == packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
@@ -955,6 +958,9 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTT_EXAMPLE_TOPIC ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( globalUnsubscribePacketIdentifier == packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -1451,7 +1457,6 @@ static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
 static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs )
 {
-    uint32_t ulMqttProcessLoopEntryTime;
     uint32_t ulMqttProcessLoopTimeoutTime;
     uint32_t ulCurrentTime;
 
