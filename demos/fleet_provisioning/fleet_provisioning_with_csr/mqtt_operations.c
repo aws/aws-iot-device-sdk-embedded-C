@@ -730,7 +730,7 @@ static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
         ( globalAckPacketIdentifier != usPacketIdentifier ) )
     {
         LogError( ( "MQTT_ProcessLoop failed to receive ACK packet: Expected ACK Packet ID=%02X, LoopDuration=%u, Status=%s",
-                    usPacketType,
+                    usPacketIdentifier,
                     ( ulCurrentTime - ulMqttProcessLoopEntryTime ),
                     MQTT_Status_strerror( eMqttStatus ) ) );
     }
