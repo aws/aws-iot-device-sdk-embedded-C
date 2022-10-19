@@ -693,6 +693,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     transport.pNetworkContext = pNetworkContext;
     transport.send = Plaintext_Send;
     transport.recv = Plaintext_Recv;
+    transport.writev = NULL;
 
     /* Fill the values for network buffer. */
     networkBuffer.pBuffer = buffer;

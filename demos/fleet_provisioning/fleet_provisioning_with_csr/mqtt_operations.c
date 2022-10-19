@@ -708,6 +708,7 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
         transport.pNetworkContext = pNetworkContext;
         transport.send = Mbedtls_Pkcs11_Send;
         transport.recv = Mbedtls_Pkcs11_Recv;
+        transport.writev = NULL;
 
         /* Fill the values for network buffer. */
         networkBuffer.pBuffer = buffer;
