@@ -172,13 +172,19 @@
  * @brief The length of the MQTT metrics string.
  */
 #define METRICS_STRING_LENGTH                    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
+
+/**
+ * @brief The length of the outgoing publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for outgoing publishes.
+ */
+#define OUTGOING_PUBLISH_RECORD_LEN              20
+
+/**
+ * @brief The length of the incoming publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for incoming publishes.
+ */
+#define INCOMING_PUBLISH_RECORD_LEN              20
 /*-----------------------------------------------------------*/
-
-#define OUTGOING_PUBLISH_RECORD_COUNT 20
-#define INCOMING_PUBLISH_RECORD_COUNT 20
-
-static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_COUNT ];
-static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_COUNT ];
 
 /**
  * @brief Structure to keep the MQTT publish packets until an ack is received
@@ -203,6 +209,13 @@ struct NetworkContext
     MbedtlsPkcs11Context_t * pParams;
 };
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Packet Identifier updated when an ACK packet is received.
+ *
+ * It is used to match an expected ACK for a transmitted packet.
+ */
+static uint16_t globalAckPacketIdentifier = 0U;
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker.
@@ -258,6 +271,24 @@ static bool mqttSessionEstablished = false;
  * publish messages.
  */
 static MQTTPublishCallback_t appPublishCallback = NULL;
+
+/**
+ * @brief Array to track the outgoing publish records for outgoing publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_LEN ];
+
+/**
+ * @brief Array to track the incoming publish records for incoming publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_LEN ];
 /*-----------------------------------------------------------*/
 
 /**
@@ -342,39 +373,30 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
  * false otherwise.
  */
 static bool handlePublishResend( MQTTContext_t * pMqttContext );
+
+/**
+ * @brief Wait for an expected ACK packet to be received.
+ *
+ * This function handles waiting for an expected ACK packet by calling
+ * #MQTT_ProcessLoop and waiting for #mqttCallback to set the global ACK
+ * packet identifier to the expected ACK packet identifier.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] usPacketIdentifier Packet identifier for expected ACK packet.
+ * @param[in] ulTimeout Maximum duration to wait for expected ACK packet.
+ *
+ * @return true if the expected ACK packet was received, false otherwise.
+ */
+static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
+                                 uint16_t usPacketIdentifier,
+                                 uint32_t ulTimeout )
+
 /*-----------------------------------------------------------*/
-
-static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
-                                            uint32_t timeout )
-{
-    MQTTStatus_t eMqttStatus;
-    uint32_t timeoutMs;
-
-    timeoutMs = pMqttContext->getTime() + timeout;
-
-    while( 1 )
-    {
-        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
-
-        if( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) )
-        {
-            break;
-        }
-
-        if( pMqttContext->getTime() >= timeoutMs )
-        {
-            break;
-        }
-    }
-
-    return eMqttStatus;
-}
 
 static uint32_t generateRandomNumber()
 {
     return( ( uint32_t ) rand() );
 }
-
 /*-----------------------------------------------------------*/
 
 static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext,
@@ -580,6 +602,9 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
                 /* Make sure the ACK packet identifier matches with the request
                  * packet identifier. */
                 assert( globalSubscribePacketIdentifier == packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
@@ -588,6 +613,9 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
                 /* Make sure the ACK packet identifier matches with the request
                  * packet identifier. */
                 assert( globalUnsubscribePacketIdentifier == packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -601,6 +629,9 @@ static void mqttCallback( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_PUBACK:
                 LogDebug( ( "PUBACK received for packet id %u.",
                             packetIdentifier ) );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
 
                 /* Cleanup the publish packet from the #outgoingPublishPackets
                  * array when a PUBACK is received. */
@@ -665,6 +696,53 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext )
 }
 /*-----------------------------------------------------------*/
 
+static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
+                                 uint16_t usPacketIdentifier,
+                                 uint32_t ulTimeout )
+{
+    uint32_t ulMQTTProcessLoopEntryTime;
+    uint32_t ulMQTTProcessLoopTimeoutTime;
+    uint32_t ulCurrentTime;
+
+    MQTTStatus_t xMQTTStatus = MQTTSuccess;
+    bool xStatus = false;
+
+    /* Reset the ACK packet identifier being received. */
+    globalAckPacketIdentifier = 0U;
+
+    ulCurrentTime = pxMQTTContext->getTime();
+    ulMQTTProcessLoopEntryTime = ulCurrentTime;
+    ulMQTTProcessLoopTimeoutTime = ulCurrentTime + ulTimeout;
+
+    /* Call MQTT_ProcessLoop multiple times until the expected packet ACK
+     * is received, a timeout happens, or MQTT_ProcessLoop fails. */
+    while( ( globalAckPacketIdentifier != usPacketIdentifier ) &&
+           ( ulCurrentTime < ulMQTTProcessLoopTimeoutTime ) &&
+           ( xMQTTStatus == MQTTSuccess || xMQTTStatus == MQTTNeedMoreBytes ) )
+    {
+        /* Event callback will set #globalAckPacketIdentifier when receiving
+         * appropriate packet. */
+        xMQTTStatus = MQTT_ProcessLoop( pxMQTTContext );
+        ulCurrentTime = pxMQTTContext->getTime();
+    }
+
+    if( ( ( xMQTTStatus != MQTTSuccess ) && ( xMQTTStatus != MQTTNeedMoreBytes ) ) ||
+        ( globalAckPacketIdentifier != usPacketIdentifier ) )
+    {
+        LogError( ( "MQTT_ProcessLoop failed to receive ACK packet: Expected ACK Packet ID=%02X, LoopDuration=%u, Status=%s",
+                    usPacketType,
+                    ( ulCurrentTime - ulMQTTProcessLoopEntryTime ),
+                    MQTT_Status_strerror( xMQTTStatus ) ) );
+    }
+    else
+    {
+        xStatus = true;
+    }
+
+    return xStatus;
+}
+/*-----------------------------------------------------------*/
+
 bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
                            CK_SESSION_HANDLE p11Session,
                            char * pClientCertLabel,
@@ -723,61 +801,74 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
                                 Clock_GetTimeMs,
                                 mqttCallback,
                                 &networkBuffer );
-                                
-         mqttStatus = MQTT_InitStatefulQoS(pMqttContext, pOutgoingPublishRecords, OUTGOING_PUBLISH_RECORD_COUNT, pIncomingPublishRecords, INCOMING_PUBLISH_RECORD_COUNT);
 
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = false;
-            LogError( ( "MQTT init failed with status %s.",
+            LogError( ( "MQTT_Init failed with status %s.",
                         MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
-            /* Establish an MQTT session by sending a CONNECT packet. */
-
-            /* If #createCleanSession is true, start with a clean session
-             * i.e. direct the MQTT broker to discard any previous session data.
-             * If #createCleanSession is false, direct the broker to attempt to
-             * reestablish a session which was already present. */
-            connectInfo.cleanSession = createCleanSession;
-
-            /* The client identifier is used to uniquely identify this MQTT client to
-             * the MQTT broker. In a production device the identifier can be something
-             * unique, such as a device serial number. */
-            connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-            connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
-
-            /* The maximum time interval in seconds which is allowed to elapse
-             * between two Control Packets.
-             * It is the responsibility of the client to ensure that the interval between
-             * control packets being sent does not exceed the this keep-alive value. In the
-             * absence of sending any other control packets, the client MUST send a
-             * PINGREQ packet. */
-            connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
-
-            /* Username and password for authentication. Not used in this demo. */
-            connectInfo.pUserName = METRICS_STRING;
-            connectInfo.userNameLength = METRICS_STRING_LENGTH;
-            connectInfo.pPassword = NULL;
-            connectInfo.passwordLength = 0U;
-
-            /* Send an MQTT CONNECT packet to the broker. */
-            mqttStatus = MQTT_Connect( pMqttContext,
-                                       &connectInfo,
-                                       NULL,
-                                       CONNACK_RECV_TIMEOUT_MS,
-                                       &sessionPresent );
+            mqttStatus = MQTT_InitStatefulQoS( pMqttContext,
+                                               pOutgoingPublishRecords,
+                                               OUTGOING_PUBLISH_RECORD_LEN,
+                                               pIncomingPublishRecords,
+                                               INCOMING_PUBLISH_RECORD_LEN );
 
             if( mqttStatus != MQTTSuccess )
             {
                 returnStatus = false;
-                LogError( ( "Connection with MQTT broker failed with status %s.",
+                LogError( ( "MQTT_InitStatefulQoS failed with status %s.",
                             MQTT_Status_strerror( mqttStatus ) ) );
             }
             else
             {
-                LogDebug( ( "MQTT connection successfully established with broker." ) );
+                /* Establish an MQTT session by sending a CONNECT packet. */
+
+                /* If #createCleanSession is true, start with a clean session
+                 * i.e. direct the MQTT broker to discard any previous session data.
+                 * If #createCleanSession is false, direct the broker to attempt to
+                 * reestablish a session which was already present. */
+                connectInfo.cleanSession = createCleanSession;
+
+                /* The client identifier is used to uniquely identify this MQTT client to
+                 * the MQTT broker. In a production device the identifier can be something
+                 * unique, such as a device serial number. */
+                connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+                connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+                /* The maximum time interval in seconds which is allowed to elapse
+                 * between two Control Packets.
+                 * It is the responsibility of the client to ensure that the interval between
+                 * control packets being sent does not exceed the this keep-alive value. In the
+                 * absence of sending any other control packets, the client MUST send a
+                 * PINGREQ packet. */
+                connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
+
+                /* Username and password for authentication. Not used in this demo. */
+                connectInfo.pUserName = METRICS_STRING;
+                connectInfo.userNameLength = METRICS_STRING_LENGTH;
+                connectInfo.pPassword = NULL;
+                connectInfo.passwordLength = 0U;
+
+                /* Send an MQTT CONNECT packet to the broker. */
+                mqttStatus = MQTT_Connect( pMqttContext,
+                                           &connectInfo,
+                                           NULL,
+                                           CONNACK_RECV_TIMEOUT_MS,
+                                           &sessionPresent );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    returnStatus = false;
+                    LogError( ( "Connection with MQTT broker failed with status %s.",
+                                MQTT_Status_strerror( mqttStatus ) ) );
+                }
+                else
+                {
+                    LogDebug( ( "MQTT connection successfully established with broker." ) );
+                }
             }
         }
 
@@ -817,6 +908,7 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
 
     return returnStatus;
 }
+
 /*-----------------------------------------------------------*/
 
 bool DisconnectMqttSession( void )
@@ -900,17 +992,9 @@ bool SubscribeToTopic( const char * pTopicFilter,
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
-        {
-            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                        MQTT_Status_strerror( mqttStatus ) ) );
-        }
-        else
-        {
-            returnStatus = true;
-        }
+        returnStatus = prvWaitForPacketAck( pMqttContext,
+                                            globalSubscribePacketIdentifier,
+                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     return returnStatus;
@@ -960,17 +1044,9 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
         /* Process incoming packet from the broker. Acknowledgment for unsubscribe
          * operation ( UNSUBACK ) will be received here. This demo uses
          * MQTT_ProcessLoop to receive packet from network. */
-        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
-
-        if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
-        {
-            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                        MQTT_Status_strerror( mqttStatus ) ) );
-        }
-        else
-        {
-            returnStatus = true;
-        }
+        returnStatus = prvWaitForPacketAck( pMqttContext,
+                                            globalUnsubscribePacketIdentifier,
+                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     return returnStatus;
@@ -1047,9 +1123,9 @@ bool ProcessLoop( void )
     bool returnStatus = false;
     MQTTStatus_t mqttStatus = MQTTSuccess;
 
-    mqttStatus = ProcessLoopWithTimeout( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+    mqttStatus = MQTT_ProcessLoop( &mqttContext );
 
-    if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
+    if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
     {
         LogError( ( "MQTT_ProcessLoop returned with status = %s.",
                     MQTT_Status_strerror( mqttStatus ) ) );
