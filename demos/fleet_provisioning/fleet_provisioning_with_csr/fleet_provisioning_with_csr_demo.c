@@ -318,7 +318,7 @@ static bool waitForResponse( void )
     responseStatus = ResponseNotReceived;
 
     /* responseStatus is updated from the MQTT publish callback. */
-    ( void ) ProcessLoop();
+    ( void ) ProcessLoopWithTimeout();
 
     if( responseStatus == ResponseNotReceived )
     {
