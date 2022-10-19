@@ -514,6 +514,7 @@ static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
  */
 static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs );
+                                            
 /*-----------------------------------------------------------*/
 
 static uint32_t generateRandomNumber()
