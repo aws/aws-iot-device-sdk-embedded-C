@@ -700,39 +700,39 @@ static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
                                  uint16_t usPacketIdentifier,
                                  uint32_t ulTimeout )
 {
-    uint32_t ulMQTTProcessLoopEntryTime;
-    uint32_t ulMQTTProcessLoopTimeoutTime;
+    uint32_t ulMqttProcessLoopEntryTime;
+    uint32_t ulMqttProcessLoopTimeoutTime;
     uint32_t ulCurrentTime;
 
-    MQTTStatus_t xMQTTStatus = MQTTSuccess;
+    MQTTStatus_t eMqttStatus = MQTTSuccess;
     bool xStatus = false;
 
     /* Reset the ACK packet identifier being received. */
     globalAckPacketIdentifier = 0U;
 
-    ulCurrentTime = pxMQTTContext->getTime();
-    ulMQTTProcessLoopEntryTime = ulCurrentTime;
-    ulMQTTProcessLoopTimeoutTime = ulCurrentTime + ulTimeout;
+    ulCurrentTime = pMqttContext->getTime();
+    ulMqttProcessLoopEntryTime = ulCurrentTime;
+    ulMqttProcessLoopTimeoutTime = ulCurrentTime + ulTimeout;
 
     /* Call MQTT_ProcessLoop multiple times until the expected packet ACK
      * is received, a timeout happens, or MQTT_ProcessLoop fails. */
     while( ( globalAckPacketIdentifier != usPacketIdentifier ) &&
-           ( ulCurrentTime < ulMQTTProcessLoopTimeoutTime ) &&
-           ( xMQTTStatus == MQTTSuccess || xMQTTStatus == MQTTNeedMoreBytes ) )
+           ( ulCurrentTime < ulMqttProcessLoopTimeoutTime ) &&
+           ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
     {
         /* Event callback will set #globalAckPacketIdentifier when receiving
          * appropriate packet. */
-        xMQTTStatus = MQTT_ProcessLoop( pxMQTTContext );
-        ulCurrentTime = pxMQTTContext->getTime();
+        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
+        ulCurrentTime = pMqttContext->getTime();
     }
 
-    if( ( ( xMQTTStatus != MQTTSuccess ) && ( xMQTTStatus != MQTTNeedMoreBytes ) ) ||
+    if( ( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) ) ||
         ( globalAckPacketIdentifier != usPacketIdentifier ) )
     {
         LogError( ( "MQTT_ProcessLoop failed to receive ACK packet: Expected ACK Packet ID=%02X, LoopDuration=%u, Status=%s",
                     usPacketType,
-                    ( ulCurrentTime - ulMQTTProcessLoopEntryTime ),
-                    MQTT_Status_strerror( xMQTTStatus ) ) );
+                    ( ulCurrentTime - ulMqttProcessLoopEntryTime ),
+                    MQTT_Status_strerror( eMqttStatus ) ) );
     }
     else
     {
