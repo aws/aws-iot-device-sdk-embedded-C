@@ -89,7 +89,13 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         target_include_directories("${library_name}"
                         PRIVATE ${${library_prefix}_EXTRA_INCLUDE_PRIVATE_DIRS})
     endif()
-
+    
+    # Link library dependencies 
+    if(DEFINED "${library_prefix}_LIBRARY_DEPENDENCIES")
+        message( STATUS "Linking libraries for ${library_prefix}: ${${library_prefix}_LIBRARY_DEPENDENCIES}" )
+        target_link_libraries("${library_name}" PRIVATE "${${library_prefix}_LIBRARY_DEPENDENCIES}" )
+    endif()
+    
     # Allow a path to a custom config header to be passed through a CMake flag.
     set(config_prefix "${library_prefix}")
     if(";${OTA_BACKENDS};" MATCHES ";${library_prefix};")
@@ -124,12 +130,6 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
     if(DEFINED "${library_prefix}_INCLUDE_PRIVATE_DIRS")
         target_include_directories("${library_name}"
                                     PRIVATE ${${library_prefix}_INCLUDE_PRIVATE_DIRS})
-    endif()
-
-    # Link library dependencies 
-    if(DEFINED "${library_prefix}_LIBRARY_DEPENDENCIES")
-        message( STATUS "Linking libraries for ${library_prefix}" )
-        target_link_libraries("${library_name}" PRIVATE "${library_prefix}_LIBRARY_DEPENDENCIES" )
     endif()
 
     # Install the library target and support both static archive and shared library builds.
