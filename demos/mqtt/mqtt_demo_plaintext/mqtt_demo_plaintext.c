@@ -598,7 +598,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
         {
             break;
         }
-        
+
         /* Check if recent subscription request has been rejected. globalSubAckStatus is updated
          * in eventCallback to reflect the status of the SUBACK sent by the broker. It represents
          * either the QoS level granted by the server upon subscription, or acknowledgement of
