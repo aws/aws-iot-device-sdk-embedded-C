@@ -52,7 +52,7 @@ foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
         ${OTA_INCLUDE_PUBLIC_DIRS})
     set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
-        ${OTA_INCLUDE_PRIVATE_DIRS}
+        ${OTA_INCLUDE_PRIVATE_DIRS})
 endforeach()
 
 # Define any extra library dependencies, making sure to use the same prefix
