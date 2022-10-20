@@ -61,7 +61,10 @@ endforeach()
 set(OTA_LIBRARY_DEPENDENCIES
         aws_iot_json)
 set(OTA_MQTT_LIBRARY_DEPENDENCIES
+        aws_iot_json
         tinycbor)
+set(OTA_HTTP_LIBRARY_DEPENDENCIES
+        aws_iot_json)
 
 if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
@@ -95,7 +98,7 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         message( STATUS "Linking libraries for ${library_prefix}: ${${library_prefix}_LIBRARY_DEPENDENCIES}" )
         target_link_libraries("${library_name}" PRIVATE "${${library_prefix}_LIBRARY_DEPENDENCIES}" )
     endif()
-    
+
     # Allow a path to a custom config header to be passed through a CMake flag.
     set(config_prefix "${library_prefix}")
     if(";${OTA_BACKENDS};" MATCHES ";${library_prefix};")
