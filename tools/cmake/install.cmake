@@ -55,7 +55,7 @@ foreach(ota_backend ${OTA_BACKENDS})
         ${OTA_INCLUDE_PUBLIC_DIRS})
     set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
         ${OTA_INCLUDE_PRIVATE_DIRS}
-        ${JSON_INCLUDE_PUBLIC_DIRS}
+        ${JSON_INCLUDE_PUBLIC_DIRS})
 endforeach()
 
 if(NOT DEFINED INSTALL_LIBS)
