@@ -82,7 +82,7 @@ static EVP_PKEY * Openssl_GetPkeyFromCertificate( uint8_t * pCertFilePath );
 static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                                                 EVP_PKEY * pPkey,
                                                 FILE * pFile,
-                                                Sig256_t * pSignature );
+                                                Sig_t * pSignature );
 
 /**
  * @brief Verify the signature of the specified file using OpenSSL.
@@ -253,7 +253,7 @@ static bool Openssl_DigestVerifyUpdate( EVP_MD_CTX * pSigContext,
 static OtaPalMainStatus_t Openssl_DigestVerify( EVP_MD_CTX * pSigContext,
                                                 EVP_PKEY * pPkey,
                                                 FILE * pFile,
-                                                Sig256_t * pSignature )
+                                                Sig_t * pSignature )
 {
     OtaPalMainStatus_t mainErr = OtaPalSignatureCheckFailed;
     OtaPalMainStatus_t startErr;
