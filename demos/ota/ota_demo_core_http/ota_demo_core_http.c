@@ -143,11 +143,6 @@
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
- * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
- */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 100U )
-
-/**
  * @brief Maximum number or retries to publish a message in case of failures.
  */
 #define MQTT_PUBLISH_RETRY_MAX_ATTEMPS           ( 3U )
@@ -2025,7 +2020,7 @@ static int startOTADemo( void )
                 if( pthread_mutex_lock( &mqttMutex ) == 0 )
                 {
                     /* Loop to receive packet from transport interface. */
-                    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+                    mqttStatus = MQTT_ProcessLoop( &mqttContext );
 
                     pthread_mutex_unlock( &mqttMutex );
                 }
@@ -2036,7 +2031,7 @@ static int startOTADemo( void )
                                 strerror( errno ) ) );
                 }
 
-                if( mqttStatus == MQTTSuccess )
+                if( ( mqttStatus == MQTTSuccess ) || ( mqttStatus == MQTTNeedMoreBytes ) )
                 {
                     /* Get OTA statistics for currently executing job. */
                     OTA_GetStatistics( &otaStatistics );
@@ -2047,11 +2042,7 @@ static int startOTADemo( void )
                                otaStatistics.otaPacketsProcessed,
                                otaStatistics.otaPacketsDropped ) );
 
-                    /* Delay if mqtt process loop is set to zero.*/
-                    if( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 )
-                    {
-                        Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
-                    }
+                    Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
                 }
                 else
                 {
