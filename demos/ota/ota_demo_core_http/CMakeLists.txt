@@ -39,6 +39,7 @@ target_link_libraries(
         Threads::Threads
         clock_posix
         openssl_posix
+        aws_iot_json
 )
 
 target_include_directories(

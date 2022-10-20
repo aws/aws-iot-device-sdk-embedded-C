@@ -61,10 +61,7 @@ endforeach()
 set(OTA_LIBRARY_DEPENDENCIES
         aws_iot_json)
 set(OTA_MQTT_LIBRARY_DEPENDENCIES
-        aws_iot_json
         tinycbor)
-set(OTA_HTTP_LIBRARY_DEPENDENCIES
-        aws_iot_json)
 
 if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
