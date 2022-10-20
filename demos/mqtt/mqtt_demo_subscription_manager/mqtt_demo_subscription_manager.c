@@ -816,7 +816,7 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
                 assert( lastSubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
 
                 /* Update the global ACK packet identifier. */
-                globalAckPacketIdentifier = packetIdentifier;
+                globalAckPacketIdentifier = pDeserializedInfo->packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
@@ -825,7 +825,7 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
                 assert( lastUnsubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
 
                 /* Update the global ACK packet identifier. */
-                globalAckPacketIdentifier = packetIdentifier;
+                globalAckPacketIdentifier = pDeserializedInfo->packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -841,7 +841,7 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
                            pDeserializedInfo->packetIdentifier ) );
 
                 /* Update the global ACK packet identifier. */
-                globalAckPacketIdentifier = packetIdentifier;
+                globalAckPacketIdentifier = pDeserializedInfo->packetIdentifier;
                 break;
 
             /* Any other packet type is invalid. */
