@@ -47,17 +47,19 @@ set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
         "${COREPKCS11_LOCATION}/source/portable/os")
-set(OTA_EXTRA_INCLUDE_PRIVATE_DIRS
-    PRIVATE
-        ${JSON_INCLUDE_PUBLIC_DIRS})
 set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
 foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
         ${OTA_INCLUDE_PUBLIC_DIRS})
     set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
         ${OTA_INCLUDE_PRIVATE_DIRS}
-        ${JSON_INCLUDE_PUBLIC_DIRS})
 endforeach()
+
+# Define any extra library dependencies, making sure to use the same prefix
+set(OTA_LIBRARY_DEPENDENCIES
+        aws_iot_json)
+set(OTA_MQTT_LIBRARY_DEPENDENCIES
+        tinycbor)
 
 if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
@@ -120,6 +122,11 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
     if(DEFINED "${library_prefix}_INCLUDE_PRIVATE_DIRS")
         target_include_directories("${library_name}"
                                     PRIVATE ${${library_prefix}_INCLUDE_PRIVATE_DIRS})
+    endif()
+
+    # Link library dependencies 
+    if(DEFINED "${library_prefix}_LIBRARY_DEPENDENCIES")
+        target_link_libraries("${library_name}" PRIVATE "${library_prefix}_LIBRARY_DEPENDENCIES" )
     endif()
 
     # Install the library target and support both static archive and shared library builds.
