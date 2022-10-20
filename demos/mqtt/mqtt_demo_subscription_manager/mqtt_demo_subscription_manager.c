@@ -814,12 +814,18 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
                 LogInfo( ( "Received SUBACK.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( lastSubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
                 LogInfo( ( "Received UNSUBACK.\n\n" ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 assert( lastUnsubscribePacketIdentifier == pDeserializedInfo->packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -833,6 +839,9 @@ static void commonEventHandler( MQTTContext_t * pMqttContext,
             case MQTT_PACKET_TYPE_PUBACK:
                 LogInfo( ( "PUBACK received for packet id %u.\n\n",
                            pDeserializedInfo->packetIdentifier ) );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             /* Any other packet type is invalid. */
