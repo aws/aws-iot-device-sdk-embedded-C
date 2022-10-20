@@ -5,6 +5,7 @@ set(FILEPATH_LOCATIONS
         ${MODULES_DIR}/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake
         ${MODULES_DIR}/aws/jobs-for-aws-iot-embedded-sdk/jobsFilePaths.cmake
         ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/otaFilePaths.cmake
+        ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/otaDependenyFilePaths.cmake
         ${MODULES_DIR}/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake
         ${MODULES_DIR}/standard/coreHTTP/httpFilePaths.cmake
         ${MODULES_DIR}/standard/coreJSON/jsonFilePaths.cmake
@@ -47,12 +48,17 @@ set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
         "${COREPKCS11_LOCATION}/source/portable/os")
+set(OTA_EXTRA_SOURCES
+        ${JSON_SOURCES}
+        ${TINYCBOR_SOURCES})
 set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
 foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
         ${OTA_INCLUDE_PUBLIC_DIRS})
     set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
-        ${OTA_INCLUDE_PRIVATE_DIRS})
+        ${OTA_INCLUDE_PRIVATE_DIRS}
+        ${JSON_INCLUDE_PUBLIC_DIRS}
+        ${TINYCBOR_INCLUDE_DIRS})
 endforeach()
 
 if(NOT DEFINED INSTALL_LIBS)
