@@ -225,29 +225,29 @@
 /**
  * @brief The common prefix for all OTA topics.
  */
-#define OTA_TOPIC_PREFIX    "$aws/things/+/"
+#define OTA_TOPIC_PREFIX               "$aws/things/+/"
 
 /**
  * @brief The string used for jobs topics.
  */
-#define OTA_TOPIC_JOBS      "jobs"
+#define OTA_TOPIC_JOBS                 "jobs"
 
 /**
  * @brief The string used for streaming service topics.
  */
-#define OTA_TOPIC_STREAM    "streams"
+#define OTA_TOPIC_STREAM               "streams"
 
 /**
  * @brief The length of the outgoing publish records array used by the coreMQTT
  * library to track QoS > 0 packet ACKS for outgoing publishes.
  */
-#define OUTGOING_PUBLISH_RECORD_LEN              ( 10U )
+#define OUTGOING_PUBLISH_RECORD_LEN    ( 10U )
 
 /**
  * @brief The length of the incoming publish records array used by the coreMQTT
  * library to track QoS > 0 packet ACKS for incoming publishes.
  */
-#define INCOMING_PUBLISH_RECORD_LEN              ( 10U )
+#define INCOMING_PUBLISH_RECORD_LEN    ( 10U )
 
 /*-----------------------------------------------------------*/
 
@@ -552,7 +552,7 @@ static uint32_t generateRandomNumber();
  * @return None.
  */
 static void otaAppCallback( OtaJobEvent_t event,
-                            const void * pData );
+                            void * pData );
 
 /**
  * @brief callback to use with the MQTT context to notify incoming packet events.
@@ -639,7 +639,7 @@ OtaEventData_t * otaEventBufferGet( void )
 /*-----------------------------------------------------------*/
 
 static void otaAppCallback( OtaJobEvent_t event,
-                            const void * pData )
+                            void * pData )
 {
     OtaErr_t err = OtaErrUninitialized;
 
@@ -1638,7 +1638,6 @@ static int startOTADemo( void )
 
                     /* Delay to allow data to buffer for MQTT_ProcessLoop. */
                     Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
-                    
                 }
                 else
                 {
