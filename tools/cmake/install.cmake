@@ -47,8 +47,9 @@ set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
         "${COREPKCS11_LOCATION}/source/portable/os")
-set(OTA_EXTRA_SOURCES
-        ${JSON_SOURCES})
+set(OTA_EXTRA_INCLUDE_PRIVATE_DIRS
+    PRIVATE
+        ${JSON_INCLUDE_PUBLIC_DIRS})
 set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
 foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
