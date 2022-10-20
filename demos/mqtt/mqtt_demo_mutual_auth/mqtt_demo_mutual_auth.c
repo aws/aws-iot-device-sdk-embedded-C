@@ -299,13 +299,13 @@
  * @brief The length of the outgoing publish records array used by the coreMQTT
  * library to track QoS > 0 packet ACKS for outgoing publishes.
  */
-#define OUTGOING_PUBLISH_RECORD_LEN              ( 10U )
+#define OUTGOING_PUBLISH_RECORD_LEN    ( 10U )
 
 /**
  * @brief The length of the incoming publish records array used by the coreMQTT
  * library to track QoS > 0 packet ACKS for incoming publishes.
  */
-#define INCOMING_PUBLISH_RECORD_LEN              ( 10U )
+#define INCOMING_PUBLISH_RECORD_LEN    ( 10U )
 
 /*-----------------------------------------------------------*/
 
@@ -633,6 +633,7 @@ static uint32_t generateRandomNumber()
 }
 
 /*-----------------------------------------------------------*/
+
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
                                               MQTTContext_t * pMqttContext,
                                               bool * pClientSessionPresent,
@@ -999,7 +1000,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
         /* Process incoming packet. */
         mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-        if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
+        if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
         {
             LogError( ( "MQTT_ProcessLoop returned with status = %s.",
                         MQTT_Status_strerror( mqttStatus ) ) );
@@ -1500,7 +1501,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 
             /* For any error in #MQTT_ProcessLoop, exit the loop and disconnect
              * from the broker. */
-            if( mqttStatus != MQTTSuccess && mqttStatus != MQTTNeedMoreBytes )
+            if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
             {
                 LogError( ( "MQTT_ProcessLoop returned with status = %s.",
                             MQTT_Status_strerror( mqttStatus ) ) );
