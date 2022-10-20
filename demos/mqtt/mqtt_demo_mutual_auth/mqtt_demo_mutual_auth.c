@@ -627,32 +627,6 @@ static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
-                                            uint32_t timeout )
-{
-    MQTTStatus_t eMqttStatus;
-    uint32_t timeoutMs;
-
-    timeoutMs = pMqttContext->getTime() + timeout;
-
-    while( 1 )
-    {
-        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
-
-        if( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) )
-        {
-            break;
-        }
-
-        if( pMqttContext->getTime() >= timeoutMs )
-        {
-            break;
-        }
-    }
-
-    return eMqttStatus;
-}
-
 static uint32_t generateRandomNumber()
 {
     return( rand() );
@@ -1430,12 +1404,24 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
                             eventCallback,
                             &networkBuffer );
 
-    mqttStatus = MQTT_InitStatefulQoS(pMqttContext, pOutgoingPublishRecords, OUTGOING_PUBLISH_RECORD_COUNT, pIncomingPublishRecords, INCOMING_PUBLISH_RECORD_COUNT);
-
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        LogError( ( "MQTT_Init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+    else
+    {
+        mqttStatus = MQTT_InitStatefulQoS( pMqttContext,
+                                           pOutgoingPublishRecords,
+                                           OUTGOING_PUBLISH_RECORD_LEN,
+                                           pIncomingPublishRecords,
+                                           INCOMING_PUBLISH_RECORD_LEN );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_InitStatefulQoS failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        }
     }
 
     return returnStatus;
