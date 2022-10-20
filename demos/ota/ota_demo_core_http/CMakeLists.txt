@@ -23,6 +23,7 @@ add_executable(
         "${DEMOS_DIR}/http/common/src/http_demo_url_utils.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
+        ${OTA_MQTT_SOURCES}
         ${OTA_HTTP_SOURCES}
         ${MQTT_SOURCES}
         ${MQTT_SERIALIZER_SOURCES}
@@ -39,6 +40,7 @@ target_link_libraries(
         clock_posix
         openssl_posix
         aws_iot_json
+        tinycbor
 )
 
 target_include_directories(
