@@ -998,13 +998,12 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
                    MQTT_EXAMPLE_TOPIC ) );
 
         /* Process incoming packet. */
-        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = prvWaitForPacketAck( pMqttContext,
+                                            globalSubscribePacketIdentifier,
+                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-        if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
+        if( returnStatus == EXIT_FAILURE )
         {
-            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                        MQTT_Status_strerror( mqttStatus ) ) );
-            returnStatus = EXIT_FAILURE;
             break;
         }
 

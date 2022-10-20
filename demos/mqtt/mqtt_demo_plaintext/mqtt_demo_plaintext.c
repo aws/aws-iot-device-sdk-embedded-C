@@ -590,16 +590,15 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
                    MQTT_EXAMPLE_TOPIC ) );
 
         /* Process incoming packet. */
-        mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = prvWaitForPacketAck( pMqttContext,
+                                            globalSubscribePacketIdentifier,
+                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
-        if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
+        if( returnStatus == EXIT_FAILURE )
         {
-            LogError( ( "MQTT_ProcessLoop returned with status = %s.",
-                        MQTT_Status_strerror( mqttStatus ) ) );
-            returnStatus = EXIT_FAILURE;
             break;
         }
-
+        
         /* Check if recent subscription request has been rejected. globalSubAckStatus is updated
          * in eventCallback to reflect the status of the SUBACK sent by the broker. It represents
          * either the QoS level granted by the server upon subscription, or acknowledgement of
