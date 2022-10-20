@@ -277,6 +277,18 @@
 #define HTTP_RESPONSE_FORBIDDEN          ( 403 )
 #define HTTP_RESPONSE_NOT_FOUND          ( 404 )
 
+/**
+ * @brief The length of the outgoing publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for outgoing publishes.
+ */
+#define OUTGOING_PUBLISH_RECORD_LEN              ( 10U )
+
+/**
+ * @brief The length of the incoming publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for incoming publishes.
+ */
+#define INCOMING_PUBLISH_RECORD_LEN              ( 10U )
+
 /*-----------------------------------------------------------*/
 
 /* Linkage for error reporting. */
@@ -456,6 +468,24 @@ static OtaAppBuffer_t otaBuffer =
     .pAuthScheme        = authScheme,
     .authSchemeSize     = OTA_MAX_AUTH_SCHEME_SIZE
 };
+
+/**
+ * @brief Array to track the outgoing publish records for outgoing publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_LEN ];
+
+/**
+ * @brief Array to track the incoming publish records for incoming publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_LEN ];
 
 /*-----------------------------------------------------------*/
 
@@ -1030,7 +1060,21 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        LogError( ( "MQTT_Init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+    else
+    {
+        mqttStatus = MQTT_InitStatefulQoS( pMqttContext,
+                                           pOutgoingPublishRecords,
+                                           OUTGOING_PUBLISH_RECORD_LEN,
+                                           pIncomingPublishRecords,
+                                           INCOMING_PUBLISH_RECORD_LEN );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_InitStatefulQoS failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        }
     }
 
     return returnStatus;
