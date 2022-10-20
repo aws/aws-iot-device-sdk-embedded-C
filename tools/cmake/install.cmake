@@ -24,12 +24,12 @@ set(LIBRARY_PREFIXES
         "DEFENDER"
         "SHADOW"
         "JOBS"
+        "JSON"
         "OTA"
         "OTA_HTTP"
         "OTA_MQTT"
         "BACKOFF_ALGORITHM"
         "HTTP"
-        "JSON"
         "MQTT"
         "PKCS")
 
@@ -56,6 +56,8 @@ foreach(ota_backend ${OTA_BACKENDS})
 endforeach()
 
 # Define any extra library dependencies, making sure to use the same prefix
+
+# Note for this to work for OTA "JSON" must be before it in the prefix list
 set(OTA_LIBRARY_DEPENDENCIES
         aws_iot_json)
 set(OTA_MQTT_LIBRARY_DEPENDENCIES
@@ -126,6 +128,7 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
 
     # Link library dependencies 
     if(DEFINED "${library_prefix}_LIBRARY_DEPENDENCIES")
+        message( STATUS "Linking libraries for ${library_prefix}" )
         target_link_libraries("${library_name}" PRIVATE "${library_prefix}_LIBRARY_DEPENDENCIES" )
     endif()
 
