@@ -2133,7 +2133,7 @@ static int startOTADemo( void )
         {
             LogError( ( "Failed to join thread"
                         ",error code = %d",
-                        returnStatus ) );
+                        returnJoin ) );
 
             returnStatus = EXIT_FAILURE;
         }

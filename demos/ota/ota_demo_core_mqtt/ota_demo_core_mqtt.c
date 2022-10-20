@@ -1625,7 +1625,7 @@ static int startOTADemo( void )
                                 strerror( errno ) ) );
                 }
 
-                if( mqttStatus == MQTTSuccess )
+                if( ( mqttStatus == MQTTSuccess ) || ( mqttStatus == MQTTNeedMoreBytes ) )
                 {
                     /* Get OTA statistics for currently executing job. */
                     OTA_GetStatistics( &otaStatistics );
@@ -1681,7 +1681,7 @@ static int startOTADemo( void )
         {
             LogError( ( "Failed to join thread"
                         ",error code = %d",
-                        returnStatus ) );
+                        returnJoin ) );
 
             returnStatus = EXIT_FAILURE;
         }
