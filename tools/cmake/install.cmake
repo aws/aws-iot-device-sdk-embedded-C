@@ -89,8 +89,8 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         target_include_directories("${library_name}"
                         PRIVATE ${${library_prefix}_EXTRA_INCLUDE_PRIVATE_DIRS})
     endif()
-    
-    # Link library dependencies 
+
+    # Link library dependencies
     if(DEFINED "${library_prefix}_LIBRARY_DEPENDENCIES")
         message( STATUS "Linking libraries for ${library_prefix}: ${${library_prefix}_LIBRARY_DEPENDENCIES}" )
         target_link_libraries("${library_name}" PRIVATE "${${library_prefix}_LIBRARY_DEPENDENCIES}" )
