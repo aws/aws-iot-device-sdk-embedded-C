@@ -142,7 +142,26 @@
  */
 #define TEST_SHADOW_DESIRED_LENGTH          ( sizeof( TEST_SHADOW_DESIRED ) - 1 )
 
+/**
+ * @brief The length of the outgoing publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for outgoing publishes.
+ */
+#define OUTGOING_PUBLISH_RECORD_LEN         ( 10U )
+
+/**
+ * @brief The length of the incoming publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for incoming publishes.
+ */
+#define INCOMING_PUBLISH_RECORD_LEN         ( 10U )
+
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Packet Identifier updated when an ACK packet is received.
+ *
+ * It is used to match an expected ACK for a transmitted packet.
+ */
+static uint16_t globalAckPacketIdentifier = 0U;
 
 /**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
@@ -316,6 +335,23 @@ static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo );
 
+/**
+ * @brief Wait for an expected ACK packet to be received.
+ *
+ * This function handles waiting for an expected ACK packet by calling
+ * #MQTT_ProcessLoop and waiting for #mqttCallback to set the global ACK
+ * packet identifier to the expected ACK packet identifier.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] usPacketIdentifier Packet identifier for expected ACK packet.
+ * @param[in] ulTimeout Maximum duration to wait for expected ACK packet.
+ *
+ * @return true if the expected ACK packet was received, false otherwise.
+ */
+static bool waitForPacketAck( MQTTContext_t * pMqttContext,
+                              uint16_t usPacketIdentifier,
+                              uint32_t ulTimeout );
+
 /*-----------------------------------------------------------*/
 
 static void establishMqttSession( MQTTContext_t * pContext,
@@ -337,6 +373,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
     transport.recv = Openssl_Recv;
+    transport.writev = NULL;
 
     /* Fill the values for network buffer. */
     networkBuffer.pBuffer = buffer;
@@ -348,6 +385,12 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                                Clock_GetTimeMs,
                                                eventCallback,
                                                &networkBuffer ) );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_InitStatefulQoS( pContext,
+                                                          pOutgoingPublishRecords,
+                                                          OUTGOING_PUBLISH_RECORD_LEN,
+                                                          pIncomingPublishRecords,
+                                                          INCOMING_PUBLISH_RECORD_LEN ) );
 
     /* Establish MQTT session with a CONNECT packet. */
 
@@ -489,6 +532,9 @@ static void eventCallback( MQTTContext_t * pContext,
                             packetIdentifier ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
@@ -506,6 +552,9 @@ static void eventCallback( MQTTContext_t * pContext,
                             packetIdentifier ) );
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PUBACK:
@@ -514,6 +563,9 @@ static void eventCallback( MQTTContext_t * pContext,
 
                 /* Make sure ACK packet identifier matches with Request packet identifier. */
                 TEST_ASSERT_EQUAL( globalPublishPacketIdentifier, packetIdentifier );
+
+                /* Update the global ACK packet identifier. */
+                globalAckPacketIdentifier = packetIdentifier;
 
                 LogDebug( ( "Received PUBACK: PacketID=%u",
                             packetIdentifier ) );
@@ -592,7 +644,7 @@ static MQTTStatus_t subscribeToTopic( MQTTContext_t * pContext,
 
     if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        TEST_ASSERT_TRUE( waitForPacketAck( pContext, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     }
 
     if( mqttStatus == MQTTSuccess )
@@ -635,7 +687,7 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
 
     if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        TEST_ASSERT_TRUE( waitForPacketAck( pContext, globalUnsubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     }
 
     if( mqttStatus == MQTTSuccess )
@@ -676,7 +728,7 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
 
     if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        TEST_ASSERT_TRUE( waitForPacketAck( pContext, globalPublishPacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     }
 
     if( mqttStatus == MQTTSuccess )
@@ -828,6 +880,52 @@ static void testSequence( const char * pShadowName,
                                                           topicString,
                                                           topicLength,
                                                           MQTTQoS0 ) );
+}
+
+static bool waitForPacketAck( MQTTContext_t * pMqttContext,
+                              uint16_t usPacketIdentifier,
+                              uint32_t ulTimeout )
+{
+    uint32_t ulMqttProcessLoopEntryTime;
+    uint32_t ulMqttProcessLoopTimeoutTime;
+    uint32_t ulCurrentTime;
+
+    MQTTStatus_t eMqttStatus = MQTTSuccess;
+    bool returnStatus = false;
+
+    /* Reset the ACK packet identifier being received. */
+    globalAckPacketIdentifier = 0U;
+
+    ulCurrentTime = pMqttContext->getTime();
+    ulMqttProcessLoopEntryTime = ulCurrentTime;
+    ulMqttProcessLoopTimeoutTime = ulCurrentTime + ulTimeout;
+
+    /* Call MQTT_ProcessLoop multiple times until the expected packet ACK
+     * is received, a timeout happens, or MQTT_ProcessLoop fails. */
+    while( ( globalAckPacketIdentifier != usPacketIdentifier ) &&
+           ( ulCurrentTime < ulMqttProcessLoopTimeoutTime ) &&
+           ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
+    {
+        /* Event callback will set #globalAckPacketIdentifier when receiving
+         * appropriate packet. */
+        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
+        ulCurrentTime = pMqttContext->getTime();
+    }
+
+    if( ( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) ) ||
+        ( globalAckPacketIdentifier != usPacketIdentifier ) )
+    {
+        LogError( ( "MQTT_ProcessLoop failed to receive ACK packet: Expected ACK Packet ID=%02X, LoopDuration=%u, Status=%s",
+                    usPacketIdentifier,
+                    ( ulCurrentTime - ulMqttProcessLoopEntryTime ),
+                    MQTT_Status_strerror( eMqttStatus ) ) );
+    }
+    else
+    {
+        returnStatus = true;
+    }
+
+    return returnStatus;
 }
 
 /* ============================   UNITY FIXTURES ============================ */
