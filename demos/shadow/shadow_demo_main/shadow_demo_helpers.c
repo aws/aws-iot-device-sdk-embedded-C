@@ -645,12 +645,16 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
             LogInfo( ( "MQTT_PACKET_TYPE_SUBACK." ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( globalSubscribePacketIdentifier == packetIdentifier );
+            /* Update the global ACK packet identifier. */
+            globalAckPacketIdentifier = packetIdentifier;
             break;
 
         case MQTT_PACKET_TYPE_UNSUBACK:
             LogInfo( ( "MQTT_PACKET_TYPE_UNSUBACK." ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             assert( globalUnsubscribePacketIdentifier == packetIdentifier );
+            /* Update the global ACK packet identifier. */
+            globalAckPacketIdentifier = packetIdentifier;
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
@@ -666,6 +670,8 @@ void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
                        packetIdentifier ) );
             /* Cleanup publish packet when a PUBACK is received. */
             cleanupOutgoingPublishWithPacketID( packetIdentifier );
+            /* Update the global ACK packet identifier. */
+            globalAckPacketIdentifier = packetIdentifier;
             break;
 
         /* Any other packet type is invalid. */
@@ -771,90 +777,102 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
                                 eventCallback,
                                 &networkBuffer );
 
-        mqttStatus = MQTT_InitStatefulQoS( pMqttContext, pOutgoingPublishRecords, OUTGOING_PUBLISH_RECORD_COUNT, pIncomingPublishRecords, INCOMING_PUBLISH_RECORD_COUNT );
-
         if( mqttStatus != MQTTSuccess )
         {
             returnStatus = EXIT_FAILURE;
-            LogError( ( "MQTT init failed with status %u.", mqttStatus ) );
+            LogError( ( "MQTT_Init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
         }
         else
         {
-            /* Establish MQTT session by sending a CONNECT packet. */
-
-            /* If #createCleanSession is true, start with a clean session
-             * i.e. direct the MQTT broker to discard any previous session data.
-             * If #createCleanSession is false, directs the broker to attempt to
-             * reestablish a session which was already present. */
-            connectInfo.cleanSession = createCleanSession;
-
-            /* The client identifier is used to uniquely identify this MQTT client to
-             * the MQTT broker. In a production device the identifier can be something
-             * unique, such as a device serial number. */
-            connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
-            connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
-
-            /* The maximum time interval in seconds which is allowed to elapse
-             * between two Control Packets.
-             * It is the responsibility of the Client to ensure that the interval between
-             * Control Packets being sent does not exceed the this Keep Alive value. In the
-             * absence of sending any other Control Packets, the Client MUST send a
-             * PINGREQ Packet. */
-            connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
-
-            /* Username and password for authentication. Not used in this demo. */
-            connectInfo.pUserName = METRICS_STRING;
-            connectInfo.userNameLength = METRICS_STRING_LENGTH;
-            connectInfo.pPassword = NULL;
-            connectInfo.passwordLength = 0U;
-
-            /* Send MQTT CONNECT packet to broker. */
-            mqttStatus = MQTT_Connect( pMqttContext,
-                                       &connectInfo,
-                                       NULL,
-                                       CONNACK_RECV_TIMEOUT_MS,
-                                       &sessionPresent );
+            mqttStatus = MQTT_InitStatefulQoS( pMqttContext,
+                                               pOutgoingPublishRecords,
+                                               OUTGOING_PUBLISH_RECORD_LEN,
+                                               pIncomingPublishRecords,
+                                               INCOMING_PUBLISH_RECORD_LEN );
 
             if( mqttStatus != MQTTSuccess )
             {
                 returnStatus = EXIT_FAILURE;
-                LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+                LogError( ( "MQTT_InitStatefulQoS failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
             }
             else
             {
-                LogInfo( ( "MQTT connection successfully established with broker." ) );
+                /* Establish MQTT session by sending a CONNECT packet. */
+
+                /* If #createCleanSession is true, start with a clean session
+                 * i.e. direct the MQTT broker to discard any previous session data.
+                 * If #createCleanSession is false, directs the broker to attempt to
+                 * reestablish a session which was already present. */
+                connectInfo.cleanSession = createCleanSession;
+
+                /* The client identifier is used to uniquely identify this MQTT client to
+                 * the MQTT broker. In a production device the identifier can be something
+                 * unique, such as a device serial number. */
+                connectInfo.pClientIdentifier = CLIENT_IDENTIFIER;
+                connectInfo.clientIdentifierLength = CLIENT_IDENTIFIER_LENGTH;
+
+                /* The maximum time interval in seconds which is allowed to elapse
+                 * between two Control Packets.
+                 * It is the responsibility of the Client to ensure that the interval between
+                 * Control Packets being sent does not exceed the this Keep Alive value. In the
+                 * absence of sending any other Control Packets, the Client MUST send a
+                 * PINGREQ Packet. */
+                connectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
+
+                /* Username and password for authentication. Not used in this demo. */
+                connectInfo.pUserName = METRICS_STRING;
+                connectInfo.userNameLength = METRICS_STRING_LENGTH;
+                connectInfo.pPassword = NULL;
+                connectInfo.passwordLength = 0U;
+
+                /* Send MQTT CONNECT packet to broker. */
+                mqttStatus = MQTT_Connect( pMqttContext,
+                                           &connectInfo,
+                                           NULL,
+                                           CONNACK_RECV_TIMEOUT_MS,
+                                           &sessionPresent );
+
+                if( mqttStatus != MQTTSuccess )
+                {
+                    returnStatus = EXIT_FAILURE;
+                    LogError( ( "Connection with MQTT broker failed with status %u.", mqttStatus ) );
+                }
+                else
+                {
+                    LogInfo( ( "MQTT connection successfully established with broker." ) );
+                }
             }
-        }
 
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Keep a flag for indicating if MQTT session is established. This
-             * flag will mark that an MQTT DISCONNECT has to be sent at the end
-             * of the demo even if there are intermediate failures. */
-            mqttSessionEstablished = true;
-        }
-
-        if( returnStatus == EXIT_SUCCESS )
-        {
-            /* Check if session is present and if there are any outgoing publishes
-             * that need to resend. This is only valid if the broker is
-             * re-establishing a session which was already present. */
-            if( sessionPresent == true )
+            if( returnStatus == EXIT_SUCCESS )
             {
-                LogInfo( ( "An MQTT session with broker is re-established. "
-                           "Resending unacked publishes." ) );
-
-                /* Handle all the resend of publish messages. */
-                returnStatus = handlePublishResend( &mqttContext );
+                /* Keep a flag for indicating if MQTT session is established. This
+                 * flag will mark that an MQTT DISCONNECT has to be sent at the end
+                 * of the demo even if there are intermediate failures. */
+                mqttSessionEstablished = true;
             }
-            else
-            {
-                LogInfo( ( "A clean MQTT connection is established."
-                           " Cleaning up all the stored outgoing publishes." ) );
 
-                /* Clean up the outgoing publishes waiting for ack as this new
-                 * connection doesn't re-establish an existing session. */
-                cleanupOutgoingPublishes();
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                /* Check if session is present and if there are any outgoing publishes
+                 * that need to resend. This is only valid if the broker is
+                 * re-establishing a session which was already present. */
+                if( sessionPresent == true )
+                {
+                    LogInfo( ( "An MQTT session with broker is re-established. "
+                               "Resending unacked publishes." ) );
+
+                    /* Handle all the resend of publish messages. */
+                    returnStatus = handlePublishResend( &mqttContext );
+                }
+                else
+                {
+                    LogInfo( ( "A clean MQTT connection is established."
+                               " Cleaning up all the stored outgoing publishes." ) );
+
+                    /* Clean up the outgoing publishes waiting for ack as this new
+                     * connection doesn't re-establish an existing session. */
+                    cleanupOutgoingPublishes();
+                }
             }
         }
     }
