@@ -236,6 +236,7 @@ mqtt
 mqttcallback
 mqttkeepalivetimeout
 mqttneedmorebytes
+mqttsuccess
 msvc
 msys
 mul
