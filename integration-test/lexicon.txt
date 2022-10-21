@@ -153,6 +153,7 @@ getfunctionlist
 getslotlist
 gf
 glibc
+globalackpacketidentifier
 gmtime
 gpl
 grp
@@ -232,7 +233,9 @@ mosquitto
 mpi
 mpis
 mqtt
+mqttcallback
 mqttkeepalivetimeout
+mqttneedmorebytes
 msvc
 msys
 mul
@@ -282,6 +285,7 @@ pkwrite
 plaintext
 pleace
 pmethod
+pmqttcontext
 pnetworkcontext
 poly
 posix
@@ -369,6 +373,8 @@ ucsecp
 udbl
 udp
 uint
+ultimeout
+ultimeoutms
 un
 undefine
 unix
@@ -377,6 +383,7 @@ unsuback
 urandom
 uri
 usa
+uspacketidentifier
 util
 utils
 vydzcnkj
