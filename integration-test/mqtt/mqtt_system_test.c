@@ -1457,7 +1457,7 @@ TEST( coreMQTT_Integration, test_MQTT_Restore_Session_Resend_PubRel )
     /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
     TEST_ASSERT_FALSE( receivedPubComp );
     packetTypeForDisconnection = MQTT_PACKET_TYPE_PUBREC;
-    TEST_ASSERT_EQUAL( MQTTSendFailed,
+    TEST_ASSERT_EQUAL( MQTTRecvFailed,
                        processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubComp );
 
