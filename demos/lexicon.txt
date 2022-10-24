@@ -249,6 +249,7 @@ getsubackstatuscodes
 gettopicstring
 gf
 glibc
+globalackpacketidentifier
 globalsubackstatus
 globalsubscribepacketidentifier
 gmtime
@@ -373,6 +374,7 @@ mpi
 mpis
 mq
 mqtt
+mqttcallback
 mqttcontext
 mqttkeepalivetimeout
 mqttprocessincomingpacket
@@ -760,6 +762,8 @@ uldigestlength
 uloffset
 ulong
 ulslotcount
+ultimeout
+ultimeoutms
 un
 unescaping
 unix
@@ -777,6 +781,7 @@ usa
 usb
 userguide
 userspace
+uspacketidentifier
 util
 utils
 v1

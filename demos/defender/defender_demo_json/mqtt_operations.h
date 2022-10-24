@@ -100,6 +100,6 @@ bool PublishToTopic( const char * pTopic,
  * @return true if process loop was successful;
  * false otherwise.
  */
-bool ProcessLoop( uint32_t timemoutMs );
+bool ProcessLoopWithTimeout( uint32_t ulTimeoutMs );
 
 #endif /* ifndef MQTT_OPERATIONS_H_ */

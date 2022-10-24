@@ -143,11 +143,6 @@
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS         ( 60U )
 
 /**
- * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
- */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS             ( 100U )
-
-/**
  * @brief Maximum number or retries to publish a message in case of failures.
  */
 #define MQTT_PUBLISH_RETRY_MAX_ATTEMPS           ( 3U )
@@ -281,6 +276,18 @@
 #define HTTP_RESPONSE_BAD_REQUEST        ( 400 )
 #define HTTP_RESPONSE_FORBIDDEN          ( 403 )
 #define HTTP_RESPONSE_NOT_FOUND          ( 404 )
+
+/**
+ * @brief The length of the outgoing publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for outgoing publishes.
+ */
+#define OUTGOING_PUBLISH_RECORD_LEN      ( 10U )
+
+/**
+ * @brief The length of the incoming publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for incoming publishes.
+ */
+#define INCOMING_PUBLISH_RECORD_LEN      ( 10U )
 
 /*-----------------------------------------------------------*/
 
@@ -461,6 +468,24 @@ static OtaAppBuffer_t otaBuffer =
     .pAuthScheme        = authScheme,
     .authSchemeSize     = OTA_MAX_AUTH_SCHEME_SIZE
 };
+
+/**
+ * @brief Array to track the outgoing publish records for outgoing publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_LEN ];
+
+/**
+ * @brief Array to track the incoming publish records for incoming publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_LEN ];
 
 /*-----------------------------------------------------------*/
 
@@ -660,7 +685,7 @@ static uint32_t generateRandomNumber();
  * @return None.
  */
 static void otaAppCallback( OtaJobEvent_t event,
-                            const void * pData );
+                            void * pData );
 
 /**
  * @brief callback to use with the MQTT context to notify incoming packet events.
@@ -747,7 +772,7 @@ OtaEventData_t * otaEventBufferGet( void )
 /*-----------------------------------------------------------*/
 
 static void otaAppCallback( OtaJobEvent_t event,
-                            const void * pData )
+                            void * pData )
 {
     OtaErr_t err = OtaErrUninitialized;
 
@@ -1020,6 +1045,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
     transport.recv = Openssl_Recv;
+    transport.writev = NULL;
 
     /* Fill the values for network buffer. */
     networkBuffer.pBuffer = otaNetworkBuffer;
@@ -1035,7 +1061,21 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        LogError( ( "MQTT_Init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+    else
+    {
+        mqttStatus = MQTT_InitStatefulQoS( pMqttContext,
+                                           pOutgoingPublishRecords,
+                                           OUTGOING_PUBLISH_RECORD_LEN,
+                                           pIncomingPublishRecords,
+                                           INCOMING_PUBLISH_RECORD_LEN );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_InitStatefulQoS failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        }
     }
 
     return returnStatus;
@@ -2025,7 +2065,7 @@ static int startOTADemo( void )
                 if( pthread_mutex_lock( &mqttMutex ) == 0 )
                 {
                     /* Loop to receive packet from transport interface. */
-                    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+                    mqttStatus = MQTT_ProcessLoop( &mqttContext );
 
                     pthread_mutex_unlock( &mqttMutex );
                 }
@@ -2036,7 +2076,7 @@ static int startOTADemo( void )
                                 strerror( errno ) ) );
                 }
 
-                if( mqttStatus == MQTTSuccess )
+                if( ( mqttStatus == MQTTSuccess ) || ( mqttStatus == MQTTNeedMoreBytes ) )
                 {
                     /* Get OTA statistics for currently executing job. */
                     OTA_GetStatistics( &otaStatistics );
@@ -2047,11 +2087,7 @@ static int startOTADemo( void )
                                otaStatistics.otaPacketsProcessed,
                                otaStatistics.otaPacketsDropped ) );
 
-                    /* Delay if mqtt process loop is set to zero.*/
-                    if( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 )
-                    {
-                        Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
-                    }
+                    Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
                 }
                 else
                 {
@@ -2098,7 +2134,7 @@ static int startOTADemo( void )
         {
             LogError( ( "Failed to join thread"
                         ",error code = %d",
-                        returnStatus ) );
+                        returnJoin ) );
 
             returnStatus = EXIT_FAILURE;
         }

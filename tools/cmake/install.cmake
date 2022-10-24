@@ -24,12 +24,12 @@ set(LIBRARY_PREFIXES
         "DEFENDER"
         "SHADOW"
         "JOBS"
+        "JSON"
         "OTA"
         "OTA_HTTP"
         "OTA_MQTT"
         "BACKOFF_ALGORITHM"
         "HTTP"
-        "JSON"
         "MQTT"
         "PKCS")
 
@@ -54,6 +54,14 @@ foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
         ${OTA_INCLUDE_PRIVATE_DIRS})
 endforeach()
+
+# Define any extra library dependencies, making sure to use the same prefix
+
+# Note for this to work for OTA "JSON" must be before it in the prefix list
+set(OTA_LIBRARY_DEPENDENCIES
+        aws_iot_json)
+set(OTA_MQTT_LIBRARY_DEPENDENCIES
+        tinycbor)
 
 if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
@@ -80,6 +88,12 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
     if(DEFINED "${library_prefix}_EXTRA_INCLUDE_PRIVATE_DIRS")
         target_include_directories("${library_name}"
                         PRIVATE ${${library_prefix}_EXTRA_INCLUDE_PRIVATE_DIRS})
+    endif()
+
+    # Link library dependencies
+    if(DEFINED "${library_prefix}_LIBRARY_DEPENDENCIES")
+        message( STATUS "Linking libraries for ${library_prefix}: ${${library_prefix}_LIBRARY_DEPENDENCIES}" )
+        target_link_libraries("${library_name}" PRIVATE "${${library_prefix}_LIBRARY_DEPENDENCIES}" )
     endif()
 
     # Allow a path to a custom config header to be passed through a CMake flag.

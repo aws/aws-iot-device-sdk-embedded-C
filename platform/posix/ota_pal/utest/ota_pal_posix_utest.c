@@ -552,7 +552,7 @@ void test_OTAPAL_CloseFile_NullInput( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -581,7 +581,7 @@ void test_OTAPAL_CloseFile_HappyPath( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -600,7 +600,7 @@ void test_OTAPAL_CloseFile_OpenSSL_failures( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -649,7 +649,7 @@ void test_OTAPAL_CloseFile_BIO_puts( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -669,7 +669,7 @@ void test_OTAPAL_CloseFile_feof_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -687,7 +687,7 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyFinal_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -704,7 +704,7 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyUpdate_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -721,7 +721,7 @@ void test_OTAPAL_CloseFile_fseek_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -738,7 +738,7 @@ void test_OTAPAL_CloseFile_fread_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -758,7 +758,7 @@ void test_OTAPAL_CloseFile_BIO_new( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
     BIO dummyBIO;
@@ -788,7 +788,7 @@ void test_OTAPAL_CloseFile_BIO_read_filename_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -804,7 +804,7 @@ void test_OTAPAL_CloseFile_EVP_DigestVerifyInit_fail( void )
 {
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
@@ -827,7 +827,7 @@ void test_OTAPAL_CloseFile_MaxBlockSize( void )
     const size_t OTA_PAL_POSIX_BUF_SIZE = 4096U;
     OtaPalStatus_t result;
     OtaFileContext_t otaFileContext;
-    Sig256_t dummySig;
+    Sig_t dummySig;
     OtaImageState_t expectedImageState = OtaImageStateTesting;
     FILE dummyFile;
 
