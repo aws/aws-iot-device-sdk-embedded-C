@@ -230,13 +230,6 @@
 #define INCOMING_PUBLISH_RECORD_LEN             ( 10U )
 
 /**
- * @brief Packet Identifier updated when an ACK packet is received.
- *
- * It is used to match an expected ACK for a transmitted packet.
- */
-static uint16_t globalAckPacketIdentifier = 0U;
-
-/**
  * @brief Packet Identifier generated when Subscribe request was sent to the broker;
  * it is used to match received Subscribe ACK to the transmitted subscribe.
  */
@@ -581,9 +574,6 @@ static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
                         packetIdentifier ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             TEST_ASSERT_EQUAL( globalSubscribePacketIdentifier, packetIdentifier );
-
-            /* Update the global ACK packet identifier. */
-            globalAckPacketIdentifier = packetIdentifier;
             break;
 
         case MQTT_PACKET_TYPE_PINGRESP:
@@ -601,9 +591,6 @@ static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
                         packetIdentifier ) );
             /* Make sure ACK packet identifier matches with Request packet identifier. */
             TEST_ASSERT_EQUAL( globalUnsubscribePacketIdentifier, packetIdentifier );
-
-            /* Update the global ACK packet identifier. */
-            globalAckPacketIdentifier = packetIdentifier;
             break;
 
         case MQTT_PACKET_TYPE_PUBACK:
@@ -615,9 +602,6 @@ static void handleAckEvents( MQTTPacketInfo_t * pPacketInfo,
 
             LogDebug( ( "Received PUBACK: PacketID=%u",
                         packetIdentifier ) );
-
-            /* Update the global ACK packet identifier. */
-            globalAckPacketIdentifier = packetIdentifier;
             break;
 
         case MQTT_PACKET_TYPE_PUBREC:
@@ -1394,7 +1378,7 @@ TEST( coreMQTT_Integration, test_MQTT_Restore_Session_Resend_PubRel )
     /* Disconnect on receiving PUBREC so that we are not able to complete the QoS 2 PUBLISH in the current connection. */
     TEST_ASSERT_FALSE( receivedPubComp );
     packetTypeForDisconnection = MQTT_PACKET_TYPE_PUBREC;
-    TEST_ASSERT_EQUAL( MQTTRecvFailed,
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
                        processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_FALSE( receivedPubComp );
 
@@ -1446,7 +1430,7 @@ TEST( coreMQTT_Integration, test_MQTT_Restore_Session_Incoming_Duplicate_PubRel 
     /* Disconnect on receiving PUBREL so that we are not able to complete in the incoming QoS2
      * PUBLISH in the current connection. */
     packetTypeForDisconnection = MQTT_PACKET_TYPE_PUBREL;
-    TEST_ASSERT_EQUAL( MQTTRecvFailed,
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
                        processLoopWithTimeout( &context, 3 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     /* We will re-establish an MQTT over TLS connection with the broker to restore
@@ -1674,7 +1658,7 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
     /* Disconnect on receiving the incoming PUBLISH packet from the broker so that
      * an acknowledgement cannot be sent to the broker. */
     packetTypeForDisconnection = MQTT_PACKET_TYPE_PUBLISH;
-    TEST_ASSERT_EQUAL( MQTTRecvFailed,
+    TEST_ASSERT_EQUAL( MQTTSendFailed,
                        processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     /* Make sure that a record was created for the incoming PUBLISH packet. */
