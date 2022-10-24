@@ -387,9 +387,9 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext );
  *
  * @return true if the expected ACK packet was received, false otherwise.
  */
-static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                 uint16_t usPacketIdentifier,
-                                 uint32_t ulTimeout );
+static bool waitForPacketAck( MQTTContext_t * pMqttContext,
+                              uint16_t usPacketIdentifier,
+                              uint32_t ulTimeout );
 /*-----------------------------------------------------------*/
 
 static uint32_t generateRandomNumber()
@@ -695,9 +695,9 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext )
 }
 /*-----------------------------------------------------------*/
 
-static bool prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                 uint16_t usPacketIdentifier,
-                                 uint32_t ulTimeout )
+static bool waitForPacketAck( MQTTContext_t * pMqttContext,
+                              uint16_t usPacketIdentifier,
+                              uint32_t ulTimeout )
 {
     uint32_t ulMqttProcessLoopEntryTime;
     uint32_t ulMqttProcessLoopTimeoutTime;
@@ -991,9 +991,9 @@ bool SubscribeToTopic( const char * pTopicFilter,
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            globalSubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         globalSubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     return returnStatus;
@@ -1043,9 +1043,9 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
         /* Process incoming packet from the broker. Acknowledgment for unsubscribe
          * operation ( UNSUBACK ) will be received here. This demo uses
          * MQTT_ProcessLoop to receive packet from network. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            globalUnsubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         globalUnsubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     return returnStatus;

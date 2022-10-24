@@ -562,9 +562,9 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
  *
  * @return true if the expected ACK packet was received, false otherwise.
  */
-static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                uint16_t usPacketIdentifier,
-                                uint32_t ulTimeout );
+static int waitForPacketAck( MQTTContext_t * pMqttContext,
+                             uint16_t usPacketIdentifier,
+                             uint32_t ulTimeout );
 
 /**
  * @brief Call #MQTT_ProcessLoop in a loop for the duration of a timeout or
@@ -575,7 +575,7 @@ static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
  *
  * @return Returns the return value of the last call to #MQTT_ProcessLoop.
  */
-static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
+static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs );
 
 /*-----------------------------------------------------------*/
@@ -1019,9 +1019,9 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext,
 
         /* Wait for acknowledgement packet (SUBACK) from the broker in response to the
          * subscribe request. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            lastSubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         lastSubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     return returnStatus;
@@ -1107,9 +1107,9 @@ static int unsubscribeFromTopicFilters( MQTTContext_t * pMqttContext,
         }
 
         /* Process Incoming UNSUBACK packet from the broker. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            lastUnsubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         lastUnsubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     return returnStatus;
@@ -1172,7 +1172,7 @@ static int publishToTopicAndProcessIncomingMessage( MQTTContext_t * pMqttContext
              * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
              * has expired since the last MQTT packet sent and receive
              * ping responses. */
-            mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            mqttStatus = processLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
             if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
             {
@@ -1403,9 +1403,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                uint16_t usPacketIdentifier,
-                                uint32_t ulTimeout )
+static int waitForPacketAck( MQTTContext_t * pMqttContext,
+                             uint16_t usPacketIdentifier,
+                             uint32_t ulTimeout )
 {
     uint32_t ulMqttProcessLoopEntryTime;
     uint32_t ulMqttProcessLoopTimeoutTime;
@@ -1451,7 +1451,7 @@ static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
+static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs )
 {
     uint32_t ulMqttProcessLoopTimeoutTime;

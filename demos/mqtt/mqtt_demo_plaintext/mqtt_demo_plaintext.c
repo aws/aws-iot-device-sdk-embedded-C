@@ -389,9 +389,9 @@ static int handleResubscribe( MQTTContext_t * pMqttContext );
  *
  * @return true if the expected ACK packet was received, false otherwise.
  */
-static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                uint16_t usPacketIdentifier,
-                                uint32_t ulTimeout );
+static int waitForPacketAck( MQTTContext_t * pMqttContext,
+                             uint16_t usPacketIdentifier,
+                             uint32_t ulTimeout );
 
 /**
  * @brief Call #MQTT_ProcessLoop in a loop for the duration of a timeout or
@@ -402,7 +402,7 @@ static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
  *
  * @return Returns the return value of the last call to #MQTT_ProcessLoop.
  */
-static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
+static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs );
 
 /*-----------------------------------------------------------*/
@@ -590,9 +590,9 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
                    MQTT_EXAMPLE_TOPIC ) );
 
         /* Process incoming packet. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            globalSubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         globalSubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
         if( returnStatus == EXIT_FAILURE )
         {
@@ -990,9 +990,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
          * of receiving publish message before subscribe ack is zero; but application
          * must be ready to receive any packet. This demo uses MQTT_ProcessLoop to
          * receive packet from network. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            globalSubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         globalSubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     /* Check if recent subscription request has been rejected. globalSubAckStatus is updated
@@ -1025,7 +1025,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
              * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
              * has expired since the last MQTT packet sent and receive
              * ping responses. */
-            mqttStatus = ProcessLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            mqttStatus = processLoopWithTimeout( pMqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
 
             if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
             {
@@ -1052,9 +1052,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
     if( returnStatus == EXIT_SUCCESS )
     {
         /* Process Incoming UNSUBACK packet from the broker. */
-        returnStatus = prvWaitForPacketAck( pMqttContext,
-                                            globalUnsubscribePacketIdentifier,
-                                            MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        returnStatus = waitForPacketAck( pMqttContext,
+                                         globalUnsubscribePacketIdentifier,
+                                         MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     /* Send an MQTT Disconnect packet over the already connected TCP socket.
@@ -1083,9 +1083,9 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
 
 /*-----------------------------------------------------------*/
 
-static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
-                                uint16_t usPacketIdentifier,
-                                uint32_t ulTimeout )
+static int waitForPacketAck( MQTTContext_t * pMqttContext,
+                             uint16_t usPacketIdentifier,
+                             uint32_t ulTimeout )
 {
     uint32_t ulMqttProcessLoopEntryTime;
     uint32_t ulMqttProcessLoopTimeoutTime;
@@ -1131,7 +1131,7 @@ static int prvWaitForPacketAck( MQTTContext_t * pMqttContext,
 
 /*-----------------------------------------------------------*/
 
-static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
+static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs )
 {
     uint32_t ulMqttProcessLoopTimeoutTime;
@@ -1142,7 +1142,7 @@ static MQTTStatus_t ProcessLoopWithTimeout( MQTTContext_t * pMqttContext,
     ulCurrentTime = pMqttContext->getTime();
     ulMqttProcessLoopTimeoutTime = ulCurrentTime + ulTimeoutMs;
 
-    /* Call MQTT_ProcessLoop multiple times a timeout happens, or
+    /* Call MQTT_ProcessLoop multiple times until a timeout happens, or
      * MQTT_ProcessLoop fails. */
     while( ( ulCurrentTime < ulMqttProcessLoopTimeoutTime ) &&
            ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
