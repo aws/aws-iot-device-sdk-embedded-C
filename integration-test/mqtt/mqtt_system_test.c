@@ -449,23 +449,6 @@ static void startPersistentSession();
 static void resumePersistentSession();
 
 /**
- * @brief Wait for an expected ACK packet to be received.
- *
- * This function handles waiting for an expected ACK packet by calling
- * #MQTT_ProcessLoop and waiting for #mqttCallback to set the global ACK
- * packet identifier to the expected ACK packet identifier.
- *
- * @param[in] pMqttContext MQTT context pointer.
- * @param[in] usPacketIdentifier Packet identifier for expected ACK packet.
- * @param[in] ulTimeout Maximum duration to wait for expected ACK packet.
- *
- * @return true if the expected ACK packet was received, false otherwise.
- */
-static bool waitForPacketAck( MQTTContext_t * pMqttContext,
-                              uint16_t usPacketIdentifier,
-                              uint32_t ulTimeout );
-
-/**
  * @brief Call #MQTT_ProcessLoop in a loop for the duration of a timeout or
  * #MQTT_ProcessLoop returns a failure.
  *
@@ -879,52 +862,6 @@ static void resumePersistentSession()
     TEST_ASSERT_TRUE( persistentSession );
 }
 
-static bool waitForPacketAck( MQTTContext_t * pMqttContext,
-                              uint16_t usPacketIdentifier,
-                              uint32_t ulTimeout )
-{
-    uint32_t ulMqttProcessLoopEntryTime;
-    uint32_t ulMqttProcessLoopTimeoutTime;
-    uint32_t ulCurrentTime;
-
-    MQTTStatus_t eMqttStatus = MQTTSuccess;
-    bool returnStatus = false;
-
-    /* Reset the ACK packet identifier being received. */
-    globalAckPacketIdentifier = 0U;
-
-    ulCurrentTime = pMqttContext->getTime();
-    ulMqttProcessLoopEntryTime = ulCurrentTime;
-    ulMqttProcessLoopTimeoutTime = ulCurrentTime + ulTimeout;
-
-    /* Call MQTT_ProcessLoop multiple times until the expected packet ACK
-     * is received, a timeout happens, or MQTT_ProcessLoop fails. */
-    while( ( globalAckPacketIdentifier != usPacketIdentifier ) &&
-           ( ulCurrentTime < ulMqttProcessLoopTimeoutTime ) &&
-           ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
-    {
-        /* Event callback will set #globalAckPacketIdentifier when receiving
-         * appropriate packet. */
-        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
-        ulCurrentTime = pMqttContext->getTime();
-    }
-
-    if( ( ( eMqttStatus != MQTTSuccess ) && ( eMqttStatus != MQTTNeedMoreBytes ) ) ||
-        ( globalAckPacketIdentifier != usPacketIdentifier ) )
-    {
-        LogError( ( "MQTT_ProcessLoop failed to receive ACK packet: Expected ACK Packet ID=%02X, LoopDuration=%u, Status=%s",
-                    usPacketIdentifier,
-                    ( ulCurrentTime - ulMqttProcessLoopEntryTime ),
-                    MQTT_Status_strerror( eMqttStatus ) ) );
-    }
-    else
-    {
-        returnStatus = true;
-    }
-
-    return returnStatus;
-}
-
 static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs )
 {
@@ -1123,8 +1060,8 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
 
     /* We expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Publish to the same topic, that we subscribed to, with Qos 0. */
@@ -1161,8 +1098,8 @@ void test_MQTT_Subscribe_Publish_With_Qos_0( void )
                            &context, TEST_MQTT_TOPIC, MQTTQoS0 ) );
 
     /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalUnsubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
@@ -1191,8 +1128,8 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Publish to the same topic, that we subscribed to, with Qos 1. */
@@ -1212,8 +1149,8 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
     /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
      * same message that we published (as we have subscribed to the same topic). */
     TEST_ASSERT_FALSE( receivedPubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalPublishPacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     /* Make sure we have received PUBACK response. */
     TEST_ASSERT_TRUE( receivedPubAck );
 
@@ -1235,7 +1172,7 @@ void test_MQTT_Subscribe_Publish_With_Qos_1( void )
 
     /* Expect an UNSUBACK from the broker for the unsubscribe operation. */
     TEST_ASSERT_EQUAL( MQTTSuccess,
-                       waitForPacketAck( &context, globalUnsubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
@@ -1264,8 +1201,8 @@ TEST( coreMQTT_Integration, test_MQTT_Subscribe_Publish_With_Qos_2 )
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Publish to the same topic, that we subscribed to, with Qos 2. */
@@ -1316,8 +1253,8 @@ TEST( coreMQTT_Integration, test_MQTT_Subscribe_Publish_With_Qos_2 )
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
 
     /* Expect an UNSUBACK from the broker for the unsubscribe operation. */
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalUnsubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
@@ -1354,8 +1291,8 @@ void test_MQTT_Connect_LWT( void )
 
     /* Wait for the SUBACK response from the broker for the subscribe request. */
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Abruptly terminate TCP connection. */
@@ -1383,8 +1320,8 @@ void test_MQTT_Connect_LWT( void )
 
     /* We expect an UNSUBACK from the broker for the unsubscribe operation. */
     TEST_ASSERT_FALSE( receivedUnsubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalUnsubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedUnsubAck );
 }
 
@@ -1493,8 +1430,8 @@ TEST( coreMQTT_Integration, test_MQTT_Restore_Session_Incoming_Duplicate_PubRel 
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Publish to the same topic with Qos 2 (so that the broker can re-publish it back to us). */
@@ -1509,7 +1446,7 @@ TEST( coreMQTT_Integration, test_MQTT_Restore_Session_Incoming_Duplicate_PubRel 
     /* Disconnect on receiving PUBREL so that we are not able to complete in the incoming QoS2
      * PUBLISH in the current connection. */
     packetTypeForDisconnection = MQTT_PACKET_TYPE_PUBREL;
-    TEST_ASSERT_EQUAL( MQTTSendFailed,
+    TEST_ASSERT_EQUAL( MQTTRecvFailed,
                        processLoopWithTimeout( &context, 3 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     /* We will re-establish an MQTT over TLS connection with the broker to restore
@@ -1605,8 +1542,8 @@ void test_MQTT_Resend_Unacked_Publish_QoS1( void )
 
     /* Complete the QoS 1 PUBLISH resend operation. */
     TEST_ASSERT_FALSE( receivedPubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalPublishPacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     /* Make sure that the PUBLISH resend was complete. */
     TEST_ASSERT_TRUE( receivedPubAck );
@@ -1721,8 +1658,8 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Publish to the same topic with Qos 1 (so that the broker can re-publish it back to us). */
@@ -1737,7 +1674,7 @@ void test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1( void )
     /* Disconnect on receiving the incoming PUBLISH packet from the broker so that
      * an acknowledgement cannot be sent to the broker. */
     packetTypeForDisconnection = MQTT_PACKET_TYPE_PUBLISH;
-    TEST_ASSERT_EQUAL( MQTTSendFailed,
+    TEST_ASSERT_EQUAL( MQTTRecvFailed,
                        processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
 
     /* Make sure that a record was created for the incoming PUBLISH packet. */
@@ -1793,8 +1730,8 @@ TEST( coreMQTT_Integration, test_MQTT_Restore_Session_Duplicate_Incoming_Publish
      * QoS 2 PUBLISH transaction in this connection. */
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS2 ) );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Publish to the same topic with Qos 2 (so that the broker can re-publish it back to us). */
@@ -1851,8 +1788,8 @@ void test_MQTT_Publish_With_Retain_Flag( void )
                                                     MQTT_GetPacketId( &context ) ) );
     /* Complete the QoS 1 PUBLISH operation. */
     TEST_ASSERT_FALSE( receivedPubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalPublishPacketIdentifier, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedPubAck );
 
     /* Subscribe to the same topic that we published the message to.
@@ -1860,8 +1797,8 @@ void test_MQTT_Publish_With_Retain_Flag( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC, MQTTQoS1 ) );
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Make sure that the library invoked the event callback with the incoming PUBLISH from
@@ -1884,8 +1821,8 @@ void test_MQTT_Publish_With_Retain_Flag( void )
 
     /* Complete the QoS 1 PUBLISH operation. */
     TEST_ASSERT_FALSE( receivedPubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalPublishPacketIdentifier, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedPubAck );
 
     /* Again, subscribe to the same topic that we just published to.
@@ -1894,8 +1831,8 @@ void test_MQTT_Publish_With_Retain_Flag( void )
     TEST_ASSERT_EQUAL( MQTTSuccess, subscribeToTopic(
                            &context, TEST_MQTT_TOPIC_2, MQTTQoS1 ) );
     TEST_ASSERT_FALSE( receivedSubAck );
-    TEST_ASSERT_EQUAL( true,
-                       waitForPacketAck( &context, globalSubscribePacketIdentifier, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, 2 * MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
     TEST_ASSERT_TRUE( receivedSubAck );
 
     /* Make sure that the library did not receive an incoming PUBLISH from the broker. */
