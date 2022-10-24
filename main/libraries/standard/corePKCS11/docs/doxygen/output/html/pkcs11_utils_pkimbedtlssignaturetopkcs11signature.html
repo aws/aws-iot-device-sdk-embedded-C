@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">corePKCS11<span id="projectnumber">&#160;v3.2.0</span>
+   <div id="projectname">corePKCS11<span id="projectnumber">&#160;v3.5.0</span>
    </div>
    <div id="projectbrief">PKCS #11 Cryptoki Library</div>
   </td>
@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('pkcs11_utils_pkimbedtlssignaturetopkcs
 <div class="textblock"><p >Converts and ECDSA P-256 signature from the format provided by PKCS #11 to an ASN.1 formatted signature.</p>
 <div class="fragment"><div class="line">int8_t <a class="code hl_function" href="core__pki__utils_8c.html#a7d2768d5e160165af1294e46e21787c4">PKI_mbedTLSSignatureToPkcs11Signature</a>( uint8_t * pxSignaturePKCS,</div>
 <div class="line">                                              <span class="keyword">const</span> uint8_t * pxMbedSignature );</div>
-<div class="ttc" id="acore__pki__utils_8c_html_a7d2768d5e160165af1294e46e21787c4"><div class="ttname"><a href="core__pki__utils_8c.html#a7d2768d5e160165af1294e46e21787c4">PKI_mbedTLSSignatureToPkcs11Signature</a></div><div class="ttdeci">int8_t PKI_mbedTLSSignatureToPkcs11Signature(uint8_t *pxSignaturePKCS, const uint8_t *pxMbedSignature)</div><div class="ttdoc">Converts an ECDSA P-256 signature from the format provided by mbedTLS to the format expected by PKCS ...</div><div class="ttdef"><b>Definition:</b> core_pki_utils.c:43</div></div>
+<div class="ttc" id="acore__pki__utils_8c_html_a7d2768d5e160165af1294e46e21787c4"><div class="ttname"><a href="core__pki__utils_8c.html#a7d2768d5e160165af1294e46e21787c4">PKI_mbedTLSSignatureToPkcs11Signature</a></div><div class="ttdeci">int8_t PKI_mbedTLSSignatureToPkcs11Signature(uint8_t *pxSignaturePKCS, const uint8_t *pxMbedSignature)</div><div class="ttdoc">Converts an ECDSA P-256 signature from the format provided by mbedTLS to the format expected by PKCS ...</div><div class="ttdef"><b>Definition:</b> core_pki_utils.c:45</div></div>
 </div><!-- fragment --><p> For P-256 signature, ASN.1 formatting has the format</p>
 <p >SEQUENCE LENGTH INTEGER LENGTH R-VALUE INTEGER LENGTH S-VALUE</p>
 <dl class="params"><dt>Parameters</dt><dd>

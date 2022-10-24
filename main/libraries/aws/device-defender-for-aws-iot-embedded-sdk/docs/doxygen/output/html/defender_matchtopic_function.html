@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Device Defender<span id="projectnumber">&#160;v1.1.1</span>
+   <div id="projectname">AWS IoT Device Defender<span id="projectnumber">&#160;v1.3.0</span>
    </div>
    <div id="projectbrief">AWS IoT Device Defender Client Library</div>
   </td>
@@ -102,9 +102,9 @@ $(document).ready(function(){initNavTree('defender_matchtopic_function.html','')
 <div class="line">                                      <a class="code hl_enumeration" href="group__defender__enum__types.html#ga75b56c3b6f174d7671aae7afb998221f">DefenderTopic_t</a> * pOutApi,</div>
 <div class="line">                                      <span class="keyword">const</span> <span class="keywordtype">char</span> ** ppOutThingName,</div>
 <div class="line">                                      uint16_t * pOutThingNameLength );</div>
-<div class="ttc" id="adefender_8c_html_acf6f6908afeef3897ef57f445fa021aa"><div class="ttname"><a href="defender_8c.html#acf6f6908afeef3897ef57f445fa021aa">Defender_MatchTopic</a></div><div class="ttdeci">DefenderStatus_t Defender_MatchTopic(const char *pTopic, uint16_t topicLength, DefenderTopic_t *pOutApi, const char **ppOutThingName, uint16_t *pOutThingNameLength)</div><div class="ttdoc">Check if the given topic is one of the Device Defender topics.</div><div class="ttdef"><b>Definition:</b> defender.c:462</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_ga60365ff6836fab9ad427f4edbe83d020"><div class="ttname"><a href="group__defender__enum__types.html#ga60365ff6836fab9ad427f4edbe83d020">DefenderStatus_t</a></div><div class="ttdeci">DefenderStatus_t</div><div class="ttdoc">Return codes from defender APIs.</div><div class="ttdef"><b>Definition:</b> defender.h:56</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_ga75b56c3b6f174d7671aae7afb998221f"><div class="ttname"><a href="group__defender__enum__types.html#ga75b56c3b6f174d7671aae7afb998221f">DefenderTopic_t</a></div><div class="ttdeci">DefenderTopic_t</div><div class="ttdoc">Topic values for subscription requests.</div><div class="ttdef"><b>Definition:</b> defender.h:69</div></div>
+<div class="ttc" id="adefender_8c_html_acf6f6908afeef3897ef57f445fa021aa"><div class="ttname"><a href="defender_8c.html#acf6f6908afeef3897ef57f445fa021aa">Defender_MatchTopic</a></div><div class="ttdeci">DefenderStatus_t Defender_MatchTopic(const char *pTopic, uint16_t topicLength, DefenderTopic_t *pOutApi, const char **ppOutThingName, uint16_t *pOutThingNameLength)</div><div class="ttdoc">Check if the given topic is one of the Device Defender topics.</div><div class="ttdef"><b>Definition:</b> defender.c:465</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_ga60365ff6836fab9ad427f4edbe83d020"><div class="ttname"><a href="group__defender__enum__types.html#ga60365ff6836fab9ad427f4edbe83d020">DefenderStatus_t</a></div><div class="ttdeci">DefenderStatus_t</div><div class="ttdoc">Return codes from defender APIs.</div><div class="ttdef"><b>Definition:</b> defender.h:58</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_ga75b56c3b6f174d7671aae7afb998221f"><div class="ttname"><a href="group__defender__enum__types.html#ga75b56c3b6f174d7671aae7afb998221f">DefenderTopic_t</a></div><div class="ttdeci">DefenderTopic_t</div><div class="ttdoc">Topic values for subscription requests.</div><div class="ttdef"><b>Definition:</b> defender.h:71</div></div>
 </div><!-- fragment --><p> The function outputs which API the topic is for. It also optionally outputs the starting location and length of the thing name in the given topic.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -152,9 +152,9 @@ $(document).ready(function(){initNavTree('defender_matchtopic_function.html','')
 <div class="line">         <span class="comment">// Unexpected response.</span></div>
 <div class="line">     }</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__defender__enum__types_html_gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2"><div class="ttname"><a href="group__defender__enum__types.html#gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2">DefenderSuccess</a></div><div class="ttdeci">@ DefenderSuccess</div><div class="ttdef"><b>Definition:</b> defender.h:58</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c"><div class="ttname"><a href="group__defender__enum__types.html#gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c">DefenderJsonReportAccepted</a></div><div class="ttdeci">@ DefenderJsonReportAccepted</div><div class="ttdef"><b>Definition:</b> defender.h:72</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_gga75b56c3b6f174d7671aae7afb998221fac1fc990713e97be6f506d7df0c3ff013"><div class="ttname"><a href="group__defender__enum__types.html#gga75b56c3b6f174d7671aae7afb998221fac1fc990713e97be6f506d7df0c3ff013">DefenderJsonReportRejected</a></div><div class="ttdeci">@ DefenderJsonReportRejected</div><div class="ttdef"><b>Definition:</b> defender.h:73</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2"><div class="ttname"><a href="group__defender__enum__types.html#gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2">DefenderSuccess</a></div><div class="ttdeci">@ DefenderSuccess</div><div class="ttdef"><b>Definition:</b> defender.h:60</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c"><div class="ttname"><a href="group__defender__enum__types.html#gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c">DefenderJsonReportAccepted</a></div><div class="ttdeci">@ DefenderJsonReportAccepted</div><div class="ttdef"><b>Definition:</b> defender.h:74</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_gga75b56c3b6f174d7671aae7afb998221fac1fc990713e97be6f506d7df0c3ff013"><div class="ttname"><a href="group__defender__enum__types.html#gga75b56c3b6f174d7671aae7afb998221fac1fc990713e97be6f506d7df0c3ff013">DefenderJsonReportRejected</a></div><div class="ttdeci">@ DefenderJsonReportRejected</div><div class="ttdef"><b>Definition:</b> defender.h:75</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

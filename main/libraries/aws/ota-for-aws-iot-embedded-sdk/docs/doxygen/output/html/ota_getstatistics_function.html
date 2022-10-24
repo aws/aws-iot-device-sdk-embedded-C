@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -98,9 +98,9 @@ $(document).ready(function(){initNavTree('ota_getstatistics_function.html',''); 
 <div class="contents">
 <div class="textblock"><p >Get the statistics of OTA message packets.</p>
 <div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota_8h.html#a63182243ef3c18d5f36cd427b83a1a22">OTA_GetStatistics</a>( <a class="code hl_struct" href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a> * pStatistics );</div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><div class="ttname"><a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a></div><div class="ttdeci">OtaErr_t</div><div class="ttdoc">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word...</div><div class="ttdef"><b>Definition:</b> ota.h:79</div></div>
-<div class="ttc" id="aota_8h_html_a63182243ef3c18d5f36cd427b83a1a22"><div class="ttname"><a href="ota_8h.html#a63182243ef3c18d5f36cd427b83a1a22">OTA_GetStatistics</a></div><div class="ttdeci">OtaErr_t OTA_GetStatistics(OtaAgentStatistics_t *pStatistics)</div><div class="ttdoc">Get the statistics of OTA message packets.</div><div class="ttdef"><b>Definition:</b> ota.c:3223</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html"><div class="ttname"><a href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a></div><div class="ttdoc">This is the OTA statistics structure to hold useful info.</div><div class="ttdef"><b>Definition:</b> ota_private.h:291</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><div class="ttname"><a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a></div><div class="ttdeci">OtaErr_t</div><div class="ttdoc">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word...</div><div class="ttdef"><b>Definition:</b> ota.h:80</div></div>
+<div class="ttc" id="aota_8h_html_a63182243ef3c18d5f36cd427b83a1a22"><div class="ttname"><a href="ota_8h.html#a63182243ef3c18d5f36cd427b83a1a22">OTA_GetStatistics</a></div><div class="ttdeci">OtaErr_t OTA_GetStatistics(OtaAgentStatistics_t *pStatistics)</div><div class="ttdoc">Get the statistics of OTA message packets.</div><div class="ttdef"><b>Definition:</b> ota.c:3400</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html"><div class="ttname"><a href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a></div><div class="ttdoc">This is the OTA statistics structure to hold useful info.</div><div class="ttdef"><b>Definition:</b> ota_private.h:293</div></div>
 </div><!-- fragment --><p> Packet statistics are: </p><ul>
 <li>
 Received: The number of OTA packets that have been received but not necessarily queued for processing by the OTA agent. </li>
@@ -111,7 +111,7 @@ Processed: The number of OTA packets that have actually been processed. </li>
 <li>
 Dropped: The number of OTA packets that have been dropped because of either no queue or at shutdown cleanup. </li>
 </ul>
-<dl class="section note"><dt>Note</dt><dd>Calling <a class="el" href="ota_8c.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a> will reset this statistic.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Calling <a class="el" href="ota_8c.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a> will reset this statistic.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>OtaErrNone if the statistics can be received successfully.</dd></dl>
 <p><b>Example</b> </p><div class="fragment"><div class="line"><span class="comment">// OTA library packet statistics per job.</span></div>
 <div class="line"><a class="code hl_struct" href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a> otaStatistics = { 0 };</div>
@@ -128,11 +128,11 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">            otaStatistics.<a class="code hl_variable" href="struct_ota_agent_statistics__t.html#adbcf157f4d998bea3bf3c508e37c8437">otaPacketsProcessed</a>,</div>
 <div class="line">            otaStatistics.<a class="code hl_variable" href="struct_ota_agent_statistics__t.html#ae644353e00d4a3770bd6400181c5785e">otaPacketsDropped</a> );</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02">OtaErrNone</a></div><div class="ttdeci">@ OtaErrNone</div><div class="ttdoc">No error occurred during the operation.</div><div class="ttdef"><b>Definition:</b> ota.h:80</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_a43f7d9b2c6ead8213c6de51d6e65e980"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#a43f7d9b2c6ead8213c6de51d6e65e980">OtaAgentStatistics_t::otaPacketsReceived</a></div><div class="ttdeci">uint32_t otaPacketsReceived</div><div class="ttdef"><b>Definition:</b> ota_private.h:292</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_ab693dddf7707daf3315bc4c23bb4e29a"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ab693dddf7707daf3315bc4c23bb4e29a">OtaAgentStatistics_t::otaPacketsQueued</a></div><div class="ttdeci">uint32_t otaPacketsQueued</div><div class="ttdef"><b>Definition:</b> ota_private.h:293</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_adbcf157f4d998bea3bf3c508e37c8437"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#adbcf157f4d998bea3bf3c508e37c8437">OtaAgentStatistics_t::otaPacketsProcessed</a></div><div class="ttdeci">uint32_t otaPacketsProcessed</div><div class="ttdef"><b>Definition:</b> ota_private.h:294</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_ae644353e00d4a3770bd6400181c5785e"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ae644353e00d4a3770bd6400181c5785e">OtaAgentStatistics_t::otaPacketsDropped</a></div><div class="ttdeci">uint32_t otaPacketsDropped</div><div class="ttdef"><b>Definition:</b> ota_private.h:295</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02">OtaErrNone</a></div><div class="ttdeci">@ OtaErrNone</div><div class="ttdoc">No error occurred during the operation.</div><div class="ttdef"><b>Definition:</b> ota.h:81</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_a43f7d9b2c6ead8213c6de51d6e65e980"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#a43f7d9b2c6ead8213c6de51d6e65e980">OtaAgentStatistics_t::otaPacketsReceived</a></div><div class="ttdeci">uint32_t otaPacketsReceived</div><div class="ttdef"><b>Definition:</b> ota_private.h:294</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_ab693dddf7707daf3315bc4c23bb4e29a"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ab693dddf7707daf3315bc4c23bb4e29a">OtaAgentStatistics_t::otaPacketsQueued</a></div><div class="ttdeci">uint32_t otaPacketsQueued</div><div class="ttdef"><b>Definition:</b> ota_private.h:295</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_adbcf157f4d998bea3bf3c508e37c8437"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#adbcf157f4d998bea3bf3c508e37c8437">OtaAgentStatistics_t::otaPacketsProcessed</a></div><div class="ttdeci">uint32_t otaPacketsProcessed</div><div class="ttdef"><b>Definition:</b> ota_private.h:296</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_ae644353e00d4a3770bd6400181c5785e"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ae644353e00d4a3770bd6400181c5785e">OtaAgentStatistics_t::otaPacketsDropped</a></div><div class="ttdeci">uint32_t otaPacketsDropped</div><div class="ttdef"><b>Definition:</b> ota_private.h:297</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

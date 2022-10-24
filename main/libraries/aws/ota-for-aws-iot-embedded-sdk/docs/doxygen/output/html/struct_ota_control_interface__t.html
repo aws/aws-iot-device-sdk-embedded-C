@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -106,10 +106,10 @@ $(document).ready(function(){initNavTree('struct_ota_control_interface__t.html',
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a8c2422158a814c16d698982dfbdffc86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_control_interface__t.html#a8c2422158a814c16d698982dfbdffc86">requestJob</a> )(<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
-<tr class="separator:a8c2422158a814c16d698982dfbdffc86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91b6c320fc204e922adbea72c834c206"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_control_interface__t.html#a91b6c320fc204e922adbea72c834c206">updateJobStatus</a> )(<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason)</td></tr>
-<tr class="separator:a91b6c320fc204e922adbea72c834c206"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a577f6d646e6776df3cc52bb7f073e14e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_control_interface__t.html#a577f6d646e6776df3cc52bb7f073e14e">requestJob</a> )(const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
+<tr class="separator:a577f6d646e6776df3cc52bb7f073e14e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa710e01300ffcfc5cddc8ba8f206fb5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_control_interface__t.html#aa710e01300ffcfc5cddc8ba8f206fb5e">updateJobStatus</a> )(const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason)</td></tr>
+<tr class="separator:aa710e01300ffcfc5cddc8ba8f206fb5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65656d6c3ef97f761b64c3af1aa16c89"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_control_interface__t.html#a65656d6c3ef97f761b64c3af1aa16c89">cleanup</a> )(const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
 <tr class="separator:a65656d6c3ef97f761b64c3af1aa16c89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -117,14 +117,14 @@ Data Fields</h2></td></tr>
 <div class="textblock"><p >Represents the OTA control interface functions. </p>
 <p >The functions in this structure are used for the control operations during over the air updates like OTA job status updates. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
-<a id="a8c2422158a814c16d698982dfbdffc86" name="a8c2422158a814c16d698982dfbdffc86"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c2422158a814c16d698982dfbdffc86">&#9670;&nbsp;</a></span>requestJob</h2>
+<a id="a577f6d646e6776df3cc52bb7f073e14e" name="a577f6d646e6776df3cc52bb7f073e14e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a577f6d646e6776df3cc52bb7f073e14e">&#9670;&nbsp;</a></span>requestJob</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaControlInterface_t::requestJob) (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td>
+          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaControlInterface_t::requestJob) (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -132,14 +132,14 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="a91b6c320fc204e922adbea72c834c206" name="a91b6c320fc204e922adbea72c834c206"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a91b6c320fc204e922adbea72c834c206">&#9670;&nbsp;</a></span>updateJobStatus</h2>
+<a id="aa710e01300ffcfc5cddc8ba8f206fb5e" name="aa710e01300ffcfc5cddc8ba8f206fb5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa710e01300ffcfc5cddc8ba8f206fb5e">&#9670;&nbsp;</a></span>updateJobStatus</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaControlInterface_t::updateJobStatus) (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason)</td>
+          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaControlInterface_t::updateJobStatus) (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason)</td>
         </tr>
       </table>
 </div><div class="memdoc">

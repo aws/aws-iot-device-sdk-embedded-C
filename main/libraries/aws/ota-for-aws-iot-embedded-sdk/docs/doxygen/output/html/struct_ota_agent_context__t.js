@@ -14,5 +14,6 @@ var struct_ota_agent_context__t =
     [ "requestMomentum", "struct_ota_agent_context__t.html#abcb47ce949d9c9874ba53c08df390665", null ],
     [ "pOtaInterface", "struct_ota_agent_context__t.html#ad28f3386552e007b1d1a8b381c38137b", null ],
     [ "OtaAppCallback", "struct_ota_agent_context__t.html#ac8aad7846a2fc1a15fa35e8f9a2053ea", null ],
-    [ "unsubscribeOnShutdown", "struct_ota_agent_context__t.html#ab86e0efb9552ea4d9962e78d1feeb0f2", null ]
+    [ "unsubscribeOnShutdown", "struct_ota_agent_context__t.html#ab86e0efb9552ea4d9962e78d1feeb0f2", null ],
+    [ "isOtaInterfaceInited", "struct_ota_agent_context__t.html#a23f187a6f425cf0e8991625eae3e90c4", null ]
 ];

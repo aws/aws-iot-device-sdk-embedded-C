@@ -2,7 +2,7 @@
 <area shape="rect" id="node1" title="The OTA agent is a singleton today. The structure keeps it nice and organized." alt="" coords="819,465,965,492"/>
 <area shape="rect" id="node2" href="$struct_ota_file_context__t.html" title="OTA File Context Information." alt="" coords="740,95,871,121"/>
 <area shape="rect" id="node12" href="$struct_ota_pal_interface__t.html" title="OTA pal Interface structure." alt="" coords="686,287,821,313"/>
-<area shape="rect" id="node3" href="$struct_sig256__t.html" title="OTA File Signature info." alt="" coords="766,5,845,32"/>
+<area shape="rect" id="node3" href="$struct_sig__t.html" title="OTA File Signature info." alt="" coords="778,5,833,32"/>
 <area shape="rect" id="node4" href="$struct_ota_agent_statistics__t.html" title="This is the OTA statistics structure to hold useful info." alt="" coords="929,376,1084,403"/>
 <area shape="rect" id="node5" href="$struct_ota_interfaces__t.html" title="OTA Interface for referencing different components." alt="" coords="529,376,652,403"/>
 <area shape="rect" id="node6" href="$struct_ota_o_s_interface__t.html" title="OTA OS Interface." alt="" coords="192,287,325,313"/>

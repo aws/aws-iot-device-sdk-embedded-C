@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">corePKCS11<span id="projectnumber">&#160;v3.2.0</span>
+   <div id="projectname">corePKCS11<span id="projectnumber">&#160;v3.5.0</span>
    </div>
    <div id="projectbrief">PKCS #11 Cryptoki Library</div>
   </td>
@@ -110,7 +110,6 @@ $(document).ready(function(){initNavTree('core__pkcs11__mbedtls_8c.html',''); in
 <code>#include &quot;<a class="el" href="core__pkcs11__pal_8h_source.html">core_pkcs11_pal.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="core__pki__utils_8h_source.html">core_pki_utils.h</a>&quot;</code><br />
 <code>#include &quot;mbedtls/pk.h&quot;</code><br />
-<code>#include &quot;mbedtls/pk_internal.h&quot;</code><br />
 <code>#include &quot;mbedtls/x509_crt.h&quot;</code><br />
 <code>#include &quot;mbedtls/ctr_drbg.h&quot;</code><br />
 <code>#include &quot;mbedtls/entropy.h&quot;</code><br />
@@ -125,23 +124,22 @@ Include dependency graph for core_pkcs11_mbedtls.c:</div>
 <div class="dyncontent">
 <div class="center"><img src="core__pkcs11__mbedtls_8c__incl.png" border="0" usemap="#acore__pkcs11__mbedtls_8c" alt=""/></div>
 <map name="acore__pkcs11__mbedtls_8c" id="acore__pkcs11__mbedtls_8c">
-<area shape="rect" title="mbedTLS&#45;based PKCS#11 implementation for software keys. This file deviates from the FreeRTOS style st..." alt="" coords="1209,5,1384,32"/>
+<area shape="rect" title="mbedTLS&#45;based PKCS#11 implementation for software keys. This file deviates from the FreeRTOS style st..." alt="" coords="1105,5,1280,32"/>
 <area shape="rect" title=" " alt="" coords="5,87,167,114"/>
 <area shape="rect" href="core__pkcs11__config__defaults_8h.html" title="List of configuration macros for the corePKCS11 library along with their default values." alt="" coords="191,80,341,121"/>
 <area shape="rect" href="core__pkcs11_8h.html" title="Wrapper functions for PKCS #11." alt="" coords="365,87,479,114"/>
 <area shape="rect" href="core__pkcs11__pal_8h.html" title="Port Specific File Access functions for PKCS #11." alt="" coords="504,87,647,114"/>
 <area shape="rect" href="core__pki__utils_8h.html" title="Helper functions for PKCS #11." alt="" coords="671,87,795,114"/>
 <area shape="rect" title=" " alt="" coords="819,87,926,114"/>
-<area shape="rect" title=" " alt="" coords="951,87,1115,114"/>
-<area shape="rect" title=" " alt="" coords="1139,87,1286,114"/>
-<area shape="rect" title=" " alt="" coords="1310,87,1454,114"/>
-<area shape="rect" title=" " alt="" coords="1478,87,1617,114"/>
-<area shape="rect" title=" " alt="" coords="1641,87,1779,114"/>
-<area shape="rect" title=" " alt="" coords="1804,87,1931,114"/>
-<area shape="rect" title=" " alt="" coords="1955,87,2102,114"/>
-<area shape="rect" title=" " alt="" coords="2127,87,2280,114"/>
-<area shape="rect" title=" " alt="" coords="2304,87,2425,114"/>
-<area shape="rect" title=" " alt="" coords="2449,87,2520,114"/>
+<area shape="rect" title=" " alt="" coords="950,87,1097,114"/>
+<area shape="rect" title=" " alt="" coords="1121,87,1265,114"/>
+<area shape="rect" title=" " alt="" coords="1289,87,1427,114"/>
+<area shape="rect" title=" " alt="" coords="1451,87,1590,114"/>
+<area shape="rect" title=" " alt="" coords="1615,87,1741,114"/>
+<area shape="rect" title=" " alt="" coords="1766,87,1913,114"/>
+<area shape="rect" title=" " alt="" coords="1937,87,2091,114"/>
+<area shape="rect" title=" " alt="" coords="2115,87,2236,114"/>
+<area shape="rect" title=" " alt="" coords="2260,87,2331,114"/>
 <area shape="rect" title=" " alt="" coords="544,169,615,196"/>
 <area shape="rect" title=" " alt="" coords="382,169,462,196"/>
 <area shape="rect" title=" " alt="" coords="695,169,770,196"/>
@@ -165,6 +163,10 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:a3bacd46ff8288c205efdb056d9ab2453"><td class="memItemLeft" align="right" valign="top"><a id="a3bacd46ff8288c205efdb056d9ab2453" name="a3bacd46ff8288c205efdb056d9ab2453"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MBEDTLS_ALLOW_PRIVATE_ACCESS</b></td></tr>
+<tr class="memdesc:a3bacd46ff8288c205efdb056d9ab2453"><td class="mdescLeft">&#160;</td><td class="mdescRight">Declaring MBEDTLS_ALLOW_PRIVATE_ACCESS allows access to mbedtls "private" fields. <br /></td></tr>
+<tr class="separator:a3bacd46ff8288c205efdb056d9ab2453"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a92427274c3174ef89fbf82a0ad25a252"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__pkcs11__mbedtls_8c.html#a92427274c3174ef89fbf82a0ad25a252">mbedtlsHighLevelCodeOrDefault</a>(mbedTlsCode)</td></tr>
 <tr class="memdesc:a92427274c3174ef89fbf82a0ad25a252"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility for converting the high-level code in an mbedTLS error to string, if the code-contains a high-level code; otherwise, using a default string.  <a href="core__pkcs11__mbedtls_8c.html#a92427274c3174ef89fbf82a0ad25a252">More...</a><br /></td></tr>
 <tr class="separator:a92427274c3174ef89fbf82a0ad25a252"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -246,6 +248,10 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>PKCS11_USING_HMAC</b>&#160;&#160;&#160;( 1 )</td></tr>
 <tr class="memdesc:gab67b566cf16bc7d05eccf92ac04509ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Private define to inform mbedtls MD module to use an HMAC for the MD context. <br /></td></tr>
 <tr class="separator:gab67b566cf16bc7d05eccf92ac04509ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb4f54ebb33fd1a25e2c4d4480cf4936"><td class="memItemLeft" align="right" valign="top"><a id="adb4f54ebb33fd1a25e2c4d4480cf4936" name="adb4f54ebb33fd1a25e2c4d4480cf4936"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MBEDTLS_VERSION_NUMBER</b>&#160;&#160;&#160;0</td></tr>
+<tr class="memdesc:adb4f54ebb33fd1a25e2c4d4480cf4936"><td class="mdescLeft">&#160;</td><td class="mdescRight">Define the MBEDTLS_VERSION_NUMBER as 0 if it is not defined, done for MISRA rule 20.9. <br /></td></tr>
+<tr class="separator:adb4f54ebb33fd1a25e2c4d4480cf4936"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -501,7 +507,7 @@ static <a class="el" href="struct_p11_session__t.html">P11Session_t</a>&#160;</t
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">    ( mbedtls_high_level_strerr( mbedTlsCode ) != NULL ) ? \</div>
 <div class="line">    mbedtls_high_level_strerr( mbedTlsCode ) : <a class="code hl_variable" href="core__pkcs11__mbedtls_8c.html#ac80d2c725e8e5238f649a2ed75e67c30">pNoHighLevelMbedTlsCodeStr</a></div>
-<div class="ttc" id="acore__pkcs11__mbedtls_8c_html_ac80d2c725e8e5238f649a2ed75e67c30"><div class="ttname"><a href="core__pkcs11__mbedtls_8c.html#ac80d2c725e8e5238f649a2ed75e67c30">pNoHighLevelMbedTlsCodeStr</a></div><div class="ttdeci">static const char * pNoHighLevelMbedTlsCodeStr</div><div class="ttdoc">Represents string to be logged when mbedTLS returned error does not contain a high-level code.</div><div class="ttdef"><b>Definition:</b> core_pkcs11_mbedtls.c:70</div></div>
+<div class="ttc" id="acore__pkcs11__mbedtls_8c_html_ac80d2c725e8e5238f649a2ed75e67c30"><div class="ttname"><a href="core__pkcs11__mbedtls_8c.html#ac80d2c725e8e5238f649a2ed75e67c30">pNoHighLevelMbedTlsCodeStr</a></div><div class="ttdeci">static const char * pNoHighLevelMbedTlsCodeStr</div><div class="ttdoc">Represents string to be logged when mbedTLS returned error does not contain a high-level code.</div><div class="ttdef"><b>Definition:</b> core_pkcs11_mbedtls.c:76</div></div>
 </div><!-- fragment -->
 <p>Utility for converting the high-level code in an mbedTLS error to string, if the code-contains a high-level code; otherwise, using a default string. </p>
 
@@ -524,7 +530,7 @@ static <a class="el" href="struct_p11_session__t.html">P11Session_t</a>&#160;</t
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">    ( mbedtls_low_level_strerr( mbedTlsCode ) != NULL ) ? \</div>
 <div class="line">    mbedtls_low_level_strerr( mbedTlsCode ) : <a class="code hl_variable" href="core__pkcs11__mbedtls_8c.html#ac3215d33b1ac379cd57b6458609de535">pNoLowLevelMbedTlsCodeStr</a></div>
-<div class="ttc" id="acore__pkcs11__mbedtls_8c_html_ac3215d33b1ac379cd57b6458609de535"><div class="ttname"><a href="core__pkcs11__mbedtls_8c.html#ac3215d33b1ac379cd57b6458609de535">pNoLowLevelMbedTlsCodeStr</a></div><div class="ttdeci">static const char * pNoLowLevelMbedTlsCodeStr</div><div class="ttdoc">Represents string to be logged when mbedTLS returned error does not contain a low-level code.</div><div class="ttdef"><b>Definition:</b> core_pkcs11_mbedtls.c:76</div></div>
+<div class="ttc" id="acore__pkcs11__mbedtls_8c_html_ac3215d33b1ac379cd57b6458609de535"><div class="ttname"><a href="core__pkcs11__mbedtls_8c.html#ac3215d33b1ac379cd57b6458609de535">pNoLowLevelMbedTlsCodeStr</a></div><div class="ttdeci">static const char * pNoLowLevelMbedTlsCodeStr</div><div class="ttdoc">Represents string to be logged when mbedTLS returned error does not contain a low-level code.</div><div class="ttdef"><b>Definition:</b> core_pkcs11_mbedtls.c:82</div></div>
 </div><!-- fragment -->
 <p>Utility for converting the level-level code in an mbedTLS error to string, if the code-contains a level-level code; otherwise, using a default string. </p>
 

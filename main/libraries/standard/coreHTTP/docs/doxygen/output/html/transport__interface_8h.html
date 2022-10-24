@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v3.0.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -109,6 +109,9 @@ $(document).ready(function(){initNavTree('transport__interface_8h.html',''); ini
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transport vector structure for sending multiple messages.  <a href="struct_transport_out_vector__t.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_transport_interface__t.html">TransportInterface_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The transport layer interface.  <a href="struct_transport_interface__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,6 +128,9 @@ typedef struct NetworkContext&#160;</td><td class="memItemRight" valign="bottom"
 <tr class="memitem:ga2a39853ff952edd715ab07b33ab2a7c5"><td class="memItemLeft" align="right" valign="top">typedef int32_t(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">TransportSend_t</a>) (<a class="el" href="group__http__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a> *pNetworkContext, const void *pBuffer, size_t bytesToSend)</td></tr>
 <tr class="memdesc:ga2a39853ff952edd715ab07b33ab2a7c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transport interface for sending data over the network.  <a href="group__http__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">More...</a><br /></td></tr>
 <tr class="separator:ga2a39853ff952edd715ab07b33ab2a7c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga47e779557b0c2db95949ef9526861dfb"><td class="memItemLeft" align="right" valign="top">typedef int32_t(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__callback__types.html#ga47e779557b0c2db95949ef9526861dfb">TransportWritev_t</a>) (<a class="el" href="group__http__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a> *pNetworkContext, <a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a> *pIoVec, size_t ioVecCount)</td></tr>
+<tr class="memdesc:ga47e779557b0c2db95949ef9526861dfb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transport interface function for "vectored" / scatter-gather based writes. This function is expected to iterate over the list of vectors pIoVec having ioVecCount entries containing portions of one MQTT message at a maximum. If the proper functionality is available, then the data in the list should be copied to the underlying TCP buffer before flushing the buffer. Implementing it in this fashion will lead to sending of fewer TCP packets for all the values in the list.  <a href="group__http__callback__types.html#ga47e779557b0c2db95949ef9526861dfb">More...</a><br /></td></tr>
+<tr class="separator:ga47e779557b0c2db95949ef9526861dfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Transport interface definitions to send and receive data over the network. </p>

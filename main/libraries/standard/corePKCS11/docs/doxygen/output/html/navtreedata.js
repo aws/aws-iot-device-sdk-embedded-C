@@ -69,7 +69,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "core__pkcs11_8c.html",
-"pkcs11_sign_verify_seq.html"
+"pkcs11_rng_seq.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

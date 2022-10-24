@@ -35,6 +35,7 @@ var group__http__struct__types =
     [ "TransportInterface_t", "struct_transport_interface__t.html", [
       [ "recv", "struct_transport_interface__t.html#a7c34e9b865e2a509306f09c7dfa3699e", null ],
       [ "send", "struct_transport_interface__t.html#a01cd9935e9a5266ca196243a0054d489", null ],
+      [ "writev", "struct_transport_interface__t.html#a8cf677fbeee53d270daa6dacfa138b79", null ],
       [ "pNetworkContext", "struct_transport_interface__t.html#aaf4702050bef8d62714a4d3900e95087", null ]
     ] ],
     [ "NetworkContext_t", "group__http__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec", null ]

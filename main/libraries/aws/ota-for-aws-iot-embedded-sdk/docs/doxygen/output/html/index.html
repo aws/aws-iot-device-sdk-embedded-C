@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -112,7 +112,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <p>AWS services can be used with this library to manage various cloud related topics such as sending firmware updates, monitoring large numbers of devices across multiple regions, reducing the blast radius of faulty deployments, and verifying the security of updates.</p>
 <blockquote class="doxtable">
 <p ><b>NOTE</b>: <b>Handling OTA and custom jobs in your application</b> <br  />
- If your application will process both OTA and custom types of jobs from AWS IoT, we recommend using the feature support for custom jobs in OTA library through the <a class="el" href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a8e314e0d83b5dcd572b08d9f205ab658" title="OTA event for parsing custom job document.">OtaJobEventParseCustomJob</a> event notification in the registered <a class="el" href="group__ota__callback__types.html#ga3bedd7e278f89d555a32a7efa8023a28" title="OTA update complete callback function typedef.">OtaAppCallback_t</a> callback. <br  />
+ If your application will process both OTA and custom types of jobs from AWS IoT, we recommend using the feature support for custom jobs in OTA library through the <a class="el" href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a8e314e0d83b5dcd572b08d9f205ab658" title="OTA event for parsing custom job document.">OtaJobEventParseCustomJob</a> event notification in the registered <a class="el" href="group__ota__callback__types.html#ga737e6e873370cf18b0221373ae5590ec" title="OTA update complete callback function typedef.">OtaAppCallback_t</a> callback. <br  />
  However, if your application chooses to use the <a href="https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk">AWS IoT Jobs library</a> (for handling custom jobs) and the OTA library (for handling OTA jobs) to communicate with AWS IoT through a shared MQTT connection, we suggest that you keep the application logic that uses these libraries within a single task/thread. As the OTA agent also makes calls to the AWS IoT Jobs service, keeping the use of libraries within the same thread context will avoid complexity of synchronizing communication with AWS IoT Jobs topics between multiple tasks/threads. However, if you choose to use different tasks/threads for calling these libraries, please be aware that the OTA library will subscribe and configurably, unsubscribe from AWS IoT Jobs topics, and also attempt to send status updates for incoming non-OTA jobs, if your application configures the OTA library to handle custom jobs. </p>
 </blockquote>
 <h1><a class="anchor" id="ota_dependencies"></a>
@@ -135,19 +135,19 @@ Memory Requirements</h1>
 <tr>
 <td><b>File</b> </td><td><b><center>With -O1 Optimization</center></b> </td><td><b><center>With -Os Optimization</center></b>  </td></tr>
 <tr>
-<td><a class="el" href="ota_8c.html" title="Implementation of the AWS IoT Over-The-Air Updates Client Library.">ota.c</a> </td><td><center>8.0K</center> </td><td><center>7.1K</center>  </td></tr>
+<td><a class="el" href="ota_8c.html" title="Implementation of the AWS IoT Over-The-Air Updates Client Library.">ota.c</a> </td><td><center>8.3K</center> </td><td><center>7.5K</center>  </td></tr>
 <tr>
 <td><a class="el" href="ota__interface_8c.html" title="Internal interface for setting the data and control planes.">ota_interface.c</a> </td><td><center>0.1K</center> </td><td><center>0.1K</center>  </td></tr>
 <tr>
 <td><a class="el" href="ota__base64_8c.html" title="Implements a Base64 decoding routine.">ota_base64.c</a> </td><td><center>0.6K</center> </td><td><center>0.6K</center>  </td></tr>
 <tr>
-<td><a class="el" href="ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT.">ota_mqtt.c</a> </td><td><center>2.3K</center> </td><td><center>2.2K</center>  </td></tr>
+<td><a class="el" href="ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT.">ota_mqtt.c</a> </td><td><center>2.4K</center> </td><td><center>2.2K</center>  </td></tr>
 <tr>
 <td><a class="el" href="ota__cbor_8c.html" title="CBOR encode/decode routines for AWS IoT Over-the-Air updates.">ota_cbor.c</a> </td><td><center>0.8K</center> </td><td><center>0.6K</center>  </td></tr>
 <tr>
 <td><a class="el" href="ota__http_8c.html" title="Data transfer over HTTP routines.">ota_http.c</a> </td><td><center>0.3K</center> </td><td><center>0.3K</center>  </td></tr>
 <tr>
-<td><b>Total estimates</b> </td><td><b><center>12.1K</center></b> </td><td><b><center>10.9K</center></b>  </td></tr>
+<td><b>Total estimates</b> </td><td><b><center>12.5K</center></b> </td><td><b><center>11.3K</center></b>  </td></tr>
 </table>
  </p>
 </div></div><!-- PageDoc -->

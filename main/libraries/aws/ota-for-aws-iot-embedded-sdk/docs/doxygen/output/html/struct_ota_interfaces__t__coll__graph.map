@@ -8,5 +8,5 @@
 <area shape="rect" id="node7" href="$struct_ota_http_interface__t.html" title="OTA Event Interface structure." alt="" coords="519,287,662,313"/>
 <area shape="rect" id="node8" href="$struct_ota_pal_interface__t.html" title="OTA pal Interface structure." alt="" coords="686,287,821,313"/>
 <area shape="rect" id="node9" href="$struct_ota_file_context__t.html" title="OTA File Context Information." alt="" coords="688,95,819,121"/>
-<area shape="rect" id="node10" href="$struct_sig256__t.html" title="OTA File Signature info." alt="" coords="714,5,793,32"/>
+<area shape="rect" id="node10" href="$struct_sig__t.html" title="OTA File Signature info." alt="" coords="726,5,781,32"/>
 </map>

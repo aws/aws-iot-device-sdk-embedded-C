@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -152,8 +152,8 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is the OTA statistics structure to hold useful info.  <a href="struct_ota_agent_statistics__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sig256__t.html">Sig256_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA File Signature info.  <a href="struct_sig256__t.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_sig__t.html">Sig_t</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA File Signature info.  <a href="struct_sig__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA File Context Information.  <a href="struct_ota_file_context__t.html#details">More...</a><br /></td></tr>
@@ -199,6 +199,10 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>OTA_ERASED_BLOCKS_VAL</b>&#160;&#160;&#160;0xffU</td></tr>
 <tr class="memdesc:ga759a079ce6746a1d1f7e6391565bbe4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The starting state of a group of erased blocks in the Rx block bitmap. <br /></td></tr>
 <tr class="separator:ga759a079ce6746a1d1f7e6391565bbe4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga301d4ae71893ce48f38c07e317304376"><td class="memItemLeft" align="right" valign="top">
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OTA_MAX_FILE_SIZE</b>&#160;&#160;&#160;UINT32_MAX - <a class="el" href="group__ota__constants.html#gac70b23d17d31a065c30283c4fcc5ab8d">OTA_FILE_BLOCK_SIZE</a> + 1U</td></tr>
+<tr class="memdesc:ga301d4ae71893ce48f38c07e317304376"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum file size supported by the library. <br /></td></tr>
+<tr class="separator:ga301d4ae71893ce48f38c07e317304376"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga059be218ff71c8df0eccda0a7115bfad"><td class="memItemLeft" align="right" valign="top">
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>OTA_MAX_JSON_TOKENS</b>&#160;&#160;&#160;64U</td></tr>
 <tr class="memdesc:ga059be218ff71c8df0eccda0a7115bfad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of JSON tokens supported in a single parser call. <br /></td></tr>
@@ -256,7 +260,7 @@ Macros</h2></td></tr>
 <tr class="memdesc:a2b311ebd30ad900edc6cfc2219366a22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of the buffer used to store the protocol field of the job document. <br /></td></tr>
 <tr class="separator:a2b311ebd30ad900edc6cfc2219366a22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga374cf454c7a4f641bb31433c410c49b7"><td class="memItemLeft" align="right" valign="top">
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>kOTA_MaxSignatureSize</b>&#160;&#160;&#160;256 /* Max bytes supported for a file signature (2048 bit RSA is 256 bytes). */</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>kOTA_MaxSignatureSize</b>&#160;&#160;&#160;384 /* Max bytes supported for a file signature (3072 bit RSA is 384 bytes). */</td></tr>
 <tr class="memdesc:ga374cf454c7a4f641bb31433c410c49b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">A composite cryptographic signature structure able to hold our largest supported signature. <br /></td></tr>
 <tr class="separator:ga374cf454c7a4f641bb31433c410c49b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae53b17849f410c6ccf5b8862293fc302"><td class="memItemLeft" align="right" valign="top">

@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -172,9 +172,9 @@ typedef <a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6c
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a9419f57f0068e6a538664cfbd382832b"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#a9d3eb1ee8e8a129c990fe9effd93f91d">IngestResult_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a9419f57f0068e6a538664cfbd382832b">ingestDataBlock</a> (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext, const uint8_t *pRawMsg, uint32_t messageSize, <a class="el" href="ota__platform__interface_8h.html#a503f74c089364b482321578b541d7640">OtaPalStatus_t</a> *pCloseResult)</td></tr>
-<tr class="memdesc:a9419f57f0068e6a538664cfbd382832b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ingest a data block.  <a href="ota_8c.html#a9419f57f0068e6a538664cfbd382832b">More...</a><br /></td></tr>
-<tr class="separator:a9419f57f0068e6a538664cfbd382832b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c6478318f3e542e0bf60bd5aaabe7d5"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#a9d3eb1ee8e8a129c990fe9effd93f91d">IngestResult_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a1c6478318f3e542e0bf60bd5aaabe7d5">ingestDataBlock</a> (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext, const <a class="el" href="struct_ota_event_data__t.html">OtaEventData_t</a> *pEventData, <a class="el" href="ota__platform__interface_8h.html#a503f74c089364b482321578b541d7640">OtaPalStatus_t</a> *pCloseResult)</td></tr>
+<tr class="memdesc:a1c6478318f3e542e0bf60bd5aaabe7d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ingest a data block.  <a href="ota_8c.html#a1c6478318f3e542e0bf60bd5aaabe7d5">More...</a><br /></td></tr>
+<tr class="separator:a1c6478318f3e542e0bf60bd5aaabe7d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acae48f24cd686ca6d3aeaccc27f48082"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#a9d3eb1ee8e8a129c990fe9effd93f91d">IngestResult_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#acae48f24cd686ca6d3aeaccc27f48082">processDataBlock</a> (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext, uint32_t uBlockIndex, uint32_t uBlockSize, <a class="el" href="ota__platform__interface_8h.html#a503f74c089364b482321578b541d7640">OtaPalStatus_t</a> *pCloseResult, uint8_t *pPayload)</td></tr>
 <tr class="memdesc:acae48f24cd686ca6d3aeaccc27f48082"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate the incoming data block and store it in the file context.  <a href="ota_8c.html#acae48f24cd686ca6d3aeaccc27f48082">More...</a><br /></td></tr>
 <tr class="separator:acae48f24cd686ca6d3aeaccc27f48082"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,9 +196,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a06fb03ec9d3fc5c9e4ce2826e533bf6d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#ae7f5ab8221031b60eb2704cf840679ec">DocParseErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a06fb03ec9d3fc5c9e4ce2826e533bf6d">decodeAndStoreKey</a> (const char *pValueInJson, size_t valueLength, void *pParamAdd)</td></tr>
 <tr class="memdesc:a06fb03ec9d3fc5c9e4ce2826e533bf6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode the base64 encoded file signature key from the job document and store it in file context.  <a href="ota_8c.html#a06fb03ec9d3fc5c9e4ce2826e533bf6d">More...</a><br /></td></tr>
 <tr class="separator:a06fb03ec9d3fc5c9e4ce2826e533bf6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b7846c523b892176de2118e822157a8"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#ae7f5ab8221031b60eb2704cf840679ec">DocParseErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a3b7846c523b892176de2118e822157a8">extractAndStoreArray</a> (const char *pKey, const char *pValueInJson, size_t valueLength, void *pParamAdd, uint32_t *pParamSizeAdd)</td></tr>
-<tr class="memdesc:a3b7846c523b892176de2118e822157a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract the value from json and store it into the allocated memory.  <a href="ota_8c.html#a3b7846c523b892176de2118e822157a8">More...</a><br /></td></tr>
-<tr class="separator:a3b7846c523b892176de2118e822157a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae153a58eadecf55fc6d4456d4485668d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#ae7f5ab8221031b60eb2704cf840679ec">DocParseErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#ae153a58eadecf55fc6d4456d4485668d">extractAndStoreArray</a> (const char *pKey, const char *pValueInJson, size_t valueLength, void *pParamAdd, const uint32_t *pParamSizeAdd)</td></tr>
+<tr class="memdesc:ae153a58eadecf55fc6d4456d4485668d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract the value from json and store it into the allocated memory.  <a href="ota_8c.html#ae153a58eadecf55fc6d4456d4485668d">More...</a><br /></td></tr>
+<tr class="separator:ae153a58eadecf55fc6d4456d4485668d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae8f6a684adf58acb5433aa77dca15db"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#ae7f5ab8221031b60eb2704cf840679ec">DocParseErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#aae8f6a684adf58acb5433aa77dca15db">verifyRequiredParamsExtracted</a> (const <a class="el" href="struct_json_doc_param__t.html">JsonDocParam_t</a> *pModelParam, const <a class="el" href="struct_json_doc_model__t.html">JsonDocModel_t</a> *pDocModel)</td></tr>
 <tr class="memdesc:aae8f6a684adf58acb5433aa77dca15db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if all the required parameters for job document are extracted from the JSON.  <a href="ota_8c.html#aae8f6a684adf58acb5433aa77dca15db">More...</a><br /></td></tr>
 <tr class="separator:aae8f6a684adf58acb5433aa77dca15db"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -220,9 +220,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a9e51070d847cd2ecf96fc8df58e0ad21"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a9e51070d847cd2ecf96fc8df58e0ad21">validateDataBlock</a> (const <a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext, uint32_t blockIndex, uint32_t blockSize)</td></tr>
 <tr class="memdesc:a9e51070d847cd2ecf96fc8df58e0ad21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate block index and block size of the data block.  <a href="ota_8c.html#a9e51070d847cd2ecf96fc8df58e0ad21">More...</a><br /></td></tr>
 <tr class="separator:a9e51070d847cd2ecf96fc8df58e0ad21"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38c37b062ef279c31dba69c7ad8340ce"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#a9d3eb1ee8e8a129c990fe9effd93f91d">IngestResult_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a38c37b062ef279c31dba69c7ad8340ce">decodeAndStoreDataBlock</a> (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext, const uint8_t *pRawMsg, uint32_t messageSize, uint8_t **pPayload, uint32_t *pBlockSize, uint32_t *pBlockIndex)</td></tr>
-<tr class="memdesc:a38c37b062ef279c31dba69c7ad8340ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode and ingest the incoming data block.  <a href="ota_8c.html#a38c37b062ef279c31dba69c7ad8340ce">More...</a><br /></td></tr>
-<tr class="separator:a38c37b062ef279c31dba69c7ad8340ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61467fe1d46c400f3c83610ece7a4dd5"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#a9d3eb1ee8e8a129c990fe9effd93f91d">IngestResult_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a61467fe1d46c400f3c83610ece7a4dd5">decodeAndStoreDataBlock</a> (const <a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext, const uint8_t *pRawMsg, uint32_t messageSize, uint8_t **pPayload, uint32_t *pBlockSize, uint32_t *pBlockIndex)</td></tr>
+<tr class="memdesc:a61467fe1d46c400f3c83610ece7a4dd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode and ingest the incoming data block.  <a href="ota_8c.html#a61467fe1d46c400f3c83610ece7a4dd5">More...</a><br /></td></tr>
+<tr class="separator:a61467fe1d46c400f3c83610ece7a4dd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87d0a2e81013e841561399a06c913eba"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a87d0a2e81013e841561399a06c913eba">otaClose</a> (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *const pFileContext)</td></tr>
 <tr class="memdesc:a87d0a2e81013e841561399a06c913eba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close an open OTA file context and free it.  <a href="ota_8c.html#a87d0a2e81013e841561399a06c913eba">More...</a><br /></td></tr>
 <tr class="separator:a87d0a2e81013e841561399a06c913eba"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -246,9 +246,9 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>dataHandlerCle
 <tr class="memitem:a2e0f5237102f7fd81bb2e162ca4cd0f0"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="ota__private_8h.html#ae7f5ab8221031b60eb2704cf840679ec">DocParseErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a2e0f5237102f7fd81bb2e162ca4cd0f0">initDocModel</a> (<a class="el" href="struct_json_doc_model__t.html">JsonDocModel_t</a> *pDocModel, const <a class="el" href="struct_json_doc_param__t.html">JsonDocParam_t</a> *pBodyDef, void *contextBaseAddr, uint32_t contextSize, uint16_t numJobParams)</td></tr>
 <tr class="memdesc:a2e0f5237102f7fd81bb2e162ca4cd0f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepare the document model for use by sanity checking the initialization parameters and detecting all required parameters.  <a href="ota_8c.html#a2e0f5237102f7fd81bb2e162ca4cd0f0">More...</a><br /></td></tr>
 <tr class="separator:a2e0f5237102f7fd81bb2e162ca4cd0f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bafd2f7eb047f40f4ea7ac0e77f8af1"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a0bafd2f7eb047f40f4ea7ac0e77f8af1">initializeAppBuffers</a> (<a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *pOtaBuffer)</td></tr>
-<tr class="memdesc:a0bafd2f7eb047f40f4ea7ac0e77f8af1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize buffers for storing the file attributes.  <a href="ota_8c.html#a0bafd2f7eb047f40f4ea7ac0e77f8af1">More...</a><br /></td></tr>
-<tr class="separator:a0bafd2f7eb047f40f4ea7ac0e77f8af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00a204aa4d926e7dd76e811fc64f9657"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a00a204aa4d926e7dd76e811fc64f9657">initializeAppBuffers</a> (const <a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *pOtaBuffer)</td></tr>
+<tr class="memdesc:a00a204aa4d926e7dd76e811fc64f9657"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize buffers for storing the file attributes.  <a href="ota_8c.html#a00a204aa4d926e7dd76e811fc64f9657">More...</a><br /></td></tr>
+<tr class="separator:a00a204aa4d926e7dd76e811fc64f9657"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a238a1d0b19c5ff32e5a9d1f4126dded5"><td class="memItemLeft" align="right" valign="top"><a id="a238a1d0b19c5ff32e5a9d1f4126dded5" name="a238a1d0b19c5ff32e5a9d1f4126dded5"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeLocalBuffers</b> (void)</td></tr>
 <tr class="memdesc:a238a1d0b19c5ff32e5a9d1f4126dded5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize jobId and protocol buffers. <br /></td></tr>
@@ -259,9 +259,9 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeLoca
 <tr class="memitem:a4334797dac98d572ae6ea0bdcf812209"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a4334797dac98d572ae6ea0bdcf812209">processValidFileContext</a> (void)</td></tr>
 <tr class="memdesc:a4334797dac98d572ae6ea0bdcf812209"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initiate download if not in self-test else reboot.  <a href="ota_8c.html#a4334797dac98d572ae6ea0bdcf812209">More...</a><br /></td></tr>
 <tr class="separator:a4334797dac98d572ae6ea0bdcf812209"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04a9f7e46088412b1186014bf4040813"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a04a9f7e46088412b1186014bf4040813">handleSelfTestJobDoc</a> (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext)</td></tr>
-<tr class="memdesc:a04a9f7e46088412b1186014bf4040813"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate update version when receiving job doc in self test state.  <a href="ota_8c.html#a04a9f7e46088412b1186014bf4040813">More...</a><br /></td></tr>
-<tr class="separator:a04a9f7e46088412b1186014bf4040813"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4df35aecba7ed59256b52d4eb10190d"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#af4df35aecba7ed59256b52d4eb10190d">handleSelfTestJobDoc</a> (const <a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pFileContext)</td></tr>
+<tr class="memdesc:af4df35aecba7ed59256b52d4eb10190d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validate update version when receiving job doc in self test state.  <a href="ota_8c.html#af4df35aecba7ed59256b52d4eb10190d">More...</a><br /></td></tr>
+<tr class="separator:af4df35aecba7ed59256b52d4eb10190d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0526ddce991d5566b6f209c60cafdef"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#aa0526ddce991d5566b6f209c60cafdef">processNullFileContext</a> (void)</td></tr>
 <tr class="memdesc:aa0526ddce991d5566b6f209c60cafdef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handle invalid file context.  <a href="ota_8c.html#aa0526ddce991d5566b6f209c60cafdef">More...</a><br /></td></tr>
 <tr class="separator:aa0526ddce991d5566b6f209c60cafdef"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -280,6 +280,14 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeLoca
 <tr class="memitem:ae751fbf1175cc0532e2c3c968854bfd2"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#ae751fbf1175cc0532e2c3c968854bfd2">receiveAndProcessOtaEvent</a> (void)</td></tr>
 <tr class="memdesc:ae751fbf1175cc0532e2c3c968854bfd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Receive and process the next available event from the event queue.  <a href="ota_8c.html#ae751fbf1175cc0532e2c3c968854bfd2">More...</a><br /></td></tr>
 <tr class="separator:ae751fbf1175cc0532e2c3c968854bfd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae813b179a518c7abff14fd0a79a30672"><td class="memItemLeft" align="right" valign="top"><a id="ae813b179a518c7abff14fd0a79a30672" name="ae813b179a518c7abff14fd0a79a30672"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>callOtaCallback</b> (<a class="el" href="group__ota__enum__types.html#ga96a2e1f5cfad783897e805196eee39a7">OtaJobEvent_t</a> eEvent, void *pData)</td></tr>
+<tr class="memdesc:ae813b179a518c7abff14fd0a79a30672"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call OTA callback function if it's registered. <br /></td></tr>
+<tr class="separator:ae813b179a518c7abff14fd0a79a30672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba376efc2aed2e83c858086f3e279fd5"><td class="memItemLeft" align="right" valign="top"><a id="aba376efc2aed2e83c858086f3e279fd5" name="aba376efc2aed2e83c858086f3e279fd5"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>resetEventQueue</b> (void)</td></tr>
+<tr class="memdesc:aba376efc2aed2e83c858086f3e279fd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear all messages in the event queue. <br /></td></tr>
+<tr class="separator:aba376efc2aed2e83c858086f3e279fd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc05572b247887937398695a7ae22428"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#adc05572b247887937398695a7ae22428">startHandler</a> (const <a class="el" href="struct_ota_event_data__t.html">OtaEventData_t</a> *pEventData)</td></tr>
 <tr class="separator:adc05572b247887937398695a7ae22428"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acfd737a3f8be41849474d97ddbe695a6"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#acfd737a3f8be41849474d97ddbe695a6">requestJobHandler</a> (const <a class="el" href="struct_ota_event_data__t.html">OtaEventData_t</a> *pEventData)</td></tr>
@@ -308,15 +316,18 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeLoca
 <tr class="separator:a59ee2cfa7669b761f5dfd4dbee7545f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a497bd4e67afe70d3aafb00abc55979ae"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a497bd4e67afe70d3aafb00abc55979ae">executeHandler</a> (uint32_t index, const <a class="el" href="struct_ota_event_msg__t.html">OtaEventMsg_t</a> *const pEventMsg)</td></tr>
 <tr class="separator:a497bd4e67afe70d3aafb00abc55979ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3a0cfdc8694a606a1d736b2f54fb113"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#ab3a0cfdc8694a606a1d736b2f54fb113">OTA_EventProcessingTask</a> (void *pUnused)</td></tr>
-<tr class="memdesc:ab3a0cfdc8694a606a1d736b2f54fb113"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA agent event processing loop.  <a href="ota_8c.html#ab3a0cfdc8694a606a1d736b2f54fb113">More...</a><br /></td></tr>
-<tr class="separator:ab3a0cfdc8694a606a1d736b2f54fb113"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40ff1cf197537e4cac4e8e049c42a1e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a40ff1cf197537e4cac4e8e049c42a1e2">OTA_EventProcessingTask</a> (const void *pUnused)</td></tr>
+<tr class="memdesc:a40ff1cf197537e4cac4e8e049c42a1e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA agent event processing loop.  <a href="ota_8c.html#a40ff1cf197537e4cac4e8e049c42a1e2">More...</a><br /></td></tr>
+<tr class="separator:a40ff1cf197537e4cac4e8e049c42a1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a733199fef860721888bbf9ee46bd4056"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a733199fef860721888bbf9ee46bd4056">OTA_EventProcess</a> (void)</td></tr>
+<tr class="memdesc:a733199fef860721888bbf9ee46bd4056"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA agent event process cycler.  <a href="ota_8c.html#a733199fef860721888bbf9ee46bd4056">More...</a><br /></td></tr>
+<tr class="separator:a733199fef860721888bbf9ee46bd4056"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2564144f284db077b8947ba58a6a72bb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a2564144f284db077b8947ba58a6a72bb">OTA_SignalEvent</a> (const <a class="el" href="struct_ota_event_msg__t.html">OtaEventMsg_t</a> *const pEventMsg)</td></tr>
 <tr class="memdesc:a2564144f284db077b8947ba58a6a72bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal event to the OTA Agent task.  <a href="ota_8c.html#a2564144f284db077b8947ba58a6a72bb">More...</a><br /></td></tr>
 <tr class="separator:a2564144f284db077b8947ba58a6a72bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9011a6007328dfb3bfde5fdb645fa52f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a> (<a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *pOtaBuffer, const <a class="el" href="struct_ota_interfaces__t.html">OtaInterfaces_t</a> *pOtaInterfaces, const uint8_t *pThingName, <a class="el" href="group__ota__callback__types.html#ga3bedd7e278f89d555a32a7efa8023a28">OtaAppCallback_t</a> OtaAppCallback)</td></tr>
-<tr class="memdesc:a9011a6007328dfb3bfde5fdb645fa52f"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA Agent initialization function.  <a href="ota_8c.html#a9011a6007328dfb3bfde5fdb645fa52f">More...</a><br /></td></tr>
-<tr class="separator:a9011a6007328dfb3bfde5fdb645fa52f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1764ba9b821dcdb693ec549e8349cc2e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a> (const <a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *pOtaBuffer, const <a class="el" href="struct_ota_interfaces__t.html">OtaInterfaces_t</a> *pOtaInterfaces, const uint8_t *pThingName, <a class="el" href="group__ota__callback__types.html#ga737e6e873370cf18b0221373ae5590ec">OtaAppCallback_t</a> OtaAppCallback)</td></tr>
+<tr class="memdesc:a1764ba9b821dcdb693ec549e8349cc2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA Agent initialization function.  <a href="ota_8c.html#a1764ba9b821dcdb693ec549e8349cc2e">More...</a><br /></td></tr>
+<tr class="separator:a1764ba9b821dcdb693ec549e8349cc2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac779291eb93f4e0e6459816e60e13b09"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#ac779291eb93f4e0e6459816e60e13b09">OTA_Shutdown</a> (uint32_t ticksToWait, uint8_t unsubscribeFlag)</td></tr>
 <tr class="memdesc:ac779291eb93f4e0e6459816e60e13b09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal to the OTA Agent to shut down.  <a href="ota_8c.html#ac779291eb93f4e0e6459816e60e13b09">More...</a><br /></td></tr>
 <tr class="separator:ac779291eb93f4e0e6459816e60e13b09"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -353,7 +364,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeLoca
 <tr class="memitem:a4951f4bb1bfbb7312850454ca2b282a4"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a4951f4bb1bfbb7312850454ca2b282a4">OTA_OsStatus_strerror</a> (<a class="el" href="group__ota__enum__types.html#gaececff6c0dd8ba4d884544571bd368e7">OtaOsStatus_t</a> status)</td></tr>
 <tr class="memdesc:a4951f4bb1bfbb7312850454ca2b282a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status code to string conversion for OTA OS status.  <a href="ota_8c.html#a4951f4bb1bfbb7312850454ca2b282a4">More...</a><br /></td></tr>
 <tr class="separator:a4951f4bb1bfbb7312850454ca2b282a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a58be1ac41b7d619eeeb4861be37c89"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a5a58be1ac41b7d619eeeb4861be37c89">OTA_PalStatus_strerror</a> (<a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a> status)</td></tr>
+<tr class="memitem:a5a58be1ac41b7d619eeeb4861be37c89"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a5a58be1ac41b7d619eeeb4861be37c89">OTA_PalStatus_strerror</a> (<a class="el" href="group__ota__constants.html#gac5c3148205ee4a0cac4246b2c7797765">OtaPalMainStatus_t</a> status)</td></tr>
 <tr class="memdesc:a5a58be1ac41b7d619eeeb4861be37c89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status code to string conversion for OTA PAL status.  <a href="ota_8c.html#a5a58be1ac41b7d619eeeb4861be37c89">More...</a><br /></td></tr>
 <tr class="separator:a5a58be1ac41b7d619eeeb4861be37c89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -374,8 +385,10 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <tr class="memdesc:a115d71f205e185e9b7031ba49de411da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition table for the OTA state machine.  <a href="ota_8c.html#a115d71f205e185e9b7031ba49de411da">More...</a><br /></td></tr>
 <tr class="separator:a115d71f205e185e9b7031ba49de411da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35bd11f5108d7e9e4f97f147b12a8c92"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a35bd11f5108d7e9e4f97f147b12a8c92">pOtaAgentStateStrings</a> [OtaAgentStateAll+1]</td></tr>
+<tr class="memdesc:a35bd11f5108d7e9e4f97f147b12a8c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">String set to represent the States of the OTA agent.  <a href="ota_8c.html#a35bd11f5108d7e9e4f97f147b12a8c92">More...</a><br /></td></tr>
 <tr class="separator:a35bd11f5108d7e9e4f97f147b12a8c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a427f6b2cde0e2fdd9136c273d0c8fae8"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a427f6b2cde0e2fdd9136c273d0c8fae8">pOtaEventStrings</a> [<a class="el" href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea668f452f3c81c0b76d09921893c7027c">OtaAgentEventMax</a>]</td></tr>
+<tr class="memdesc:a427f6b2cde0e2fdd9136c273d0c8fae8"><td class="mdescLeft">&#160;</td><td class="mdescRight">String set to represent the Events for the OTA agent.  <a href="ota_8c.html#a427f6b2cde0e2fdd9136c273d0c8fae8">More...</a><br /></td></tr>
 <tr class="separator:a427f6b2cde0e2fdd9136c273d0c8fae8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad483f03f8d49725d5d5cfe9133e86854"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="struct_json_doc_param__t.html">JsonDocParam_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#ad483f03f8d49725d5d5cfe9133e86854">otaJobDocModelParamStructure</a> [<a class="el" href="ota__private_8h.html#a77c1dadee30b8e0beaea17fb8563e218">OTA_NUM_JOB_PARAMS</a>]</td></tr>
 <tr class="memdesc:ad483f03f8d49725d5d5cfe9133e86854"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is the OTA job document model describing the parameters, their types, destination and how to extract.  <a href="ota_8c.html#ad483f03f8d49725d5d5cfe9133e86854">More...</a><br /></td></tr>
@@ -384,14 +397,14 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <tr class="separator:aaf6b80a942717438ad5ee23466e62d01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17a536dc3f752d78111477613ab0dca9"><td class="memItemLeft" align="right" valign="top">static uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a17a536dc3f752d78111477613ab0dca9">pProtocolBuffer</a> [<a class="el" href="ota__private_8h.html#a2b311ebd30ad900edc6cfc2219366a22">OTA_PROTOCOL_BUFFER_SIZE</a>]</td></tr>
 <tr class="separator:a17a536dc3f752d78111477613ab0dca9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ae882f31f2728422eb3d256fbecd384"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_sig256__t.html">Sig256_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#a6ae882f31f2728422eb3d256fbecd384">sig256Buffer</a></td></tr>
-<tr class="separator:a6ae882f31f2728422eb3d256fbecd384"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebfcd3030a3c9d082a768b15d6bd05e6"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_sig__t.html">Sig_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota_8c.html#aebfcd3030a3c9d082a768b15d6bd05e6">sigBuffer</a></td></tr>
+<tr class="separator:aebfcd3030a3c9d082a768b15d6bd05e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Implementation of the AWS IoT Over-The-Air Updates Client Library. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a9419f57f0068e6a538664cfbd382832b" name="a9419f57f0068e6a538664cfbd382832b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9419f57f0068e6a538664cfbd382832b">&#9670;&nbsp;</a></span>ingestDataBlock()</h2>
+<a id="a1c6478318f3e542e0bf60bd5aaabe7d5" name="a1c6478318f3e542e0bf60bd5aaabe7d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c6478318f3e542e0bf60bd5aaabe7d5">&#9670;&nbsp;</a></span>ingestDataBlock()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -408,14 +421,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const uint8_t *&#160;</td>
-          <td class="paramname"><em>pRawMsg</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>messageSize</em>, </td>
+          <td class="paramtype">const <a class="el" href="struct_ota_event_data__t.html">OtaEventData_t</a> *&#160;</td>
+          <td class="paramname"><em>pEventData</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -441,8 +448,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pFileContext</td><td>Information of file to be streamed. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pRawMsg</td><td>Raw job document. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">messageSize</td><td>Length of document. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pEventData</td><td>The event data containing the job document. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pCloseResult</td><td>Result of closing file in PAL. </td></tr>
   </table>
   </dd>
@@ -823,8 +829,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 
 </div>
 </div>
-<a id="a3b7846c523b892176de2118e822157a8" name="a3b7846c523b892176de2118e822157a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b7846c523b892176de2118e822157a8">&#9670;&nbsp;</a></span>extractAndStoreArray()</h2>
+<a id="ae153a58eadecf55fc6d4456d4485668d" name="ae153a58eadecf55fc6d4456d4485668d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae153a58eadecf55fc6d4456d4485668d">&#9670;&nbsp;</a></span>extractAndStoreArray()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -859,7 +865,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t *&#160;</td>
+          <td class="paramtype">const uint32_t *&#160;</td>
           <td class="paramname"><em>pParamSizeAdd</em>&#160;</td>
         </tr>
         <tr>
@@ -1243,8 +1249,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 
 </div>
 </div>
-<a id="a38c37b062ef279c31dba69c7ad8340ce" name="a38c37b062ef279c31dba69c7ad8340ce"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38c37b062ef279c31dba69c7ad8340ce">&#9670;&nbsp;</a></span>decodeAndStoreDataBlock()</h2>
+<a id="a61467fe1d46c400f3c83610ece7a4dd5" name="a61467fe1d46c400f3c83610ece7a4dd5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61467fe1d46c400f3c83610ece7a4dd5">&#9670;&nbsp;</a></span>decodeAndStoreDataBlock()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1255,7 +1261,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="memname">static <a class="el" href="ota__private_8h.html#a9d3eb1ee8e8a129c990fe9effd93f91d">IngestResult_t</a> decodeAndStoreDataBlock </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *&#160;</td>
           <td class="paramname"><em>pFileContext</em>, </td>
         </tr>
         <tr>
@@ -1545,8 +1551,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 
 </div>
 </div>
-<a id="a0bafd2f7eb047f40f4ea7ac0e77f8af1" name="a0bafd2f7eb047f40f4ea7ac0e77f8af1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0bafd2f7eb047f40f4ea7ac0e77f8af1">&#9670;&nbsp;</a></span>initializeAppBuffers()</h2>
+<a id="a00a204aa4d926e7dd76e811fc64f9657" name="a00a204aa4d926e7dd76e811fc64f9657"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a00a204aa4d926e7dd76e811fc64f9657">&#9670;&nbsp;</a></span>initializeAppBuffers()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1557,7 +1563,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="memname">static void initializeAppBuffers </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *&#160;</td>
           <td class="paramname"><em>pOtaBuffer</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1643,8 +1649,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 
 </div>
 </div>
-<a id="a04a9f7e46088412b1186014bf4040813" name="a04a9f7e46088412b1186014bf4040813"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a04a9f7e46088412b1186014bf4040813">&#9670;&nbsp;</a></span>handleSelfTestJobDoc()</h2>
+<a id="af4df35aecba7ed59256b52d4eb10190d" name="af4df35aecba7ed59256b52d4eb10190d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4df35aecba7ed59256b52d4eb10190d">&#9670;&nbsp;</a></span>handleSelfTestJobDoc()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1655,7 +1661,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="memname">static void handleSelfTestJobDoc </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *&#160;</td>
           <td class="paramname"><em>pFileContext</em></td><td>)</td>
           <td></td>
         </tr>
@@ -2265,8 +2271,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 
 </div>
 </div>
-<a id="ab3a0cfdc8694a606a1d736b2f54fb113" name="ab3a0cfdc8694a606a1d736b2f54fb113"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3a0cfdc8694a606a1d736b2f54fb113">&#9670;&nbsp;</a></span>OTA_EventProcessingTask()</h2>
+<a id="a40ff1cf197537e4cac4e8e049c42a1e2" name="a40ff1cf197537e4cac4e8e049c42a1e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40ff1cf197537e4cac4e8e049c42a1e2">&#9670;&nbsp;</a></span>OTA_EventProcessingTask()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2274,7 +2280,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="memname">void OTA_EventProcessingTask </td>
           <td>(</td>
-          <td class="paramtype">void *&#160;</td>
+          <td class="paramtype">const void *&#160;</td>
           <td class="paramname"><em>pUnused</em></td><td>)</td>
           <td></td>
         </tr>
@@ -2290,6 +2296,29 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
   </dd>
 </dl>
 <p>For a Posix based reference of creating a thread with this task, please see the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/main/demos/ota">demos in AWS IoT Embedded C SDK repository</a>. </p>
+
+</div>
+</div>
+<a id="a733199fef860721888bbf9ee46bd4056" name="a733199fef860721888bbf9ee46bd4056"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a733199fef860721888bbf9ee46bd4056">&#9670;&nbsp;</a></span>OTA_EventProcess()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a> OTA_EventProcess </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>OTA agent event process cycler. </p>
+<p >This is the main agent event handler for OTA update and needs to be called repeatedly by an application task. This is functionally equivalent to <a class="el" href="ota_8c.html#a40ff1cf197537e4cac4e8e049c42a1e2">OTA_EventProcessingTask</a>, except instead of forever looping internally, the user is responsible for periodically calling this function.</p>
+<dl class="section note"><dt>Note</dt><dd>This is NOT thread safe with <a class="el" href="ota_8c.html#a40ff1cf197537e4cac4e8e049c42a1e2">OTA_EventProcessingTask</a> and the two should never be used in conjunction.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The state of the ota agent after this single event process cycle </dd></dl>
 
 </div>
 </div>
@@ -2345,19 +2374,19 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> returnValue;</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga5d1a57074f3242737a756c3feb64d4d4"><div class="ttname"><a href="group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4">OtaHttpStatus_t</a></div><div class="ttdeci">OtaHttpStatus_t</div><div class="ttdoc">The OTA HTTP interface return status.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:86</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea79ef0fd4aaffd57dd5af6ef646a70f11"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea79ef0fd4aaffd57dd5af6ef646a70f11">OtaAgentEventReceivedFileBlock</a></div><div class="ttdeci">@ OtaAgentEventReceivedFileBlock</div><div class="ttdoc">Event to trigger when file block is received.</div><div class="ttdef"><b>Definition:</b> ota_private.h:352</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga5d1a57074f3242737a756c3feb64d4d4a49f043cf87a8fefc6d7f383acc730dd5"><div class="ttname"><a href="group__ota__enum__types.html#gga5d1a57074f3242737a756c3feb64d4d4a49f043cf87a8fefc6d7f383acc730dd5">OtaHttpRequestFailed</a></div><div class="ttdeci">@ OtaHttpRequestFailed</div><div class="ttdoc">Error sending the HTTP request.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:90</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga5d1a57074f3242737a756c3feb64d4d4ac8837a3a448f8dc701d838974a2a6535"><div class="ttname"><a href="group__ota__enum__types.html#gga5d1a57074f3242737a756c3feb64d4d4ac8837a3a448f8dc701d838974a2a6535">OtaHttpSuccess</a></div><div class="ttdeci">@ OtaHttpSuccess</div><div class="ttdoc">OTA HTTP interface success.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:87</div></div>
-<div class="ttc" id="aota_8h_html_a2564144f284db077b8947ba58a6a72bb"><div class="ttname"><a href="ota_8h.html#a2564144f284db077b8947ba58a6a72bb">OTA_SignalEvent</a></div><div class="ttdeci">bool OTA_SignalEvent(const OtaEventMsg_t *const pEventMsg)</div><div class="ttdoc">Signal event to the OTA Agent task.</div><div class="ttdef"><b>Definition:</b> ota.c:2921</div></div>
-<div class="ttc" id="astruct_ota_event_data__t_html"><div class="ttname"><a href="struct_ota_event_data__t.html">OtaEventData_t</a></div><div class="ttdoc">The OTA Agent event and data structures.</div><div class="ttdef"><b>Definition:</b> ota_private.h:422</div></div>
-<div class="ttc" id="astruct_ota_event_data__t_html_a2d6745b10e3e5ad0dac2ebb89a56f252"><div class="ttname"><a href="struct_ota_event_data__t.html#a2d6745b10e3e5ad0dac2ebb89a56f252">OtaEventData_t::data</a></div><div class="ttdeci">uint8_t data[OTA_DATA_BLOCK_SIZE]</div><div class="ttdef"><b>Definition:</b> ota_private.h:423</div></div>
-<div class="ttc" id="astruct_ota_event_data__t_html_a4f1b1b9d316c41d97fd9169dc6ff076d"><div class="ttname"><a href="struct_ota_event_data__t.html#a4f1b1b9d316c41d97fd9169dc6ff076d">OtaEventData_t::dataLength</a></div><div class="ttdeci">uint32_t dataLength</div><div class="ttdef"><b>Definition:</b> ota_private.h:424</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga5d1a57074f3242737a756c3feb64d4d4"><div class="ttname"><a href="group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4">OtaHttpStatus_t</a></div><div class="ttdeci">OtaHttpStatus_t</div><div class="ttdoc">The OTA HTTP interface return status.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:88</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea79ef0fd4aaffd57dd5af6ef646a70f11"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea79ef0fd4aaffd57dd5af6ef646a70f11">OtaAgentEventReceivedFileBlock</a></div><div class="ttdeci">@ OtaAgentEventReceivedFileBlock</div><div class="ttdoc">Event to trigger when file block is received.</div><div class="ttdef"><b>Definition:</b> ota_private.h:354</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga5d1a57074f3242737a756c3feb64d4d4a49f043cf87a8fefc6d7f383acc730dd5"><div class="ttname"><a href="group__ota__enum__types.html#gga5d1a57074f3242737a756c3feb64d4d4a49f043cf87a8fefc6d7f383acc730dd5">OtaHttpRequestFailed</a></div><div class="ttdeci">@ OtaHttpRequestFailed</div><div class="ttdoc">Error sending the HTTP request.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:92</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga5d1a57074f3242737a756c3feb64d4d4ac8837a3a448f8dc701d838974a2a6535"><div class="ttname"><a href="group__ota__enum__types.html#gga5d1a57074f3242737a756c3feb64d4d4ac8837a3a448f8dc701d838974a2a6535">OtaHttpSuccess</a></div><div class="ttdeci">@ OtaHttpSuccess</div><div class="ttdoc">OTA HTTP interface success.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:89</div></div>
+<div class="ttc" id="aota_8h_html_a2564144f284db077b8947ba58a6a72bb"><div class="ttname"><a href="ota_8h.html#a2564144f284db077b8947ba58a6a72bb">OTA_SignalEvent</a></div><div class="ttdeci">bool OTA_SignalEvent(const OtaEventMsg_t *const pEventMsg)</div><div class="ttdoc">Signal event to the OTA Agent task.</div><div class="ttdef"><b>Definition:</b> ota.c:3066</div></div>
+<div class="ttc" id="astruct_ota_event_data__t_html"><div class="ttname"><a href="struct_ota_event_data__t.html">OtaEventData_t</a></div><div class="ttdoc">The OTA Agent event and data structures.</div><div class="ttdef"><b>Definition:</b> ota_private.h:420</div></div>
+<div class="ttc" id="astruct_ota_event_data__t_html_a2d6745b10e3e5ad0dac2ebb89a56f252"><div class="ttname"><a href="struct_ota_event_data__t.html#a2d6745b10e3e5ad0dac2ebb89a56f252">OtaEventData_t::data</a></div><div class="ttdeci">uint8_t data[OTA_DATA_BLOCK_SIZE]</div><div class="ttdef"><b>Definition:</b> ota_private.h:421</div></div>
+<div class="ttc" id="astruct_ota_event_data__t_html_a4f1b1b9d316c41d97fd9169dc6ff076d"><div class="ttname"><a href="struct_ota_event_data__t.html#a4f1b1b9d316c41d97fd9169dc6ff076d">OtaEventData_t::dataLength</a></div><div class="ttdeci">uint32_t dataLength</div><div class="ttdef"><b>Definition:</b> ota_private.h:422</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
-<a id="a9011a6007328dfb3bfde5fdb645fa52f" name="a9011a6007328dfb3bfde5fdb645fa52f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9011a6007328dfb3bfde5fdb645fa52f">&#9670;&nbsp;</a></span>OTA_Init()</h2>
+<a id="a1764ba9b821dcdb693ec549e8349cc2e" name="a1764ba9b821dcdb693ec549e8349cc2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1764ba9b821dcdb693ec549e8349cc2e">&#9670;&nbsp;</a></span>OTA_Init()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2365,7 +2394,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> OTA_Init </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a> *&#160;</td>
           <td class="paramname"><em>pOtaBuffer</em>, </td>
         </tr>
         <tr>
@@ -2383,7 +2412,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="group__ota__callback__types.html#ga3bedd7e278f89d555a32a7efa8023a28">OtaAppCallback_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="group__ota__callback__types.html#ga737e6e873370cf18b0221373ae5590ec">OtaAppCallback_t</a>&#160;</td>
           <td class="paramname"><em>OtaAppCallback</em>&#160;</td>
         </tr>
         <tr>
@@ -2458,7 +2487,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <div class="line"><span class="comment">// Unique client identifier</span></div>
 <div class="line"><span class="keywordtype">char</span> * pClientIdentifier = <span class="stringliteral">&quot;uniqueClientID&quot;</span>;</div>
 <div class="line"> </div>
-<div class="line">otaErr = <a class="code hl_function" href="ota_8h.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a>( &amp;otaBuffer,</div>
+<div class="line">otaErr = <a class="code hl_function" href="ota_8h.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a>( &amp;otaBuffer,</div>
 <div class="line">                   &amp;otaInterfaces,</div>
 <div class="line">                   ( <span class="keyword">const</span> uint8_t * ) pClientIdentifier,</div>
 <div class="line">                   otaAppCallback ) ) != <a class="code hl_enumvalue" href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02">OtaErrNone</a> )</div>
@@ -2466,17 +2495,17 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <div class="line">{</div>
 <div class="line">    <span class="comment">// Do something with the OTA agent.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__constants_html_ga538d92a689f2b60c60bcef41e2739a1e"><div class="ttname"><a href="group__ota__constants.html#ga538d92a689f2b60c60bcef41e2739a1e">OTA_MAX_BLOCK_BITMAP_SIZE</a></div><div class="ttdeci">#define OTA_MAX_BLOCK_BITMAP_SIZE</div><div class="ttdoc">Max allowed number of bytes to track all blocks of an OTA file. Adjust block size if more range is ne...</div><div class="ttdef"><b>Definition:</b> ota_private.h:64</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><div class="ttname"><a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a></div><div class="ttdeci">OtaErr_t</div><div class="ttdoc">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word...</div><div class="ttdef"><b>Definition:</b> ota.h:79</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga96a2e1f5cfad783897e805196eee39a7"><div class="ttname"><a href="group__ota__enum__types.html#ga96a2e1f5cfad783897e805196eee39a7">OtaJobEvent_t</a></div><div class="ttdeci">OtaJobEvent_t</div><div class="ttdoc">OTA Job callback events.</div><div class="ttdef"><b>Definition:</b> ota.h:165</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02">OtaErrNone</a></div><div class="ttdeci">@ OtaErrNone</div><div class="ttdoc">No error occurred during the operation.</div><div class="ttdef"><b>Definition:</b> ota.h:80</div></div>
-<div class="ttc" id="aota_8h_html_a9011a6007328dfb3bfde5fdb645fa52f"><div class="ttname"><a href="ota_8h.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a></div><div class="ttdeci">OtaErr_t OTA_Init(OtaAppBuffer_t *pOtaBuffer, const OtaInterfaces_t *pOtaInterfaces, const uint8_t *pThingName, OtaAppCallback_t OtaAppCallback)</div><div class="ttdoc">OTA Agent initialization function.</div><div class="ttdef"><b>Definition:</b> ota.c:3062</div></div>
-<div class="ttc" id="astruct_ota_app_buffer__t_html"><div class="ttname"><a href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a></div><div class="ttdoc">OTA Application Buffer size information.</div><div class="ttdef"><b>Definition:</b> ota.h:271</div></div>
-<div class="ttc" id="astruct_ota_app_buffer__t_html_a1e8e0cf1e6b1f699409f22a4c03cefd7"><div class="ttname"><a href="struct_ota_app_buffer__t.html#a1e8e0cf1e6b1f699409f22a4c03cefd7">OtaAppBuffer_t::pUpdateFilePath</a></div><div class="ttdeci">uint8_t * pUpdateFilePath</div><div class="ttdoc">Path to store the files.</div><div class="ttdef"><b>Definition:</b> ota.h:272</div></div>
-<div class="ttc" id="astruct_ota_event_interface__t_html_a70a33a62828b128cd625c1b13ff8550e"><div class="ttname"><a href="struct_ota_event_interface__t.html#a70a33a62828b128cd625c1b13ff8550e">OtaEventInterface_t::init</a></div><div class="ttdeci">OtaInitEvent_t init</div><div class="ttdoc">Initialization event.</div><div class="ttdef"><b>Definition:</b> ota_os_interface.h:263</div></div>
-<div class="ttc" id="astruct_ota_interfaces__t_html"><div class="ttname"><a href="struct_ota_interfaces__t.html">OtaInterfaces_t</a></div><div class="ttdoc">OTA Interface for referencing different components.</div><div class="ttdef"><b>Definition:</b> ota.h:257</div></div>
-<div class="ttc" id="astruct_ota_interfaces__t_html_a4309938e333d120eb646b1d24b5f413a"><div class="ttname"><a href="struct_ota_interfaces__t.html#a4309938e333d120eb646b1d24b5f413a">OtaInterfaces_t::os</a></div><div class="ttdeci">OtaOSInterface_t os</div><div class="ttdoc">OS interface to store event, timers and memory operations.</div><div class="ttdef"><b>Definition:</b> ota.h:258</div></div>
-<div class="ttc" id="astruct_ota_o_s_interface__t_html_a56b4e42ad807bb4f407f61cca2964016"><div class="ttname"><a href="struct_ota_o_s_interface__t.html#a56b4e42ad807bb4f407f61cca2964016">OtaOSInterface_t::event</a></div><div class="ttdeci">OtaEventInterface_t event</div><div class="ttdoc">OTA Event interface.</div><div class="ttdef"><b>Definition:</b> ota_os_interface.h:306</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga538d92a689f2b60c60bcef41e2739a1e"><div class="ttname"><a href="group__ota__constants.html#ga538d92a689f2b60c60bcef41e2739a1e">OTA_MAX_BLOCK_BITMAP_SIZE</a></div><div class="ttdeci">#define OTA_MAX_BLOCK_BITMAP_SIZE</div><div class="ttdoc">Max allowed number of bytes to track all blocks of an OTA file. Adjust block size if more range is ne...</div><div class="ttdef"><b>Definition:</b> ota_private.h:66</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><div class="ttname"><a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a></div><div class="ttdeci">OtaErr_t</div><div class="ttdoc">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word...</div><div class="ttdef"><b>Definition:</b> ota.h:80</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga96a2e1f5cfad783897e805196eee39a7"><div class="ttname"><a href="group__ota__enum__types.html#ga96a2e1f5cfad783897e805196eee39a7">OtaJobEvent_t</a></div><div class="ttdeci">OtaJobEvent_t</div><div class="ttdoc">OTA Job callback events.</div><div class="ttdef"><b>Definition:</b> ota.h:167</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02">OtaErrNone</a></div><div class="ttdeci">@ OtaErrNone</div><div class="ttdoc">No error occurred during the operation.</div><div class="ttdef"><b>Definition:</b> ota.h:81</div></div>
+<div class="ttc" id="aota_8h_html_a1764ba9b821dcdb693ec549e8349cc2e"><div class="ttname"><a href="ota_8h.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a></div><div class="ttdeci">OtaErr_t OTA_Init(const OtaAppBuffer_t *pOtaBuffer, const OtaInterfaces_t *pOtaInterfaces, const uint8_t *pThingName, OtaAppCallback_t OtaAppCallback)</div><div class="ttdoc">OTA Agent initialization function.</div><div class="ttdef"><b>Definition:</b> ota.c:3236</div></div>
+<div class="ttc" id="astruct_ota_app_buffer__t_html"><div class="ttname"><a href="struct_ota_app_buffer__t.html">OtaAppBuffer_t</a></div><div class="ttdoc">OTA Application Buffer size information.</div><div class="ttdef"><b>Definition:</b> ota.h:316</div></div>
+<div class="ttc" id="astruct_ota_app_buffer__t_html_a1e8e0cf1e6b1f699409f22a4c03cefd7"><div class="ttname"><a href="struct_ota_app_buffer__t.html#a1e8e0cf1e6b1f699409f22a4c03cefd7">OtaAppBuffer_t::pUpdateFilePath</a></div><div class="ttdeci">uint8_t * pUpdateFilePath</div><div class="ttdoc">Path to store the files.</div><div class="ttdef"><b>Definition:</b> ota.h:317</div></div>
+<div class="ttc" id="astruct_ota_event_interface__t_html_a70a33a62828b128cd625c1b13ff8550e"><div class="ttname"><a href="struct_ota_event_interface__t.html#a70a33a62828b128cd625c1b13ff8550e">OtaEventInterface_t::init</a></div><div class="ttdeci">OtaInitEvent_t init</div><div class="ttdoc">Initialization event.</div><div class="ttdef"><b>Definition:</b> ota_os_interface.h:265</div></div>
+<div class="ttc" id="astruct_ota_interfaces__t_html"><div class="ttname"><a href="struct_ota_interfaces__t.html">OtaInterfaces_t</a></div><div class="ttdoc">OTA Interface for referencing different components.</div><div class="ttdef"><b>Definition:</b> ota.h:302</div></div>
+<div class="ttc" id="astruct_ota_interfaces__t_html_a4309938e333d120eb646b1d24b5f413a"><div class="ttname"><a href="struct_ota_interfaces__t.html#a4309938e333d120eb646b1d24b5f413a">OtaInterfaces_t::os</a></div><div class="ttdeci">OtaOSInterface_t os</div><div class="ttdoc">OS interface to store event, timers and memory operations.</div><div class="ttdef"><b>Definition:</b> ota.h:303</div></div>
+<div class="ttc" id="astruct_ota_o_s_interface__t_html_a56b4e42ad807bb4f407f61cca2964016"><div class="ttname"><a href="struct_ota_o_s_interface__t.html#a56b4e42ad807bb4f407f61cca2964016">OtaOSInterface_t::event</a></div><div class="ttdeci">OtaEventInterface_t event</div><div class="ttdoc">OTA Event interface.</div><div class="ttdef"><b>Definition:</b> ota_os_interface.h:309</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2508,6 +2537,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 
 <p>Signal to the OTA Agent to shut down. </p>
 <p >Signals the OTA agent task to shut down. The OTA agent will unsubscribe from all MQTT job notification topics, stop in progress OTA jobs, if any, and clear all resources.</p>
+<p >OTA needs a processing task running OTA_EventProcessingTask to handle shutdown event, or OTA will shutdown after the processing task is created and scheduled.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ticksToWait</td><td>The number of ticks to wait for the OTA Agent to complete the shutdown process. If this is set to zero, the function will return immediately without waiting. The actual state is returned to the caller. The agent does not sleep for this while but used for busy looping.</td></tr>
@@ -2532,8 +2562,8 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <div class="line">    <span class="comment">// Optional: Disconnect MQTT and HTTP connections</span></div>
 <div class="line">    <span class="comment">// required by the OTA agent and other tasks.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="aota_8h_html_a6db3f9cb417cb135cb0e68f5b5f2b11f"><div class="ttname"><a href="ota_8h.html#a6db3f9cb417cb135cb0e68f5b5f2b11f">OTA_GetState</a></div><div class="ttdeci">OtaState_t OTA_GetState(void)</div><div class="ttdoc">Get the current state of the OTA agent.</div><div class="ttdef"><b>Definition:</b> ota.c:3215</div></div>
-<div class="ttc" id="aota_8h_html_ac779291eb93f4e0e6459816e60e13b09"><div class="ttname"><a href="ota_8h.html#ac779291eb93f4e0e6459816e60e13b09">OTA_Shutdown</a></div><div class="ttdeci">OtaState_t OTA_Shutdown(uint32_t ticksToWait, uint8_t unsubscribeFlag)</div><div class="ttdoc">Signal to the OTA Agent to shut down.</div><div class="ttdef"><b>Definition:</b> ota.c:3156</div></div>
+<div class="ttc" id="aota_8h_html_a6db3f9cb417cb135cb0e68f5b5f2b11f"><div class="ttname"><a href="ota_8h.html#a6db3f9cb417cb135cb0e68f5b5f2b11f">OTA_GetState</a></div><div class="ttdeci">OtaState_t OTA_GetState(void)</div><div class="ttdoc">Get the current state of the OTA agent.</div><div class="ttdef"><b>Definition:</b> ota.c:3392</div></div>
+<div class="ttc" id="aota_8h_html_ac779291eb93f4e0e6459816e60e13b09"><div class="ttname"><a href="ota_8h.html#ac779291eb93f4e0e6459816e60e13b09">OTA_Shutdown</a></div><div class="ttdeci">OtaState_t OTA_Shutdown(uint32_t ticksToWait, uint8_t unsubscribeFlag)</div><div class="ttdoc">Signal to the OTA Agent to shut down.</div><div class="ttdef"><b>Definition:</b> ota.c:3339</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2564,7 +2594,7 @@ static <a class="el" href="struct_ota_data_interface__t.html">OtaDataInterface_t
 <div class="line">    <span class="comment">// the desired state.</span></div>
 <div class="line">    state = <a class="code hl_function" href="ota_8h.html#a6db3f9cb417cb135cb0e68f5b5f2b11f">OTA_GetState</a>();</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga1cb476a5e0ee81fa486f605e64419dcc"><div class="ttname"><a href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a></div><div class="ttdeci">OtaState_t</div><div class="ttdoc">OTA Agent states.</div><div class="ttdef"><b>Definition:</b> ota.h:114</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga1cb476a5e0ee81fa486f605e64419dcc"><div class="ttname"><a href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a></div><div class="ttdeci">OtaState_t</div><div class="ttdoc">OTA Agent states.</div><div class="ttdef"><b>Definition:</b> ota.h:116</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2595,7 +2625,7 @@ Processed: The number of OTA packets that have actually been processed. </li>
 <li>
 Dropped: The number of OTA packets that have been dropped because of either no queue or at shutdown cleanup. </li>
 </ul>
-<dl class="section note"><dt>Note</dt><dd>Calling <a class="el" href="ota_8c.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a> will reset this statistic.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Calling <a class="el" href="ota_8c.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a> will reset this statistic.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>OtaErrNone if the statistics can be received successfully.</dd></dl>
 <p><b>Example</b> </p><div class="fragment"><div class="line"><span class="comment">// OTA library packet statistics per job.</span></div>
 <div class="line"><a class="code hl_struct" href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a> otaStatistics = { 0 };</div>
@@ -2612,12 +2642,12 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">            otaStatistics.<a class="code hl_variable" href="struct_ota_agent_statistics__t.html#adbcf157f4d998bea3bf3c508e37c8437">otaPacketsProcessed</a>,</div>
 <div class="line">            otaStatistics.<a class="code hl_variable" href="struct_ota_agent_statistics__t.html#ae644353e00d4a3770bd6400181c5785e">otaPacketsDropped</a> );</div>
 <div class="line">}</div>
-<div class="ttc" id="aota_8h_html_a63182243ef3c18d5f36cd427b83a1a22"><div class="ttname"><a href="ota_8h.html#a63182243ef3c18d5f36cd427b83a1a22">OTA_GetStatistics</a></div><div class="ttdeci">OtaErr_t OTA_GetStatistics(OtaAgentStatistics_t *pStatistics)</div><div class="ttdoc">Get the statistics of OTA message packets.</div><div class="ttdef"><b>Definition:</b> ota.c:3223</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html"><div class="ttname"><a href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a></div><div class="ttdoc">This is the OTA statistics structure to hold useful info.</div><div class="ttdef"><b>Definition:</b> ota_private.h:291</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_a43f7d9b2c6ead8213c6de51d6e65e980"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#a43f7d9b2c6ead8213c6de51d6e65e980">OtaAgentStatistics_t::otaPacketsReceived</a></div><div class="ttdeci">uint32_t otaPacketsReceived</div><div class="ttdef"><b>Definition:</b> ota_private.h:292</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_ab693dddf7707daf3315bc4c23bb4e29a"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ab693dddf7707daf3315bc4c23bb4e29a">OtaAgentStatistics_t::otaPacketsQueued</a></div><div class="ttdeci">uint32_t otaPacketsQueued</div><div class="ttdef"><b>Definition:</b> ota_private.h:293</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_adbcf157f4d998bea3bf3c508e37c8437"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#adbcf157f4d998bea3bf3c508e37c8437">OtaAgentStatistics_t::otaPacketsProcessed</a></div><div class="ttdeci">uint32_t otaPacketsProcessed</div><div class="ttdef"><b>Definition:</b> ota_private.h:294</div></div>
-<div class="ttc" id="astruct_ota_agent_statistics__t_html_ae644353e00d4a3770bd6400181c5785e"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ae644353e00d4a3770bd6400181c5785e">OtaAgentStatistics_t::otaPacketsDropped</a></div><div class="ttdeci">uint32_t otaPacketsDropped</div><div class="ttdef"><b>Definition:</b> ota_private.h:295</div></div>
+<div class="ttc" id="aota_8h_html_a63182243ef3c18d5f36cd427b83a1a22"><div class="ttname"><a href="ota_8h.html#a63182243ef3c18d5f36cd427b83a1a22">OTA_GetStatistics</a></div><div class="ttdeci">OtaErr_t OTA_GetStatistics(OtaAgentStatistics_t *pStatistics)</div><div class="ttdoc">Get the statistics of OTA message packets.</div><div class="ttdef"><b>Definition:</b> ota.c:3400</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html"><div class="ttname"><a href="struct_ota_agent_statistics__t.html">OtaAgentStatistics_t</a></div><div class="ttdoc">This is the OTA statistics structure to hold useful info.</div><div class="ttdef"><b>Definition:</b> ota_private.h:293</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_a43f7d9b2c6ead8213c6de51d6e65e980"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#a43f7d9b2c6ead8213c6de51d6e65e980">OtaAgentStatistics_t::otaPacketsReceived</a></div><div class="ttdeci">uint32_t otaPacketsReceived</div><div class="ttdef"><b>Definition:</b> ota_private.h:294</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_ab693dddf7707daf3315bc4c23bb4e29a"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ab693dddf7707daf3315bc4c23bb4e29a">OtaAgentStatistics_t::otaPacketsQueued</a></div><div class="ttdeci">uint32_t otaPacketsQueued</div><div class="ttdef"><b>Definition:</b> ota_private.h:295</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_adbcf157f4d998bea3bf3c508e37c8437"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#adbcf157f4d998bea3bf3c508e37c8437">OtaAgentStatistics_t::otaPacketsProcessed</a></div><div class="ttdeci">uint32_t otaPacketsProcessed</div><div class="ttdef"><b>Definition:</b> ota_private.h:296</div></div>
+<div class="ttc" id="astruct_ota_agent_statistics__t_html_ae644353e00d4a3770bd6400181c5785e"><div class="ttname"><a href="struct_ota_agent_statistics__t.html#ae644353e00d4a3770bd6400181c5785e">OtaAgentStatistics_t::otaPacketsDropped</a></div><div class="ttdeci">uint32_t otaPacketsDropped</div><div class="ttdef"><b>Definition:</b> ota_private.h:297</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2659,7 +2689,7 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 </div><div class="memdoc">
 
 <p>Activate the newest MCU image received via OTA. </p>
-<p >This function should reset the MCU and cause a reboot of the system to execute the newly updated firmware. It should be called by the user code sometime after the OtaJobEventActivate event is passed to the users application via the OTA Job Complete Callback mechanism. Refer to the <a class="el" href="ota_8c.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a> function for more information about configuring the callback.</p>
+<p >This function should reset the MCU and cause a reboot of the system to execute the newly updated firmware. It should be called by the user code sometime after the OtaJobEventActivate event is passed to the users application via the OTA Job Complete Callback mechanism. Refer to the <a class="el" href="ota_8c.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a> function for more information about configuring the callback.</p>
 <dl class="section return"><dt>Returns</dt><dd>OtaErrNone if successful, otherwise an error code prefixed with 'OtaErr' from the list above.</dd></dl>
 <p><b>Example</b> </p><div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> otaAppCallback( <a class="code hl_enumeration" href="group__ota__enum__types.html#ga96a2e1f5cfad783897e805196eee39a7">OtaJobEvent_t</a> event,</div>
 <div class="line">                            <span class="keyword">const</span> <span class="keywordtype">void</span> * pData )</div>
@@ -2680,9 +2710,9 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Handle other events</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678">OtaErrActivateFailed</a></div><div class="ttdeci">@ OtaErrActivateFailed</div><div class="ttdoc">Failed to activate the new image.</div><div class="ttdef"><b>Definition:</b> ota.h:102</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga96a2e1f5cfad783897e805196eee39a7aaf02fd22119771d2980c7af439fa3280"><div class="ttname"><a href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7aaf02fd22119771d2980c7af439fa3280">OtaJobEventActivate</a></div><div class="ttdeci">@ OtaJobEventActivate</div><div class="ttdoc">OTA receive is authenticated and ready to activate.</div><div class="ttdef"><b>Definition:</b> ota.h:166</div></div>
-<div class="ttc" id="aota_8h_html_a5169ba09148e7f5668a90e776e712f8b"><div class="ttname"><a href="ota_8h.html#a5169ba09148e7f5668a90e776e712f8b">OTA_ActivateNewImage</a></div><div class="ttdeci">OtaErr_t OTA_ActivateNewImage(void)</div><div class="ttdoc">Activate the newest MCU image received via OTA.</div><div class="ttdef"><b>Definition:</b> ota.c:3264</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678">OtaErrActivateFailed</a></div><div class="ttdeci">@ OtaErrActivateFailed</div><div class="ttdoc">Failed to activate the new image.</div><div class="ttdef"><b>Definition:</b> ota.h:103</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga96a2e1f5cfad783897e805196eee39a7aaf02fd22119771d2980c7af439fa3280"><div class="ttname"><a href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7aaf02fd22119771d2980c7af439fa3280">OtaJobEventActivate</a></div><div class="ttdeci">@ OtaJobEventActivate</div><div class="ttdoc">OTA receive is authenticated and ready to activate.</div><div class="ttdef"><b>Definition:</b> ota.h:168</div></div>
+<div class="ttc" id="aota_8h_html_a5169ba09148e7f5668a90e776e712f8b"><div class="ttname"><a href="ota_8h.html#a5169ba09148e7f5668a90e776e712f8b">OTA_ActivateNewImage</a></div><div class="ttdeci">OtaErr_t OTA_ActivateNewImage(void)</div><div class="ttdoc">Activate the newest MCU image received via OTA.</div><div class="ttdef"><b>Definition:</b> ota.c:3441</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2728,9 +2758,9 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Handle other events</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga96a2e1f5cfad783897e805196eee39a7a04e2c9b7143d34f63905cd052bf9763b"><div class="ttname"><a href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a04e2c9b7143d34f63905cd052bf9763b">OtaJobEventStartTest</a></div><div class="ttdeci">@ OtaJobEventStartTest</div><div class="ttdoc">OTA job is now in self test, perform user tests.</div><div class="ttdef"><b>Definition:</b> ota.h:168</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_ggad4909faa8b9c8672e7f7bef1bc6b5b84ad9ee33052c9c36593243b1bd0329a396"><div class="ttname"><a href="group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84ad9ee33052c9c36593243b1bd0329a396">OtaImageStateAccepted</a></div><div class="ttdeci">@ OtaImageStateAccepted</div><div class="ttdoc">The state of the OTA MCU Image post successful download and successful self_test.</div><div class="ttdef"><b>Definition:</b> ota_private.h:317</div></div>
-<div class="ttc" id="aota_8h_html_ab68cdf65934474e1f3d2cd1046314bea"><div class="ttname"><a href="ota_8h.html#ab68cdf65934474e1f3d2cd1046314bea">OTA_SetImageState</a></div><div class="ttdeci">OtaErr_t OTA_SetImageState(OtaImageState_t state)</div><div class="ttdoc">Set the state of the current MCU image.</div><div class="ttdef"><b>Definition:</b> ota.c:3300</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga96a2e1f5cfad783897e805196eee39a7a04e2c9b7143d34f63905cd052bf9763b"><div class="ttname"><a href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a04e2c9b7143d34f63905cd052bf9763b">OtaJobEventStartTest</a></div><div class="ttdeci">@ OtaJobEventStartTest</div><div class="ttdoc">OTA job is now in self test, perform user tests.</div><div class="ttdef"><b>Definition:</b> ota.h:170</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ggad4909faa8b9c8672e7f7bef1bc6b5b84ad9ee33052c9c36593243b1bd0329a396"><div class="ttname"><a href="group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84ad9ee33052c9c36593243b1bd0329a396">OtaImageStateAccepted</a></div><div class="ttdeci">@ OtaImageStateAccepted</div><div class="ttdoc">The state of the OTA MCU Image post successful download and successful self_test.</div><div class="ttdef"><b>Definition:</b> ota_private.h:319</div></div>
+<div class="ttc" id="aota_8h_html_ab68cdf65934474e1f3d2cd1046314bea"><div class="ttname"><a href="ota_8h.html#ab68cdf65934474e1f3d2cd1046314bea">OTA_SetImageState</a></div><div class="ttdeci">OtaErr_t OTA_SetImageState(OtaImageState_t state)</div><div class="ttdoc">Set the state of the current MCU image.</div><div class="ttdef"><b>Definition:</b> ota.c:3477</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2805,7 +2835,7 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line">}</div>
-<div class="ttc" id="aota_8h_html_a65b61ae5dd477e8b2e6c88ea0473c62b"><div class="ttname"><a href="ota_8h.html#a65b61ae5dd477e8b2e6c88ea0473c62b">OTA_Suspend</a></div><div class="ttdeci">OtaErr_t OTA_Suspend(void)</div><div class="ttdoc">Suspend OTA agent operations .</div><div class="ttdef"><b>Definition:</b> ota.c:3365</div></div>
+<div class="ttc" id="aota_8h_html_a65b61ae5dd477e8b2e6c88ea0473c62b"><div class="ttname"><a href="ota_8h.html#a65b61ae5dd477e8b2e6c88ea0473c62b">OTA_Suspend</a></div><div class="ttdeci">OtaErr_t OTA_Suspend(void)</div><div class="ttdoc">Suspend OTA agent operations .</div><div class="ttdef"><b>Definition:</b> ota.c:3542</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2855,11 +2885,11 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> returnStatus;</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eac965db79301fabd43971f2ad050d782c"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eac965db79301fabd43971f2ad050d782c">OtaAgentEventStart</a></div><div class="ttdeci">@ OtaAgentEventStart</div><div class="ttdoc">Start the OTA state machine.</div><div class="ttdef"><b>Definition:</b> ota_private.h:346</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c1dd94b8875896b0a9dd383ba239774"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c1dd94b8875896b0a9dd383ba239774">OtaErrUninitialized</a></div><div class="ttdeci">@ OtaErrUninitialized</div><div class="ttdoc">The error code has not yet been set by a logic path.</div><div class="ttdef"><b>Definition:</b> ota.h:81</div></div>
-<div class="ttc" id="aota_8h_html_ae9d40388ac87e4ac93288de37c98a138"><div class="ttname"><a href="ota_8h.html#ae9d40388ac87e4ac93288de37c98a138">OTA_Resume</a></div><div class="ttdeci">OtaErr_t OTA_Resume(void)</div><div class="ttdoc">Resume OTA agent operations .</div><div class="ttdef"><b>Definition:</b> ota.c:3398</div></div>
-<div class="ttc" id="astruct_ota_event_msg__t_html"><div class="ttname"><a href="struct_ota_event_msg__t.html">OtaEventMsg_t</a></div><div class="ttdoc">Stores information about the event message.</div><div class="ttdef"><b>Definition:</b> ota_private.h:434</div></div>
-<div class="ttc" id="astruct_ota_event_msg__t_html_a065656c53757f9f78f5ddfc5b25e77f8"><div class="ttname"><a href="struct_ota_event_msg__t.html#a065656c53757f9f78f5ddfc5b25e77f8">OtaEventMsg_t::eventId</a></div><div class="ttdeci">OtaEvent_t eventId</div><div class="ttdef"><b>Definition:</b> ota_private.h:436</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eac965db79301fabd43971f2ad050d782c"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eac965db79301fabd43971f2ad050d782c">OtaAgentEventStart</a></div><div class="ttdeci">@ OtaAgentEventStart</div><div class="ttdoc">Start the OTA state machine.</div><div class="ttdef"><b>Definition:</b> ota_private.h:348</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c1dd94b8875896b0a9dd383ba239774"><div class="ttname"><a href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c1dd94b8875896b0a9dd383ba239774">OtaErrUninitialized</a></div><div class="ttdeci">@ OtaErrUninitialized</div><div class="ttdoc">The error code has not yet been set by a logic path.</div><div class="ttdef"><b>Definition:</b> ota.h:82</div></div>
+<div class="ttc" id="aota_8h_html_ae9d40388ac87e4ac93288de37c98a138"><div class="ttname"><a href="ota_8h.html#ae9d40388ac87e4ac93288de37c98a138">OTA_Resume</a></div><div class="ttdeci">OtaErr_t OTA_Resume(void)</div><div class="ttdoc">Resume OTA agent operations .</div><div class="ttdef"><b>Definition:</b> ota.c:3578</div></div>
+<div class="ttc" id="astruct_ota_event_msg__t_html"><div class="ttname"><a href="struct_ota_event_msg__t.html">OtaEventMsg_t</a></div><div class="ttdoc">Stores information about the event message.</div><div class="ttdef"><b>Definition:</b> ota_private.h:432</div></div>
+<div class="ttc" id="astruct_ota_event_msg__t_html_a065656c53757f9f78f5ddfc5b25e77f8"><div class="ttname"><a href="struct_ota_event_msg__t.html#a065656c53757f9f78f5ddfc5b25e77f8">OtaEventMsg_t::eventId</a></div><div class="ttdeci">OtaEvent_t eventId</div><div class="ttdef"><b>Definition:</b> ota_private.h:434</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2953,7 +2983,7 @@ Dropped: The number of OTA packets that have been dropped because of either no q
         <tr>
           <td class="memname">const char * OTA_PalStatus_strerror </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="group__ota__constants.html#gac5c3148205ee4a0cac4246b2c7797765">OtaPalMainStatus_t</a>&#160;</td>
           <td class="paramname"><em>status</em></td><td>)</td>
           <td></td>
         </tr>
@@ -3007,9 +3037,10 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">    0,                    </div>
 <div class="line">    NULL,                 </div>
 <div class="line">    NULL,                 </div>
-<div class="line">    1                     </div>
+<div class="line">    1,                    </div>
+<div class="line">    0                     </div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_ggad4909faa8b9c8672e7f7bef1bc6b5b84afb051298f888e18cfeb7fd1b1986cb9a"><div class="ttname"><a href="group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84afb051298f888e18cfeb7fd1b1986cb9a">OtaImageStateUnknown</a></div><div class="ttdeci">@ OtaImageStateUnknown</div><div class="ttdoc">The initial state of the OTA MCU Image.</div><div class="ttdef"><b>Definition:</b> ota_private.h:315</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ggad4909faa8b9c8672e7f7bef1bc6b5b84afb051298f888e18cfeb7fd1b1986cb9a"><div class="ttname"><a href="group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84afb051298f888e18cfeb7fd1b1986cb9a">OtaImageStateUnknown</a></div><div class="ttdeci">@ OtaImageStateUnknown</div><div class="ttdoc">The initial state of the OTA MCU Image.</div><div class="ttdef"><b>Definition:</b> ota_private.h:317</div></div>
 </div><!-- fragment -->
 <p>This is THE OTA agent context and initialization state. </p>
 
@@ -3057,30 +3088,30 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">    { OtaAgentStateAll,                 <a class="code hl_enumvalue" href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea92146829f7a9aaccefc0d0d96daef50b">OtaAgentEventUserAbort</a>,           <a class="code hl_function" href="ota_8c.html#a8cf09d8207b0c6a8f8aa118483a4aef0">userAbortHandler</a>,       OtaAgentStateWaitingForJob       },</div>
 <div class="line">    { OtaAgentStateAll,                 <a class="code hl_enumvalue" href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead02ce67dfb7d99810979ec659813f89b">OtaAgentEventShutdown</a>,            <a class="code hl_function" href="ota_8c.html#adc27b49696f1562fd90a031d9d59c129">shutdownHandler</a>,        OtaAgentStateStopped             },</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea50831130508ed232d604aee5cf8999e3"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea50831130508ed232d604aee5cf8999e3">OtaAgentEventRequestJobDocument</a></div><div class="ttdeci">@ OtaAgentEventRequestJobDocument</div><div class="ttdoc">Event for requesting job document.</div><div class="ttdef"><b>Definition:</b> ota_private.h:348</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea593ee44d9ab623f9c9010603fcb7bca3"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea593ee44d9ab623f9c9010603fcb7bca3">OtaAgentEventReceivedJobDocument</a></div><div class="ttdeci">@ OtaAgentEventReceivedJobDocument</div><div class="ttdoc">Event when job document is received.</div><div class="ttdef"><b>Definition:</b> ota_private.h:349</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea92146829f7a9aaccefc0d0d96daef50b"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea92146829f7a9aaccefc0d0d96daef50b">OtaAgentEventUserAbort</a></div><div class="ttdeci">@ OtaAgentEventUserAbort</div><div class="ttdoc">Event triggered by user to stop agent.</div><div class="ttdef"><b>Definition:</b> ota_private.h:357</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea9ff4b58dab8e17eca36163959ac02395"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea9ff4b58dab8e17eca36163959ac02395">OtaAgentEventCreateFile</a></div><div class="ttdeci">@ OtaAgentEventCreateFile</div><div class="ttdoc">Event to create a file.</div><div class="ttdef"><b>Definition:</b> ota_private.h:350</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eacb6862078f37cb276c7c4429a16593fe"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eacb6862078f37cb276c7c4429a16593fe">OtaAgentEventCloseFile</a></div><div class="ttdeci">@ OtaAgentEventCloseFile</div><div class="ttdoc">Event to trigger closing file.</div><div class="ttdef"><b>Definition:</b> ota_private.h:354</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead02ce67dfb7d99810979ec659813f89b"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead02ce67dfb7d99810979ec659813f89b">OtaAgentEventShutdown</a></div><div class="ttdeci">@ OtaAgentEventShutdown</div><div class="ttdoc">Event to trigger ota shutdown.</div><div class="ttdef"><b>Definition:</b> ota_private.h:358</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead2c2503cc33bf8309c28618897f8fcdd"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead2c2503cc33bf8309c28618897f8fcdd">OtaAgentEventSuspend</a></div><div class="ttdeci">@ OtaAgentEventSuspend</div><div class="ttdoc">Event to suspend ota task.</div><div class="ttdef"><b>Definition:</b> ota_private.h:355</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead424034a3d0a53c719c3dfcf110aedbb"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead424034a3d0a53c719c3dfcf110aedbb">OtaAgentEventRequestTimer</a></div><div class="ttdeci">@ OtaAgentEventRequestTimer</div><div class="ttdoc">Event to request event timer.</div><div class="ttdef"><b>Definition:</b> ota_private.h:353</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead88894cbefd4b61cc2049e495e52cad1"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead88894cbefd4b61cc2049e495e52cad1">OtaAgentEventRequestFileBlock</a></div><div class="ttdeci">@ OtaAgentEventRequestFileBlock</div><div class="ttdoc">Event to request file blocks.</div><div class="ttdef"><b>Definition:</b> ota_private.h:351</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eaeab0f855ccec790d94ac1e295256526e"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eaeab0f855ccec790d94ac1e295256526e">OtaAgentEventStartSelfTest</a></div><div class="ttdeci">@ OtaAgentEventStartSelfTest</div><div class="ttdoc">Event to trigger self test.</div><div class="ttdef"><b>Definition:</b> ota_private.h:347</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eaf1e3cb59f2e70908e121c218c27c1fe9"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eaf1e3cb59f2e70908e121c218c27c1fe9">OtaAgentEventResume</a></div><div class="ttdeci">@ OtaAgentEventResume</div><div class="ttdoc">Event to resume suspended task.</div><div class="ttdef"><b>Definition:</b> ota_private.h:356</div></div>
-<div class="ttc" id="aota_8c_html_a16eafd6185711b5016056603e0a42501"><div class="ttname"><a href="ota_8c.html#a16eafd6185711b5016056603e0a42501">processDataHandler</a></div><div class="ttdeci">static OtaErr_t processDataHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1165</div></div>
-<div class="ttc" id="aota_8c_html_a32593607464529ebfbf759706f26738e"><div class="ttname"><a href="ota_8c.html#a32593607464529ebfbf759706f26738e">processJobHandler</a></div><div class="ttdeci">static OtaErr_t processJobHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:980</div></div>
-<div class="ttc" id="aota_8c_html_a4c051ef9cabbefca475b1c63e31a2c2c"><div class="ttname"><a href="ota_8c.html#a4c051ef9cabbefca475b1c63e31a2c2c">requestDataHandler</a></div><div class="ttdeci">static OtaErr_t requestDataHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1083</div></div>
-<div class="ttc" id="aota_8c_html_a4d439e624b33eae921f10e515d029987"><div class="ttname"><a href="ota_8c.html#a4d439e624b33eae921f10e515d029987">initFileHandler</a></div><div class="ttdeci">static OtaErr_t initFileHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1012</div></div>
-<div class="ttc" id="aota_8c_html_a59ee2cfa7669b761f5dfd4dbee7545f8"><div class="ttname"><a href="ota_8c.html#a59ee2cfa7669b761f5dfd4dbee7545f8">jobNotificationHandler</a></div><div class="ttdeci">static OtaErr_t jobNotificationHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1363</div></div>
-<div class="ttc" id="aota_8c_html_a858c721e7cd210b915a41d74c7e47d6f"><div class="ttname"><a href="ota_8c.html#a858c721e7cd210b915a41d74c7e47d6f">closeFileHandler</a></div><div class="ttdeci">static OtaErr_t closeFileHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1287</div></div>
-<div class="ttc" id="aota_8c_html_a8cf09d8207b0c6a8f8aa118483a4aef0"><div class="ttname"><a href="ota_8c.html#a8cf09d8207b0c6a8f8aa118483a4aef0">userAbortHandler</a></div><div class="ttdeci">static OtaErr_t userAbortHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1300</div></div>
-<div class="ttc" id="aota_8c_html_abbda282e0291623cf680da11e58f0808"><div class="ttname"><a href="ota_8c.html#abbda282e0291623cf680da11e58f0808">suspendHandler</a></div><div class="ttdeci">static OtaErr_t suspendHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1339</div></div>
-<div class="ttc" id="aota_8c_html_acad9250775186fe3986c5ccd72c8942d"><div class="ttname"><a href="ota_8c.html#acad9250775186fe3986c5ccd72c8942d">inSelfTestHandler</a></div><div class="ttdeci">static OtaErr_t inSelfTestHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:788</div></div>
-<div class="ttc" id="aota_8c_html_acfd737a3f8be41849474d97ddbe695a6"><div class="ttname"><a href="ota_8c.html#acfd737a3f8be41849474d97ddbe695a6">requestJobHandler</a></div><div class="ttdeci">static OtaErr_t requestJobHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:830</div></div>
-<div class="ttc" id="aota_8c_html_adc05572b247887937398695a7ae22428"><div class="ttname"><a href="ota_8c.html#adc05572b247887937398695a7ae22428">startHandler</a></div><div class="ttdeci">static OtaErr_t startHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:761</div></div>
-<div class="ttc" id="aota_8c_html_adc27b49696f1562fd90a031d9d59c129"><div class="ttname"><a href="ota_8c.html#adc27b49696f1562fd90a031d9d59c129">shutdownHandler</a></div><div class="ttdeci">static OtaErr_t shutdownHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1324</div></div>
-<div class="ttc" id="aota_8c_html_af0188eca0c85dcac5fed956f21d9207c"><div class="ttname"><a href="ota_8c.html#af0188eca0c85dcac5fed956f21d9207c">resumeHandler</a></div><div class="ttdeci">static OtaErr_t resumeHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1349</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea50831130508ed232d604aee5cf8999e3"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea50831130508ed232d604aee5cf8999e3">OtaAgentEventRequestJobDocument</a></div><div class="ttdeci">@ OtaAgentEventRequestJobDocument</div><div class="ttdoc">Event for requesting job document.</div><div class="ttdef"><b>Definition:</b> ota_private.h:350</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea593ee44d9ab623f9c9010603fcb7bca3"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea593ee44d9ab623f9c9010603fcb7bca3">OtaAgentEventReceivedJobDocument</a></div><div class="ttdeci">@ OtaAgentEventReceivedJobDocument</div><div class="ttdoc">Event when job document is received.</div><div class="ttdef"><b>Definition:</b> ota_private.h:351</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea92146829f7a9aaccefc0d0d96daef50b"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea92146829f7a9aaccefc0d0d96daef50b">OtaAgentEventUserAbort</a></div><div class="ttdeci">@ OtaAgentEventUserAbort</div><div class="ttdoc">Event triggered by user to stop agent.</div><div class="ttdef"><b>Definition:</b> ota_private.h:359</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ea9ff4b58dab8e17eca36163959ac02395"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ea9ff4b58dab8e17eca36163959ac02395">OtaAgentEventCreateFile</a></div><div class="ttdeci">@ OtaAgentEventCreateFile</div><div class="ttdoc">Event to create a file.</div><div class="ttdef"><b>Definition:</b> ota_private.h:352</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eacb6862078f37cb276c7c4429a16593fe"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eacb6862078f37cb276c7c4429a16593fe">OtaAgentEventCloseFile</a></div><div class="ttdeci">@ OtaAgentEventCloseFile</div><div class="ttdoc">Event to trigger closing file.</div><div class="ttdef"><b>Definition:</b> ota_private.h:356</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead02ce67dfb7d99810979ec659813f89b"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead02ce67dfb7d99810979ec659813f89b">OtaAgentEventShutdown</a></div><div class="ttdeci">@ OtaAgentEventShutdown</div><div class="ttdoc">Event to trigger ota shutdown.</div><div class="ttdef"><b>Definition:</b> ota_private.h:360</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead2c2503cc33bf8309c28618897f8fcdd"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead2c2503cc33bf8309c28618897f8fcdd">OtaAgentEventSuspend</a></div><div class="ttdeci">@ OtaAgentEventSuspend</div><div class="ttdoc">Event to suspend ota task.</div><div class="ttdef"><b>Definition:</b> ota_private.h:357</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead424034a3d0a53c719c3dfcf110aedbb"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead424034a3d0a53c719c3dfcf110aedbb">OtaAgentEventRequestTimer</a></div><div class="ttdeci">@ OtaAgentEventRequestTimer</div><div class="ttdoc">Event to request event timer.</div><div class="ttdef"><b>Definition:</b> ota_private.h:355</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4ead88894cbefd4b61cc2049e495e52cad1"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4ead88894cbefd4b61cc2049e495e52cad1">OtaAgentEventRequestFileBlock</a></div><div class="ttdeci">@ OtaAgentEventRequestFileBlock</div><div class="ttdoc">Event to request file blocks.</div><div class="ttdef"><b>Definition:</b> ota_private.h:353</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eaeab0f855ccec790d94ac1e295256526e"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eaeab0f855ccec790d94ac1e295256526e">OtaAgentEventStartSelfTest</a></div><div class="ttdeci">@ OtaAgentEventStartSelfTest</div><div class="ttdoc">Event to trigger self test.</div><div class="ttdef"><b>Definition:</b> ota_private.h:349</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_gga2c42c25235304ca5c3e3a6abef78be4eaf1e3cb59f2e70908e121c218c27c1fe9"><div class="ttname"><a href="group__ota__enum__types.html#gga2c42c25235304ca5c3e3a6abef78be4eaf1e3cb59f2e70908e121c218c27c1fe9">OtaAgentEventResume</a></div><div class="ttdeci">@ OtaAgentEventResume</div><div class="ttdoc">Event to resume suspended task.</div><div class="ttdef"><b>Definition:</b> ota_private.h:358</div></div>
+<div class="ttc" id="aota_8c_html_a16eafd6185711b5016056603e0a42501"><div class="ttname"><a href="ota_8c.html#a16eafd6185711b5016056603e0a42501">processDataHandler</a></div><div class="ttdeci">static OtaErr_t processDataHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1178</div></div>
+<div class="ttc" id="aota_8c_html_a32593607464529ebfbf759706f26738e"><div class="ttname"><a href="ota_8c.html#a32593607464529ebfbf759706f26738e">processJobHandler</a></div><div class="ttdeci">static OtaErr_t processJobHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:993</div></div>
+<div class="ttc" id="aota_8c_html_a4c051ef9cabbefca475b1c63e31a2c2c"><div class="ttname"><a href="ota_8c.html#a4c051ef9cabbefca475b1c63e31a2c2c">requestDataHandler</a></div><div class="ttdeci">static OtaErr_t requestDataHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1099</div></div>
+<div class="ttc" id="aota_8c_html_a4d439e624b33eae921f10e515d029987"><div class="ttname"><a href="ota_8c.html#a4d439e624b33eae921f10e515d029987">initFileHandler</a></div><div class="ttdeci">static OtaErr_t initFileHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1028</div></div>
+<div class="ttc" id="aota_8c_html_a59ee2cfa7669b761f5dfd4dbee7545f8"><div class="ttname"><a href="ota_8c.html#a59ee2cfa7669b761f5dfd4dbee7545f8">jobNotificationHandler</a></div><div class="ttdeci">static OtaErr_t jobNotificationHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1398</div></div>
+<div class="ttc" id="aota_8c_html_a858c721e7cd210b915a41d74c7e47d6f"><div class="ttname"><a href="ota_8c.html#a858c721e7cd210b915a41d74c7e47d6f">closeFileHandler</a></div><div class="ttdeci">static OtaErr_t closeFileHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1311</div></div>
+<div class="ttc" id="aota_8c_html_a8cf09d8207b0c6a8f8aa118483a4aef0"><div class="ttname"><a href="ota_8c.html#a8cf09d8207b0c6a8f8aa118483a4aef0">userAbortHandler</a></div><div class="ttdeci">static OtaErr_t userAbortHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1324</div></div>
+<div class="ttc" id="aota_8c_html_abbda282e0291623cf680da11e58f0808"><div class="ttname"><a href="ota_8c.html#abbda282e0291623cf680da11e58f0808">suspendHandler</a></div><div class="ttdeci">static OtaErr_t suspendHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1374</div></div>
+<div class="ttc" id="aota_8c_html_acad9250775186fe3986c5ccd72c8942d"><div class="ttname"><a href="ota_8c.html#acad9250775186fe3986c5ccd72c8942d">inSelfTestHandler</a></div><div class="ttdeci">static OtaErr_t inSelfTestHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:801</div></div>
+<div class="ttc" id="aota_8c_html_acfd737a3f8be41849474d97ddbe695a6"><div class="ttname"><a href="ota_8c.html#acfd737a3f8be41849474d97ddbe695a6">requestJobHandler</a></div><div class="ttdeci">static OtaErr_t requestJobHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:843</div></div>
+<div class="ttc" id="aota_8c_html_adc05572b247887937398695a7ae22428"><div class="ttname"><a href="ota_8c.html#adc05572b247887937398695a7ae22428">startHandler</a></div><div class="ttdeci">static OtaErr_t startHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:774</div></div>
+<div class="ttc" id="aota_8c_html_adc27b49696f1562fd90a031d9d59c129"><div class="ttname"><a href="ota_8c.html#adc27b49696f1562fd90a031d9d59c129">shutdownHandler</a></div><div class="ttdeci">static OtaErr_t shutdownHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1348</div></div>
+<div class="ttc" id="aota_8c_html_af0188eca0c85dcac5fed956f21d9207c"><div class="ttname"><a href="ota_8c.html#af0188eca0c85dcac5fed956f21d9207c">resumeHandler</a></div><div class="ttdeci">static OtaErr_t resumeHandler(const OtaEventData_t *pEventData)</div><div class="ttdef"><b>Definition:</b> ota.c:1384</div></div>
 </div><!-- fragment -->
 <p>Transition table for the OTA state machine. </p>
 
@@ -3120,7 +3151,8 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">    <span class="stringliteral">&quot;Stopped&quot;</span>,</div>
 <div class="line">    <span class="stringliteral">&quot;All&quot;</span></div>
 <div class="line">}</div>
-</div><!-- fragment --><p >&lt; String set to represent the States of the OTA agent. </p>
+</div><!-- fragment -->
+<p>String set to represent the States of the OTA agent. </p>
 
 </div>
 </div>
@@ -3159,7 +3191,8 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">    <span class="stringliteral">&quot;UserAbort&quot;</span>,</div>
 <div class="line">    <span class="stringliteral">&quot;Shutdown&quot;</span></div>
 <div class="line">}</div>
-</div><!-- fragment --><p >&lt; String set to represent the Events for the OTA agent. </p>
+</div><!-- fragment -->
+<p>String set to represent the Events for the OTA agent. </p>
 
 </div>
 </div>
@@ -3206,33 +3239,33 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 <div class="line">    { <a class="code hl_define" href="group__ota__constants.html#ga098cfb263c324b93dee1e98917312ffd">OTA_JSON_FILE_ATTRIBUTE_KEY</a>,  <a class="code hl_define" href="group__ota__constants.html#gab4f3b8ca5434b9b02ae4244da5cd2078">OTA_JOB_PARAM_OPTIONAL</a>, <a class="code hl_define" href="ota_8c.html#a4342d17740cc60072d01f1bc9790bffa">U16_OFFSET</a>( <a class="code hl_struct" href="struct_ota_file_context__t.html">OtaFileContext_t</a>, fileAttributes ),      <a class="code hl_define" href="group__ota__constants.html#gac462962d86d18bfe1fab0ca0527ea9ca">OTA_DONT_STORE_PARAM</a>, ModelParamTypeUInt32},</div>
 <div class="line">    { <a class="code hl_define" href="group__ota__constants.html#gaab7b7332590b19bcc767a290953c58a8">OTA_JSON_FILETYPE_KEY</a>,        <a class="code hl_define" href="group__ota__constants.html#gab4f3b8ca5434b9b02ae4244da5cd2078">OTA_JOB_PARAM_OPTIONAL</a>, <a class="code hl_define" href="ota_8c.html#a4342d17740cc60072d01f1bc9790bffa">U16_OFFSET</a>( <a class="code hl_struct" href="struct_ota_file_context__t.html">OtaFileContext_t</a>, fileType ),            <a class="code hl_define" href="group__ota__constants.html#gac462962d86d18bfe1fab0ca0527ea9ca">OTA_DONT_STORE_PARAM</a>, ModelParamTypeUInt32}</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__ota__constants_html_ga098cfb263c324b93dee1e98917312ffd"><div class="ttname"><a href="group__ota__constants.html#ga098cfb263c324b93dee1e98917312ffd">OTA_JSON_FILE_ATTRIBUTE_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_ATTRIBUTE_KEY</div><div class="ttdoc">Additional file attributes.</div><div class="ttdef"><b>Definition:</b> ota_private.h:153</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga1801081d3c11b83ce214949c54156587"><div class="ttname"><a href="group__ota__constants.html#ga1801081d3c11b83ce214949c54156587">OTA_JSON_STREAM_NAME_KEY</a></div><div class="ttdeci">#define OTA_JSON_STREAM_NAME_KEY</div><div class="ttdoc">Name of the stream used for download.</div><div class="ttdef"><b>Definition:</b> ota_private.h:149</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga1c56c6acb4d197a362143b670aeaac75"><div class="ttname"><a href="group__ota__constants.html#ga1c56c6acb4d197a362143b670aeaac75">OTA_JSON_OTA_UNIT_KEY</a></div><div class="ttdeci">#define OTA_JSON_OTA_UNIT_KEY</div><div class="ttdoc">afr-ota.</div><div class="ttdef"><b>Definition:</b> ota_private.h:146</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga209cd55d10743b96b2792ed8ae12fa51"><div class="ttname"><a href="group__ota__constants.html#ga209cd55d10743b96b2792ed8ae12fa51">OTA_JSON_FILE_PATH_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_PATH_KEY</div><div class="ttdoc">Path to store the image on the device.</div><div class="ttdef"><b>Definition:</b> ota_private.h:150</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga3d69df69fbdff6811da80020c8afc61a"><div class="ttname"><a href="group__ota__constants.html#ga3d69df69fbdff6811da80020c8afc61a">OTA_JSON_CLIENT_TOKEN_KEY</a></div><div class="ttdeci">#define OTA_JSON_CLIENT_TOKEN_KEY</div><div class="ttdoc">Client token.</div><div class="ttdef"><b>Definition:</b> ota_private.h:136</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga44138af02a7ed130ff630788cbaf1c27"><div class="ttname"><a href="group__ota__constants.html#ga44138af02a7ed130ff630788cbaf1c27">OTA_JSON_JOB_ID_KEY</a></div><div class="ttdeci">#define OTA_JSON_JOB_ID_KEY</div><div class="ttdoc">Name of the job.</div><div class="ttdef"><b>Definition:</b> ota_private.h:139</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga4d831064bb7ea8bae1df86e1b77eaab6"><div class="ttname"><a href="group__ota__constants.html#ga4d831064bb7ea8bae1df86e1b77eaab6">OTA_JSON_EXECUTION_KEY</a></div><div class="ttdeci">#define OTA_JSON_EXECUTION_KEY</div><div class="ttdoc">Contains job execution parameters .</div><div class="ttdef"><b>Definition:</b> ota_private.h:138</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga625051ce4de218406aad6dd0955f1c73"><div class="ttname"><a href="group__ota__constants.html#ga625051ce4de218406aad6dd0955f1c73">OTA_JSON_TIMESTAMP_KEY</a></div><div class="ttdeci">#define OTA_JSON_TIMESTAMP_KEY</div><div class="ttdoc">Used to calculate timeout and time spent on the operation.</div><div class="ttdef"><b>Definition:</b> ota_private.h:137</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga62f786dfa9c243d52d490aedf55b74a6"><div class="ttname"><a href="group__ota__constants.html#ga62f786dfa9c243d52d490aedf55b74a6">OTA_STORE_NESTED_JSON</a></div><div class="ttdeci">#define OTA_STORE_NESTED_JSON</div><div class="ttdoc">Store the reference to a nested JSON in a separate pointer.</div><div class="ttdef"><b>Definition:</b> ota_private.h:82</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga6a6b266874ad73e248d840643616325c"><div class="ttname"><a href="group__ota__constants.html#ga6a6b266874ad73e248d840643616325c">OTA_JSON_STATUS_DETAILS_KEY</a></div><div class="ttdeci">#define OTA_JSON_STATUS_DETAILS_KEY</div><div class="ttdoc">Current status of the job.</div><div class="ttdef"><b>Definition:</b> ota_private.h:140</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga6e5f882dc07e8a5a8b2f079cc4444a50"><div class="ttname"><a href="group__ota__constants.html#ga6e5f882dc07e8a5a8b2f079cc4444a50">OTA_JSON_FILE_CERT_NAME_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_CERT_NAME_KEY</div><div class="ttdoc">Location of the certificate on the device to find code signing.</div><div class="ttdef"><b>Definition:</b> ota_private.h:154</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga716173ece0b83fdc783798bdf2cf5715"><div class="ttname"><a href="group__ota__constants.html#ga716173ece0b83fdc783798bdf2cf5715">OTA_JOB_PARAM_REQUIRED</a></div><div class="ttdeci">#define OTA_JOB_PARAM_REQUIRED</div><div class="ttdoc">Used to denote a required document model parameter.</div><div class="ttdef"><b>Definition:</b> ota_private.h:79</div></div>
-<div class="ttc" id="agroup__ota__constants_html_ga85efaf15e103da089f3de398948f46d4"><div class="ttname"><a href="group__ota__constants.html#ga85efaf15e103da089f3de398948f46d4">OTA_JSON_FILE_GROUP_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_GROUP_KEY</div><div class="ttdoc">Parameters for specifying file configurations.</div><div class="ttdef"><b>Definition:</b> ota_private.h:148</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gaab7b7332590b19bcc767a290953c58a8"><div class="ttname"><a href="group__ota__constants.html#gaab7b7332590b19bcc767a290953c58a8">OTA_JSON_FILETYPE_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILETYPE_KEY</div><div class="ttdoc">Used to identify the file in case of multi file type support.</div><div class="ttdef"><b>Definition:</b> ota_private.h:157</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gaacb7d18662a1212605eede7c875016ea"><div class="ttname"><a href="group__ota__constants.html#gaacb7d18662a1212605eede7c875016ea">OTA_JSON_PROTOCOLS_KEY</a></div><div class="ttdeci">#define OTA_JSON_PROTOCOLS_KEY</div><div class="ttdoc">Protocols over which the download can take place.</div><div class="ttdef"><b>Definition:</b> ota_private.h:147</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gaafc3e865308a16ec82181d6aea75d6bb"><div class="ttname"><a href="group__ota__constants.html#gaafc3e865308a16ec82181d6aea75d6bb">OTA_JSON_AUTH_SCHEME_KEY</a></div><div class="ttdeci">#define OTA_JSON_AUTH_SCHEME_KEY</div><div class="ttdoc">Authentication scheme for downloading a the image over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_private.h:156</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gab4f3b8ca5434b9b02ae4244da5cd2078"><div class="ttname"><a href="group__ota__constants.html#gab4f3b8ca5434b9b02ae4244da5cd2078">OTA_JOB_PARAM_OPTIONAL</a></div><div class="ttdeci">#define OTA_JOB_PARAM_OPTIONAL</div><div class="ttdoc">Used to denote an optional document model parameter.</div><div class="ttdef"><b>Definition:</b> ota_private.h:80</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gac0132213a7beb808d8cf4b86a3ab6b86"><div class="ttname"><a href="group__ota__constants.html#gac0132213a7beb808d8cf4b86a3ab6b86">OTA_JSON_JOB_DOC_KEY</a></div><div class="ttdeci">#define OTA_JSON_JOB_DOC_KEY</div><div class="ttdoc">Parameters that specify the nature of the job.</div><div class="ttdef"><b>Definition:</b> ota_private.h:145</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gac0ddd548347a6aa9e001eb3383ddeafe"><div class="ttname"><a href="group__ota__constants.html#gac0ddd548347a6aa9e001eb3383ddeafe">OTA_JSON_FILE_ID_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_ID_KEY</div><div class="ttdoc">Used to identify the file in case of multiple file downloads.</div><div class="ttdef"><b>Definition:</b> ota_private.h:152</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gac462962d86d18bfe1fab0ca0527ea9ca"><div class="ttname"><a href="group__ota__constants.html#gac462962d86d18bfe1fab0ca0527ea9ca">OTA_DONT_STORE_PARAM</a></div><div class="ttdeci">#define OTA_DONT_STORE_PARAM</div><div class="ttdoc">If destOffset in the model is 0xffffffff, do not store the value.</div><div class="ttdef"><b>Definition:</b> ota_private.h:81</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gad3c584828dcc7d99d65931d0c1ded6b7"><div class="ttname"><a href="group__ota__constants.html#gad3c584828dcc7d99d65931d0c1ded6b7">OTA_JSON_UPDATE_DATA_URL_KEY</a></div><div class="ttdeci">#define OTA_JSON_UPDATE_DATA_URL_KEY</div><div class="ttdoc">S3 bucket presigned url to fetch the image from .</div><div class="ttdef"><b>Definition:</b> ota_private.h:155</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gadbef300d5ee8db5704a53dd50f9babc3"><div class="ttname"><a href="group__ota__constants.html#gadbef300d5ee8db5704a53dd50f9babc3">OTA_JSON_FILE_SIZE_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_SIZE_KEY</div><div class="ttdoc">Size of the file to be downloaded.</div><div class="ttdef"><b>Definition:</b> ota_private.h:151</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gaf7c64cc7a2f1a8141d00f0e33f83c1d9"><div class="ttname"><a href="group__ota__constants.html#gaf7c64cc7a2f1a8141d00f0e33f83c1d9">OTA_JSON_SELF_TEST_KEY</a></div><div class="ttdeci">#define OTA_JSON_SELF_TEST_KEY</div><div class="ttdoc">Specifies if the platform and service is is selftest.</div><div class="ttdef"><b>Definition:</b> ota_private.h:141</div></div>
-<div class="ttc" id="agroup__ota__constants_html_gaffd03defb729ae990baede2a0c704076"><div class="ttname"><a href="group__ota__constants.html#gaffd03defb729ae990baede2a0c704076">OTA_JSON_UPDATED_BY_KEY</a></div><div class="ttdeci">#define OTA_JSON_UPDATED_BY_KEY</div><div class="ttdoc">Parameter to specify update status.</div><div class="ttdef"><b>Definition:</b> ota_private.h:142</div></div>
-<div class="ttc" id="aota_8c_html_a4342d17740cc60072d01f1bc9790bffa"><div class="ttname"><a href="ota_8c.html#a4342d17740cc60072d01f1bc9790bffa">U16_OFFSET</a></div><div class="ttdeci">#define U16_OFFSET(type, member)</div><div class="ttdoc">Offset helper.</div><div class="ttdef"><b>Definition:</b> ota.c:75</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga098cfb263c324b93dee1e98917312ffd"><div class="ttname"><a href="group__ota__constants.html#ga098cfb263c324b93dee1e98917312ffd">OTA_JSON_FILE_ATTRIBUTE_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_ATTRIBUTE_KEY</div><div class="ttdoc">Additional file attributes.</div><div class="ttdef"><b>Definition:</b> ota_private.h:155</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga1801081d3c11b83ce214949c54156587"><div class="ttname"><a href="group__ota__constants.html#ga1801081d3c11b83ce214949c54156587">OTA_JSON_STREAM_NAME_KEY</a></div><div class="ttdeci">#define OTA_JSON_STREAM_NAME_KEY</div><div class="ttdoc">Name of the stream used for download.</div><div class="ttdef"><b>Definition:</b> ota_private.h:151</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga1c56c6acb4d197a362143b670aeaac75"><div class="ttname"><a href="group__ota__constants.html#ga1c56c6acb4d197a362143b670aeaac75">OTA_JSON_OTA_UNIT_KEY</a></div><div class="ttdeci">#define OTA_JSON_OTA_UNIT_KEY</div><div class="ttdoc">afr-ota.</div><div class="ttdef"><b>Definition:</b> ota_private.h:148</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga209cd55d10743b96b2792ed8ae12fa51"><div class="ttname"><a href="group__ota__constants.html#ga209cd55d10743b96b2792ed8ae12fa51">OTA_JSON_FILE_PATH_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_PATH_KEY</div><div class="ttdoc">Path to store the image on the device.</div><div class="ttdef"><b>Definition:</b> ota_private.h:152</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga3d69df69fbdff6811da80020c8afc61a"><div class="ttname"><a href="group__ota__constants.html#ga3d69df69fbdff6811da80020c8afc61a">OTA_JSON_CLIENT_TOKEN_KEY</a></div><div class="ttdeci">#define OTA_JSON_CLIENT_TOKEN_KEY</div><div class="ttdoc">Client token.</div><div class="ttdef"><b>Definition:</b> ota_private.h:138</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga44138af02a7ed130ff630788cbaf1c27"><div class="ttname"><a href="group__ota__constants.html#ga44138af02a7ed130ff630788cbaf1c27">OTA_JSON_JOB_ID_KEY</a></div><div class="ttdeci">#define OTA_JSON_JOB_ID_KEY</div><div class="ttdoc">Name of the job.</div><div class="ttdef"><b>Definition:</b> ota_private.h:141</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga4d831064bb7ea8bae1df86e1b77eaab6"><div class="ttname"><a href="group__ota__constants.html#ga4d831064bb7ea8bae1df86e1b77eaab6">OTA_JSON_EXECUTION_KEY</a></div><div class="ttdeci">#define OTA_JSON_EXECUTION_KEY</div><div class="ttdoc">Contains job execution parameters .</div><div class="ttdef"><b>Definition:</b> ota_private.h:140</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga625051ce4de218406aad6dd0955f1c73"><div class="ttname"><a href="group__ota__constants.html#ga625051ce4de218406aad6dd0955f1c73">OTA_JSON_TIMESTAMP_KEY</a></div><div class="ttdeci">#define OTA_JSON_TIMESTAMP_KEY</div><div class="ttdoc">Used to calculate timeout and time spent on the operation.</div><div class="ttdef"><b>Definition:</b> ota_private.h:139</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga62f786dfa9c243d52d490aedf55b74a6"><div class="ttname"><a href="group__ota__constants.html#ga62f786dfa9c243d52d490aedf55b74a6">OTA_STORE_NESTED_JSON</a></div><div class="ttdeci">#define OTA_STORE_NESTED_JSON</div><div class="ttdoc">Store the reference to a nested JSON in a separate pointer.</div><div class="ttdef"><b>Definition:</b> ota_private.h:84</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga6a6b266874ad73e248d840643616325c"><div class="ttname"><a href="group__ota__constants.html#ga6a6b266874ad73e248d840643616325c">OTA_JSON_STATUS_DETAILS_KEY</a></div><div class="ttdeci">#define OTA_JSON_STATUS_DETAILS_KEY</div><div class="ttdoc">Current status of the job.</div><div class="ttdef"><b>Definition:</b> ota_private.h:142</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga6e5f882dc07e8a5a8b2f079cc4444a50"><div class="ttname"><a href="group__ota__constants.html#ga6e5f882dc07e8a5a8b2f079cc4444a50">OTA_JSON_FILE_CERT_NAME_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_CERT_NAME_KEY</div><div class="ttdoc">Location of the certificate on the device to find code signing.</div><div class="ttdef"><b>Definition:</b> ota_private.h:156</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga716173ece0b83fdc783798bdf2cf5715"><div class="ttname"><a href="group__ota__constants.html#ga716173ece0b83fdc783798bdf2cf5715">OTA_JOB_PARAM_REQUIRED</a></div><div class="ttdeci">#define OTA_JOB_PARAM_REQUIRED</div><div class="ttdoc">Used to denote a required document model parameter.</div><div class="ttdef"><b>Definition:</b> ota_private.h:81</div></div>
+<div class="ttc" id="agroup__ota__constants_html_ga85efaf15e103da089f3de398948f46d4"><div class="ttname"><a href="group__ota__constants.html#ga85efaf15e103da089f3de398948f46d4">OTA_JSON_FILE_GROUP_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_GROUP_KEY</div><div class="ttdoc">Parameters for specifying file configurations.</div><div class="ttdef"><b>Definition:</b> ota_private.h:150</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gaab7b7332590b19bcc767a290953c58a8"><div class="ttname"><a href="group__ota__constants.html#gaab7b7332590b19bcc767a290953c58a8">OTA_JSON_FILETYPE_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILETYPE_KEY</div><div class="ttdoc">Used to identify the file in case of multi file type support.</div><div class="ttdef"><b>Definition:</b> ota_private.h:159</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gaacb7d18662a1212605eede7c875016ea"><div class="ttname"><a href="group__ota__constants.html#gaacb7d18662a1212605eede7c875016ea">OTA_JSON_PROTOCOLS_KEY</a></div><div class="ttdeci">#define OTA_JSON_PROTOCOLS_KEY</div><div class="ttdoc">Protocols over which the download can take place.</div><div class="ttdef"><b>Definition:</b> ota_private.h:149</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gaafc3e865308a16ec82181d6aea75d6bb"><div class="ttname"><a href="group__ota__constants.html#gaafc3e865308a16ec82181d6aea75d6bb">OTA_JSON_AUTH_SCHEME_KEY</a></div><div class="ttdeci">#define OTA_JSON_AUTH_SCHEME_KEY</div><div class="ttdoc">Authentication scheme for downloading a the image over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_private.h:158</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gab4f3b8ca5434b9b02ae4244da5cd2078"><div class="ttname"><a href="group__ota__constants.html#gab4f3b8ca5434b9b02ae4244da5cd2078">OTA_JOB_PARAM_OPTIONAL</a></div><div class="ttdeci">#define OTA_JOB_PARAM_OPTIONAL</div><div class="ttdoc">Used to denote an optional document model parameter.</div><div class="ttdef"><b>Definition:</b> ota_private.h:82</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gac0132213a7beb808d8cf4b86a3ab6b86"><div class="ttname"><a href="group__ota__constants.html#gac0132213a7beb808d8cf4b86a3ab6b86">OTA_JSON_JOB_DOC_KEY</a></div><div class="ttdeci">#define OTA_JSON_JOB_DOC_KEY</div><div class="ttdoc">Parameters that specify the nature of the job.</div><div class="ttdef"><b>Definition:</b> ota_private.h:147</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gac0ddd548347a6aa9e001eb3383ddeafe"><div class="ttname"><a href="group__ota__constants.html#gac0ddd548347a6aa9e001eb3383ddeafe">OTA_JSON_FILE_ID_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_ID_KEY</div><div class="ttdoc">Used to identify the file in case of multiple file downloads.</div><div class="ttdef"><b>Definition:</b> ota_private.h:154</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gac462962d86d18bfe1fab0ca0527ea9ca"><div class="ttname"><a href="group__ota__constants.html#gac462962d86d18bfe1fab0ca0527ea9ca">OTA_DONT_STORE_PARAM</a></div><div class="ttdeci">#define OTA_DONT_STORE_PARAM</div><div class="ttdoc">If destOffset in the model is 0xffffffff, do not store the value.</div><div class="ttdef"><b>Definition:</b> ota_private.h:83</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gad3c584828dcc7d99d65931d0c1ded6b7"><div class="ttname"><a href="group__ota__constants.html#gad3c584828dcc7d99d65931d0c1ded6b7">OTA_JSON_UPDATE_DATA_URL_KEY</a></div><div class="ttdeci">#define OTA_JSON_UPDATE_DATA_URL_KEY</div><div class="ttdoc">S3 bucket presigned url to fetch the image from .</div><div class="ttdef"><b>Definition:</b> ota_private.h:157</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gadbef300d5ee8db5704a53dd50f9babc3"><div class="ttname"><a href="group__ota__constants.html#gadbef300d5ee8db5704a53dd50f9babc3">OTA_JSON_FILE_SIZE_KEY</a></div><div class="ttdeci">#define OTA_JSON_FILE_SIZE_KEY</div><div class="ttdoc">Size of the file to be downloaded.</div><div class="ttdef"><b>Definition:</b> ota_private.h:153</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gaf7c64cc7a2f1a8141d00f0e33f83c1d9"><div class="ttname"><a href="group__ota__constants.html#gaf7c64cc7a2f1a8141d00f0e33f83c1d9">OTA_JSON_SELF_TEST_KEY</a></div><div class="ttdeci">#define OTA_JSON_SELF_TEST_KEY</div><div class="ttdoc">Specifies if the platform and service is is selftest.</div><div class="ttdef"><b>Definition:</b> ota_private.h:143</div></div>
+<div class="ttc" id="agroup__ota__constants_html_gaffd03defb729ae990baede2a0c704076"><div class="ttname"><a href="group__ota__constants.html#gaffd03defb729ae990baede2a0c704076">OTA_JSON_UPDATED_BY_KEY</a></div><div class="ttdeci">#define OTA_JSON_UPDATED_BY_KEY</div><div class="ttdoc">Parameter to specify update status.</div><div class="ttdef"><b>Definition:</b> ota_private.h:144</div></div>
+<div class="ttc" id="aota_8c_html_a4342d17740cc60072d01f1bc9790bffa"><div class="ttname"><a href="ota_8c.html#a4342d17740cc60072d01f1bc9790bffa">U16_OFFSET</a></div><div class="ttdeci">#define U16_OFFSET(type, member)</div><div class="ttdoc">Offset helper.</div><div class="ttdef"><b>Definition:</b> ota.c:78</div></div>
 <div class="ttc" id="aota_8h_html_a3b34dcda67d1fd023ced9257eb00cdcb"><div class="ttname"><a href="ota_8h.html#a3b34dcda67d1fd023ced9257eb00cdcb">OTA_JsonFileSignatureKey</a></div><div class="ttdeci">const char OTA_JsonFileSignatureKey[OTA_FILE_SIG_KEY_STR_MAX_LENGTH]</div><div class="ttdoc">The OTA signature algorithm string is specified by the PAL.</div></div>
-<div class="ttc" id="astruct_ota_file_context__t_html"><div class="ttname"><a href="struct_ota_file_context__t.html">OtaFileContext_t</a></div><div class="ttdoc">OTA File Context Information.</div><div class="ttdef"><b>Definition:</b> ota_private.h:382</div></div>
+<div class="ttc" id="astruct_ota_file_context__t_html"><div class="ttname"><a href="struct_ota_file_context__t.html">OtaFileContext_t</a></div><div class="ttdoc">OTA File Context Information.</div><div class="ttdef"><b>Definition:</b> ota_private.h:384</div></div>
 </div><!-- fragment -->
 <p>This is the OTA job document model describing the parameters, their types, destination and how to extract. </p>
 
@@ -3284,8 +3317,8 @@ Dropped: The number of OTA packets that have been dropped because of either no q
 
 </div>
 </div>
-<a id="a6ae882f31f2728422eb3d256fbecd384" name="a6ae882f31f2728422eb3d256fbecd384"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ae882f31f2728422eb3d256fbecd384">&#9670;&nbsp;</a></span>sig256Buffer</h2>
+<a id="aebfcd3030a3c9d082a768b15d6bd05e6" name="aebfcd3030a3c9d082a768b15d6bd05e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebfcd3030a3c9d082a768b15d6bd05e6">&#9670;&nbsp;</a></span>sigBuffer</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3294,7 +3327,7 @@ Dropped: The number of OTA packets that have been dropped because of either no q
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="struct_sig256__t.html">Sig256_t</a> sig256Buffer</td>
+          <td class="memname"><a class="el" href="struct_sig__t.html">Sig_t</a> sigBuffer</td>
         </tr>
       </table>
   </td>

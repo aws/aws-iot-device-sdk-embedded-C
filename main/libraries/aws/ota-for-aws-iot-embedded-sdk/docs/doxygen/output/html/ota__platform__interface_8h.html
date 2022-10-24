@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -96,8 +96,7 @@ $(document).ready(function(){initNavTree('ota__platform__interface_8h.html','');
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#enum-members">Enumerations</a>  </div>
+<a href="#typedef-members">Typedefs</a>  </div>
   <div class="headertitle"><div class="title">ota_platform_interface.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -146,13 +145,77 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ac8ce179990389b4561c54d5e1ea0d1fa"><td class="memItemLeft" align="right" valign="top"><a id="ac8ce179990389b4561c54d5e1ea0d1fa" name="ac8ce179990389b4561c54d5e1ea0d1fa"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalSuccess</b>&#160;&#160;&#160;0x0U</td></tr>
+<tr class="memdesc:ac8ce179990389b4561c54d5e1ea0d1fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA platform interface success. <br /></td></tr>
+<tr class="separator:ac8ce179990389b4561c54d5e1ea0d1fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ea591ec68abbf293e0618c3d3f37195"><td class="memItemLeft" align="right" valign="top"><a id="a4ea591ec68abbf293e0618c3d3f37195" name="a4ea591ec68abbf293e0618c3d3f37195"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalUninitialized</b>&#160;&#160;&#160;0xe0U</td></tr>
+<tr class="memdesc:a4ea591ec68abbf293e0618c3d3f37195"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result is not yet initialized from PAL. <br /></td></tr>
+<tr class="separator:a4ea591ec68abbf293e0618c3d3f37195"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8eae519ce243995ae605e376f72643a7"><td class="memItemLeft" align="right" valign="top"><a id="a8eae519ce243995ae605e376f72643a7" name="a8eae519ce243995ae605e376f72643a7"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalOutOfMemory</b>&#160;&#160;&#160;0xe1U</td></tr>
+<tr class="memdesc:a8eae519ce243995ae605e376f72643a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Out of memory. <br /></td></tr>
+<tr class="separator:a8eae519ce243995ae605e376f72643a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d9f78a8862bf5187c21d9fb0f98a456"><td class="memItemLeft" align="right" valign="top"><a id="a9d9f78a8862bf5187c21d9fb0f98a456" name="a9d9f78a8862bf5187c21d9fb0f98a456"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalNullFileContext</b>&#160;&#160;&#160;0xe2U</td></tr>
+<tr class="memdesc:a9d9f78a8862bf5187c21d9fb0f98a456"><td class="mdescLeft">&#160;</td><td class="mdescRight">The PAL is called with a NULL file context. <br /></td></tr>
+<tr class="separator:a9d9f78a8862bf5187c21d9fb0f98a456"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae25e9b2b097df6da15b469d6f7472178"><td class="memItemLeft" align="right" valign="top"><a id="ae25e9b2b097df6da15b469d6f7472178" name="ae25e9b2b097df6da15b469d6f7472178"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalSignatureCheckFailed</b>&#160;&#160;&#160;0xe3U</td></tr>
+<tr class="memdesc:ae25e9b2b097df6da15b469d6f7472178"><td class="mdescLeft">&#160;</td><td class="mdescRight">The signature check failed for the specified file. <br /></td></tr>
+<tr class="separator:ae25e9b2b097df6da15b469d6f7472178"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a943f3e453356a05decd77ab08cd8513c"><td class="memItemLeft" align="right" valign="top"><a id="a943f3e453356a05decd77ab08cd8513c" name="a943f3e453356a05decd77ab08cd8513c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalRxFileCreateFailed</b>&#160;&#160;&#160;0xe4U</td></tr>
+<tr class="memdesc:a943f3e453356a05decd77ab08cd8513c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The PAL failed to create the OTA receive file. <br /></td></tr>
+<tr class="separator:a943f3e453356a05decd77ab08cd8513c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04693d8d8525a9a9d28402f9c9cd03af"><td class="memItemLeft" align="right" valign="top"><a id="a04693d8d8525a9a9d28402f9c9cd03af" name="a04693d8d8525a9a9d28402f9c9cd03af"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalRxFileTooLarge</b>&#160;&#160;&#160;0xe5U</td></tr>
+<tr class="memdesc:a04693d8d8525a9a9d28402f9c9cd03af"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA receive file is too big for the platform to support. <br /></td></tr>
+<tr class="separator:a04693d8d8525a9a9d28402f9c9cd03af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf106aabb8450f85cc5b17e475f3a4a8"><td class="memItemLeft" align="right" valign="top"><a id="acf106aabb8450f85cc5b17e475f3a4a8" name="acf106aabb8450f85cc5b17e475f3a4a8"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalBootInfoCreateFailed</b>&#160;&#160;&#160;0xe6U</td></tr>
+<tr class="memdesc:acf106aabb8450f85cc5b17e475f3a4a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The PAL failed to create the OTA boot info file. <br /></td></tr>
+<tr class="separator:acf106aabb8450f85cc5b17e475f3a4a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fef7e79db9d41de91bf4c6f75c7c0bd"><td class="memItemLeft" align="right" valign="top"><a id="a4fef7e79db9d41de91bf4c6f75c7c0bd" name="a4fef7e79db9d41de91bf4c6f75c7c0bd"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalBadSignerCert</b>&#160;&#160;&#160;0xe7U</td></tr>
+<tr class="memdesc:a4fef7e79db9d41de91bf4c6f75c7c0bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The signer certificate was not readable or zero length. <br /></td></tr>
+<tr class="separator:a4fef7e79db9d41de91bf4c6f75c7c0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcf41ccec36c6597a7f8e94b124b7859"><td class="memItemLeft" align="right" valign="top"><a id="afcf41ccec36c6597a7f8e94b124b7859" name="afcf41ccec36c6597a7f8e94b124b7859"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalBadImageState</b>&#160;&#160;&#160;0xe8U</td></tr>
+<tr class="memdesc:afcf41ccec36c6597a7f8e94b124b7859"><td class="mdescLeft">&#160;</td><td class="mdescRight">The specified OTA image state was out of range. <br /></td></tr>
+<tr class="separator:afcf41ccec36c6597a7f8e94b124b7859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd53ad0c7b1a1c5253f0dc89c56453ad"><td class="memItemLeft" align="right" valign="top"><a id="acd53ad0c7b1a1c5253f0dc89c56453ad" name="acd53ad0c7b1a1c5253f0dc89c56453ad"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalAbortFailed</b>&#160;&#160;&#160;0xe9U</td></tr>
+<tr class="memdesc:acd53ad0c7b1a1c5253f0dc89c56453ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error trying to abort the OTA. <br /></td></tr>
+<tr class="separator:acd53ad0c7b1a1c5253f0dc89c56453ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af93162b550aeb6a404c3226b3690f497"><td class="memItemLeft" align="right" valign="top"><a id="af93162b550aeb6a404c3226b3690f497" name="af93162b550aeb6a404c3226b3690f497"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalRejectFailed</b>&#160;&#160;&#160;0xeaU</td></tr>
+<tr class="memdesc:af93162b550aeb6a404c3226b3690f497"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error trying to reject the OTA image. <br /></td></tr>
+<tr class="separator:af93162b550aeb6a404c3226b3690f497"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6adb3755fe44abac5498a8a1fc819671"><td class="memItemLeft" align="right" valign="top"><a id="a6adb3755fe44abac5498a8a1fc819671" name="a6adb3755fe44abac5498a8a1fc819671"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalCommitFailed</b>&#160;&#160;&#160;0xebU</td></tr>
+<tr class="memdesc:a6adb3755fe44abac5498a8a1fc819671"><td class="mdescLeft">&#160;</td><td class="mdescRight">The acceptance commit of the new OTA image failed. <br /></td></tr>
+<tr class="separator:a6adb3755fe44abac5498a8a1fc819671"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2916aa5503710cf5b0bc44a92e9889a1"><td class="memItemLeft" align="right" valign="top"><a id="a2916aa5503710cf5b0bc44a92e9889a1" name="a2916aa5503710cf5b0bc44a92e9889a1"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalActivateFailed</b>&#160;&#160;&#160;0xecU</td></tr>
+<tr class="memdesc:a2916aa5503710cf5b0bc44a92e9889a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The activation of the new OTA image failed. <br /></td></tr>
+<tr class="separator:a2916aa5503710cf5b0bc44a92e9889a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9f10fa03556888f281eed8e22a8e733"><td class="memItemLeft" align="right" valign="top"><a id="ad9f10fa03556888f281eed8e22a8e733" name="ad9f10fa03556888f281eed8e22a8e733"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalFileAbort</b>&#160;&#160;&#160;0xedU</td></tr>
+<tr class="memdesc:ad9f10fa03556888f281eed8e22a8e733"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error in low level file abort. <br /></td></tr>
+<tr class="separator:ad9f10fa03556888f281eed8e22a8e733"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade38baa8017b07d9903d7a367403f734"><td class="memItemLeft" align="right" valign="top"><a id="ade38baa8017b07d9903d7a367403f734" name="ade38baa8017b07d9903d7a367403f734"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalFileClose</b>&#160;&#160;&#160;0xeeU</td></tr>
+<tr class="memdesc:ade38baa8017b07d9903d7a367403f734"><td class="mdescLeft">&#160;</td><td class="mdescRight">Error in low level file close. <br /></td></tr>
+<tr class="separator:ade38baa8017b07d9903d7a367403f734"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af86d69b12a8373d4843e693187c66c02"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#af86d69b12a8373d4843e693187c66c02">OTA_PAL_ERR_MASK</a>&#160;&#160;&#160;0xffffffUL</td></tr>
 <tr class="separator:af86d69b12a8373d4843e693187c66c02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adca6a50131b3abc3d910f4c7f39ce332"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#adca6a50131b3abc3d910f4c7f39ce332">OTA_PAL_SUB_BITS</a>&#160;&#160;&#160;24U</td></tr>
 <tr class="separator:adca6a50131b3abc3d910f4c7f39ce332"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab25e30871d1c2fc609552591d883c87e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#ab25e30871d1c2fc609552591d883c87e">OTA_PAL_MAIN_ERR</a>(err)&#160;&#160;&#160;( ( <a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a> ) ( uint32_t ) ( ( uint32_t ) ( err ) &gt;&gt; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#adca6a50131b3abc3d910f4c7f39ce332">OTA_PAL_SUB_BITS</a> ) )</td></tr>
+<tr class="memitem:ab25e30871d1c2fc609552591d883c87e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#ab25e30871d1c2fc609552591d883c87e">OTA_PAL_MAIN_ERR</a>(err)&#160;&#160;&#160;( ( <a class="el" href="group__ota__constants.html#gac5c3148205ee4a0cac4246b2c7797765">OtaPalMainStatus_t</a> ) ( uint32_t ) ( ( uint32_t ) ( err ) &gt;&gt; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#adca6a50131b3abc3d910f4c7f39ce332">OTA_PAL_SUB_BITS</a> ) )</td></tr>
 <tr class="separator:ab25e30871d1c2fc609552591d883c87e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93e53a52e858cad1adc7231d8d6ff769"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#a93e53a52e858cad1adc7231d8d6ff769">OTA_PAL_SUB_ERR</a>(err)&#160;&#160;&#160;( ( uint32_t ) ( err ) &amp; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#af86d69b12a8373d4843e693187c66c02">OTA_PAL_ERR_MASK</a> )</td></tr>
+<tr class="memitem:a93e53a52e858cad1adc7231d8d6ff769"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#a93e53a52e858cad1adc7231d8d6ff769">OTA_PAL_SUB_ERR</a>(err)&#160;&#160;&#160;( ( ( uint32_t ) ( err ) ) &amp; ( ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#af86d69b12a8373d4843e693187c66c02">OTA_PAL_ERR_MASK</a> ) )</td></tr>
 <tr class="separator:a93e53a52e858cad1adc7231d8d6ff769"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0684a42fae0de7395399d8b4d248fb35"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#a0684a42fae0de7395399d8b4d248fb35">OTA_PAL_COMBINE_ERR</a>(main,  sub)&#160;&#160;&#160;( ( ( uint32_t ) ( main ) &lt;&lt; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#adca6a50131b3abc3d910f4c7f39ce332">OTA_PAL_SUB_BITS</a> ) | ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#a93e53a52e858cad1adc7231d8d6ff769">OTA_PAL_SUB_ERR</a>( sub ) )</td></tr>
 <tr class="separator:a0684a42fae0de7395399d8b4d248fb35"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -167,6 +230,10 @@ typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalSta
 typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalSubStatus_t</b></td></tr>
 <tr class="memdesc:a4910712f01795de72f368d4614dd8561"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA platform interface sub status. <br /></td></tr>
 <tr class="separator:a4910712f01795de72f368d4614dd8561"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac5c3148205ee4a0cac4246b2c7797765"><td class="memItemLeft" align="right" valign="top">
+typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalMainStatus_t</b></td></tr>
+<tr class="memdesc:gac5c3148205ee4a0cac4246b2c7797765"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA platform interface main status. <br /></td></tr>
+<tr class="separator:gac5c3148205ee4a0cac4246b2c7797765"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae085ba60212a4e05007c8b7fd1a77d7b"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="ota__platform__interface_8h.html#a503f74c089364b482321578b541d7640">OtaPalStatus_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#ae085ba60212a4e05007c8b7fd1a77d7b">OtaPalAbort_t</a>) (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *const pFileContext)</td></tr>
 <tr class="memdesc:ae085ba60212a4e05007c8b7fd1a77d7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Abort an OTA transfer.  <a href="ota__platform__interface_8h.html#ae085ba60212a4e05007c8b7fd1a77d7b">More...</a><br /></td></tr>
 <tr class="separator:ae085ba60212a4e05007c8b7fd1a77d7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -191,33 +258,6 @@ typedef uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>OtaPalSub
 <tr class="memitem:a829011b74971ee47c38c5eabde519d84"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="group__ota__enum__types.html#gab1f386c3bcc707ff32033659a0a4ddca">OtaPalImageState_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__platform__interface_8h.html#a829011b74971ee47c38c5eabde519d84">OtaPalGetPlatformImageState_t</a>) (<a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *const pFileContext)</td></tr>
 <tr class="memdesc:a829011b74971ee47c38c5eabde519d84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the state of the OTA update image.  <a href="ota__platform__interface_8h.html#a829011b74971ee47c38c5eabde519d84">More...</a><br /></td></tr>
 <tr class="separator:a829011b74971ee47c38c5eabde519d84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:ga8e503bbbffc277f6fd5b8645767a685b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a> { <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba8dbb21a8a52503c7e8f33835dc6687c4">OtaPalSuccess</a> = 0
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba386aef27e1d9c7a937d3698e559641e4">OtaPalUninitialized</a> = 0xe0
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba0ec8f96ac056d352c45db250b4f6e05d">OtaPalOutOfMemory</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba088a029115f9b8053b9c23eb50438a1c">OtaPalNullFileContext</a>
-, <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba3a92c1315048b471740472eaa91cd39b">OtaPalSignatureCheckFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba15af1448f649ae32235d23aaab93b90d">OtaPalRxFileCreateFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf945ac941bd969b1833f80847d286805">OtaPalRxFileTooLarge</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba38e979079368805430af70c0daa35005">OtaPalBootInfoCreateFailed</a>
-, <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba7335f166465b3c6537093140445fdfef">OtaPalBadSignerCert</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba8022263fa243f4fedb05692f5816b709">OtaPalBadImageState</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf4431964d1c516dde35c2b37c829b195">OtaPalAbortFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba0beb58eb2e069e80e51e3c4857549d14">OtaPalRejectFailed</a>
-, <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf5d88629edcda34a8883985972e52126">OtaPalCommitFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba6e8ffdf4071a5ef58fdd3e3bdc1253de">OtaPalActivateFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba233a2055c5de2e07759f3e39fa88f8cb">OtaPalFileAbort</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685bab9b6262d3d153e77d186f6df07eb3e6f">OtaPalFileClose</a>
-<br />
- }</td></tr>
-<tr class="memdesc:ga8e503bbbffc277f6fd5b8645767a685b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA platform interface main status.  <a href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">More...</a><br /></td></tr>
-<tr class="separator:ga8e503bbbffc277f6fd5b8645767a685b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Contains PAL interface statuses, type definitions and structure to store interface routines. </p>
@@ -263,7 +303,7 @@ Enumerations</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">err</td><td>)</td>
-          <td>&#160;&#160;&#160;( ( <a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a> ) ( uint32_t ) ( ( uint32_t ) ( err ) &gt;&gt; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#adca6a50131b3abc3d910f4c7f39ce332">OTA_PAL_SUB_BITS</a> ) )</td>
+          <td>&#160;&#160;&#160;( ( <a class="el" href="group__ota__constants.html#gac5c3148205ee4a0cac4246b2c7797765">OtaPalMainStatus_t</a> ) ( uint32_t ) ( ( uint32_t ) ( err ) &gt;&gt; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#adca6a50131b3abc3d910f4c7f39ce332">OTA_PAL_SUB_BITS</a> ) )</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -282,7 +322,7 @@ Enumerations</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">err</td><td>)</td>
-          <td>&#160;&#160;&#160;( ( uint32_t ) ( err ) &amp; ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#af86d69b12a8373d4843e693187c66c02">OTA_PAL_ERR_MASK</a> )</td>
+          <td>&#160;&#160;&#160;( ( ( uint32_t ) ( err ) ) &amp; ( ( uint32_t ) <a class="el" href="ota__platform__interface_8h.html#af86d69b12a8373d4843e693187c66c02">OTA_PAL_ERR_MASK</a> ) )</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -414,7 +454,9 @@ The input <a class="el" href="struct_ota_file_context__t.html" title="OTA File C
 </div><div class="memdoc">
 
 <p>Write a block of data to the specified file at the given offset. </p>
-<dl class="section note"><dt>Note</dt><dd>The input <a class="el" href="struct_ota_file_context__t.html" title="OTA File Context Information.">OtaFileContext_t</a> pFileContext is checked for NULL by the OTA agent before this function is called. The file pointer/handle pFileContext-&gt;pFile, is checked for NULL by the OTA agent before this function is called. pData is checked for NULL by the OTA agent before this function is called. blockSize is validated for range by the OTA agent before this function is called. offset is validated by the OTA agent before this function is called.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function must always write a complete file block before returning. So the number of bytes written will be equal to the size of the file block. Exception only in case of last block where the number of bytes written will be equal or less than the size of the file block.</dd>
+<dd>
+The input <a class="el" href="struct_ota_file_context__t.html" title="OTA File Context Information.">OtaFileContext_t</a> pFileContext is checked for NULL by the OTA agent before this function is called. The file pointer/handle pFileContext-&gt;pFile, is checked for NULL by the OTA agent before this function is called. pData is checked for NULL by the OTA agent before this function is called. blockSize is validated for range by the OTA agent before this function is called. offset is validated by the OTA agent before this function is called.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pFileContext</td><td>OTA file context information. </td></tr>

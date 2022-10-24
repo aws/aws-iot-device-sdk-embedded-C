@@ -23,7 +23,8 @@ var group__ota__enum__types =
       [ "OtaErrUserAbort", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dafbd1a370f69e3eb88eff25d4fe9facbd", null ],
       [ "OtaErrFailedToEncodeCbor", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dad57de41d65cd3bd5de28228883e83084", null ],
       [ "OtaErrFailedToDecodeCbor", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da7fa31caf9e7a68df47ddbdb657f7f35d", null ],
-      [ "OtaErrActivateFailed", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678", null ]
+      [ "OtaErrActivateFailed", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678", null ],
+      [ "OtaErrFileSizeOverflow", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914", null ]
     ] ],
     [ "OtaState_t", "group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc", null ],
     [ "OtaJobParseErr_t", "group__ota__enum__types.html#gab8e370b46d0ae5d51879710d533a7314", null ],
@@ -35,7 +36,8 @@ var group__ota__enum__types =
       [ "OtaJobEventSelfTestFailed", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a26b36eee239cace8df37d0a9e5874212", null ],
       [ "OtaJobEventParseCustomJob", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a8e314e0d83b5dcd572b08d9f205ab658", null ],
       [ "OtaJobEventReceivedJob", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a5cf84ad545b4e47c7bc2fe36b4b83fdd", null ],
-      [ "OtaJobEventUpdateComplete", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2ea5dedb25b574c14f379ae6b530dfff", null ]
+      [ "OtaJobEventUpdateComplete", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2ea5dedb25b574c14f379ae6b530dfff", null ],
+      [ "OtaJobEventNoActiveJob", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2545ed736348e8d3f14746792ed40744", null ]
     ] ],
     [ "OtaJobStatus_t", "group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0", null ],
     [ "OtaHttpStatus_t", "group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4", [
@@ -61,24 +63,6 @@ var group__ota__enum__types =
       [ "OtaOsTimerRestartFailed", "group__ota__enum__types.html#ggaececff6c0dd8ba4d884544571bd368e7aade705ebfa991b59d6bd66523a9324d9", null ],
       [ "OtaOsTimerStopFailed", "group__ota__enum__types.html#ggaececff6c0dd8ba4d884544571bd368e7a760aadce2bd9363c4973720eec02b63f", null ],
       [ "OtaOsTimerDeleteFailed", "group__ota__enum__types.html#ggaececff6c0dd8ba4d884544571bd368e7a22a0a901794cea938b8402a3d5c6499c", null ]
-    ] ],
-    [ "OtaPalMainStatus_t", "group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b", [
-      [ "OtaPalSuccess", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba8dbb21a8a52503c7e8f33835dc6687c4", null ],
-      [ "OtaPalUninitialized", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba386aef27e1d9c7a937d3698e559641e4", null ],
-      [ "OtaPalOutOfMemory", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba0ec8f96ac056d352c45db250b4f6e05d", null ],
-      [ "OtaPalNullFileContext", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba088a029115f9b8053b9c23eb50438a1c", null ],
-      [ "OtaPalSignatureCheckFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba3a92c1315048b471740472eaa91cd39b", null ],
-      [ "OtaPalRxFileCreateFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba15af1448f649ae32235d23aaab93b90d", null ],
-      [ "OtaPalRxFileTooLarge", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf945ac941bd969b1833f80847d286805", null ],
-      [ "OtaPalBootInfoCreateFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba38e979079368805430af70c0daa35005", null ],
-      [ "OtaPalBadSignerCert", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba7335f166465b3c6537093140445fdfef", null ],
-      [ "OtaPalBadImageState", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba8022263fa243f4fedb05692f5816b709", null ],
-      [ "OtaPalAbortFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf4431964d1c516dde35c2b37c829b195", null ],
-      [ "OtaPalRejectFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba0beb58eb2e069e80e51e3c4857549d14", null ],
-      [ "OtaPalCommitFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf5d88629edcda34a8883985972e52126", null ],
-      [ "OtaPalActivateFailed", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba6e8ffdf4071a5ef58fdd3e3bdc1253de", null ],
-      [ "OtaPalFileAbort", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba233a2055c5de2e07759f3e39fa88f8cb", null ],
-      [ "OtaPalFileClose", "group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685bab9b6262d3d153e77d186f6df07eb3e6f", null ]
     ] ],
     [ "OtaImageState_t", "group__ota__enum__types.html#gad4909faa8b9c8672e7f7bef1bc6b5b84", [
       [ "OtaImageStateUnknown", "group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84afb051298f888e18cfeb7fd1b1986cb9a", null ],

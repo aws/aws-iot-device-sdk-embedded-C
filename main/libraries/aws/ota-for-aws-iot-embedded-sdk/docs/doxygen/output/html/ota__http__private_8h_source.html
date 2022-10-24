@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -97,76 +97,78 @@ $(document).ready(function(){initNavTree('ota__http__private_8h_source.html','')
 </div><!--header-->
 <div class="contents">
 <a href="ota__http__private_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * AWS IoT Over-the-air Update v3.1.0</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * AWS IoT Over-the-air Update v3.4.0</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * Permission is hereby granted, free of charge, to any person obtaining a copy of</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> * this software and associated documentation files (the &quot;Software&quot;), to deal in</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> * the Software without restriction, including without limitation the rights to</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> * the Software, and to permit persons to whom the Software is furnished to do so,</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> * subject to the following conditions:</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> * The above copyright notice and this permission notice shall be included in all</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> * copies or substantial portions of the Software.</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS</span></div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span></div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER</span></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN</span></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span></div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#ifndef OTA_HTTP_H</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#define OTA_HTTP_H</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment">/* *INDENT-OFF* */</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment">/* *INDENT-ON* */</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="comment">/* OTA includes. */</span></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#include &quot;<a class="code" href="ota_8h.html">ota.h</a>&quot;</span></div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="preprocessor">#include &quot;<a class="code" href="ota__private_8h.html">ota_private.h</a>&quot;</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#ad8086a6e3c6ccf6b543fe7a375f824ba">initFileTransfer_Http</a>( <a class="code hl_struct" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> * pAgentCtx );</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#ad501dd9d4704c39272a1e7ae3ec1f217">requestDataBlock_Http</a>( <a class="code hl_struct" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> * pAgentCtx );</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#aef5ca8e71ac452d251db5fef2e8dab84">decodeFileBlock_Http</a>( <span class="keyword">const</span> uint8_t * pMessageBuffer,</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>                               <span class="keywordtype">size_t</span> messageSize,</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>                               int32_t * pFileId,</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>                               int32_t * pBlockId,</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>                               int32_t * pBlockSize,</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>                               uint8_t ** pPayload,</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>                               <span class="keywordtype">size_t</span> * pPayloadSize );</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#a11b07a9ef9722b5a062da46301e5e80c">cleanupData_Http</a>( <span class="keyword">const</span> <a class="code hl_struct" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> * pAgentCtx );</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_function" href="ota__http__private_8h.html#af31ef8b0e39314f7204d72c8321ac729">OTA_HTTP_strerror</a>( <a class="code hl_enumeration" href="group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4">OtaHttpStatus_t</a> status );</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="comment">/* *INDENT-OFF* */</span></div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    }</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="comment">/* *INDENT-ON* */</span></div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="preprocessor">#endif </span><span class="comment">/* ifndef OTA_HTTP_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga5d1a57074f3242737a756c3feb64d4d4"><div class="ttname"><a href="group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4">OtaHttpStatus_t</a></div><div class="ttdeci">OtaHttpStatus_t</div><div class="ttdoc">The OTA HTTP interface return status.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:86</div></div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><div class="ttname"><a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a></div><div class="ttdeci">OtaErr_t</div><div class="ttdoc">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word...</div><div class="ttdef"><b>Definition:</b> ota.h:79</div></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * SPDX-License-Identifier: MIT</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment"> * Permission is hereby granted, free of charge, to any person obtaining a copy of</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> * this software and associated documentation files (the &quot;Software&quot;), to deal in</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> * the Software without restriction, including without limitation the rights to</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> * the Software, and to permit persons to whom the Software is furnished to do so,</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> * subject to the following conditions:</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> * The above copyright notice and this permission notice shall be included in all</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> * copies or substantial portions of the Software.</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#ifndef OTA_HTTP_H</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#define OTA_HTTP_H</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment">/* *INDENT-OFF* */</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="comment">/* *INDENT-ON* */</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="comment">/* OTA includes. */</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="preprocessor">#include &quot;<a class="code" href="ota_8h.html">ota.h</a>&quot;</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor">#include &quot;<a class="code" href="ota__private_8h.html">ota_private.h</a>&quot;</span></div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#aabc246de977d7b9ff8c2a76e79aa84f3">initFileTransfer_Http</a>( <span class="keyword">const</span> <a class="code hl_struct" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> * pAgentCtx );</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#ad501dd9d4704c39272a1e7ae3ec1f217">requestDataBlock_Http</a>( <a class="code hl_struct" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> * pAgentCtx );</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#a34c5e7f585b76053ada3a783b017d5f0">decodeFileBlock_Http</a>( <span class="keyword">const</span> uint8_t * pMessageBuffer,</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>                               <span class="keywordtype">size_t</span> messageSize,</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>                               int32_t * pFileId,</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>                               int32_t * pBlockId,</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>                               int32_t * pBlockSize,</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>                               uint8_t * <span class="keyword">const</span> * pPayload,</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>                               <span class="keywordtype">size_t</span> * pPayloadSize );</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><a class="code hl_enumeration" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> <a class="code hl_function" href="ota__http__private_8h.html#a11b07a9ef9722b5a062da46301e5e80c">cleanupData_Http</a>( <span class="keyword">const</span> <a class="code hl_struct" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> * pAgentCtx );</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_function" href="ota__http__private_8h.html#af31ef8b0e39314f7204d72c8321ac729">OTA_HTTP_strerror</a>( <a class="code hl_enumeration" href="group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4">OtaHttpStatus_t</a> status );</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="comment">/* *INDENT-OFF* */</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    }</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="comment">/* *INDENT-ON* */</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="preprocessor">#endif </span><span class="comment">/* ifndef OTA_HTTP_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga5d1a57074f3242737a756c3feb64d4d4"><div class="ttname"><a href="group__ota__enum__types.html#ga5d1a57074f3242737a756c3feb64d4d4">OtaHttpStatus_t</a></div><div class="ttdeci">OtaHttpStatus_t</div><div class="ttdoc">The OTA HTTP interface return status.</div><div class="ttdef"><b>Definition:</b> ota_http_interface.h:88</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><div class="ttname"><a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a></div><div class="ttdeci">OtaErr_t</div><div class="ttdoc">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word...</div><div class="ttdef"><b>Definition:</b> ota.h:80</div></div>
 <div class="ttc" id="aota_8h_html"><div class="ttname"><a href="ota_8h.html">ota.h</a></div><div class="ttdoc">OTA Agent Interface.</div></div>
-<div class="ttc" id="aota__http__private_8h_html_a11b07a9ef9722b5a062da46301e5e80c"><div class="ttname"><a href="ota__http__private_8h.html#a11b07a9ef9722b5a062da46301e5e80c">cleanupData_Http</a></div><div class="ttdeci">OtaErr_t cleanupData_Http(const OtaAgentContext_t *pAgentCtx)</div><div class="ttdoc">Cleanup related to OTA data plane over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_http.c:162</div></div>
-<div class="ttc" id="aota__http__private_8h_html_ad501dd9d4704c39272a1e7ae3ec1f217"><div class="ttname"><a href="ota__http__private_8h.html#ad501dd9d4704c39272a1e7ae3ec1f217">requestDataBlock_Http</a></div><div class="ttdeci">OtaErr_t requestDataBlock_Http(OtaAgentContext_t *pAgentCtx)</div><div class="ttdoc">Request File block over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_http.c:78</div></div>
-<div class="ttc" id="aota__http__private_8h_html_ad8086a6e3c6ccf6b543fe7a375f824ba"><div class="ttname"><a href="ota__http__private_8h.html#ad8086a6e3c6ccf6b543fe7a375f824ba">initFileTransfer_Http</a></div><div class="ttdeci">OtaErr_t initFileTransfer_Http(OtaAgentContext_t *pAgentCtx)</div><div class="ttdoc">Initialize file transfer over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_http.c:47</div></div>
-<div class="ttc" id="aota__http__private_8h_html_aef5ca8e71ac452d251db5fef2e8dab84"><div class="ttname"><a href="ota__http__private_8h.html#aef5ca8e71ac452d251db5fef2e8dab84">decodeFileBlock_Http</a></div><div class="ttdeci">OtaErr_t decodeFileBlock_Http(const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t **pPayload, size_t *pPayloadSize)</div><div class="ttdoc">Stub for decoding the file block.</div><div class="ttdef"><b>Definition:</b> ota_http.c:122</div></div>
-<div class="ttc" id="aota__http__private_8h_html_af31ef8b0e39314f7204d72c8321ac729"><div class="ttname"><a href="ota__http__private_8h.html#af31ef8b0e39314f7204d72c8321ac729">OTA_HTTP_strerror</a></div><div class="ttdeci">const char * OTA_HTTP_strerror(OtaHttpStatus_t status)</div><div class="ttdoc">Status to string conversion for OTA HTTP interface status.</div><div class="ttdef"><b>Definition:</b> ota_http.c:176</div></div>
+<div class="ttc" id="aota__http__private_8h_html_a11b07a9ef9722b5a062da46301e5e80c"><div class="ttname"><a href="ota__http__private_8h.html#a11b07a9ef9722b5a062da46301e5e80c">cleanupData_Http</a></div><div class="ttdeci">OtaErr_t cleanupData_Http(const OtaAgentContext_t *pAgentCtx)</div><div class="ttdoc">Cleanup related to OTA data plane over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_http.c:167</div></div>
+<div class="ttc" id="aota__http__private_8h_html_a34c5e7f585b76053ada3a783b017d5f0"><div class="ttname"><a href="ota__http__private_8h.html#a34c5e7f585b76053ada3a783b017d5f0">decodeFileBlock_Http</a></div><div class="ttdeci">OtaErr_t decodeFileBlock_Http(const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t *const *pPayload, size_t *pPayloadSize)</div><div class="ttdoc">Stub for decoding the file block.</div><div class="ttdef"><b>Definition:</b> ota_http.c:127</div></div>
+<div class="ttc" id="aota__http__private_8h_html_aabc246de977d7b9ff8c2a76e79aa84f3"><div class="ttname"><a href="ota__http__private_8h.html#aabc246de977d7b9ff8c2a76e79aa84f3">initFileTransfer_Http</a></div><div class="ttdeci">OtaErr_t initFileTransfer_Http(const OtaAgentContext_t *pAgentCtx)</div><div class="ttdoc">Initialize file transfer over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_http.c:49</div></div>
+<div class="ttc" id="aota__http__private_8h_html_ad501dd9d4704c39272a1e7ae3ec1f217"><div class="ttname"><a href="ota__http__private_8h.html#ad501dd9d4704c39272a1e7ae3ec1f217">requestDataBlock_Http</a></div><div class="ttdeci">OtaErr_t requestDataBlock_Http(OtaAgentContext_t *pAgentCtx)</div><div class="ttdoc">Request File block over HTTP.</div><div class="ttdef"><b>Definition:</b> ota_http.c:83</div></div>
+<div class="ttc" id="aota__http__private_8h_html_af31ef8b0e39314f7204d72c8321ac729"><div class="ttname"><a href="ota__http__private_8h.html#af31ef8b0e39314f7204d72c8321ac729">OTA_HTTP_strerror</a></div><div class="ttdeci">const char * OTA_HTTP_strerror(OtaHttpStatus_t status)</div><div class="ttdoc">Status to string conversion for OTA HTTP interface status.</div><div class="ttdef"><b>Definition:</b> ota_http.c:181</div></div>
 <div class="ttc" id="aota__private_8h_html"><div class="ttname"><a href="ota__private_8h.html">ota_private.h</a></div><div class="ttdoc">Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo...</div></div>
-<div class="ttc" id="astruct_ota_agent_context__t_html"><div class="ttname"><a href="struct_ota_agent_context__t.html">OtaAgentContext_t</a></div><div class="ttdoc">The OTA agent is a singleton today. The structure keeps it nice and organized.</div><div class="ttdef"><b>Definition:</b> ota.h:294</div></div>
+<div class="ttc" id="astruct_ota_agent_context__t_html"><div class="ttname"><a href="struct_ota_agent_context__t.html">OtaAgentContext_t</a></div><div class="ttdoc">The OTA agent is a singleton today. The structure keeps it nice and organized.</div><div class="ttdef"><b>Definition:</b> ota.h:339</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

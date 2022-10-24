@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -120,17 +120,17 @@ OTA MQTT Overview</h1>
 <div class="line"> </div>
 <div class="line"> ....</div>
 <div class="line"> </div>
-<div class="line"><a class="code hl_function" href="ota_8h.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a>( &amp;otaBuffer,</div>
+<div class="line"><a class="code hl_function" href="ota_8h.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a>( &amp;otaBuffer,</div>
 <div class="line">          &amp;otaInterfaces,</div>
 <div class="line">          ( CLIENT_IDENTIFIER ),</div>
 <div class="line">          otaAppCallback )</div>
-<div class="ttc" id="aota_8h_html_a9011a6007328dfb3bfde5fdb645fa52f"><div class="ttname"><a href="ota_8h.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a></div><div class="ttdeci">OtaErr_t OTA_Init(OtaAppBuffer_t *pOtaBuffer, const OtaInterfaces_t *pOtaInterfaces, const uint8_t *pThingName, OtaAppCallback_t OtaAppCallback)</div><div class="ttdoc">OTA Agent initialization function.</div><div class="ttdef"><b>Definition:</b> ota.c:3062</div></div>
-<div class="ttc" id="astruct_ota_interfaces__t_html"><div class="ttname"><a href="struct_ota_interfaces__t.html">OtaInterfaces_t</a></div><div class="ttdoc">OTA Interface for referencing different components.</div><div class="ttdef"><b>Definition:</b> ota.h:257</div></div>
-<div class="ttc" id="astruct_ota_interfaces__t_html_a231d847d025ae94578f68d5ae8ff3e66"><div class="ttname"><a href="struct_ota_interfaces__t.html#a231d847d025ae94578f68d5ae8ff3e66">OtaInterfaces_t::mqtt</a></div><div class="ttdeci">OtaMqttInterface_t mqtt</div><div class="ttdoc">MQTT interface that references the publish subscribe methods and callbacks.</div><div class="ttdef"><b>Definition:</b> ota.h:259</div></div>
-<div class="ttc" id="astruct_ota_mqtt_interface__t_html"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html">OtaMqttInterface_t</a></div><div class="ttdoc">OTA Event Interface structure.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:162</div></div>
-<div class="ttc" id="astruct_ota_mqtt_interface__t_html_aab31f752ef9b005cb5f06226fdce7540"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html#aab31f752ef9b005cb5f06226fdce7540">OtaMqttInterface_t::publish</a></div><div class="ttdeci">OtaMqttPublish_t publish</div><div class="ttdoc">Interface for publishing MQTT messages.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:165</div></div>
-<div class="ttc" id="astruct_ota_mqtt_interface__t_html_adf1c4fbd39dc489e5f446a163ed57d65"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html#adf1c4fbd39dc489e5f446a163ed57d65">OtaMqttInterface_t::subscribe</a></div><div class="ttdeci">OtaMqttSubscribe_t subscribe</div><div class="ttdoc">Interface for subscribing to Mqtt topics.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:163</div></div>
-<div class="ttc" id="astruct_ota_mqtt_interface__t_html_afe7b58ce23961bd3023266e9abb26a85"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html#afe7b58ce23961bd3023266e9abb26a85">OtaMqttInterface_t::unsubscribe</a></div><div class="ttdeci">OtaMqttUnsubscribe_t unsubscribe</div><div class="ttdoc">interface for unsubscribing to MQTT topics.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:164</div></div>
+<div class="ttc" id="aota_8h_html_a1764ba9b821dcdb693ec549e8349cc2e"><div class="ttname"><a href="ota_8h.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a></div><div class="ttdeci">OtaErr_t OTA_Init(const OtaAppBuffer_t *pOtaBuffer, const OtaInterfaces_t *pOtaInterfaces, const uint8_t *pThingName, OtaAppCallback_t OtaAppCallback)</div><div class="ttdoc">OTA Agent initialization function.</div><div class="ttdef"><b>Definition:</b> ota.c:3236</div></div>
+<div class="ttc" id="astruct_ota_interfaces__t_html"><div class="ttname"><a href="struct_ota_interfaces__t.html">OtaInterfaces_t</a></div><div class="ttdoc">OTA Interface for referencing different components.</div><div class="ttdef"><b>Definition:</b> ota.h:302</div></div>
+<div class="ttc" id="astruct_ota_interfaces__t_html_a231d847d025ae94578f68d5ae8ff3e66"><div class="ttname"><a href="struct_ota_interfaces__t.html#a231d847d025ae94578f68d5ae8ff3e66">OtaInterfaces_t::mqtt</a></div><div class="ttdeci">OtaMqttInterface_t mqtt</div><div class="ttdoc">MQTT interface that references the publish subscribe methods and callbacks.</div><div class="ttdef"><b>Definition:</b> ota.h:304</div></div>
+<div class="ttc" id="astruct_ota_mqtt_interface__t_html"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html">OtaMqttInterface_t</a></div><div class="ttdoc">OTA Event Interface structure.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:164</div></div>
+<div class="ttc" id="astruct_ota_mqtt_interface__t_html_aab31f752ef9b005cb5f06226fdce7540"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html#aab31f752ef9b005cb5f06226fdce7540">OtaMqttInterface_t::publish</a></div><div class="ttdeci">OtaMqttPublish_t publish</div><div class="ttdoc">Interface for publishing MQTT messages.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:167</div></div>
+<div class="ttc" id="astruct_ota_mqtt_interface__t_html_adf1c4fbd39dc489e5f446a163ed57d65"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html#adf1c4fbd39dc489e5f446a163ed57d65">OtaMqttInterface_t::subscribe</a></div><div class="ttdeci">OtaMqttSubscribe_t subscribe</div><div class="ttdoc">Interface for subscribing to Mqtt topics.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:165</div></div>
+<div class="ttc" id="astruct_ota_mqtt_interface__t_html_afe7b58ce23961bd3023266e9abb26a85"><div class="ttname"><a href="struct_ota_mqtt_interface__t.html#afe7b58ce23961bd3023266e9abb26a85">OtaMqttInterface_t::unsubscribe</a></div><div class="ttdeci">OtaMqttUnsubscribe_t unsubscribe</div><div class="ttdoc">interface for unsubscribing to MQTT topics.</div><div class="ttdef"><b>Definition:</b> ota_mqtt_interface.h:166</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

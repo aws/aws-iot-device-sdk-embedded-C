@@ -42,6 +42,7 @@ var core__mqtt__serializer_8c =
     [ "remainingLengthEncodedSize", "core__mqtt__serializer_8c.html#aeead0813fa045d754e3d6ec964d0686e", null ],
     [ "encodeString", "core__mqtt__serializer_8c.html#a60e580c28431eb08f05a156949137f1f", null ],
     [ "getRemainingLength", "core__mqtt__serializer_8c.html#a5685b753d1d42788a00bd59ffa4639e2", null ],
+    [ "processRemainingLength", "core__mqtt__serializer_8c.html#a8a4f72e05cd72fa57ba5a90e204569b3", null ],
     [ "incomingPacketValid", "core__mqtt__serializer_8c.html#a03dfebbfbc1635567839f7abb7c0f8db", null ],
     [ "checkPublishRemainingLength", "core__mqtt__serializer_8c.html#a33a2680aab1ce2186acd7c78aeb270f1", null ],
     [ "processPublishFlags", "core__mqtt__serializer_8c.html#a47a044115ee5df1ac7fe02d2ee37e1e0", null ],
@@ -51,9 +52,13 @@ var core__mqtt__serializer_8c =
     [ "deserializePublish", "core__mqtt__serializer_8c.html#a6e8bcde1280e14706e0cb9180358607c", null ],
     [ "deserializeSimpleAck", "core__mqtt__serializer_8c.html#a5d437c287290fa28a0ed65635fd6c9ae", null ],
     [ "deserializePingresp", "core__mqtt__serializer_8c.html#afdd9b08562ccaa6cf8dd68baa6bc7060", null ],
+    [ "MQTT_SerializePublishHeaderWithoutTopic", "core__mqtt__serializer_8c.html#a32de7fabeca85a4d360fa1dd06ff7cd0", null ],
+    [ "MQTT_SerializeConnectFixedHeader", "core__mqtt__serializer_8c.html#a5e6043289c05db1cdb7e33e0921247a0", null ],
     [ "MQTT_GetConnectPacketSize", "core__mqtt__serializer_8c.html#a4e57ccef527a25b572dc66eeb2e217c5", null ],
     [ "MQTT_SerializeConnect", "core__mqtt__serializer_8c.html#aa2e2300d6c43e61f8f2cf83f7149835c", null ],
     [ "MQTT_GetSubscribePacketSize", "core__mqtt__serializer_8c.html#abb9a703cb23ab39fdd6fe282a5f3ddc5", null ],
+    [ "MQTT_SerializeSubscribeHeader", "core__mqtt__serializer_8c.html#a6fe31953d7b8dacb769adcf4c2719730", null ],
+    [ "MQTT_SerializeUnsubscribeHeader", "core__mqtt__serializer_8c.html#a5b6f47fa319a444835ffed2d6af04709", null ],
     [ "MQTT_SerializeSubscribe", "core__mqtt__serializer_8c.html#a21273b13070e8340cc33b0f86bf79571", null ],
     [ "MQTT_GetUnsubscribePacketSize", "core__mqtt__serializer_8c.html#a2a18563d5f63c8975b57118a6836c932", null ],
     [ "MQTT_SerializeUnsubscribe", "core__mqtt__serializer_8c.html#aab58219c203077c07ffd7061405e1adb", null ],
@@ -67,5 +72,6 @@ var core__mqtt__serializer_8c =
     [ "MQTT_SerializePingreq", "core__mqtt__serializer_8c.html#af3b3e40858fd984c871511e02a61e15d", null ],
     [ "MQTT_DeserializePublish", "core__mqtt__serializer_8c.html#a4c2aec031f31d0fe55c1cda46544e95a", null ],
     [ "MQTT_DeserializeAck", "core__mqtt__serializer_8c.html#ae9971855df71edf94124116e0625bf18", null ],
-    [ "MQTT_GetIncomingPacketTypeAndLength", "core__mqtt__serializer_8c.html#a98cdda86f86a0a1888745a584199e930", null ]
+    [ "MQTT_GetIncomingPacketTypeAndLength", "core__mqtt__serializer_8c.html#a98cdda86f86a0a1888745a584199e930", null ],
+    [ "MQTT_ProcessIncomingPacketTypeAndLength", "core__mqtt__serializer_8c.html#a94fd3f746074b3f6e16ae6b23dad9a28", null ]
 ];

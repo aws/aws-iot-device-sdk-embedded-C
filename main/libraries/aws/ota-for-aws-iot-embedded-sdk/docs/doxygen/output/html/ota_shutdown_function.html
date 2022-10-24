@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -99,9 +99,10 @@ $(document).ready(function(){initNavTree('ota_shutdown_function.html',''); initR
 <div class="textblock"><p >Signal to the OTA Agent to shut down.</p>
 <div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a> <a class="code hl_function" href="ota_8h.html#ac779291eb93f4e0e6459816e60e13b09">OTA_Shutdown</a>( uint32_t ticksToWait,</div>
 <div class="line">                         uint8_t unsubscribeFlag );</div>
-<div class="ttc" id="agroup__ota__enum__types_html_ga1cb476a5e0ee81fa486f605e64419dcc"><div class="ttname"><a href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a></div><div class="ttdeci">OtaState_t</div><div class="ttdoc">OTA Agent states.</div><div class="ttdef"><b>Definition:</b> ota.h:114</div></div>
-<div class="ttc" id="aota_8h_html_ac779291eb93f4e0e6459816e60e13b09"><div class="ttname"><a href="ota_8h.html#ac779291eb93f4e0e6459816e60e13b09">OTA_Shutdown</a></div><div class="ttdeci">OtaState_t OTA_Shutdown(uint32_t ticksToWait, uint8_t unsubscribeFlag)</div><div class="ttdoc">Signal to the OTA Agent to shut down.</div><div class="ttdef"><b>Definition:</b> ota.c:3156</div></div>
+<div class="ttc" id="agroup__ota__enum__types_html_ga1cb476a5e0ee81fa486f605e64419dcc"><div class="ttname"><a href="group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc">OtaState_t</a></div><div class="ttdeci">OtaState_t</div><div class="ttdoc">OTA Agent states.</div><div class="ttdef"><b>Definition:</b> ota.h:116</div></div>
+<div class="ttc" id="aota_8h_html_ac779291eb93f4e0e6459816e60e13b09"><div class="ttname"><a href="ota_8h.html#ac779291eb93f4e0e6459816e60e13b09">OTA_Shutdown</a></div><div class="ttdeci">OtaState_t OTA_Shutdown(uint32_t ticksToWait, uint8_t unsubscribeFlag)</div><div class="ttdoc">Signal to the OTA Agent to shut down.</div><div class="ttdef"><b>Definition:</b> ota.c:3339</div></div>
 </div><!-- fragment --><p> Signals the OTA agent task to shut down. The OTA agent will unsubscribe from all MQTT job notification topics, stop in progress OTA jobs, if any, and clear all resources.</p>
+<p >OTA needs a processing task running OTA_EventProcessingTask to handle shutdown event, or OTA will shutdown after the processing task is created and scheduled.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ticksToWait</td><td>The number of ticks to wait for the OTA Agent to complete the shutdown process. If this is set to zero, the function will return immediately without waiting. The actual state is returned to the caller. The agent does not sleep for this while but used for busy looping.</td></tr>
@@ -126,7 +127,7 @@ $(document).ready(function(){initNavTree('ota_shutdown_function.html',''); initR
 <div class="line">    <span class="comment">// Optional: Disconnect MQTT and HTTP connections</span></div>
 <div class="line">    <span class="comment">// required by the OTA agent and other tasks.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="aota_8h_html_a6db3f9cb417cb135cb0e68f5b5f2b11f"><div class="ttname"><a href="ota_8h.html#a6db3f9cb417cb135cb0e68f5b5f2b11f">OTA_GetState</a></div><div class="ttdeci">OtaState_t OTA_GetState(void)</div><div class="ttdoc">Get the current state of the OTA agent.</div><div class="ttdef"><b>Definition:</b> ota.c:3215</div></div>
+<div class="ttc" id="aota_8h_html_a6db3f9cb417cb135cb0e68f5b5f2b11f"><div class="ttname"><a href="ota_8h.html#a6db3f9cb417cb135cb0e68f5b5f2b11f">OTA_GetState</a></div><div class="ttdeci">OtaState_t OTA_GetState(void)</div><div class="ttdoc">Get the current state of the OTA agent.</div><div class="ttdef"><b>Definition:</b> ota.c:3392</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

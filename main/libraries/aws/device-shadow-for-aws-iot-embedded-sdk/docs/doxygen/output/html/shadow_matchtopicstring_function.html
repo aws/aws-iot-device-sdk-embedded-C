@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Device Shadow<span id="projectnumber">&#160;v1.1.1</span>
+   <div id="projectname">AWS IoT Device Shadow<span id="projectnumber">&#160;v1.3.0</span>
    </div>
    <div id="projectbrief">AWS IoT Device Shadow client library</div>
   </td>
@@ -104,9 +104,9 @@ $(document).ready(function(){initNavTree('shadow_matchtopicstring_function.html'
 <div class="line">                                        uint8_t * pThingNameLength,</div>
 <div class="line">                                        <span class="keyword">const</span> <span class="keywordtype">char</span> ** pShadowName,</div>
 <div class="line">                                        uint8_t * pShadowNameLength );</div>
-<div class="ttc" id="agroup__shadow__enum__types_html_ga41ed1ee9c48c83638bef476fd2773398"><div class="ttname"><a href="group__shadow__enum__types.html#ga41ed1ee9c48c83638bef476fd2773398">ShadowStatus_t</a></div><div class="ttdeci">ShadowStatus_t</div><div class="ttdoc">Return codes from Shadow functions.</div><div class="ttdef"><b>Definition:</b> shadow.h:100</div></div>
-<div class="ttc" id="agroup__shadow__enum__types_html_gac953015263099970421c6af6ce1ccba9"><div class="ttname"><a href="group__shadow__enum__types.html#gac953015263099970421c6af6ce1ccba9">ShadowMessageType_t</a></div><div class="ttdeci">ShadowMessageType_t</div><div class="ttdoc">Each of these values describes the type of a shadow message. https://docs.aws.amazon....</div><div class="ttdef"><b>Definition:</b> shadow.h:60</div></div>
-<div class="ttc" id="ashadow_8h_html_a14cc590d8d8e6a0a50e482b0134a3e1d"><div class="ttname"><a href="shadow_8h.html#a14cc590d8d8e6a0a50e482b0134a3e1d">Shadow_MatchTopicString</a></div><div class="ttdeci">ShadowStatus_t Shadow_MatchTopicString(const char *pTopic, uint16_t topicLength, ShadowMessageType_t *pMessageType, const char **pThingName, uint8_t *pThingNameLength, const char **pShadowName, uint8_t *pShadowNameLength)</div><div class="ttdoc">Given the topic string of an incoming message, determine whether it is related to a device shadow; if...</div><div class="ttdef"><b>Definition:</b> shadow.c:764</div></div>
+<div class="ttc" id="agroup__shadow__enum__types_html_ga41ed1ee9c48c83638bef476fd2773398"><div class="ttname"><a href="group__shadow__enum__types.html#ga41ed1ee9c48c83638bef476fd2773398">ShadowStatus_t</a></div><div class="ttdeci">ShadowStatus_t</div><div class="ttdoc">Return codes from Shadow functions.</div><div class="ttdef"><b>Definition:</b> shadow.h:102</div></div>
+<div class="ttc" id="agroup__shadow__enum__types_html_gac953015263099970421c6af6ce1ccba9"><div class="ttname"><a href="group__shadow__enum__types.html#gac953015263099970421c6af6ce1ccba9">ShadowMessageType_t</a></div><div class="ttdeci">ShadowMessageType_t</div><div class="ttdoc">Each of these values describes the type of a shadow message. https://docs.aws.amazon....</div><div class="ttdef"><b>Definition:</b> shadow.h:62</div></div>
+<div class="ttc" id="ashadow_8h_html_a14cc590d8d8e6a0a50e482b0134a3e1d"><div class="ttname"><a href="shadow_8h.html#a14cc590d8d8e6a0a50e482b0134a3e1d">Shadow_MatchTopicString</a></div><div class="ttdeci">ShadowStatus_t Shadow_MatchTopicString(const char *pTopic, uint16_t topicLength, ShadowMessageType_t *pMessageType, const char **pThingName, uint8_t *pThingNameLength, const char **pShadowName, uint8_t *pShadowNameLength)</div><div class="ttdoc">Given the topic string of an incoming message, determine whether it is related to a device shadow; if...</div><div class="ttdef"><b>Definition:</b> shadow.c:766</div></div>
 </div><!-- fragment --> <dl class="section note"><dt>Note</dt><dd>When this function returns, the pointer pThingName points at the first character of the &lt;thingName&gt; segment inside of the topic string. Likewise, the pointer pShadowName points at the first character of the &lt;shadowName&gt; segment inside of the topic string (if the topic is for a named shadow, not the "Classic" shadow.) Caller is responsible for keeping the memory holding the topic string around while accessing the Thing Name through pThingName and the Shadow Name through pShadowName.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -147,7 +147,7 @@ $(document).ready(function(){initNavTree('shadow_matchtopicstring_function.html'
 <div class="line">     <span class="comment">// It is a device shadow message. And the type of the message has been returned in messageType.</span></div>
 <div class="line">     <span class="comment">// Now we can act on the message.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__shadow__enum__types_html_gga41ed1ee9c48c83638bef476fd2773398a568e9c9ebfb0ae4d11587ea70694f855"><div class="ttname"><a href="group__shadow__enum__types.html#gga41ed1ee9c48c83638bef476fd2773398a568e9c9ebfb0ae4d11587ea70694f855">SHADOW_SUCCESS</a></div><div class="ttdeci">@ SHADOW_SUCCESS</div><div class="ttdoc">Shadow function success.</div><div class="ttdef"><b>Definition:</b> shadow.h:101</div></div>
+<div class="ttc" id="agroup__shadow__enum__types_html_gga41ed1ee9c48c83638bef476fd2773398a568e9c9ebfb0ae4d11587ea70694f855"><div class="ttname"><a href="group__shadow__enum__types.html#gga41ed1ee9c48c83638bef476fd2773398a568e9c9ebfb0ae4d11587ea70694f855">SHADOW_SUCCESS</a></div><div class="ttdeci">@ SHADOW_SUCCESS</div><div class="ttdoc">Shadow function success.</div><div class="ttdef"><b>Definition:</b> shadow.h:103</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

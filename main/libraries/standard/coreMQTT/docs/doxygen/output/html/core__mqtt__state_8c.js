@@ -1,5 +1,6 @@
 var core__mqtt__state_8c =
 [
+    [ "MQTT_INVALID_STATE_COUNT", "core__mqtt__state_8c.html#a49d2236ebe2b3d27e82e54a7b9e74984", null ],
     [ "UINT16_BITMAP_BIT_SET_AT", "core__mqtt__state_8c.html#a50892214c51968df798f584272f16a17", null ],
     [ "UINT16_SET_BIT", "core__mqtt__state_8c.html#acd96521b31682b7d93de544704fd9594", null ],
     [ "UINT16_CHECK_BIT", "core__mqtt__state_8c.html#a085ab1307745f304ce2e6d24bdc3f6a7", null ],
@@ -11,14 +12,16 @@ var core__mqtt__state_8c =
     [ "addRecord", "core__mqtt__state_8c.html#a5d0ffdfde0c38a1cc1d4e3f4750a8cc4", null ],
     [ "updateRecord", "core__mqtt__state_8c.html#a819c7c72087621fcf97a028bff02759e", null ],
     [ "stateSelect", "core__mqtt__state_8c.html#adfc09b0c75d5de09cd73650f944699c0", null ],
-    [ "updateStateAck", "core__mqtt__state_8c.html#a897d2385c4f4f49589e664e1df0afd3f", null ],
-    [ "updateStatePublish", "core__mqtt__state_8c.html#a05a9eda7866e5c9fa95d4c447b1f4921", null ],
+    [ "updateStateAck", "core__mqtt__state_8c.html#a174a91b9491a344d6fb4f0b39189392f", null ],
+    [ "updateStatePublish", "core__mqtt__state_8c.html#aa0550584e3733da2e31c9478b9307b49", null ],
     [ "MQTT_CalculateStateAck", "core__mqtt__state_8c.html#a0cad28e34f03b84aff43ee243ce8e2cf", null ],
-    [ "MQTT_ReserveState", "core__mqtt__state_8c.html#ae47d7b3a2ddcaeddfb0ed9063801ca7f", null ],
+    [ "MQTT_ReserveState", "core__mqtt__state_8c.html#a43bc5d82716e1d8b6e167ec0fe50de5d", null ],
     [ "MQTT_CalculateStatePublish", "core__mqtt__state_8c.html#aadc4fdd8af74ac25b848a33e916bff50", null ],
-    [ "MQTT_UpdateStatePublish", "core__mqtt__state_8c.html#a0791ed4537962861ab5d15e0094b195f", null ],
-    [ "MQTT_UpdateStateAck", "core__mqtt__state_8c.html#aed480e79fa1300737c16964e7082afa8", null ],
+    [ "MQTT_UpdateStatePublish", "core__mqtt__state_8c.html#ad657bd67745c66bc50f0441b4cc94763", null ],
+    [ "MQTT_RemoveStateRecord", "core__mqtt__state_8c.html#aef2c13cffbbd5c71183282e69ac9d799", null ],
+    [ "MQTT_UpdateStateAck", "core__mqtt__state_8c.html#a09a013b709085ffd51faa33c067cce1f", null ],
     [ "MQTT_PubrelToResend", "core__mqtt__state_8c.html#ae58ade262ec01262687554b349b2fdf5", null ],
     [ "MQTT_PublishToResend", "core__mqtt__state_8c.html#a44b3cf50dc477a9f97413a9238a961f6", null ],
-    [ "MQTT_State_strerror", "core__mqtt__state_8c.html#a53d786203ca4d5d5630a9eb3dd4cddae", null ]
+    [ "MQTT_State_strerror", "core__mqtt__state_8c.html#a53d786203ca4d5d5630a9eb3dd4cddae", null ],
+    [ "ZERO_SIZE_T", "core__mqtt__state_8c.html#ab93bbb754488b23d5ac75abcd385e086", null ]
 ];

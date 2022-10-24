@@ -10,6 +10,5 @@ var searchData=
   ['otamqttstatus_5ft_7',['OtaMqttStatus_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__enum__types.html#gaf32d40000cc4b46c0144fd673d6f24fa',1,]]],
   ['otaosstatus_5ft_8',['OtaOsStatus_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__enum__types.html#gaececff6c0dd8ba4d884544571bd368e7',1,]]],
   ['otapalimagestate_5ft_9',['OtaPalImageState_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__enum__types.html#gab1f386c3bcc707ff32033659a0a4ddca',1,]]],
-  ['otapalmainstatus_5ft_10',['OtaPalMainStatus_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b',1,]]],
-  ['otastate_5ft_11',['OtaState_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc',1,]]]
+  ['otastate_5ft_10',['OtaState_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc',1,]]]
 ];

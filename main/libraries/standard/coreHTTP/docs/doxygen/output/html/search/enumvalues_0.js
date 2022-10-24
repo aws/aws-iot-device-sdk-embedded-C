@@ -17,6 +17,5 @@ var searchData=
   ['httpsecurityalertinvalidcontentlength_14',['HTTPSecurityAlertInvalidContentLength',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac1b1794cf29fd99be06e0b0ed5f9213d',1,'core_http_client.h']]],
   ['httpsecurityalertinvalidprotocolversion_15',['HTTPSecurityAlertInvalidProtocolVersion',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fab6ed7f7e24e250896a7b35825006d460',1,'core_http_client.h']]],
   ['httpsecurityalertinvalidstatuscode_16',['HTTPSecurityAlertInvalidStatusCode',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf53f0e027fd6d66ecd796bce19711562',1,'core_http_client.h']]],
-  ['httpsecurityalertresponseheaderssizelimitexceeded_17',['HTTPSecurityAlertResponseHeadersSizeLimitExceeded',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac9de51dc48124bbbc331a9161afe3862',1,'core_http_client.h']]],
-  ['httpsuccess_18',['HTTPSuccess',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd',1,'core_http_client.h']]]
+  ['httpsuccess_17',['HTTPSuccess',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd',1,'core_http_client.h']]]
 ];

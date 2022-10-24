@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v3.0.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -106,9 +106,6 @@ $(document).ready(function(){initNavTree('core__http__config__defaults_8h.html',
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ae75b97ea0b2c54acc59a148274a882e8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__config__defaults_8h.html#ae75b97ea0b2c54acc59a148274a882e8">HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES</a>&#160;&#160;&#160;2048U</td></tr>
-<tr class="memdesc:ae75b97ea0b2c54acc59a148274a882e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum size, in bytes, of headers allowed from the server.  <a href="core__http__config__defaults_8h.html#ae75b97ea0b2c54acc59a148274a882e8">More...</a><br /></td></tr>
-<tr class="separator:ae75b97ea0b2c54acc59a148274a882e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad588638704f5bfbc30bc56f971dba343"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__http__config__defaults_8h.html#ad588638704f5bfbc30bc56f971dba343">HTTP_USER_AGENT_VALUE</a>&#160;&#160;&#160;&quot;my-platform-name&quot;</td></tr>
 <tr class="memdesc:ad588638704f5bfbc30bc56f971dba343"><td class="mdescLeft">&#160;</td><td class="mdescRight">The HTTP header "User-Agent" value.  <a href="core__http__config__defaults_8h.html#ad588638704f5bfbc30bc56f971dba343">More...</a><br /></td></tr>
 <tr class="separator:ad588638704f5bfbc30bc56f971dba343"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,25 +132,6 @@ Macros</h2></td></tr>
 <div class="textblock"><p >The default values for the configuration macros for the HTTP Client library. </p>
 <dl class="section note"><dt>Note</dt><dd>This file SHOULD NOT be modified. If custom values are needed for any configuration macro, a core_http_config.h file should be provided to the HTTP Client library to override the default values defined in this file. To use the custom config file, the HTTP_DO_NOT_USE_CUSTOM_CONFIG preprocessor macro SHOULD NOT be set. </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="ae75b97ea0b2c54acc59a148274a882e8" name="ae75b97ea0b2c54acc59a148274a882e8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae75b97ea0b2c54acc59a148274a882e8">&#9670;&nbsp;</a></span>HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES&#160;&#160;&#160;2048U</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Maximum size, in bytes, of headers allowed from the server. </p>
-<p >If the total size in bytes of the headers received from the server exceeds this configuration, then the status code <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac9de51dc48124bbbc331a9161afe3862" title="The server sent more headers than the configured HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES.">HTTPSecurityAlertResponseHeadersSizeLimitExceeded</a> is returned from <a class="el" href="core__http__client_8h.html#aa33b3334128496487d820f0da7ae5601" title="Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...">HTTPClient_Send</a>.</p>
-<p ><b>Possible values:</b> Any positive 32 bit integer. <br  />
- <b>Default value:</b> <code>2048</code> </p>
-
-</div>
-</div>
 <a id="ad588638704f5bfbc30bc56f971dba343" name="ad588638704f5bfbc30bc56f971dba343"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad588638704f5bfbc30bc56f971dba343">&#9670;&nbsp;</a></span>HTTP_USER_AGENT_VALUE</h2>
 

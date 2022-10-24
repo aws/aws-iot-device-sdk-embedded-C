@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['incomingpublishrecords_0',['incomingPublishRecords',['../struct_m_q_t_t_context__t.html#a2603a6d9ba3443a323f2262025b5c5ef',1,'MQTTContext_t']]]
+  ['headerlength_0',['headerLength',['../struct_m_q_t_t_packet_info__t.html#aa7de1631ed8e08410942d36a72db558a',1,'MQTTPacketInfo_t']]]
 ];

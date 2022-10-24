@@ -11,5 +11,5 @@ var searchData=
   ['processvalidfilecontext_8',['processValidFileContext',['../ota_8c.html#a4334797dac98d572ae6ea0bdcf812209',1,'ota.c']]],
   ['prvbuildstatusmessagefinish_9',['prvBuildStatusMessageFinish',['../ota__mqtt_8c.html#aaa2eaddd7807ec765cb49056f0c88ad8',1,'ota_mqtt.c']]],
   ['prvbuildstatusmessageselftest_10',['prvBuildStatusMessageSelfTest',['../ota__mqtt_8c.html#a15053eb434a9a80cfe501ff2332a3811',1,'ota_mqtt.c']]],
-  ['publishstatusmessage_11',['publishStatusMessage',['../ota__mqtt_8c.html#aa4f7d02282e60e0700df63cc4028ccab',1,'ota_mqtt.c']]]
+  ['publishstatusmessage_11',['publishStatusMessage',['../ota__mqtt_8c.html#ac02a840211a67a57f271f5dfa729c2a9',1,'ota_mqtt.c']]]
 ];

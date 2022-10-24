@@ -81,14 +81,14 @@ var group__ota__struct__types =
       [ "setPlatformImageState", "struct_ota_pal_interface__t.html#a4042675d1df2bcc0fca26a9121fe5668", null ],
       [ "getPlatformImageState", "struct_ota_pal_interface__t.html#ace5e6d57a59896ca51b41c685989dd13", null ]
     ] ],
-    [ "Sig256_t", "struct_sig256__t.html", [
-      [ "size", "struct_sig256__t.html#a03d5d9cc35524d46b65eeb6287e75ea3", null ],
-      [ "data", "struct_sig256__t.html#aae366e61733f67f99979cdd998fc8e01", null ]
+    [ "Sig_t", "struct_sig__t.html", [
+      [ "size", "struct_sig__t.html#a060a9746084edd6e0b0b5d3e6f53c9f5", null ],
+      [ "data", "struct_sig__t.html#a50ba06ed445cc74de1aa388fdd096890", null ]
     ] ],
     [ "OtaFileContext_t", "struct_ota_file_context__t.html", [
       [ "pFilePath", "struct_ota_file_context__t.html#a7281da77a81626910373a56efcf90262", null ],
       [ "filePathMaxSize", "struct_ota_file_context__t.html#a011bd760168a0265d0912bfb9ae5b35a", null ],
-      [ "pFile", "struct_ota_file_context__t.html#a731eefc516423588396a17c63cc159b9", null ],
+      [ "pFile", "struct_ota_file_context__t.html#ae7aa864f6bd88d6805759a55e89bfe8e", null ],
       [ "fileSize", "struct_ota_file_context__t.html#a26d56a7c06c041a73e569ca53e71ac67", null ],
       [ "blocksRemaining", "struct_ota_file_context__t.html#a23ad6a417000fca03982f5dd67bae94f", null ],
       [ "fileAttributes", "struct_ota_file_context__t.html#a1eb0744188e34521d45faf9f740043e1", null ],
@@ -112,6 +112,6 @@ var group__ota__struct__types =
       [ "pDecodeMem", "struct_ota_file_context__t.html#acd7020697cf5a208cac8da603af33d1f", null ],
       [ "decodeMemMaxSize", "struct_ota_file_context__t.html#a14058c044993f0fe95a406b072204495", null ],
       [ "fileType", "struct_ota_file_context__t.html#a3b880b7e8fcb4fee11607ac8bd454915", null ],
-      [ "pSignature", "struct_ota_file_context__t.html#a7b19507fb15f4924d985ad0a48c671f0", null ]
+      [ "pSignature", "struct_ota_file_context__t.html#a9b19a39f2ad185b21231cf91cef47ace", null ]
     ] ]
 ];

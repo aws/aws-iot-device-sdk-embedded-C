@@ -8,6 +8,7 @@ var group__ota__constants =
     [ "OTA_REQUEST_MSG_MAX_SIZE", "group__ota__constants.html#ga9b81d4cb7dbd60b668da6dc2dea072c2", null ],
     [ "OTA_REQUEST_URL_MAX_SIZE", "group__ota__constants.html#gab4104ae99ac82ab47978b046e6e26e6a", null ],
     [ "OTA_ERASED_BLOCKS_VAL", "group__ota__constants.html#ga759a079ce6746a1d1f7e6391565bbe4a", null ],
+    [ "OTA_MAX_FILE_SIZE", "group__ota__constants.html#ga301d4ae71893ce48f38c07e317304376", null ],
     [ "OTA_MAX_JSON_TOKENS", "group__ota__constants.html#ga059be218ff71c8df0eccda0a7115bfad", null ],
     [ "OTA_MAX_JSON_STR_LEN", "group__ota__constants.html#gafaa370948b99101757c117fd5f85abc1", null ],
     [ "OTA_DOC_MODEL_MAX_PARAMS", "group__ota__constants.html#gabe907910e02fd0d9ac522cc48c39e54d", null ],
@@ -45,5 +46,6 @@ var group__ota__constants =
     [ "OTA_JSON_FILE_CERT_NAME_KEY", "group__ota__constants.html#ga6e5f882dc07e8a5a8b2f079cc4444a50", null ],
     [ "OTA_JSON_UPDATE_DATA_URL_KEY", "group__ota__constants.html#gad3c584828dcc7d99d65931d0c1ded6b7", null ],
     [ "OTA_JSON_AUTH_SCHEME_KEY", "group__ota__constants.html#gaafc3e865308a16ec82181d6aea75d6bb", null ],
-    [ "OTA_JSON_FILETYPE_KEY", "group__ota__constants.html#gaab7b7332590b19bcc767a290953c58a8", null ]
+    [ "OTA_JSON_FILETYPE_KEY", "group__ota__constants.html#gaab7b7332590b19bcc767a290953c58a8", null ],
+    [ "OtaPalMainStatus_t", "group__ota__constants.html#gac5c3148205ee4a0cac4246b2c7797765", null ]
 ];

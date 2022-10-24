@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -109,7 +109,7 @@ Collaboration diagram for OtaFileContext_t:</div>
 <div class="center"><img src="struct_ota_file_context__t__coll__graph.png" border="0" usemap="#a_ota_file_context__t_coll__map" alt="Collaboration graph"/></div>
 <map name="a_ota_file_context__t_coll__map" id="a_ota_file_context__t_coll__map">
 <area shape="rect" title="OTA File Context Information." alt="" coords="5,95,136,121"/>
-<area shape="rect" href="struct_sig256__t.html" title="OTA File Signature info." alt="" coords="31,5,110,32"/>
+<area shape="rect" href="struct_sig__t.html" title="OTA File Signature info." alt="" coords="43,5,98,32"/>
 </map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -123,10 +123,10 @@ uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><b>pFilePath</b></t
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>filePathMaxSize</b></td></tr>
 <tr class="memdesc:a011bd760168a0265d0912bfb9ae5b35a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum size of the update file path. <br /></td></tr>
 <tr class="separator:a011bd760168a0265d0912bfb9ae5b35a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a731eefc516423588396a17c63cc159b9"><td class="memItemLeft" align="right" valign="top"><a id="a731eefc516423588396a17c63cc159b9" name="a731eefc516423588396a17c63cc159b9"></a>
-uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><b>pFile</b></td></tr>
-<tr class="memdesc:a731eefc516423588396a17c63cc159b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">File type is RAM/Flash image pointer after file is open for write. <br /></td></tr>
-<tr class="separator:a731eefc516423588396a17c63cc159b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7aa864f6bd88d6805759a55e89bfe8e"><td class="memItemLeft" align="right" valign="top"><a id="ae7aa864f6bd88d6805759a55e89bfe8e" name="ae7aa864f6bd88d6805759a55e89bfe8e"></a>
+<a class="el" href="ota__config__defaults_8h.html#ac6198be4c4b8952d25662b260e9e8323">otaconfigOTA_FILE_TYPE</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pFile</b></td></tr>
+<tr class="memdesc:ae7aa864f6bd88d6805759a55e89bfe8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">File type after file is open for write. <br /></td></tr>
+<tr class="separator:ae7aa864f6bd88d6805759a55e89bfe8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a26d56a7c06c041a73e569ca53e71ac67"><td class="memItemLeft" align="right" valign="top"><a id="a26d56a7c06c041a73e569ca53e71ac67" name="a26d56a7c06c041a73e569ca53e71ac67"></a>
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>fileSize</b></td></tr>
 <tr class="memdesc:a26d56a7c06c041a73e569ca53e71ac67"><td class="mdescLeft">&#160;</td><td class="mdescRight">The size of the file in bytes. <br /></td></tr>
@@ -219,10 +219,10 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>decodeMemMaxSize<
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>fileType</b></td></tr>
 <tr class="memdesc:a3b880b7e8fcb4fee11607ac8bd454915"><td class="mdescLeft">&#160;</td><td class="mdescRight">The file type id set when creating the OTA job. <br /></td></tr>
 <tr class="separator:a3b880b7e8fcb4fee11607ac8bd454915"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b19507fb15f4924d985ad0a48c671f0"><td class="memItemLeft" align="right" valign="top"><a id="a7b19507fb15f4924d985ad0a48c671f0" name="a7b19507fb15f4924d985ad0a48c671f0"></a>
-<a class="el" href="struct_sig256__t.html">Sig256_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pSignature</b></td></tr>
-<tr class="memdesc:a7b19507fb15f4924d985ad0a48c671f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the file's signature structure. <br /></td></tr>
-<tr class="separator:a7b19507fb15f4924d985ad0a48c671f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b19a39f2ad185b21231cf91cef47ace"><td class="memItemLeft" align="right" valign="top"><a id="a9b19a39f2ad185b21231cf91cef47ace" name="a9b19a39f2ad185b21231cf91cef47ace"></a>
+<a class="el" href="struct_sig__t.html">Sig_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pSignature</b></td></tr>
+<tr class="memdesc:a9b19a39f2ad185b21231cf91cef47ace"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the file's signature structure. <br /></td></tr>
+<tr class="separator:a9b19a39f2ad185b21231cf91cef47ace"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >OTA File Context Information. </p>

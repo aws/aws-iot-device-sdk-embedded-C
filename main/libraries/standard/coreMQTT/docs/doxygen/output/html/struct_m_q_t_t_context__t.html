@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v1.1.2</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -106,14 +106,22 @@ $(document).ready(function(){initNavTree('struct_m_q_t_t_context__t.html',''); i
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ad2845a6789e2f49dae22d67c91e48d53"><td class="memItemLeft" align="right" valign="top"><a id="ad2845a6789e2f49dae22d67c91e48d53" name="ad2845a6789e2f49dae22d67c91e48d53"></a>
-<a class="el" href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>outgoingPublishRecords</b> [<a class="el" href="core__mqtt__config__defaults_8h.html#a50b149716607c0b7974c391830f1b007">MQTT_STATE_ARRAY_MAX_COUNT</a>]</td></tr>
-<tr class="memdesc:ad2845a6789e2f49dae22d67c91e48d53"><td class="mdescLeft">&#160;</td><td class="mdescRight">State engine records for outgoing publishes. <br /></td></tr>
-<tr class="separator:ad2845a6789e2f49dae22d67c91e48d53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2603a6d9ba3443a323f2262025b5c5ef"><td class="memItemLeft" align="right" valign="top"><a id="a2603a6d9ba3443a323f2262025b5c5ef" name="a2603a6d9ba3443a323f2262025b5c5ef"></a>
-<a class="el" href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>incomingPublishRecords</b> [<a class="el" href="core__mqtt__config__defaults_8h.html#a50b149716607c0b7974c391830f1b007">MQTT_STATE_ARRAY_MAX_COUNT</a>]</td></tr>
-<tr class="memdesc:a2603a6d9ba3443a323f2262025b5c5ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">State engine records for incoming publishes. <br /></td></tr>
-<tr class="separator:a2603a6d9ba3443a323f2262025b5c5ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ea1e37e0e81f010fbf84365ac2ef6de"><td class="memItemLeft" align="right" valign="top"><a id="a4ea1e37e0e81f010fbf84365ac2ef6de" name="a4ea1e37e0e81f010fbf84365ac2ef6de"></a>
+<a class="el" href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>outgoingPublishRecords</b></td></tr>
+<tr class="memdesc:a4ea1e37e0e81f010fbf84365ac2ef6de"><td class="mdescLeft">&#160;</td><td class="mdescRight">State engine records for outgoing publishes. <br /></td></tr>
+<tr class="separator:a4ea1e37e0e81f010fbf84365ac2ef6de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc147663a5933de81212fa77057f0a4d"><td class="memItemLeft" align="right" valign="top"><a id="afc147663a5933de81212fa77057f0a4d" name="afc147663a5933de81212fa77057f0a4d"></a>
+<a class="el" href="struct_m_q_t_t_pub_ack_info__t.html">MQTTPubAckInfo_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>incomingPublishRecords</b></td></tr>
+<tr class="memdesc:afc147663a5933de81212fa77057f0a4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">State engine records for incoming publishes. <br /></td></tr>
+<tr class="separator:afc147663a5933de81212fa77057f0a4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2851073e252d1e744596272ef13dd14a"><td class="memItemLeft" align="right" valign="top"><a id="a2851073e252d1e744596272ef13dd14a" name="a2851073e252d1e744596272ef13dd14a"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>outgoingPublishRecordMaxCount</b></td></tr>
+<tr class="memdesc:a2851073e252d1e744596272ef13dd14a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of outgoing publish records. <br /></td></tr>
+<tr class="separator:a2851073e252d1e744596272ef13dd14a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa33ed2e10380a854629f1386d0323ea8"><td class="memItemLeft" align="right" valign="top"><a id="aa33ed2e10380a854629f1386d0323ea8" name="aa33ed2e10380a854629f1386d0323ea8"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>incomingPublishRecordMaxCount</b></td></tr>
+<tr class="memdesc:aa33ed2e10380a854629f1386d0323ea8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of incoming publish records. <br /></td></tr>
+<tr class="separator:aa33ed2e10380a854629f1386d0323ea8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87ab9d61e7711325c2c85ce3ce63386a"><td class="memItemLeft" align="right" valign="top"><a id="a87ab9d61e7711325c2c85ce3ce63386a" name="a87ab9d61e7711325c2c85ce3ce63386a"></a>
 <a class="el" href="struct_transport_interface__t.html">TransportInterface_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>transportInterface</b></td></tr>
 <tr class="memdesc:a87ab9d61e7711325c2c85ce3ce63386a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The transport interface used by the MQTT connection. <br /></td></tr>
@@ -138,14 +146,22 @@ uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>nextPacketId</b><
 <a class="el" href="group__mqtt__callback__types.html#ga00d348277ed4fde23c95bfc749ae954a">MQTTEventCallback_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>appCallback</b></td></tr>
 <tr class="memdesc:a73bd9259db9c3a9b84518cbf928ed91f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function used to give deserialized MQTT packets to the application. <br /></td></tr>
 <tr class="separator:a73bd9259db9c3a9b84518cbf928ed91f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd7afb708927ec69530408defa192d2f"><td class="memItemLeft" align="right" valign="top"><a id="abd7afb708927ec69530408defa192d2f" name="abd7afb708927ec69530408defa192d2f"></a>
-uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>lastPacketTime</b></td></tr>
-<tr class="memdesc:abd7afb708927ec69530408defa192d2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timestamp of the last packet sent by the library. <br /></td></tr>
-<tr class="separator:abd7afb708927ec69530408defa192d2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01acf90953e830ba3e7f44182cb1d482"><td class="memItemLeft" align="right" valign="top"><a id="a01acf90953e830ba3e7f44182cb1d482" name="a01acf90953e830ba3e7f44182cb1d482"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>lastPacketTxTime</b></td></tr>
+<tr class="memdesc:a01acf90953e830ba3e7f44182cb1d482"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timestamp of the last packet sent by the library. <br /></td></tr>
+<tr class="separator:a01acf90953e830ba3e7f44182cb1d482"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7111ef16e4a4e75a72861f6f3ea8a7c3"><td class="memItemLeft" align="right" valign="top"><a id="a7111ef16e4a4e75a72861f6f3ea8a7c3" name="a7111ef16e4a4e75a72861f6f3ea8a7c3"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>lastPacketRxTime</b></td></tr>
+<tr class="memdesc:a7111ef16e4a4e75a72861f6f3ea8a7c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timestamp of the last packet received by the library. <br /></td></tr>
+<tr class="separator:a7111ef16e4a4e75a72861f6f3ea8a7c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9724f2426132e3ce96a03892902ef89"><td class="memItemLeft" align="right" valign="top"><a id="af9724f2426132e3ce96a03892902ef89" name="af9724f2426132e3ce96a03892902ef89"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>controlPacketSent</b></td></tr>
-<tr class="memdesc:af9724f2426132e3ce96a03892902ef89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the library sent a packet during a call of <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a>. <br /></td></tr>
+<tr class="memdesc:af9724f2426132e3ce96a03892902ef89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the library sent a packet during a call of <a class="el" href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a>. <br /></td></tr>
 <tr class="separator:af9724f2426132e3ce96a03892902ef89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41b7735cd0746563483b72e17cf103aa"><td class="memItemLeft" align="right" valign="top"><a id="a41b7735cd0746563483b72e17cf103aa" name="a41b7735cd0746563483b72e17cf103aa"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>index</b></td></tr>
+<tr class="memdesc:a41b7735cd0746563483b72e17cf103aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Index to keep track of the number of bytes received in network buffer. <br /></td></tr>
+<tr class="separator:a41b7735cd0746563483b72e17cf103aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd6071827ef48b230212a5725c2075be"><td class="memItemLeft" align="right" valign="top"><a id="afd6071827ef48b230212a5725c2075be" name="afd6071827ef48b230212a5725c2075be"></a>
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>keepAliveIntervalSec</b></td></tr>
 <tr class="memdesc:afd6071827ef48b230212a5725c2075be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Keep Alive interval. <br /></td></tr>

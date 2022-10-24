@@ -40,7 +40,8 @@ var group__mqtt__enum__types =
       [ "MQTTNoDataAvailable", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca676f21c0ddf297ae3ec874bc829aa957", null ],
       [ "MQTTIllegalState", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca67905d7a05f98faa557a73eb5092bd8f", null ],
       [ "MQTTStateCollision", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca8d05b92240dea6df08eab5a9e3799c11", null ],
-      [ "MQTTKeepAliveTimeout", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca076ca8965e836a06e707a94adb26144f", null ]
+      [ "MQTTKeepAliveTimeout", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca076ca8965e836a06e707a94adb26144f", null ],
+      [ "MQTTNeedMoreBytes", "group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735caa97df53014d919df5ecd54398f89f9b9", null ]
     ] ],
     [ "MQTTQoS_t", "group__mqtt__enum__types.html#gae308a5928d7f537379c29a894228093a", [
       [ "MQTTQoS0", "group__mqtt__enum__types.html#ggae308a5928d7f537379c29a894228093aaad51b23a1ae1417f96d8f343c788d1d2", null ],

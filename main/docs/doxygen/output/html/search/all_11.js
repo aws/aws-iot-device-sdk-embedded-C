@@ -7,7 +7,7 @@ var searchData=
   ['reqflags_4',['reqFlags',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_request_info__t.html#a157ebe1394fe870d342b25a5521f2505',1,'HTTPRequestInfo_t']]],
   ['request_5',['request',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_http_interface__t.html#a87e4e6ebc94538da49d7cfe24cefab1c',1,'OtaHttpInterface_t']]],
   ['requestfileblock_6',['requestFileBlock',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_data_interface__t.html#a4ceb39add093ae3e3aa2798a1e515cc1',1,'OtaDataInterface_t']]],
-  ['requestjob_7',['requestJob',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_control_interface__t.html#a8c2422158a814c16d698982dfbdffc86',1,'OtaControlInterface_t']]],
+  ['requestjob_7',['requestJob',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_control_interface__t.html#a577f6d646e6776df3cc52bb7f073e14e',1,'OtaControlInterface_t']]],
   ['requestmomentum_8',['requestMomentum',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_agent_context__t.html#abcb47ce949d9c9874ba53c08df390665',1,'OtaAgentContext_t']]],
   ['required_9',['required',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_json_doc_param__t.html#a96709fba52845d5f5ad914c89db05989',1,'JsonDocParam_t']]],
   ['reset_10',['reset',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_pal_interface__t.html#a744b9602243baf92cbe2d1e8aef3b7ec',1,'OtaPalInterface_t']]],

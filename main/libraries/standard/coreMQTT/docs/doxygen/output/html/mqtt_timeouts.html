@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v1.1.2</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -102,7 +102,7 @@ $(document).ready(function(){initNavTree('mqtt_timeouts.html',''); initResizable
 <li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_keep_alive">MQTT Keep Alive interval</a></li>
 <li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_ping_response">MQTT Ping Response timeout</a></li>
 <li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_receive_polling">MQTT Receive Polling timeout</a></li>
-<li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_send_retry">MQTT Send Retry timeout</a></li>
+<li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_send">MQTT Send timeout</a></li>
 <li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_process_receive_loop">Timeouts for MQTT_ProcessLoop and MQTT_ReceiveLoop APIs</a></li>
 <li><a class="el" href="mqtt_timeouts.html#mqtt_timeouts_connect">Timeout for MQTT_Connect</a></li>
 </ol>
@@ -126,11 +126,11 @@ MQTT Receive Polling timeout</h1>
 <p >MQTT Receive Polling timeout is the maximum duration between non-empty network reads while receiving an MQTT packet via the <a class="el" href="mqtt_processloop_function.html">MQTT_ProcessLoop</a> or <a class="el" href="mqtt_receiveloop_function.html">MQTT_ReceiveLoop</a> API functions. This timeout represents the maximum polling duration that is allowed without any data reception from the network for the incoming packet.</p>
 <p >It is important to note that having this timeout too short will result in MQTT being disconnected due to the possibility of partial data being received. If you have small TCP buffers and a high latency network, the optimum value for the timeout can be surprisingly long. In such cases, optimum value for the timeout can be better determined based on experimenting the MQTT applications with payloads bigger than the TCP buffer. If a retry is required for a Transport Receive even after hitting a timeout of Transport Receive without any data received, we recommend using a value larger than the Transport Receive timeout. If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa">MQTTGetCurrentTimeFunc_t</a> timer function, that always returns 0, is used, then this timeout must be set to 0.</p>
 <p >The MQTT Receive Polling timeout can be set by defining the configuration <a class="el" href="core_mqtt_config.html#MQTT_RECV_POLLING_TIMEOUT_MS">MQTT_RECV_POLLING_TIMEOUT_MS</a>.</p>
-<h1><a class="anchor" id="mqtt_timeouts_send_retry"></a>
-MQTT Send Retry timeout</h1>
-<p >MQTT Send Retry timeout is the maximum duration between non-empty network transmissions while sending an MQTT packet via the <a class="el" href="mqtt_processloop_function.html">MQTT_ProcessLoop</a> or <a class="el" href="mqtt_receiveloop_function.html">MQTT_ReceiveLoop</a> API functions. This timeout represents the maximum duration that is allowed for no data transmission over the network through the Transport Send function.</p>
+<h1><a class="anchor" id="mqtt_timeouts_send"></a>
+MQTT Send timeout</h1>
+<p >MQTT Send timeout is the maximum duration allowed to send an MQTT packet over the transport interface.</p>
 <p >It is important to note that having this timeout too short will result in MQTT being disconnected due to the possibility of partial data being sent. If you have small TCP buffers and a high latency network, the optimum value for the timeout can be surprisingly long. In such cases, optimum value for the timeout can be better determined based on experimenting the MQTT applications with payloads bigger than the TCP buffer. If a retry is required for a Transport Send even after hitting a timeout of Transport Send before any data could be sent to transport layer, we recommend using a value larger than the Transport Send timeout. If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa">MQTTGetCurrentTimeFunc_t</a> timer function, that always returns 0, is used, then this timeout must be set to 0.</p>
-<p >The MQTT Send Retry timeout can be set by defining the configuration <a class="el" href="core_mqtt_config.html#MQTT_SEND_RETRY_TIMEOUT_MS">MQTT_SEND_RETRY_TIMEOUT_MS</a>.</p>
+<p >The MQTT Send timeout can be set by defining the configuration <a class="el" href="core_mqtt_config.html#MQTT_SEND_TIMEOUT_MS">MQTT_SEND_TIMEOUT_MS</a>.</p>
 <h1><a class="anchor" id="mqtt_timeouts_process_receive_loop"></a>
 Timeouts for MQTT_ProcessLoop and MQTT_ReceiveLoop APIs</h1>
 <p >This timeout is passed as an argument to <a class="el" href="mqtt_processloop_function.html">MQTT_ProcessLoop</a> or <a class="el" href="mqtt_receiveloop_function.html">MQTT_ReceiveLoop</a> API functions. It is the minimum time that the receive loop in these API functions will run, unless an error occurs. These APIs may be blocked for more time than this timeout, since the APIs will attempt to send and receive MQTT packets to the network using the Transport implementation. The maximum time spent on Transport functions for send and receive depends on the Transport Send and Receive timeouts and the MQTT Receive Polling timeouts as explained in the descriptions of these timeouts above.</p>

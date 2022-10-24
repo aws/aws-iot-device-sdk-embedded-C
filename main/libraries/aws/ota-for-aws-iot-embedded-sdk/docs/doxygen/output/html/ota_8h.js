@@ -3,7 +3,7 @@ var ota_8h =
     [ "OtaAgentContext_t", "struct_ota_agent_context__t.html", "struct_ota_agent_context__t" ],
     [ "CONST_STRLEN", "ota_8h.html#a2714f6afa56c8777b5e570a390a69a58", null ],
     [ "OTA_FILE_SIG_KEY_STR_MAX_LENGTH", "ota_8h.html#a8baee291088322fecd736ff0b03fb730", null ],
-    [ "OtaAppCallback_t", "group__ota__callback__types.html#ga3bedd7e278f89d555a32a7efa8023a28", null ],
+    [ "OtaAppCallback_t", "group__ota__callback__types.html#ga737e6e873370cf18b0221373ae5590ec", null ],
     [ "OtaErr_t", "group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d", [
       [ "OtaErrNone", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c644255eee375cb8e6bd9def0772e02", null ],
       [ "OtaErrUninitialized", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da0c1dd94b8875896b0a9dd383ba239774", null ],
@@ -27,7 +27,8 @@ var ota_8h =
       [ "OtaErrUserAbort", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dafbd1a370f69e3eb88eff25d4fe9facbd", null ],
       [ "OtaErrFailedToEncodeCbor", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dad57de41d65cd3bd5de28228883e83084", null ],
       [ "OtaErrFailedToDecodeCbor", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da7fa31caf9e7a68df47ddbdb657f7f35d", null ],
-      [ "OtaErrActivateFailed", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678", null ]
+      [ "OtaErrActivateFailed", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678", null ],
+      [ "OtaErrFileSizeOverflow", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914", null ]
     ] ],
     [ "OtaState_t", "group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc", [
       [ "OtaAgentStateNoTransition", "group__ota__enum__types.html#gga1cb476a5e0ee81fa486f605e64419dccac587715b1ba932ee624384dde28a24f2", null ],
@@ -64,6 +65,7 @@ var ota_8h =
       [ "OtaJobEventParseCustomJob", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a8e314e0d83b5dcd572b08d9f205ab658", null ],
       [ "OtaJobEventReceivedJob", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a5cf84ad545b4e47c7bc2fe36b4b83fdd", null ],
       [ "OtaJobEventUpdateComplete", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2ea5dedb25b574c14f379ae6b530dfff", null ],
+      [ "OtaJobEventNoActiveJob", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2545ed736348e8d3f14746792ed40744", null ],
       [ "OtaLastJobEvent", "group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7afd4ce3f42084241df27353d4f0e4c614", null ]
     ] ],
     [ "OtaJobStatus_t", "group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0", [
@@ -74,7 +76,7 @@ var ota_8h =
       [ "JobStatusFailedWithVal", "group__ota__enum__types.html#ggabf6d6b1d2bca4c54f58bd622ca6242d0a4965780a768288c0f1cb758206e10186", null ],
       [ "NumJobStatusMappings", "group__ota__enum__types.html#ggabf6d6b1d2bca4c54f58bd622ca6242d0a9bedf4d3fc48cf5d504864b3c3505362", null ]
     ] ],
-    [ "OTA_Init", "ota_8h.html#a9011a6007328dfb3bfde5fdb645fa52f", null ],
+    [ "OTA_Init", "ota_8h.html#a1764ba9b821dcdb693ec549e8349cc2e", null ],
     [ "OTA_Shutdown", "ota_8h.html#ac779291eb93f4e0e6459816e60e13b09", null ],
     [ "OTA_GetState", "ota_8h.html#a6db3f9cb417cb135cb0e68f5b5f2b11f", null ],
     [ "OTA_ActivateNewImage", "ota_8h.html#a5169ba09148e7f5668a90e776e712f8b", null ],
@@ -83,7 +85,8 @@ var ota_8h =
     [ "OTA_CheckForUpdate", "ota_8h.html#a1178e8009eb05e6f55f6506b625c9fc2", null ],
     [ "OTA_Suspend", "ota_8h.html#a65b61ae5dd477e8b2e6c88ea0473c62b", null ],
     [ "OTA_Resume", "ota_8h.html#ae9d40388ac87e4ac93288de37c98a138", null ],
-    [ "OTA_EventProcessingTask", "ota_8h.html#ab3a0cfdc8694a606a1d736b2f54fb113", null ],
+    [ "OTA_EventProcessingTask", "ota_8h.html#a40ff1cf197537e4cac4e8e049c42a1e2", null ],
+    [ "OTA_EventProcess", "ota_8h.html#a733199fef860721888bbf9ee46bd4056", null ],
     [ "OTA_SignalEvent", "ota_8h.html#a2564144f284db077b8947ba58a6a72bb", null ],
     [ "OTA_GetStatistics", "ota_8h.html#a63182243ef3c18d5f36cd427b83a1a22", null ],
     [ "OTA_Err_strerror", "ota_8h.html#a39a9b75e749cf89593c4cf411327ce47", null ],

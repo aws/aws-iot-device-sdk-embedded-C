@@ -11,7 +11,6 @@ var searchData=
   ['otamqttstatus_5ft_8',['OtaMqttStatus_t',['../group__ota__enum__types.html#gaf32d40000cc4b46c0144fd673d6f24fa',1,'ota_mqtt_interface.h']]],
   ['otaosstatus_5ft_9',['OtaOsStatus_t',['../group__ota__enum__types.html#gaececff6c0dd8ba4d884544571bd368e7',1,'ota_os_interface.h']]],
   ['otapalimagestate_5ft_10',['OtaPalImageState_t',['../group__ota__enum__types.html#gab1f386c3bcc707ff32033659a0a4ddca',1,'ota_private.h']]],
-  ['otapalmainstatus_5ft_11',['OtaPalMainStatus_t',['../group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b',1,'ota_platform_interface.h']]],
-  ['otastate_5ft_12',['OtaState_t',['../group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc',1,'ota.h']]],
-  ['otatimerid_5ft_13',['OtaTimerId_t',['../ota__os__interface_8h.html#afb4112b0dbe23a668f5b69e56ffea085',1,'ota_os_interface.h']]]
+  ['otastate_5ft_11',['OtaState_t',['../group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc',1,'ota.h']]],
+  ['otatimerid_5ft_12',['OtaTimerId_t',['../ota__os__interface_8h.html#afb4112b0dbe23a668f5b69e56ffea085',1,'ota_os_interface.h']]]
 ];

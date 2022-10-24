@@ -6,16 +6,20 @@ var group__mqtt__struct__types =
       [ "publishState", "struct_m_q_t_t_pub_ack_info__t.html#a61314203ef87a231c6489c68b579de34", null ]
     ] ],
     [ "MQTTContext_t", "struct_m_q_t_t_context__t.html", [
-      [ "outgoingPublishRecords", "struct_m_q_t_t_context__t.html#ad2845a6789e2f49dae22d67c91e48d53", null ],
-      [ "incomingPublishRecords", "struct_m_q_t_t_context__t.html#a2603a6d9ba3443a323f2262025b5c5ef", null ],
+      [ "outgoingPublishRecords", "struct_m_q_t_t_context__t.html#a4ea1e37e0e81f010fbf84365ac2ef6de", null ],
+      [ "incomingPublishRecords", "struct_m_q_t_t_context__t.html#afc147663a5933de81212fa77057f0a4d", null ],
+      [ "outgoingPublishRecordMaxCount", "struct_m_q_t_t_context__t.html#a2851073e252d1e744596272ef13dd14a", null ],
+      [ "incomingPublishRecordMaxCount", "struct_m_q_t_t_context__t.html#aa33ed2e10380a854629f1386d0323ea8", null ],
       [ "transportInterface", "struct_m_q_t_t_context__t.html#a87ab9d61e7711325c2c85ce3ce63386a", null ],
       [ "networkBuffer", "struct_m_q_t_t_context__t.html#a231c5576a6ce389317a3f00f95628276", null ],
       [ "nextPacketId", "struct_m_q_t_t_context__t.html#af47ed55ad7e9bb112324f5f209b70534", null ],
       [ "connectStatus", "struct_m_q_t_t_context__t.html#a4e38c4dc77e7751a0ad8730a41bee47f", null ],
       [ "getTime", "struct_m_q_t_t_context__t.html#aabe1d302a16771292151013e8e30c582", null ],
       [ "appCallback", "struct_m_q_t_t_context__t.html#a73bd9259db9c3a9b84518cbf928ed91f", null ],
-      [ "lastPacketTime", "struct_m_q_t_t_context__t.html#abd7afb708927ec69530408defa192d2f", null ],
+      [ "lastPacketTxTime", "struct_m_q_t_t_context__t.html#a01acf90953e830ba3e7f44182cb1d482", null ],
+      [ "lastPacketRxTime", "struct_m_q_t_t_context__t.html#a7111ef16e4a4e75a72861f6f3ea8a7c3", null ],
       [ "controlPacketSent", "struct_m_q_t_t_context__t.html#af9724f2426132e3ce96a03892902ef89", null ],
+      [ "index", "struct_m_q_t_t_context__t.html#a41b7735cd0746563483b72e17cf103aa", null ],
       [ "keepAliveIntervalSec", "struct_m_q_t_t_context__t.html#afd6071827ef48b230212a5725c2075be", null ],
       [ "pingReqSendTimeMs", "struct_m_q_t_t_context__t.html#acca3efa4146d85f7e874c7c326e23556", null ],
       [ "waitingForPingResp", "struct_m_q_t_t_context__t.html#ac7073f43645f7b7c0c5b7763980004bb", null ]
@@ -56,11 +60,13 @@ var group__mqtt__struct__types =
     [ "MQTTPacketInfo_t", "struct_m_q_t_t_packet_info__t.html", [
       [ "type", "struct_m_q_t_t_packet_info__t.html#a7fef40548c1aa0f0e7f812a6a7243758", null ],
       [ "pRemainingData", "struct_m_q_t_t_packet_info__t.html#ac66cedff052bc844ec9b296387df60bc", null ],
-      [ "remainingLength", "struct_m_q_t_t_packet_info__t.html#a7c85becf08de0ec9776dd4be1fcc4bf8", null ]
+      [ "remainingLength", "struct_m_q_t_t_packet_info__t.html#a7c85becf08de0ec9776dd4be1fcc4bf8", null ],
+      [ "headerLength", "struct_m_q_t_t_packet_info__t.html#aa7de1631ed8e08410942d36a72db558a", null ]
     ] ],
     [ "TransportInterface_t", "struct_transport_interface__t.html", [
       [ "recv", "struct_transport_interface__t.html#a7c34e9b865e2a509306f09c7dfa3699e", null ],
       [ "send", "struct_transport_interface__t.html#a01cd9935e9a5266ca196243a0054d489", null ],
+      [ "writev", "struct_transport_interface__t.html#a8cf677fbeee53d270daa6dacfa138b79", null ],
       [ "pNetworkContext", "struct_transport_interface__t.html#aaf4702050bef8d62714a4d3900e95087", null ]
     ] ],
     [ "NetworkContext_t", "group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec", null ]

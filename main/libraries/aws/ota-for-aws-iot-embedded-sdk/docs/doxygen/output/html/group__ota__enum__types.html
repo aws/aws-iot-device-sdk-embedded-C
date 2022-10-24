@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -133,6 +133,7 @@ Enumerations</h2></td></tr>
 &#160;&#160;<a class="el" href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dad57de41d65cd3bd5de28228883e83084">OtaErrFailedToEncodeCbor</a>
 , <a class="el" href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da7fa31caf9e7a68df47ddbdb657f7f35d">OtaErrFailedToDecodeCbor</a>
 , <a class="el" href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678">OtaErrActivateFailed</a>
+, <a class="el" href="group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914">OtaErrFileSizeOverflow</a>
 <br />
  }</td></tr>
 <tr class="memdesc:ga7ab3c74dc057383c56c6cb9aa6bf0b2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA API return status. OTA agent error codes are in the upper 8 bits of the 32 bit OTA error word, OtaErr_t.  <a href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">More...</a><br /></td></tr>
@@ -185,7 +186,8 @@ Enumerations</h2></td></tr>
 , <a class="el" href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a5cf84ad545b4e47c7bc2fe36b4b83fdd">OtaJobEventReceivedJob</a> = 6
 , <a class="el" href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2ea5dedb25b574c14f379ae6b530dfff">OtaJobEventUpdateComplete</a> = 7
 , <br />
-&#160;&#160;<b>OtaLastJobEvent</b> = OtaJobEventStartTest
+&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga96a2e1f5cfad783897e805196eee39a7a2545ed736348e8d3f14746792ed40744">OtaJobEventNoActiveJob</a> = 8
+, <b>OtaLastJobEvent</b> = OtaJobEventStartTest
 <br />
  }</td></tr>
 <tr class="memdesc:ga96a2e1f5cfad783897e805196eee39a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">OTA Job callback events.  <a href="group__ota__enum__types.html#ga96a2e1f5cfad783897e805196eee39a7">More...</a><br /></td></tr>
@@ -233,30 +235,6 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:gaececff6c0dd8ba4d884544571bd368e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA OS interface return status.  <a href="group__ota__enum__types.html#gaececff6c0dd8ba4d884544571bd368e7">More...</a><br /></td></tr>
 <tr class="separator:gaececff6c0dd8ba4d884544571bd368e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8e503bbbffc277f6fd5b8645767a685b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a> { <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba8dbb21a8a52503c7e8f33835dc6687c4">OtaPalSuccess</a> = 0
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba386aef27e1d9c7a937d3698e559641e4">OtaPalUninitialized</a> = 0xe0
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba0ec8f96ac056d352c45db250b4f6e05d">OtaPalOutOfMemory</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba088a029115f9b8053b9c23eb50438a1c">OtaPalNullFileContext</a>
-, <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba3a92c1315048b471740472eaa91cd39b">OtaPalSignatureCheckFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba15af1448f649ae32235d23aaab93b90d">OtaPalRxFileCreateFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf945ac941bd969b1833f80847d286805">OtaPalRxFileTooLarge</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba38e979079368805430af70c0daa35005">OtaPalBootInfoCreateFailed</a>
-, <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba7335f166465b3c6537093140445fdfef">OtaPalBadSignerCert</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba8022263fa243f4fedb05692f5816b709">OtaPalBadImageState</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf4431964d1c516dde35c2b37c829b195">OtaPalAbortFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba0beb58eb2e069e80e51e3c4857549d14">OtaPalRejectFailed</a>
-, <br />
-&#160;&#160;<a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685baf5d88629edcda34a8883985972e52126">OtaPalCommitFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba6e8ffdf4071a5ef58fdd3e3bdc1253de">OtaPalActivateFailed</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685ba233a2055c5de2e07759f3e39fa88f8cb">OtaPalFileAbort</a>
-, <a class="el" href="group__ota__enum__types.html#gga8e503bbbffc277f6fd5b8645767a685bab9b6262d3d153e77d186f6df07eb3e6f">OtaPalFileClose</a>
-<br />
- }</td></tr>
-<tr class="memdesc:ga8e503bbbffc277f6fd5b8645767a685b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OTA platform interface main status.  <a href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">More...</a><br /></td></tr>
-<tr class="separator:ga8e503bbbffc277f6fd5b8645767a685b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad4909faa8b9c8672e7f7bef1bc6b5b84"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ota__enum__types.html#gad4909faa8b9c8672e7f7bef1bc6b5b84">OtaImageState_t</a> { <br />
 &#160;&#160;<a class="el" href="group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84afb051298f888e18cfeb7fd1b1986cb9a">OtaImageStateUnknown</a> = 0
 , <a class="el" href="group__ota__enum__types.html#ggad4909faa8b9c8672e7f7bef1bc6b5b84a7193a6a56fbd5578d87dfe46c785d420">OtaImageStateTesting</a> = 1
@@ -362,6 +340,8 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678" name="gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678"></a>OtaErrActivateFailed&#160;</td><td class="fielddoc"><p >Failed to activate the new image. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914" name="gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914"></a>OtaErrFileSizeOverflow&#160;</td><td class="fielddoc"><p >Firmware file size greater than the max allowed size. </p>
+</td></tr>
 </table>
 
 </div>
@@ -397,7 +377,7 @@ Enumerations</h2></td></tr>
 </div><div class="memdoc">
 
 <p>OTA Job callback events. </p>
-<p >After an OTA update image is received and authenticated, the agent calls the user callback (set with the <a class="el" href="ota_8c.html#a9011a6007328dfb3bfde5fdb645fa52f">OTA_Init</a> API) with the value OtaJobEventActivate to signal that the device must be rebooted to activate the new image. When the device boots, if the OTA job status is in self test mode, the agent calls the user callback with the value OtaJobEventStartTest, signaling that any additional self tests should be performed.</p>
+<p >After an OTA update image is received and authenticated, the agent calls the user callback (set with the <a class="el" href="ota_8c.html#a1764ba9b821dcdb693ec549e8349cc2e">OTA_Init</a> API) with the value OtaJobEventActivate to signal that the device must be rebooted to activate the new image. When the device boots, if the OTA job status is in self test mode, the agent calls the user callback with the value OtaJobEventStartTest, signaling that any additional self tests should be performed.</p>
 <p >If the OTA receive fails for any reason, the agent calls the user callback with the value OtaJobEventFail instead to allow the user to log the failure and take any action deemed appropriate by the user code.</p>
 <p >See the OtaImageState_t type for more information. </p>
 <table class="fieldtable">
@@ -416,6 +396,8 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="gga96a2e1f5cfad783897e805196eee39a7a5cf84ad545b4e47c7bc2fe36b4b83fdd" name="gga96a2e1f5cfad783897e805196eee39a7a5cf84ad545b4e47c7bc2fe36b4b83fdd"></a>OtaJobEventReceivedJob&#160;</td><td class="fielddoc"><p >OTA event when a new valid AFT-OTA job is received. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga96a2e1f5cfad783897e805196eee39a7a2ea5dedb25b574c14f379ae6b530dfff" name="gga96a2e1f5cfad783897e805196eee39a7a2ea5dedb25b574c14f379ae6b530dfff"></a>OtaJobEventUpdateComplete&#160;</td><td class="fielddoc"><p >OTA event when the update is completed. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga96a2e1f5cfad783897e805196eee39a7a2545ed736348e8d3f14746792ed40744" name="gga96a2e1f5cfad783897e805196eee39a7a2545ed736348e8d3f14746792ed40744"></a>OtaJobEventNoActiveJob&#160;</td><td class="fielddoc"><p >OTA event when no active job is pending. </p>
 </td></tr>
 </table>
 
@@ -506,56 +488,6 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="ggaececff6c0dd8ba4d884544571bd368e7a760aadce2bd9363c4973720eec02b63f" name="ggaececff6c0dd8ba4d884544571bd368e7a760aadce2bd9363c4973720eec02b63f"></a>OtaOsTimerStopFailed&#160;</td><td class="fielddoc"><p >Failed to stop the timer. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="ggaececff6c0dd8ba4d884544571bd368e7a22a0a901794cea938b8402a3d5c6499c" name="ggaececff6c0dd8ba4d884544571bd368e7a22a0a901794cea938b8402a3d5c6499c"></a>OtaOsTimerDeleteFailed&#160;</td><td class="fielddoc"><p >Failed to delete the timer. </p>
-</td></tr>
-</table>
-
-</div>
-</div>
-<a id="ga8e503bbbffc277f6fd5b8645767a685b" name="ga8e503bbbffc277f6fd5b8645767a685b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga8e503bbbffc277f6fd5b8645767a685b">&#9670;&nbsp;</a></span>OtaPalMainStatus_t</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="group__ota__enum__types.html#ga8e503bbbffc277f6fd5b8645767a685b">OtaPalMainStatus_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>The OTA platform interface main status. </p>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba8dbb21a8a52503c7e8f33835dc6687c4" name="gga8e503bbbffc277f6fd5b8645767a685ba8dbb21a8a52503c7e8f33835dc6687c4"></a>OtaPalSuccess&#160;</td><td class="fielddoc"><p >OTA platform interface success. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba386aef27e1d9c7a937d3698e559641e4" name="gga8e503bbbffc277f6fd5b8645767a685ba386aef27e1d9c7a937d3698e559641e4"></a>OtaPalUninitialized&#160;</td><td class="fielddoc"><p >Result is not yet initialized from PAL. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba0ec8f96ac056d352c45db250b4f6e05d" name="gga8e503bbbffc277f6fd5b8645767a685ba0ec8f96ac056d352c45db250b4f6e05d"></a>OtaPalOutOfMemory&#160;</td><td class="fielddoc"><p >Out of memory. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba088a029115f9b8053b9c23eb50438a1c" name="gga8e503bbbffc277f6fd5b8645767a685ba088a029115f9b8053b9c23eb50438a1c"></a>OtaPalNullFileContext&#160;</td><td class="fielddoc"><p >The PAL is called with a NULL file context. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba3a92c1315048b471740472eaa91cd39b" name="gga8e503bbbffc277f6fd5b8645767a685ba3a92c1315048b471740472eaa91cd39b"></a>OtaPalSignatureCheckFailed&#160;</td><td class="fielddoc"><p >The signature check failed for the specified file. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba15af1448f649ae32235d23aaab93b90d" name="gga8e503bbbffc277f6fd5b8645767a685ba15af1448f649ae32235d23aaab93b90d"></a>OtaPalRxFileCreateFailed&#160;</td><td class="fielddoc"><p >The PAL failed to create the OTA receive file. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685baf945ac941bd969b1833f80847d286805" name="gga8e503bbbffc277f6fd5b8645767a685baf945ac941bd969b1833f80847d286805"></a>OtaPalRxFileTooLarge&#160;</td><td class="fielddoc"><p >The OTA receive file is too big for the platform to support. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba38e979079368805430af70c0daa35005" name="gga8e503bbbffc277f6fd5b8645767a685ba38e979079368805430af70c0daa35005"></a>OtaPalBootInfoCreateFailed&#160;</td><td class="fielddoc"><p >The PAL failed to create the OTA boot info file. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba7335f166465b3c6537093140445fdfef" name="gga8e503bbbffc277f6fd5b8645767a685ba7335f166465b3c6537093140445fdfef"></a>OtaPalBadSignerCert&#160;</td><td class="fielddoc"><p >The signer certificate was not readable or zero length. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba8022263fa243f4fedb05692f5816b709" name="gga8e503bbbffc277f6fd5b8645767a685ba8022263fa243f4fedb05692f5816b709"></a>OtaPalBadImageState&#160;</td><td class="fielddoc"><p >The specified OTA image state was out of range. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685baf4431964d1c516dde35c2b37c829b195" name="gga8e503bbbffc277f6fd5b8645767a685baf4431964d1c516dde35c2b37c829b195"></a>OtaPalAbortFailed&#160;</td><td class="fielddoc"><p >Error trying to abort the OTA. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba0beb58eb2e069e80e51e3c4857549d14" name="gga8e503bbbffc277f6fd5b8645767a685ba0beb58eb2e069e80e51e3c4857549d14"></a>OtaPalRejectFailed&#160;</td><td class="fielddoc"><p >Error trying to reject the OTA image. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685baf5d88629edcda34a8883985972e52126" name="gga8e503bbbffc277f6fd5b8645767a685baf5d88629edcda34a8883985972e52126"></a>OtaPalCommitFailed&#160;</td><td class="fielddoc"><p >The acceptance commit of the new OTA image failed. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba6e8ffdf4071a5ef58fdd3e3bdc1253de" name="gga8e503bbbffc277f6fd5b8645767a685ba6e8ffdf4071a5ef58fdd3e3bdc1253de"></a>OtaPalActivateFailed&#160;</td><td class="fielddoc"><p >The activation of the new OTA image failed. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685ba233a2055c5de2e07759f3e39fa88f8cb" name="gga8e503bbbffc277f6fd5b8645767a685ba233a2055c5de2e07759f3e39fa88f8cb"></a>OtaPalFileAbort&#160;</td><td class="fielddoc"><p >Error in low level file abort. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="gga8e503bbbffc277f6fd5b8645767a685bab9b6262d3d153e77d186f6df07eb3e6f" name="gga8e503bbbffc277f6fd5b8645767a685bab9b6262d3d153e77d186f6df07eb3e6f"></a>OtaPalFileClose&#160;</td><td class="fielddoc"><p >Error in low level file close. </p>
 </td></tr>
 </table>
 

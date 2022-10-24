@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -97,8 +97,8 @@ $(document).ready(function(){initNavTree('ota_eventprocessingtask_function.html'
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p >OTA agent event processing loop.</p>
-<div class="fragment"><div class="line"><span class="keywordtype">void</span> <a class="code hl_function" href="ota_8h.html#ab3a0cfdc8694a606a1d736b2f54fb113">OTA_EventProcessingTask</a>( <span class="keywordtype">void</span> * pUnused );</div>
-<div class="ttc" id="aota_8h_html_ab3a0cfdc8694a606a1d736b2f54fb113"><div class="ttname"><a href="ota_8h.html#ab3a0cfdc8694a606a1d736b2f54fb113">OTA_EventProcessingTask</a></div><div class="ttdeci">void OTA_EventProcessingTask(void *pUnused)</div><div class="ttdoc">OTA agent event processing loop.</div><div class="ttdef"><b>Definition:</b> ota.c:2906</div></div>
+<div class="fragment"><div class="line"><span class="keywordtype">void</span> <a class="code hl_function" href="ota_8h.html#a40ff1cf197537e4cac4e8e049c42a1e2">OTA_EventProcessingTask</a>( <span class="keyword">const</span> <span class="keywordtype">void</span> * pUnused );</div>
+<div class="ttc" id="aota_8h_html_a40ff1cf197537e4cac4e8e049c42a1e2"><div class="ttname"><a href="ota_8h.html#a40ff1cf197537e4cac4e8e049c42a1e2">OTA_EventProcessingTask</a></div><div class="ttdeci">void OTA_EventProcessingTask(const void *pUnused)</div><div class="ttdoc">OTA agent event processing loop.</div><div class="ttdef"><b>Definition:</b> ota.c:3025</div></div>
 </div><!-- fragment --><p> This is the main event loop to handle events for OTA update and needs to be called by the application task. This loop will continue to handle and execute events received for OTA Update until this tasks is terminated by the application.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

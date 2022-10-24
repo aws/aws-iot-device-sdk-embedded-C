@@ -11,6 +11,6 @@ var ota__cbor__private_8h =
     [ "OTA_CBOR_BLOCKID_KEY", "ota__cbor__private_8h.html#aa1cc92139de0ccb03c3009102f7d6b1d", null ],
     [ "OTA_CBOR_BLOCKPAYLOAD_KEY", "ota__cbor__private_8h.html#a61fe6e62a38c30cc370db183aaa27106", null ],
     [ "OTA_CBOR_NUMBEROFBLOCKS_KEY", "ota__cbor__private_8h.html#a7f2cb71d485996fa170b69efb31a0266", null ],
-    [ "OTA_CBOR_Decode_GetStreamResponseMessage", "ota__cbor__private_8h.html#a479c08472cc49b7b813d7a1b91d744a5", null ],
-    [ "OTA_CBOR_Encode_GetStreamRequestMessage", "ota__cbor__private_8h.html#aa163d0fa47b92895b9292a400bd89448", null ]
+    [ "OTA_CBOR_Decode_GetStreamResponseMessage", "ota__cbor__private_8h.html#a595cede1c982346f5a766f4f491a5573", null ],
+    [ "OTA_CBOR_Encode_GetStreamRequestMessage", "ota__cbor__private_8h.html#a253e99d19d2b90574461b8cdef6f3c6a", null ]
 ];

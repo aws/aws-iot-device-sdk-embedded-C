@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v3.0.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -104,11 +104,6 @@ HTTP_DO_NOT_USE_CUSTOM_CONFIG</h1>
 <p >Define this macro to build the HTTP client library without the custom config file core_http_config.h.</p>
 <p >Without the custom config, the HTTP client library builds with default values of config macros defined in <a class="el" href="core__http__config__defaults_8h.html" title="The default values for the configuration macros for the HTTP Client library.">core_http_config_defaults.h</a> file.</p>
 <p >If a custom config is provided, then HTTP_DO_NOT_USE_CUSTOM_CONFIG should not be defined.</p>
-<h1><a class="anchor" id="HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES"></a>
-HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES</h1>
-<p >Maximum size, in bytes, of headers allowed from the server. If the total size in bytes of the headers received from the server exceeds this configuration, then the status code <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac9de51dc48124bbbc331a9161afe3862" title="The server sent more headers than the configured HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES.">HTTPSecurityAlertResponseHeadersSizeLimitExceeded</a> is returned from <a class="el" href="core__http__client_8h.html#aa33b3334128496487d820f0da7ae5601" title="Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...">HTTPClient_Send</a>.</p>
-<p ><b>Possible values:</b> Any positive 32 bit integer. <br  />
- <b>Default value:</b> <code>2048</code></p>
 <h1><a class="anchor" id="HTTP_USER_AGENT_VALUE"></a>
 HTTP_USER_AGENT_VALUE</h1>
 <p >The HTTP header "User-Agent" value. The following header line is automatically written to <a class="el" href="struct_h_t_t_p_request_headers__t.html#acaffc0e3ae5413bf7c673f83388bc7c6" title="Buffer to hold the raw HTTP request headers.">HTTPRequestHeaders_t.pBuffer</a>: "User-Agent: my-platform-name\r\n"</p>

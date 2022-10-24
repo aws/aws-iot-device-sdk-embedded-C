@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v1.1.2</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.1.0</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -101,7 +101,8 @@ $(document).ready(function(){initNavTree('core__mqtt__config__defaults_8h.html',
 
 <p>This represents the default values for the configuration macros for the MQTT library.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &quot;core_mqtt_config.h&quot;</code><br />
+</div>
 <p><a href="core__mqtt__config__defaults_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
@@ -109,33 +110,28 @@ Macros</h2></td></tr>
 <tr class="memitem:abd12bb401eecf3f6694447ea3b1c886d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#abd12bb401eecf3f6694447ea3b1c886d">MQTT_DO_NOT_USE_CUSTOM_CONFIG</a></td></tr>
 <tr class="memdesc:abd12bb401eecf3f6694447ea3b1c886d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Define this macro to build the MQTT library without the custom config file core_mqtt_config.h.  <a href="core__mqtt__config__defaults_8h.html#abd12bb401eecf3f6694447ea3b1c886d">More...</a><br /></td></tr>
 <tr class="separator:abd12bb401eecf3f6694447ea3b1c886d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50b149716607c0b7974c391830f1b007"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a50b149716607c0b7974c391830f1b007">MQTT_STATE_ARRAY_MAX_COUNT</a>&#160;&#160;&#160;( 10U )</td></tr>
-<tr class="memdesc:a50b149716607c0b7974c391830f1b007"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines the maximum number of MQTT PUBLISH messages, pending acknowledgment at a time, that are supported for incoming and outgoing direction of messages, separately.  <a href="core__mqtt__config__defaults_8h.html#a50b149716607c0b7974c391830f1b007">More...</a><br /></td></tr>
-<tr class="separator:a50b149716607c0b7974c391830f1b007"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga928ea0bff12ebf9cf9fa9dfe5cafebbb"><td class="memItemLeft" align="right" valign="top">
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MQTT_SUB_UNSUB_MAX_VECTORS</b>&#160;&#160;&#160;( 4U )</td></tr>
+<tr class="memdesc:ga928ea0bff12ebf9cf9fa9dfe5cafebbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of vectors in subscribe and unsubscribe packet. <br /></td></tr>
+<tr class="separator:ga928ea0bff12ebf9cf9fa9dfe5cafebbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ca6c96436d5e7c2c8a7933fb28a5c87"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a8ca6c96436d5e7c2c8a7933fb28a5c87">MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT</a>&#160;&#160;&#160;( 5U )</td></tr>
 <tr class="memdesc:a8ca6c96436d5e7c2c8a7933fb28a5c87"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of retries for receiving CONNACK.  <a href="core__mqtt__config__defaults_8h.html#a8ca6c96436d5e7c2c8a7933fb28a5c87">More...</a><br /></td></tr>
 <tr class="separator:a8ca6c96436d5e7c2c8a7933fb28a5c87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa825fddb52da7df88fb56d2befcd2fa"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa">MQTT_PINGRESP_TIMEOUT_MS</a>&#160;&#160;&#160;( 5000U )</td></tr>
 <tr class="memdesc:afa825fddb52da7df88fb56d2befcd2fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of milliseconds to wait for a ping response to a ping request as part of the keep-alive mechanism.  <a href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa">More...</a><br /></td></tr>
 <tr class="separator:afa825fddb52da7df88fb56d2befcd2fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b3c7c33badcafec477a205d916424bc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a9b3c7c33badcafec477a205d916424bc">PACKET_TX_TIMEOUT_MS</a>&#160;&#160;&#160;( 30000U )</td></tr>
+<tr class="memdesc:a9b3c7c33badcafec477a205d916424bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of milliseconds of TX inactivity to wait before initiating a PINGREQ.  <a href="core__mqtt__config__defaults_8h.html#a9b3c7c33badcafec477a205d916424bc">More...</a><br /></td></tr>
+<tr class="separator:a9b3c7c33badcafec477a205d916424bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46ef647d5a8315f626dc17d62e264aed"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a46ef647d5a8315f626dc17d62e264aed">PACKET_RX_TIMEOUT_MS</a>&#160;&#160;&#160;( 30000U )</td></tr>
+<tr class="memdesc:a46ef647d5a8315f626dc17d62e264aed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of milliseconds of RX inactivity to wait before initiating a PINGREQ.  <a href="core__mqtt__config__defaults_8h.html#a46ef647d5a8315f626dc17d62e264aed">More...</a><br /></td></tr>
+<tr class="separator:a46ef647d5a8315f626dc17d62e264aed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43dc9a67427d9e420a65955eea0e2671"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671">MQTT_RECV_POLLING_TIMEOUT_MS</a>&#160;&#160;&#160;( 10U )</td></tr>
-<tr class="memdesc:a43dc9a67427d9e420a65955eea0e2671"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum duration between non-empty network reads while receiving an MQTT packet via the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions.  <a href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671">More...</a><br /></td></tr>
+<tr class="memdesc:a43dc9a67427d9e420a65955eea0e2671"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum duration between non-empty network reads while receiving an MQTT packet via the <a class="el" href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions.  <a href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671">More...</a><br /></td></tr>
 <tr class="separator:a43dc9a67427d9e420a65955eea0e2671"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73228316a06bbbb91c931dbade56de35"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a73228316a06bbbb91c931dbade56de35">MQTT_SEND_RETRY_TIMEOUT_MS</a>&#160;&#160;&#160;( 10U )</td></tr>
-<tr class="memdesc:a73228316a06bbbb91c931dbade56de35"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum duration between non-empty network transmissions while sending an MQTT packet via the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions.  <a href="core__mqtt__config__defaults_8h.html#a73228316a06bbbb91c931dbade56de35">More...</a><br /></td></tr>
-<tr class="separator:a73228316a06bbbb91c931dbade56de35"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">LogError</a>(message)</td></tr>
-<tr class="memdesc:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Error" level messages.  <a href="core__mqtt__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">More...</a><br /></td></tr>
-<tr class="separator:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7da92048aaf0cbfcacde9539c98a0e05"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">LogWarn</a>(message)</td></tr>
-<tr class="memdesc:a7da92048aaf0cbfcacde9539c98a0e05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Warning" level messages.  <a href="core__mqtt__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">More...</a><br /></td></tr>
-<tr class="separator:a7da92048aaf0cbfcacde9539c98a0e05"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00810b1cb9d2f25d25ce2d4d93815fba"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba">LogInfo</a>(message)</td></tr>
-<tr class="memdesc:a00810b1cb9d2f25d25ce2d4d93815fba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Info" level messages.  <a href="core__mqtt__config__defaults_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba">More...</a><br /></td></tr>
-<tr class="separator:a00810b1cb9d2f25d25ce2d4d93815fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af60e8ffc327d136e5d0d8441ed98c98d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#af60e8ffc327d136e5d0d8441ed98c98d">LogDebug</a>(message)</td></tr>
-<tr class="memdesc:af60e8ffc327d136e5d0d8441ed98c98d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Debug" level messages.  <a href="core__mqtt__config__defaults_8h.html#af60e8ffc327d136e5d0d8441ed98c98d">More...</a><br /></td></tr>
-<tr class="separator:af60e8ffc327d136e5d0d8441ed98c98d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac262cab68c4c713ebc2b91a2e4ab8b19"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19">MQTT_SEND_TIMEOUT_MS</a>&#160;&#160;&#160;( 20000U )</td></tr>
+<tr class="memdesc:ac262cab68c4c713ebc2b91a2e4ab8b19"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum duration allowed to send an MQTT packet over the transport interface.  <a href="core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19">More...</a><br /></td></tr>
+<tr class="separator:ac262cab68c4c713ebc2b91a2e4ab8b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >This represents the default values for the configuration macros for the MQTT library. </p>
@@ -156,26 +152,6 @@ Macros</h2></td></tr>
 <p>Define this macro to build the MQTT library without the custom config file core_mqtt_config.h. </p>
 <p >Without the custom config, the MQTT library builds with default values of config macros defined in <a class="el" href="core__mqtt__config__defaults_8h.html" title="This represents the default values for the configuration macros for the MQTT library.">core_mqtt_config_defaults.h</a> file.</p>
 <p >If a custom config is provided, then MQTT_DO_NOT_USE_CUSTOM_CONFIG should not be defined. </p>
-
-</div>
-</div>
-<a id="a50b149716607c0b7974c391830f1b007" name="a50b149716607c0b7974c391830f1b007"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a50b149716607c0b7974c391830f1b007">&#9670;&nbsp;</a></span>MQTT_STATE_ARRAY_MAX_COUNT</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define MQTT_STATE_ARRAY_MAX_COUNT&#160;&#160;&#160;( 10U )</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Determines the maximum number of MQTT PUBLISH messages, pending acknowledgment at a time, that are supported for incoming and outgoing direction of messages, separately. </p>
-<p >QoS 1 and 2 MQTT PUBLISHes require acknowledgment from the server before they can be completed. While they are awaiting the acknowledgment, the client must maintain information about their state. The value of this macro sets the limit on how many simultaneous PUBLISH states an MQTT context maintains, separately, for both incoming and outgoing direction of PUBLISHes.</p>
-<dl class="section note"><dt>Note</dt><dd>The MQTT context maintains separate state records for outgoing and incoming PUBLISHes, and thus, 2 * MQTT_STATE_ARRAY_MAX_COUNT amount of memory is statically allocated for the state records.</dd></dl>
-<p><b>Possible values:</b> Any positive 32 bit integer. <br  />
- <b>Default value:</b> <code>10</code> </p>
 
 </div>
 </div>
@@ -211,12 +187,49 @@ Macros</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Maximum number of milliseconds to wait for a ping response to a ping request as part of the keep-alive mechanism. </p>
-<p >If a ping response is not received before this timeout, then <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> will return <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca076ca8965e836a06e707a94adb26144f">MQTTKeepAliveTimeout</a>.</p>
+<p >If a ping response is not received before this timeout, then <a class="el" href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> will return <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca076ca8965e836a06e707a94adb26144f">MQTTKeepAliveTimeout</a>.</p>
 <dl class="section note"><dt>Note</dt><dd>If this value is more than half of the keep alive interval, and the server does not receive the previous ping request, then it is likely that the server will disconnect the client before <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca076ca8965e836a06e707a94adb26144f">MQTTKeepAliveTimeout</a> can be returned.</dd>
 <dd>
-If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the current time in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then the keep-alive mechanism is not supported by the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> API function. In that case, the value of <a class="el" href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa" title="Maximum number of milliseconds to wait for a ping response to a ping request as part of the keep-aliv...">MQTT_PINGRESP_TIMEOUT_MS</a> is irrelevant to the behavior of the library.</dd></dl>
+If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the time elapsed since a given epoch in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then the keep-alive mechanism is not supported by the <a class="el" href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> API function. In that case, the value of <a class="el" href="core__mqtt__config__defaults_8h.html#afa825fddb52da7df88fb56d2befcd2fa" title="Maximum number of milliseconds to wait for a ping response to a ping request as part of the keep-aliv...">MQTT_PINGRESP_TIMEOUT_MS</a> is irrelevant to the behavior of the library.</dd></dl>
 <p><b>Possible values:</b> Any positive integer up to SIZE_MAX. <br  />
  <b>Default value:</b> <code>5000</code> </p>
+
+</div>
+</div>
+<a id="a9b3c7c33badcafec477a205d916424bc" name="a9b3c7c33badcafec477a205d916424bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b3c7c33badcafec477a205d916424bc">&#9670;&nbsp;</a></span>PACKET_TX_TIMEOUT_MS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PACKET_TX_TIMEOUT_MS&#160;&#160;&#160;( 30000U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Maximum number of milliseconds of TX inactivity to wait before initiating a PINGREQ. </p>
+<dl class="section note"><dt>Note</dt><dd>If this value is less than the keep alive interval than it will be used instead.</dd></dl>
+<p><b>Possible values:</b> Any positive integer up to SIZE_MAX. <br  />
+ <b>Default value:</b> '30000' </p>
+
+</div>
+</div>
+<a id="a46ef647d5a8315f626dc17d62e264aed" name="a46ef647d5a8315f626dc17d62e264aed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46ef647d5a8315f626dc17d62e264aed">&#9670;&nbsp;</a></span>PACKET_RX_TIMEOUT_MS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PACKET_RX_TIMEOUT_MS&#160;&#160;&#160;( 30000U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Maximum number of milliseconds of RX inactivity to wait before initiating a PINGREQ. </p>
+<p ><b>Possible values:</b> Any positive integer up to SIZE_MAX. <br  />
+ <b>Default value:</b> '30000' </p>
 
 </div>
 </div>
@@ -232,125 +245,33 @@ If a dummy implementation of the <a class="el" href="group__mqtt__callback__type
       </table>
 </div><div class="memdoc">
 
-<p>The maximum duration between non-empty network reads while receiving an MQTT packet via the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions. </p>
+<p>The maximum duration between non-empty network reads while receiving an MQTT packet via the <a class="el" href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions. </p>
 <p >When an incoming MQTT packet is detected, the transport receive function may be called multiple times until all of the expected number of bytes of the packet are received. This timeout represents the maximum polling duration that is allowed without any data reception from the network for the incoming packet.</p>
-<p >If the timeout expires, the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> and <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> functions return <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735caa14bc8aa4ad218702d782366945d43ac">MQTTRecvFailed</a>.</p>
-<dl class="section note"><dt>Note</dt><dd>If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the current time in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then <a class="el" href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671" title="The maximum duration between non-empty network reads while receiving an MQTT packet via the MQTT_Proc...">MQTT_RECV_POLLING_TIMEOUT_MS</a> MUST be set to 0.</dd></dl>
+<p >If the timeout expires, the <a class="el" href="core__mqtt_8h.html#ab95d3d6b3eed98a6184fb2018c5b55d7" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> and <a class="el" href="core__mqtt_8h.html#aeb7c37284fcf6f68eb577427a6763fc6" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> functions return <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735caa14bc8aa4ad218702d782366945d43ac">MQTTRecvFailed</a>.</p>
+<dl class="section note"><dt>Note</dt><dd>If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the time elapsed since a given epoch in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then <a class="el" href="core__mqtt__config__defaults_8h.html#a43dc9a67427d9e420a65955eea0e2671" title="The maximum duration between non-empty network reads while receiving an MQTT packet via the MQTT_Proc...">MQTT_RECV_POLLING_TIMEOUT_MS</a> MUST be set to 0.</dd></dl>
 <p><b>Possible values:</b> Any positive 32 bit integer. Recommended to use a small timeout value. <br  />
  <b>Default value:</b> <code>10</code> </p>
 
 </div>
 </div>
-<a id="a73228316a06bbbb91c931dbade56de35" name="a73228316a06bbbb91c931dbade56de35"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73228316a06bbbb91c931dbade56de35">&#9670;&nbsp;</a></span>MQTT_SEND_RETRY_TIMEOUT_MS</h2>
+<a id="ac262cab68c4c713ebc2b91a2e4ab8b19" name="ac262cab68c4c713ebc2b91a2e4ab8b19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac262cab68c4c713ebc2b91a2e4ab8b19">&#9670;&nbsp;</a></span>MQTT_SEND_TIMEOUT_MS</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define MQTT_SEND_RETRY_TIMEOUT_MS&#160;&#160;&#160;( 10U )</td>
+          <td class="memname">#define MQTT_SEND_TIMEOUT_MS&#160;&#160;&#160;( 20000U )</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The maximum duration between non-empty network transmissions while sending an MQTT packet via the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> or <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> API functions. </p>
-<p >When sending an MQTT packet, the transport send function may be called multiple times until all of the required number of bytes are sent. This timeout represents the maximum duration that is allowed for no data transmission over the network through the transport send function.</p>
-<p >If the timeout expires, the <a class="el" href="core__mqtt_8h.html#adce9111350db412c1256689ef9a7b9f4" title="Loop to receive packets from the transport interface. Handles keep alive.">MQTT_ProcessLoop</a> and <a class="el" href="core__mqtt_8h.html#a274d7a62c9c011a063031c2e678fb40a" title="Loop to receive packets from the transport interface. Does not handle keep alive.">MQTT_ReceiveLoop</a> functions return <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735cafd06b63fe9677fa2af06b0f4c7d4ad55">MQTTSendFailed</a>.</p>
-<dl class="section note"><dt>Note</dt><dd>If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the current time in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then <a class="el" href="core__mqtt__config__defaults_8h.html#a73228316a06bbbb91c931dbade56de35" title="The maximum duration between non-empty network transmissions while sending an MQTT packet via the MQT...">MQTT_SEND_RETRY_TIMEOUT_MS</a> MUST be set to 0.</dd></dl>
-<p><b>Possible values:</b> Any positive 32 bit integer. Recommended to use a small timeout value. <br  />
- <b>Default value:</b> <code>10</code> </p>
-
-</div>
-</div>
-<a id="a8d9dbaaa88129137a4c68ba0456a18b1" name="a8d9dbaaa88129137a4c68ba0456a18b1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d9dbaaa88129137a4c68ba0456a18b1">&#9670;&nbsp;</a></span>LogError</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LogError</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">message</td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Macro that is called in the MQTT library for logging "Error" level messages. </p>
-<p >To enable error level logging in the MQTT library, this macro should be mapped to the application-specific logging implementation that supports error logging.</p>
-<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C">AWS IoT Embedded C SDK repository</a>.</dd></dl>
-<p><b>Default value</b>: Error logging is turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
-
-</div>
-</div>
-<a id="a7da92048aaf0cbfcacde9539c98a0e05" name="a7da92048aaf0cbfcacde9539c98a0e05"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7da92048aaf0cbfcacde9539c98a0e05">&#9670;&nbsp;</a></span>LogWarn</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LogWarn</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">message</td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Macro that is called in the MQTT library for logging "Warning" level messages. </p>
-<p >To enable warning level logging in the MQTT library, this macro should be mapped to the application-specific logging implementation that supports warning logging.</p>
-<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/">AWS IoT Embedded C SDK repository</a>.</dd></dl>
-<p><b>Default value</b>: Warning logs are turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
-
-</div>
-</div>
-<a id="a00810b1cb9d2f25d25ce2d4d93815fba" name="a00810b1cb9d2f25d25ce2d4d93815fba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00810b1cb9d2f25d25ce2d4d93815fba">&#9670;&nbsp;</a></span>LogInfo</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LogInfo</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">message</td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Macro that is called in the MQTT library for logging "Info" level messages. </p>
-<p >To enable info level logging in the MQTT library, this macro should be mapped to the application-specific logging implementation that supports info logging.</p>
-<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/">AWS IoT Embedded C SDK repository</a>.</dd></dl>
-<p><b>Default value</b>: Info logging is turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
-
-</div>
-</div>
-<a id="af60e8ffc327d136e5d0d8441ed98c98d" name="af60e8ffc327d136e5d0d8441ed98c98d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af60e8ffc327d136e5d0d8441ed98c98d">&#9670;&nbsp;</a></span>LogDebug</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LogDebug</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">message</td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Macro that is called in the MQTT library for logging "Debug" level messages. </p>
-<p >To enable debug level logging from MQTT library, this macro should be mapped to the application-specific logging implementation that supports debug logging.</p>
-<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/">AWS IoT Embedded C SDK repository</a>.</dd></dl>
-<p><b>Default value</b>: Debug logging is turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
+<p>The maximum duration allowed to send an MQTT packet over the transport interface. </p>
+<p >When sending an MQTT packet, the transport send or writev functions may be called multiple times until all of the required number of bytes are sent. This timeout represents the maximum duration that is allowed to send the MQTT packet while calling the transport send or writev functions.</p>
+<p >If the timeout expires, <a class="el" href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735cafd06b63fe9677fa2af06b0f4c7d4ad55">MQTTSendFailed</a> will be returned by the public API functions.</p>
+<dl class="section note"><dt>Note</dt><dd>If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the time elapsed since a given epoch in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then <a class="el" href="core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19" title="The maximum duration allowed to send an MQTT packet over the transport interface.">MQTT_SEND_TIMEOUT_MS</a> MUST be set to 0.</dd></dl>
+<p><b>Possible values:</b> Any positive 32 bit integer. <br  />
+ <b>Default value:</b> <code>20000</code> </p>
 
 </div>
 </div>

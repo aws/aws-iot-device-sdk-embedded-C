@@ -42,7 +42,6 @@ var NAVTREE =
     ] ],
     [ "Configurations", "http_config.html", [
       [ "HTTP_DO_NOT_USE_CUSTOM_CONFIG", "http_config.html#HTTP_DO_NOT_USE_CUSTOM_CONFIG", null ],
-      [ "HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES", "http_config.html#HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES", null ],
       [ "HTTP_USER_AGENT_VALUE", "http_config.html#HTTP_USER_AGENT_VALUE", null ],
       [ "HTTP_SEND_RETRY_TIMEOUT_MS", "http_config.html#HTTP_SEND_RETRY_TIMEOUT_MS", null ],
       [ "HTTP_RECV_RETRY_TIMEOUT_MS", "http_config.html#HTTP_RECV_RETRY_TIMEOUT_MS", null ],

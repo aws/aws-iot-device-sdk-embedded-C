@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Device Defender<span id="projectnumber">&#160;v1.1.1</span>
+   <div id="projectname">AWS IoT Device Defender<span id="projectnumber">&#160;v1.3.0</span>
    </div>
    <div id="projectbrief">AWS IoT Device Defender Client Library</div>
   </td>
@@ -103,9 +103,9 @@ $(document).ready(function(){initNavTree('defender_gettopic_function.html',''); 
 <div class="line">                                    uint16_t thingNameLength,</div>
 <div class="line">                                    <a class="code hl_enumeration" href="group__defender__enum__types.html#ga75b56c3b6f174d7671aae7afb998221f">DefenderTopic_t</a> api,</div>
 <div class="line">                                    uint16_t * pOutLength );</div>
-<div class="ttc" id="adefender_8c_html_a22eb9dc43200e71931a69ae60ffce08b"><div class="ttname"><a href="defender_8c.html#a22eb9dc43200e71931a69ae60ffce08b">Defender_GetTopic</a></div><div class="ttdeci">DefenderStatus_t Defender_GetTopic(char *pBuffer, uint16_t bufferLength, const char *pThingName, uint16_t thingNameLength, DefenderTopic_t api, uint16_t *pOutLength)</div><div class="ttdoc">Populate the topic string for a Device Defender operation.</div><div class="ttdef"><b>Definition:</b> defender.c:381</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_ga60365ff6836fab9ad427f4edbe83d020"><div class="ttname"><a href="group__defender__enum__types.html#ga60365ff6836fab9ad427f4edbe83d020">DefenderStatus_t</a></div><div class="ttdeci">DefenderStatus_t</div><div class="ttdoc">Return codes from defender APIs.</div><div class="ttdef"><b>Definition:</b> defender.h:56</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_ga75b56c3b6f174d7671aae7afb998221f"><div class="ttname"><a href="group__defender__enum__types.html#ga75b56c3b6f174d7671aae7afb998221f">DefenderTopic_t</a></div><div class="ttdeci">DefenderTopic_t</div><div class="ttdoc">Topic values for subscription requests.</div><div class="ttdef"><b>Definition:</b> defender.h:69</div></div>
+<div class="ttc" id="adefender_8c_html_a22eb9dc43200e71931a69ae60ffce08b"><div class="ttname"><a href="defender_8c.html#a22eb9dc43200e71931a69ae60ffce08b">Defender_GetTopic</a></div><div class="ttdeci">DefenderStatus_t Defender_GetTopic(char *pBuffer, uint16_t bufferLength, const char *pThingName, uint16_t thingNameLength, DefenderTopic_t api, uint16_t *pOutLength)</div><div class="ttdoc">Populate the topic string for a Device Defender operation.</div><div class="ttdef"><b>Definition:</b> defender.c:384</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_ga60365ff6836fab9ad427f4edbe83d020"><div class="ttname"><a href="group__defender__enum__types.html#ga60365ff6836fab9ad427f4edbe83d020">DefenderStatus_t</a></div><div class="ttdeci">DefenderStatus_t</div><div class="ttdoc">Return codes from defender APIs.</div><div class="ttdef"><b>Definition:</b> defender.h:58</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_ga75b56c3b6f174d7671aae7afb998221f"><div class="ttname"><a href="group__defender__enum__types.html#ga75b56c3b6f174d7671aae7afb998221f">DefenderTopic_t</a></div><div class="ttdeci">DefenderTopic_t</div><div class="ttdoc">Topic values for subscription requests.</div><div class="ttdef"><b>Definition:</b> defender.h:71</div></div>
 </div><!-- fragment --> <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pBuffer</td><td>The buffer to write the topic string into. </td></tr>
@@ -145,8 +145,8 @@ $(document).ready(function(){initNavTree('defender_gettopic_function.html',''); 
 <div class="line">     <span class="comment">// topicLength for getting a JSON report accepted response. Subscribe</span></div>
 <div class="line">     <span class="comment">// to this topic using an MQTT client of your choice.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__defender__enum__types_html_gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2"><div class="ttname"><a href="group__defender__enum__types.html#gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2">DefenderSuccess</a></div><div class="ttdeci">@ DefenderSuccess</div><div class="ttdef"><b>Definition:</b> defender.h:58</div></div>
-<div class="ttc" id="agroup__defender__enum__types_html_gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c"><div class="ttname"><a href="group__defender__enum__types.html#gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c">DefenderJsonReportAccepted</a></div><div class="ttdeci">@ DefenderJsonReportAccepted</div><div class="ttdef"><b>Definition:</b> defender.h:72</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2"><div class="ttname"><a href="group__defender__enum__types.html#gga60365ff6836fab9ad427f4edbe83d020af2b4bec80da4dc078b9fa393c5b450e2">DefenderSuccess</a></div><div class="ttdeci">@ DefenderSuccess</div><div class="ttdef"><b>Definition:</b> defender.h:60</div></div>
+<div class="ttc" id="agroup__defender__enum__types_html_gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c"><div class="ttname"><a href="group__defender__enum__types.html#gga75b56c3b6f174d7671aae7afb998221fab84742e9598458a7b05e17c4f0d0248c">DefenderJsonReportAccepted</a></div><div class="ttdeci">@ DefenderJsonReportAccepted</div><div class="ttdef"><b>Definition:</b> defender.h:74</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

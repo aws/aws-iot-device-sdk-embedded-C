@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -142,12 +142,12 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a479c08472cc49b7b813d7a1b91d744a5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__cbor__private_8h.html#a479c08472cc49b7b813d7a1b91d744a5">OTA_CBOR_Decode_GetStreamResponseMessage</a> (const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t **pPayload, size_t *pPayloadSize)</td></tr>
-<tr class="memdesc:a479c08472cc49b7b813d7a1b91d744a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode a Get Stream response message from AWS IoT OTA.  <a href="ota__cbor__private_8h.html#a479c08472cc49b7b813d7a1b91d744a5">More...</a><br /></td></tr>
-<tr class="separator:a479c08472cc49b7b813d7a1b91d744a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa163d0fa47b92895b9292a400bd89448"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__cbor__private_8h.html#aa163d0fa47b92895b9292a400bd89448">OTA_CBOR_Encode_GetStreamRequestMessage</a> (uint8_t *pMessageBuffer, size_t messageBufferSize, size_t *pEncodedMessageSize, const char *pClientToken, int32_t fileId, int32_t blockSize, int32_t blockOffset, uint8_t *pBlockBitmap, size_t blockBitmapSize, int32_t numOfBlocksRequested)</td></tr>
-<tr class="memdesc:aa163d0fa47b92895b9292a400bd89448"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an encoded Get Stream Request message for the AWS IoT OTA service. The service allows block count or block bitmap to be requested, but not both.  <a href="ota__cbor__private_8h.html#aa163d0fa47b92895b9292a400bd89448">More...</a><br /></td></tr>
-<tr class="separator:aa163d0fa47b92895b9292a400bd89448"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a595cede1c982346f5a766f4f491a5573"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__cbor__private_8h.html#a595cede1c982346f5a766f4f491a5573">OTA_CBOR_Decode_GetStreamResponseMessage</a> (const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t *const *pPayload, size_t *pPayloadSize)</td></tr>
+<tr class="memdesc:a595cede1c982346f5a766f4f491a5573"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode a Get Stream response message from AWS IoT OTA.  <a href="ota__cbor__private_8h.html#a595cede1c982346f5a766f4f491a5573">More...</a><br /></td></tr>
+<tr class="separator:a595cede1c982346f5a766f4f491a5573"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a253e99d19d2b90574461b8cdef6f3c6a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__cbor__private_8h.html#a253e99d19d2b90574461b8cdef6f3c6a">OTA_CBOR_Encode_GetStreamRequestMessage</a> (uint8_t *pMessageBuffer, size_t messageBufferSize, size_t *pEncodedMessageSize, const char *pClientToken, int32_t fileId, int32_t blockSize, int32_t blockOffset, const uint8_t *pBlockBitmap, size_t blockBitmapSize, int32_t numOfBlocksRequested)</td></tr>
+<tr class="memdesc:a253e99d19d2b90574461b8cdef6f3c6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an encoded Get Stream Request message for the AWS IoT OTA service. The service allows block count or block bitmap to be requested, but not both.  <a href="ota__cbor__private_8h.html#a253e99d19d2b90574461b8cdef6f3c6a">More...</a><br /></td></tr>
+<tr class="separator:a253e99d19d2b90574461b8cdef6f3c6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Function declarations and field declarations for <a class="el" href="ota__cbor_8c.html" title="CBOR encode/decode routines for AWS IoT Over-the-Air updates.">ota_cbor.c</a>. </p>
@@ -318,8 +318,8 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a479c08472cc49b7b813d7a1b91d744a5" name="a479c08472cc49b7b813d7a1b91d744a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a479c08472cc49b7b813d7a1b91d744a5">&#9670;&nbsp;</a></span>OTA_CBOR_Decode_GetStreamResponseMessage()</h2>
+<a id="a595cede1c982346f5a766f4f491a5573" name="a595cede1c982346f5a766f4f491a5573"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a595cede1c982346f5a766f4f491a5573">&#9670;&nbsp;</a></span>OTA_CBOR_Decode_GetStreamResponseMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -357,7 +357,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint8_t **&#160;</td>
+          <td class="paramtype">uint8_t *const *&#160;</td>
           <td class="paramname"><em>pPayload</em>, </td>
         </tr>
         <tr>
@@ -391,8 +391,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa163d0fa47b92895b9292a400bd89448" name="aa163d0fa47b92895b9292a400bd89448"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa163d0fa47b92895b9292a400bd89448">&#9670;&nbsp;</a></span>OTA_CBOR_Encode_GetStreamRequestMessage()</h2>
+<a id="a253e99d19d2b90574461b8cdef6f3c6a" name="a253e99d19d2b90574461b8cdef6f3c6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a253e99d19d2b90574461b8cdef6f3c6a">&#9670;&nbsp;</a></span>OTA_CBOR_Encode_GetStreamRequestMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -442,7 +442,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
           <td class="paramname"><em>pBlockBitmap</em>, </td>
         </tr>
         <tr>

@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreHTTP<span id="projectnumber">&#160;v3.0.0</span>
    </div>
    <div id="projectbrief">HTTP/1.1 Client Library</div>
   </td>
@@ -102,9 +102,9 @@ $(document).ready(function(){initNavTree('httpclient_addheader_function.html',''
 <div class="line">                                   <span class="keywordtype">size_t</span> fieldLen,</div>
 <div class="line">                                   <span class="keyword">const</span> <span class="keywordtype">char</span> * pValue,</div>
 <div class="line">                                   <span class="keywordtype">size_t</span> valueLen );</div>
-<div class="ttc" id="acore__http__client_8c_html_a451c30912fcdf48c71f9144788250916"><div class="ttname"><a href="core__http__client_8c.html#a451c30912fcdf48c71f9144788250916">HTTPClient_AddHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddHeader(HTTPRequestHeaders_t *pRequestHeaders, const char *pField, size_t fieldLen, const char *pValue, size_t valueLen)</div><div class="ttdoc">Add a header to the request headers stored in HTTPRequestHeaders_t.pBuffer.</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1638</div></div>
-<div class="ttc" id="agroup__http__enum__types_html_ga39fad9050063a355ffd95e95381e743f"><div class="ttname"><a href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a></div><div class="ttdeci">HTTPStatus_t</div><div class="ttdoc">The HTTP Client library return status.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:162</div></div>
-<div class="ttc" id="astruct_h_t_t_p_request_headers__t_html"><div class="ttname"><a href="struct_h_t_t_p_request_headers__t.html">HTTPRequestHeaders_t</a></div><div class="ttdoc">Represents header data that will be sent in an HTTP request.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:329</div></div>
+<div class="ttc" id="acore__http__client_8c_html_a451c30912fcdf48c71f9144788250916"><div class="ttname"><a href="core__http__client_8c.html#a451c30912fcdf48c71f9144788250916">HTTPClient_AddHeader</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_AddHeader(HTTPRequestHeaders_t *pRequestHeaders, const char *pField, size_t fieldLen, const char *pValue, size_t valueLen)</div><div class="ttdoc">Add a header to the request headers stored in HTTPRequestHeaders_t.pBuffer.</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1664</div></div>
+<div class="ttc" id="agroup__http__enum__types_html_ga39fad9050063a355ffd95e95381e743f"><div class="ttname"><a href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a></div><div class="ttdeci">HTTPStatus_t</div><div class="ttdoc">The HTTP Client library return status.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:164</div></div>
+<div class="ttc" id="astruct_h_t_t_p_request_headers__t_html"><div class="ttname"><a href="struct_h_t_t_p_request_headers__t.html">HTTPRequestHeaders_t</a></div><div class="ttdoc">Represents header data that will be sent in an HTTP request.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:322</div></div>
 </div><!-- fragment --><p> Upon return, pRequestHeaders-&gt;headersLen will be updated with the number of bytes written.</p>
 <p >Headers are written in the following format:</p>
 <div class="fragment"><div class="line">&lt;field&gt;: &lt;value&gt;\r\n\r\n</div>
@@ -137,7 +137,7 @@ $(document).ready(function(){initNavTree('httpclient_addheader_function.html',''
 <div class="line">                                          <span class="keyword">sizeof</span>( <span class="stringliteral">&quot;Request-Header-Field&quot;</span> ) - 1U,</div>
 <div class="line">                                          <span class="stringliteral">&quot;Request-Header-Value&quot;</span>,</div>
 <div class="line">                                          <span class="keyword">sizeof</span>(<span class="stringliteral">&quot;Request-Header-Value&quot;</span>) - 1U );</div>
-<div class="ttc" id="agroup__http__enum__types_html_gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd"><div class="ttname"><a href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd">HTTPSuccess</a></div><div class="ttdeci">@ HTTPSuccess</div><div class="ttdoc">The HTTP Client library function completed successfully.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:173</div></div>
+<div class="ttc" id="agroup__http__enum__types_html_gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd"><div class="ttname"><a href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd">HTTPSuccess</a></div><div class="ttdeci">@ HTTPSuccess</div><div class="ttdoc">The HTTP Client library function completed successfully.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:175</div></div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

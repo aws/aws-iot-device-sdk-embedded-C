@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -204,9 +204,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a3298a475bc64c592f658dedc132b475a"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#gaf32d40000cc4b46c0144fd673d6f24fa">OtaMqttStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#a3298a475bc64c592f658dedc132b475a">unsubscribeFromJobNotificationTopic</a> (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
 <tr class="memdesc:a3298a475bc64c592f658dedc132b475a"><td class="mdescLeft">&#160;</td><td class="mdescRight">UnSubscribe from the jobs notification topic.  <a href="ota__mqtt_8c.html#a3298a475bc64c592f658dedc132b475a">More...</a><br /></td></tr>
 <tr class="separator:a3298a475bc64c592f658dedc132b475a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4f7d02282e60e0700df63cc4028ccab"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#gaf32d40000cc4b46c0144fd673d6f24fa">OtaMqttStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#aa4f7d02282e60e0700df63cc4028ccab">publishStatusMessage</a> (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, const char *pMsg, uint32_t msgSize, uint8_t qos)</td></tr>
-<tr class="memdesc:aa4f7d02282e60e0700df63cc4028ccab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Publish a message to the job status topic.  <a href="ota__mqtt_8c.html#aa4f7d02282e60e0700df63cc4028ccab">More...</a><br /></td></tr>
-<tr class="separator:aa4f7d02282e60e0700df63cc4028ccab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac02a840211a67a57f271f5dfa729c2a9"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__ota__enum__types.html#gaf32d40000cc4b46c0144fd673d6f24fa">OtaMqttStatus_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ac02a840211a67a57f271f5dfa729c2a9">publishStatusMessage</a> (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, const char *pMsg, uint32_t msgSize, uint8_t qos)</td></tr>
+<tr class="memdesc:ac02a840211a67a57f271f5dfa729c2a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Publish a message to the job status topic.  <a href="ota__mqtt_8c.html#ac02a840211a67a57f271f5dfa729c2a9">More...</a><br /></td></tr>
+<tr class="separator:ac02a840211a67a57f271f5dfa729c2a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b21d0737bee094525b5a274a663d4c8"><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#a0b21d0737bee094525b5a274a663d4c8">buildStatusMessageReceiving</a> (char *pMsgBuffer, size_t msgBufferSize, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, const <a class="el" href="struct_ota_file_context__t.html">OtaFileContext_t</a> *pOTAFileCtx)</td></tr>
 <tr class="memdesc:a0b21d0737bee094525b5a274a663d4c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populate the message buffer with the job status message.  <a href="ota__mqtt_8c.html#a0b21d0737bee094525b5a274a663d4c8">More...</a><br /></td></tr>
 <tr class="separator:a0b21d0737bee094525b5a274a663d4c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -216,30 +216,30 @@ Functions</h2></td></tr>
 <tr class="memitem:aaa2eaddd7807ec765cb49056f0c88ad8"><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#aaa2eaddd7807ec765cb49056f0c88ad8">prvBuildStatusMessageFinish</a> (char *pMsgBuffer, size_t msgBufferSize, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason, uint32_t previousVersion)</td></tr>
 <tr class="memdesc:aaa2eaddd7807ec765cb49056f0c88ad8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populate the response message with the status of the job.  <a href="ota__mqtt_8c.html#aaa2eaddd7807ec765cb49056f0c88ad8">More...</a><br /></td></tr>
 <tr class="separator:aaa2eaddd7807ec765cb49056f0c88ad8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2617f45133753d96b1f17f1f0dc8959"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#aa2617f45133753d96b1f17f1f0dc8959">stringBuilder</a> (char *pBuffer, size_t bufferSizeBytes, const char *strings[])</td></tr>
-<tr class="memdesc:aa2617f45133753d96b1f17f1f0dc8959"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a string from a set of strings.  <a href="ota__mqtt_8c.html#aa2617f45133753d96b1f17f1f0dc8959">More...</a><br /></td></tr>
-<tr class="separator:aa2617f45133753d96b1f17f1f0dc8959"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae824e5ff4574f6046726dd2fc60acdf8"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ae824e5ff4574f6046726dd2fc60acdf8">stringBuilder</a> (char *pBuffer, size_t bufferSizeBytes, const char *const strings[])</td></tr>
+<tr class="memdesc:ae824e5ff4574f6046726dd2fc60acdf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a string from a set of strings.  <a href="ota__mqtt_8c.html#ae824e5ff4574f6046726dd2fc60acdf8">More...</a><br /></td></tr>
+<tr class="separator:ae824e5ff4574f6046726dd2fc60acdf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a971b8c6e86d4bb4eab60cff88ae36c4e"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#a971b8c6e86d4bb4eab60cff88ae36c4e">stringBuilderUInt32Decimal</a> (char *pBuffer, size_t bufferSizeBytes, uint32_t value)</td></tr>
 <tr class="memdesc:a971b8c6e86d4bb4eab60cff88ae36c4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a string with the decimal representation of a uint32_t value.  <a href="ota__mqtt_8c.html#a971b8c6e86d4bb4eab60cff88ae36c4e">More...</a><br /></td></tr>
 <tr class="separator:a971b8c6e86d4bb4eab60cff88ae36c4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff80c9f62bb98981e03bf88954324114"><td class="memItemLeft" align="right" valign="top">static size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#aff80c9f62bb98981e03bf88954324114">stringBuilderUInt32Hex</a> (char *pBuffer, size_t bufferSizeBytes, uint32_t value)</td></tr>
 <tr class="memdesc:aff80c9f62bb98981e03bf88954324114"><td class="mdescLeft">&#160;</td><td class="mdescRight">Build a string with the hex representation of a uint32_t value.  <a href="ota__mqtt_8c.html#aff80c9f62bb98981e03bf88954324114">More...</a><br /></td></tr>
 <tr class="separator:aff80c9f62bb98981e03bf88954324114"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5d088697ab942fa1d7a88d83959bb75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ae5d088697ab942fa1d7a88d83959bb75">requestJob_Mqtt</a> (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
-<tr class="memdesc:ae5d088697ab942fa1d7a88d83959bb75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check for available OTA job over MQTT.  <a href="ota__mqtt_8c.html#ae5d088697ab942fa1d7a88d83959bb75">More...</a><br /></td></tr>
-<tr class="separator:ae5d088697ab942fa1d7a88d83959bb75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16e4bdb664fe1ee97bf8ac6995b13dbb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#a16e4bdb664fe1ee97bf8ac6995b13dbb">updateJobStatus_Mqtt</a> (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason)</td></tr>
-<tr class="memdesc:a16e4bdb664fe1ee97bf8ac6995b13dbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update job status over MQTT.  <a href="ota__mqtt_8c.html#a16e4bdb664fe1ee97bf8ac6995b13dbb">More...</a><br /></td></tr>
-<tr class="separator:a16e4bdb664fe1ee97bf8ac6995b13dbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a60c3bf3dc91de2a9c34264ecfd4333"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#a8a60c3bf3dc91de2a9c34264ecfd4333">initFileTransfer_Mqtt</a> (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
-<tr class="memdesc:a8a60c3bf3dc91de2a9c34264ecfd4333"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize file transfer over MQTT.  <a href="ota__mqtt_8c.html#a8a60c3bf3dc91de2a9c34264ecfd4333">More...</a><br /></td></tr>
-<tr class="separator:a8a60c3bf3dc91de2a9c34264ecfd4333"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf10c91889e5a2945fe6b5f7a68008a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#abf10c91889e5a2945fe6b5f7a68008a1">requestJob_Mqtt</a> (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
+<tr class="memdesc:abf10c91889e5a2945fe6b5f7a68008a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check for available OTA job over MQTT.  <a href="ota__mqtt_8c.html#abf10c91889e5a2945fe6b5f7a68008a1">More...</a><br /></td></tr>
+<tr class="separator:abf10c91889e5a2945fe6b5f7a68008a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ee38f410138b45cbcbbd7524736b8a0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#a4ee38f410138b45cbcbbd7524736b8a0">updateJobStatus_Mqtt</a> (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx, <a class="el" href="group__ota__enum__types.html#gabf6d6b1d2bca4c54f58bd622ca6242d0">OtaJobStatus_t</a> status, int32_t reason, int32_t subReason)</td></tr>
+<tr class="memdesc:a4ee38f410138b45cbcbbd7524736b8a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update job status over MQTT.  <a href="ota__mqtt_8c.html#a4ee38f410138b45cbcbbd7524736b8a0">More...</a><br /></td></tr>
+<tr class="separator:a4ee38f410138b45cbcbbd7524736b8a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad350aa49ce0e5004d0f0310ab77dcc9a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ad350aa49ce0e5004d0f0310ab77dcc9a">initFileTransfer_Mqtt</a> (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
+<tr class="memdesc:ad350aa49ce0e5004d0f0310ab77dcc9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize file transfer over MQTT.  <a href="ota__mqtt_8c.html#ad350aa49ce0e5004d0f0310ab77dcc9a">More...</a><br /></td></tr>
+<tr class="separator:ad350aa49ce0e5004d0f0310ab77dcc9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9130a843fa7901fc0d59bd630b678bb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ad9130a843fa7901fc0d59bd630b678bb">requestFileBlock_Mqtt</a> (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
 <tr class="memdesc:ad9130a843fa7901fc0d59bd630b678bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request File block over MQTT.  <a href="ota__mqtt_8c.html#ad9130a843fa7901fc0d59bd630b678bb">More...</a><br /></td></tr>
 <tr class="separator:ad9130a843fa7901fc0d59bd630b678bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af41c26c85d8a3b123dda8db825bba299"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#af41c26c85d8a3b123dda8db825bba299">decodeFileBlock_Mqtt</a> (const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t **pPayload, size_t *pPayloadSize)</td></tr>
-<tr class="memdesc:af41c26c85d8a3b123dda8db825bba299"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode a cbor encoded fileblock.  <a href="ota__mqtt_8c.html#af41c26c85d8a3b123dda8db825bba299">More...</a><br /></td></tr>
-<tr class="separator:af41c26c85d8a3b123dda8db825bba299"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace9794c0d83a30a0c7ace5b6bdbbfdfd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ace9794c0d83a30a0c7ace5b6bdbbfdfd">decodeFileBlock_Mqtt</a> (const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t *const *pPayload, size_t *pPayloadSize)</td></tr>
+<tr class="memdesc:ace9794c0d83a30a0c7ace5b6bdbbfdfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode a cbor encoded fileblock.  <a href="ota__mqtt_8c.html#ace9794c0d83a30a0c7ace5b6bdbbfdfd">More...</a><br /></td></tr>
+<tr class="separator:ace9794c0d83a30a0c7ace5b6bdbbfdfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8a6105f2306eac0fc6e935fa8a4f895"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__mqtt_8c.html#ac8a6105f2306eac0fc6e935fa8a4f895">cleanupControl_Mqtt</a> (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
 <tr class="memdesc:ac8a6105f2306eac0fc6e935fa8a4f895"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cleanup related to OTA control plane over MQTT.  <a href="ota__mqtt_8c.html#ac8a6105f2306eac0fc6e935fa8a4f895">More...</a><br /></td></tr>
 <tr class="separator:ac8a6105f2306eac0fc6e935fa8a4f895"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -767,8 +767,8 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 
 </div>
 </div>
-<a id="aa4f7d02282e60e0700df63cc4028ccab" name="aa4f7d02282e60e0700df63cc4028ccab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa4f7d02282e60e0700df63cc4028ccab">&#9670;&nbsp;</a></span>publishStatusMessage()</h2>
+<a id="ac02a840211a67a57f271f5dfa729c2a9" name="ac02a840211a67a57f271f5dfa729c2a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac02a840211a67a57f271f5dfa729c2a9">&#9670;&nbsp;</a></span>publishStatusMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -779,7 +779,7 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
         <tr>
           <td class="memname">static <a class="el" href="group__ota__enum__types.html#gaf32d40000cc4b46c0144fd673d6f24fa">OtaMqttStatus_t</a> publishStatusMessage </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
           <td class="paramname"><em>pAgentCtx</em>, </td>
         </tr>
         <tr>
@@ -1021,8 +1021,8 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 
 </div>
 </div>
-<a id="aa2617f45133753d96b1f17f1f0dc8959" name="aa2617f45133753d96b1f17f1f0dc8959"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa2617f45133753d96b1f17f1f0dc8959">&#9670;&nbsp;</a></span>stringBuilder()</h2>
+<a id="ae824e5ff4574f6046726dd2fc60acdf8" name="ae824e5ff4574f6046726dd2fc60acdf8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae824e5ff4574f6046726dd2fc60acdf8">&#9670;&nbsp;</a></span>stringBuilder()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1045,7 +1045,7 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const char *&#160;</td>
+          <td class="paramtype">const char *const&#160;</td>
           <td class="paramname"><em>strings</em>[]&#160;</td>
         </tr>
         <tr>
@@ -1180,8 +1180,8 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 
 </div>
 </div>
-<a id="ae5d088697ab942fa1d7a88d83959bb75" name="ae5d088697ab942fa1d7a88d83959bb75"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae5d088697ab942fa1d7a88d83959bb75">&#9670;&nbsp;</a></span>requestJob_Mqtt()</h2>
+<a id="abf10c91889e5a2945fe6b5f7a68008a1" name="abf10c91889e5a2945fe6b5f7a68008a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf10c91889e5a2945fe6b5f7a68008a1">&#9670;&nbsp;</a></span>requestJob_Mqtt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1189,7 +1189,7 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
         <tr>
           <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> requestJob_Mqtt </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
           <td class="paramname"><em>pAgentCtx</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1208,8 +1208,8 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 
 </div>
 </div>
-<a id="a16e4bdb664fe1ee97bf8ac6995b13dbb" name="a16e4bdb664fe1ee97bf8ac6995b13dbb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16e4bdb664fe1ee97bf8ac6995b13dbb">&#9670;&nbsp;</a></span>updateJobStatus_Mqtt()</h2>
+<a id="a4ee38f410138b45cbcbbd7524736b8a0" name="a4ee38f410138b45cbcbbd7524736b8a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ee38f410138b45cbcbbd7524736b8a0">&#9670;&nbsp;</a></span>updateJobStatus_Mqtt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1217,7 +1217,7 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
         <tr>
           <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> updateJobStatus_Mqtt </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
           <td class="paramname"><em>pAgentCtx</em>, </td>
         </tr>
         <tr>
@@ -1267,8 +1267,8 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 
 </div>
 </div>
-<a id="a8a60c3bf3dc91de2a9c34264ecfd4333" name="a8a60c3bf3dc91de2a9c34264ecfd4333"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8a60c3bf3dc91de2a9c34264ecfd4333">&#9670;&nbsp;</a></span>initFileTransfer_Mqtt()</h2>
+<a id="ad350aa49ce0e5004d0f0310ab77dcc9a" name="ad350aa49ce0e5004d0f0310ab77dcc9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad350aa49ce0e5004d0f0310ab77dcc9a">&#9670;&nbsp;</a></span>initFileTransfer_Mqtt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1276,7 +1276,7 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
         <tr>
           <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a> initFileTransfer_Mqtt </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *&#160;</td>
           <td class="paramname"><em>pAgentCtx</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1324,8 +1324,8 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 
 </div>
 </div>
-<a id="af41c26c85d8a3b123dda8db825bba299" name="af41c26c85d8a3b123dda8db825bba299"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af41c26c85d8a3b123dda8db825bba299">&#9670;&nbsp;</a></span>decodeFileBlock_Mqtt()</h2>
+<a id="ace9794c0d83a30a0c7ace5b6bdbbfdfd" name="ace9794c0d83a30a0c7ace5b6bdbbfdfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace9794c0d83a30a0c7ace5b6bdbbfdfd">&#9670;&nbsp;</a></span>decodeFileBlock_Mqtt()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1363,7 +1363,7 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint8_t **&#160;</td>
+          <td class="paramtype">uint8_t *const *&#160;</td>
           <td class="paramname"><em>pPayload</em>, </td>
         </tr>
         <tr>
@@ -1670,10 +1670,10 @@ static const char *&#160;</td><td class="memItemRight" valign="bottom"><b>pOtaJo
 <div class="line">    <span class="stringliteral">&quot;{\&quot;status\&quot;:\&quot;&quot;</span><a class="code hl_define" href="ota__mqtt_8c.html#aa856801466e59ece1094805a5664d80d">JOBS_API_STATUS_REJECTED</a> <span class="stringliteral">&quot;\&quot;,\&quot;statusDetails\&quot;:{&quot;</span>,</div>
 <div class="line">    <span class="stringliteral">&quot;{\&quot;status\&quot;:\&quot;&quot;</span><a class="code hl_define" href="ota__mqtt_8c.html#a593d7e0360443075b28b79abdf8365f7">JOBS_API_STATUS_FAILED</a> <span class="stringliteral">&quot;\&quot;,\&quot;statusDetails\&quot;:{&quot;</span>, </div>
 <div class="line">}</div>
-<div class="ttc" id="aota__mqtt_8c_html_a33538872ddc4e588809f5e3589b1ca80"><div class="ttname"><a href="ota__mqtt_8c.html#a33538872ddc4e588809f5e3589b1ca80">JOBS_API_STATUS_IN_PROGRESS</a></div><div class="ttdeci">#define JOBS_API_STATUS_IN_PROGRESS</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:82</div></div>
-<div class="ttc" id="aota__mqtt_8c_html_a4e66ea77d83acb7c0de30cb628bafdb8"><div class="ttname"><a href="ota__mqtt_8c.html#a4e66ea77d83acb7c0de30cb628bafdb8">JOBS_API_STATUS_SUCCEEDED</a></div><div class="ttdeci">#define JOBS_API_STATUS_SUCCEEDED</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:84</div></div>
-<div class="ttc" id="aota__mqtt_8c_html_a593d7e0360443075b28b79abdf8365f7"><div class="ttname"><a href="ota__mqtt_8c.html#a593d7e0360443075b28b79abdf8365f7">JOBS_API_STATUS_FAILED</a></div><div class="ttdeci">#define JOBS_API_STATUS_FAILED</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:83</div></div>
-<div class="ttc" id="aota__mqtt_8c_html_aa856801466e59ece1094805a5664d80d"><div class="ttname"><a href="ota__mqtt_8c.html#aa856801466e59ece1094805a5664d80d">JOBS_API_STATUS_REJECTED</a></div><div class="ttdeci">#define JOBS_API_STATUS_REJECTED</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:85</div></div>
+<div class="ttc" id="aota__mqtt_8c_html_a33538872ddc4e588809f5e3589b1ca80"><div class="ttname"><a href="ota__mqtt_8c.html#a33538872ddc4e588809f5e3589b1ca80">JOBS_API_STATUS_IN_PROGRESS</a></div><div class="ttdeci">#define JOBS_API_STATUS_IN_PROGRESS</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:84</div></div>
+<div class="ttc" id="aota__mqtt_8c_html_a4e66ea77d83acb7c0de30cb628bafdb8"><div class="ttname"><a href="ota__mqtt_8c.html#a4e66ea77d83acb7c0de30cb628bafdb8">JOBS_API_STATUS_SUCCEEDED</a></div><div class="ttdeci">#define JOBS_API_STATUS_SUCCEEDED</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:86</div></div>
+<div class="ttc" id="aota__mqtt_8c_html_a593d7e0360443075b28b79abdf8365f7"><div class="ttname"><a href="ota__mqtt_8c.html#a593d7e0360443075b28b79abdf8365f7">JOBS_API_STATUS_FAILED</a></div><div class="ttdeci">#define JOBS_API_STATUS_FAILED</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:85</div></div>
+<div class="ttc" id="aota__mqtt_8c_html_aa856801466e59ece1094805a5664d80d"><div class="ttname"><a href="ota__mqtt_8c.html#aa856801466e59ece1094805a5664d80d">JOBS_API_STATUS_REJECTED</a></div><div class="ttdeci">#define JOBS_API_STATUS_REJECTED</div><div class="ttdef"><b>Definition:</b> ota_mqtt.c:87</div></div>
 </div><!-- fragment -->
 <p>List of all the status cases a job can be in. </p>
 

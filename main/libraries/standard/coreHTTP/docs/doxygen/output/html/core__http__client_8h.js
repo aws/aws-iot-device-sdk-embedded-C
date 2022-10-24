@@ -18,7 +18,6 @@ var core__http__client_8h =
       [ "HTTPPartialResponse", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa2b345207e843dc4e3d2ef9ea34c7f024", null ],
       [ "HTTPNoResponse", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa8aa7c86301f91fd4b3c0b698ab8c177a", null ],
       [ "HTTPInsufficientMemory", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa33aae6d01bae2736a4a977ef04399ad4", null ],
-      [ "HTTPSecurityAlertResponseHeadersSizeLimitExceeded", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac9de51dc48124bbbc331a9161afe3862", null ],
       [ "HTTPSecurityAlertExtraneousResponseData", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf6441d45e373b7686e45c2d9a0d12dd3", null ],
       [ "HTTPSecurityAlertInvalidChunkHeader", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faef569c934115aa105cc2cff1f72ef78b", null ],
       [ "HTTPSecurityAlertInvalidProtocolVersion", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fab6ed7f7e24e250896a7b35825006d460", null ],

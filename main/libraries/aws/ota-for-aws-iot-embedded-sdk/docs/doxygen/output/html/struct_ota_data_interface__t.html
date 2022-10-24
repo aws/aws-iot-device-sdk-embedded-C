@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -106,12 +106,12 @@ $(document).ready(function(){initNavTree('struct_ota_data_interface__t.html','')
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ad512cb7d433675c3e6895ace60443041"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_data_interface__t.html#ad512cb7d433675c3e6895ace60443041">initFileTransfer</a> )(<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
-<tr class="separator:ad512cb7d433675c3e6895ace60443041"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88941317ed4fd2e35572a2fdaa58e22f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_data_interface__t.html#a88941317ed4fd2e35572a2fdaa58e22f">initFileTransfer</a> )(const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
+<tr class="separator:a88941317ed4fd2e35572a2fdaa58e22f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ceb39add093ae3e3aa2798a1e515cc1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_data_interface__t.html#a4ceb39add093ae3e3aa2798a1e515cc1">requestFileBlock</a> )(<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
 <tr class="separator:a4ceb39add093ae3e3aa2798a1e515cc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47a30ce721442ecc2b45d5cbcaa4b725"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_data_interface__t.html#a47a30ce721442ecc2b45d5cbcaa4b725">decodeFileBlock</a> )(const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t **pPayload, size_t *pPayloadSize)</td></tr>
-<tr class="separator:a47a30ce721442ecc2b45d5cbcaa4b725"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8520f5c8d7ccd1322463cd30839a0416"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_data_interface__t.html#a8520f5c8d7ccd1322463cd30839a0416">decodeFileBlock</a> )(const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t *const *pPayload, size_t *pPayloadSize)</td></tr>
+<tr class="separator:a8520f5c8d7ccd1322463cd30839a0416"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c2561be437d1ad0f8b5f5f17ae79c0f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_ota_data_interface__t.html#a3c2561be437d1ad0f8b5f5f17ae79c0f">cleanup</a> )(const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td></tr>
 <tr class="separator:a3c2561be437d1ad0f8b5f5f17ae79c0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -119,14 +119,14 @@ Data Fields</h2></td></tr>
 <div class="textblock"><p >Represents the OTA data interface functions. </p>
 <p >The functions in this structure are used for the data operations during over the air updates like requesting file blocks. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
-<a id="ad512cb7d433675c3e6895ace60443041" name="ad512cb7d433675c3e6895ace60443041"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad512cb7d433675c3e6895ace60443041">&#9670;&nbsp;</a></span>initFileTransfer</h2>
+<a id="a88941317ed4fd2e35572a2fdaa58e22f" name="a88941317ed4fd2e35572a2fdaa58e22f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88941317ed4fd2e35572a2fdaa58e22f">&#9670;&nbsp;</a></span>initFileTransfer</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaDataInterface_t::initFileTransfer) (<a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td>
+          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaDataInterface_t::initFileTransfer) (const <a class="el" href="struct_ota_agent_context__t.html">OtaAgentContext_t</a> *pAgentCtx)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -149,14 +149,14 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a id="a47a30ce721442ecc2b45d5cbcaa4b725" name="a47a30ce721442ecc2b45d5cbcaa4b725"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a47a30ce721442ecc2b45d5cbcaa4b725">&#9670;&nbsp;</a></span>decodeFileBlock</h2>
+<a id="a8520f5c8d7ccd1322463cd30839a0416" name="a8520f5c8d7ccd1322463cd30839a0416"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8520f5c8d7ccd1322463cd30839a0416">&#9670;&nbsp;</a></span>decodeFileBlock</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaDataInterface_t::decodeFileBlock) (const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t **pPayload, size_t *pPayloadSize)</td>
+          <td class="memname"><a class="el" href="group__ota__enum__types.html#ga7ab3c74dc057383c56c6cb9aa6bf0b2d">OtaErr_t</a>(* OtaDataInterface_t::decodeFileBlock) (const uint8_t *pMessageBuffer, size_t messageSize, int32_t *pFileId, int32_t *pBlockId, int32_t *pBlockSize, uint8_t *const *pPayload, size_t *pPayloadSize)</td>
         </tr>
       </table>
 </div><div class="memdoc">

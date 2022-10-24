@@ -1,6 +1,7 @@
 var group__mqtt__constants =
 [
     [ "MQTT_PACKET_ID_INVALID", "group__mqtt__constants.html#ga9fde6503edb9eaad50ecd3392ab9992a", null ],
+    [ "MQTT_SUB_UNSUB_MAX_VECTORS", "group__mqtt__constants.html#ga928ea0bff12ebf9cf9fa9dfe5cafebbb", null ],
     [ "MQTT_PACKET_TYPE_CONNECT", "group__mqtt__constants.html#ga64a0515bda2ecc89e97595535e1cf0ef", null ],
     [ "MQTT_PACKET_TYPE_CONNACK", "group__mqtt__constants.html#gab14f6c39c303eac1a76816edfde7feab", null ],
     [ "MQTT_PACKET_TYPE_PUBLISH", "group__mqtt__constants.html#ga5b2d79c61f2591c8e5772f974826d4ad", null ],

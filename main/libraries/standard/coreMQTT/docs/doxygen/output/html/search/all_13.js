@@ -9,7 +9,7 @@ var searchData=
   ['uint8_5fcheck_5fbit_6',['UINT8_CHECK_BIT',['../core__mqtt__serializer_8c.html#a07cc5f3f934e1ebf8011a6c15a667206',1,'core_mqtt_serializer.c']]],
   ['uint8_5fset_5fbit_7',['UINT8_SET_BIT',['../core__mqtt__serializer_8c.html#af259c91b3075c24df53fa3ffe516b208',1,'core_mqtt_serializer.c']]],
   ['updaterecord_8',['updateRecord',['../core__mqtt__state_8c.html#a819c7c72087621fcf97a028bff02759e',1,'core_mqtt_state.c']]],
-  ['updatestateack_9',['updateStateAck',['../core__mqtt__state_8c.html#a897d2385c4f4f49589e664e1df0afd3f',1,'core_mqtt_state.c']]],
-  ['updatestatepublish_10',['updateStatePublish',['../core__mqtt__state_8c.html#a05a9eda7866e5c9fa95d4c447b1f4921',1,'core_mqtt_state.c']]],
+  ['updatestateack_9',['updateStateAck',['../core__mqtt__state_8c.html#a174a91b9491a344d6fb4f0b39189392f',1,'core_mqtt_state.c']]],
+  ['updatestatepublish_10',['updateStatePublish',['../core__mqtt__state_8c.html#aa0550584e3733da2e31c9478b9307b49',1,'core_mqtt_state.c']]],
   ['usernamelength_11',['userNameLength',['../struct_m_q_t_t_connect_info__t.html#a7165be3bb06d4527ab4eb773b50e05e1',1,'MQTTConnectInfo_t']]]
 ];

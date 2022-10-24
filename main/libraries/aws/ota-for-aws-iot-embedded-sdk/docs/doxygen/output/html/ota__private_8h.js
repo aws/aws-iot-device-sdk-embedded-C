@@ -13,6 +13,7 @@ var ota__private_8h =
     [ "OTA_REQUEST_MSG_MAX_SIZE", "group__ota__constants.html#ga9b81d4cb7dbd60b668da6dc2dea072c2", null ],
     [ "OTA_REQUEST_URL_MAX_SIZE", "group__ota__constants.html#gab4104ae99ac82ab47978b046e6e26e6a", null ],
     [ "OTA_ERASED_BLOCKS_VAL", "group__ota__constants.html#ga759a079ce6746a1d1f7e6391565bbe4a", null ],
+    [ "OTA_MAX_FILE_SIZE", "group__ota__constants.html#ga301d4ae71893ce48f38c07e317304376", null ],
     [ "OTA_MAX_JSON_TOKENS", "group__ota__constants.html#ga059be218ff71c8df0eccda0a7115bfad", null ],
     [ "OTA_MAX_JSON_STR_LEN", "group__ota__constants.html#gafaa370948b99101757c117fd5f85abc1", null ],
     [ "OTA_DOC_MODEL_MAX_PARAMS", "group__ota__constants.html#gabe907910e02fd0d9ac522cc48c39e54d", null ],

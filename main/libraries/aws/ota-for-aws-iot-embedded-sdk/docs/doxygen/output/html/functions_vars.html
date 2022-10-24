@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -124,9 +124,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 
 
 <h3><a id="index_d" name="index_d"></a>- d -</h3><ul>
-<li>data&#160;:&#160;<a class="el" href="struct_ota_event_data__t.html#a2d6745b10e3e5ad0dac2ebb89a56f252">OtaEventData_t</a>, <a class="el" href="struct_sig256__t.html#aae366e61733f67f99979cdd998fc8e01">Sig256_t</a></li>
+<li>data&#160;:&#160;<a class="el" href="struct_ota_event_data__t.html#a2d6745b10e3e5ad0dac2ebb89a56f252">OtaEventData_t</a>, <a class="el" href="struct_sig__t.html#a50ba06ed445cc74de1aa388fdd096890">Sig_t</a></li>
 <li>dataLength&#160;:&#160;<a class="el" href="struct_ota_event_data__t.html#a4f1b1b9d316c41d97fd9169dc6ff076d">OtaEventData_t</a></li>
-<li>decodeFileBlock&#160;:&#160;<a class="el" href="struct_ota_data_interface__t.html#a47a30ce721442ecc2b45d5cbcaa4b725">OtaDataInterface_t</a></li>
+<li>decodeFileBlock&#160;:&#160;<a class="el" href="struct_ota_data_interface__t.html#a8520f5c8d7ccd1322463cd30839a0416">OtaDataInterface_t</a></li>
 <li>decodeMemMaxSize&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a14058c044993f0fe95a406b072204495">OtaFileContext_t</a></li>
 <li>decodeMemorySize&#160;:&#160;<a class="el" href="struct_ota_app_buffer__t.html#a4cf8c691d69b5f951bb902d780fca1a8">OtaAppBuffer_t</a></li>
 <li>deinit&#160;:&#160;<a class="el" href="struct_ota_event_interface__t.html#a0bc56e4a2b5c991272239045e75363d7">OtaEventInterface_t</a>, <a class="el" href="struct_ota_http_interface__t.html#a71b991f269a830332759d07341dc540f">OtaHttpInterface_t</a></li>
@@ -167,8 +167,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <h3><a id="index_i" name="index_i"></a>- i -</h3><ul>
 <li>imageState&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#a802de005e5206788c454854204768b5c">OtaAgentContext_t</a></li>
 <li>init&#160;:&#160;<a class="el" href="struct_ota_event_interface__t.html#a70a33a62828b128cd625c1b13ff8550e">OtaEventInterface_t</a>, <a class="el" href="struct_ota_http_interface__t.html#a9e6e01808eb7dcd83ea3562aeda6ce67">OtaHttpInterface_t</a></li>
-<li>initFileTransfer&#160;:&#160;<a class="el" href="struct_ota_data_interface__t.html#ad512cb7d433675c3e6895ace60443041">OtaDataInterface_t</a></li>
+<li>initFileTransfer&#160;:&#160;<a class="el" href="struct_ota_data_interface__t.html#a88941317ed4fd2e35572a2fdaa58e22f">OtaDataInterface_t</a></li>
 <li>isInSelfTest&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a4bed61a2b0553f841bbaca9abd0a1560">OtaFileContext_t</a></li>
+<li>isOtaInterfaceInited&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#a23f187a6f425cf0e8991625eae3e90c4">OtaAgentContext_t</a></li>
 </ul>
 
 
@@ -223,7 +224,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>pDestSizeOffset&#160;:&#160;<a class="el" href="struct_json_doc_param__t.html#aa6a954422b324818b6cad8ac866e40aa">JsonDocParam_t</a></li>
 <li>pEventContext&#160;:&#160;<a class="el" href="struct_ota_event_interface__t.html#a6f6184ea615ef2e26093adcb136f8176">OtaEventInterface_t</a></li>
 <li>pEventData&#160;:&#160;<a class="el" href="struct_ota_event_msg__t.html#a3244289f279458a9bf6d8a1cedd0f27a">OtaEventMsg_t</a></li>
-<li>pFile&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a731eefc516423588396a17c63cc159b9">OtaFileContext_t</a></li>
+<li>pFile&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#ae7aa864f6bd88d6805759a55e89bfe8e">OtaFileContext_t</a></li>
 <li>pFileBitmap&#160;:&#160;<a class="el" href="struct_ota_app_buffer__t.html#a6d2a5ecba3800a44bf58223ea6785ddd">OtaAppBuffer_t</a></li>
 <li>pFilePath&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a7281da77a81626910373a56efcf90262">OtaFileContext_t</a></li>
 <li>pJobDocJson&#160;:&#160;<a class="el" href="struct_ota_job_document__t.html#a76f27be43afe47387d01b8a25fdb2555">OtaJobDocument_t</a></li>
@@ -233,7 +234,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>pProtocols&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#af1c7d4797e2ae02f8f022bcaad229cb3">OtaFileContext_t</a></li>
 <li>protocolMaxSize&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#ae0306a16a35e855c2cd4d60fcf940813">OtaFileContext_t</a></li>
 <li>pRxBlockBitmap&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a1876125c2893ff2639fdcebfe47aa073">OtaFileContext_t</a></li>
-<li>pSignature&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a7b19507fb15f4924d985ad0a48c671f0">OtaFileContext_t</a></li>
+<li>pSignature&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a9b19a39f2ad185b21231cf91cef47ace">OtaFileContext_t</a></li>
 <li>pSrcKey&#160;:&#160;<a class="el" href="struct_json_doc_param__t.html#adf590486686c77a328e34ed2d6cd0e24">JsonDocParam_t</a></li>
 <li>pStreamName&#160;:&#160;<a class="el" href="struct_ota_app_buffer__t.html#a7bc6e9af2e5935ddf7168173bba51805">OtaAppBuffer_t</a>, <a class="el" href="struct_ota_file_context__t.html#a5bfc26add016d1883c2373a63c2bf5b0">OtaFileContext_t</a></li>
 <li>pThingName&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#ab65c1d54c43a832265e1c106e091f384">OtaAgentContext_t</a></li>
@@ -249,7 +250,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>recv&#160;:&#160;<a class="el" href="struct_ota_event_interface__t.html#acd46139762310587bb44d8b23b58c8fe">OtaEventInterface_t</a></li>
 <li>request&#160;:&#160;<a class="el" href="struct_ota_http_interface__t.html#a87e4e6ebc94538da49d7cfe24cefab1c">OtaHttpInterface_t</a></li>
 <li>requestFileBlock&#160;:&#160;<a class="el" href="struct_ota_data_interface__t.html#a4ceb39add093ae3e3aa2798a1e515cc1">OtaDataInterface_t</a></li>
-<li>requestJob&#160;:&#160;<a class="el" href="struct_ota_control_interface__t.html#a8c2422158a814c16d698982dfbdffc86">OtaControlInterface_t</a></li>
+<li>requestJob&#160;:&#160;<a class="el" href="struct_ota_control_interface__t.html#a577f6d646e6776df3cc52bb7f073e14e">OtaControlInterface_t</a></li>
 <li>requestMomentum&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#abcb47ce949d9c9874ba53c08df390665">OtaAgentContext_t</a></li>
 <li>required&#160;:&#160;<a class="el" href="struct_json_doc_param__t.html#a96709fba52845d5f5ad914c89db05989">JsonDocParam_t</a></li>
 <li>reset&#160;:&#160;<a class="el" href="struct_ota_pal_interface__t.html#a744b9602243baf92cbe2d1e8aef3b7ec">OtaPalInterface_t</a></li>
@@ -260,7 +261,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>send&#160;:&#160;<a class="el" href="struct_ota_event_interface__t.html#a02285842a33d7f21990422fdeabc39eb">OtaEventInterface_t</a></li>
 <li>serverFileID&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#ad80a0e3d45f727bbc3dfd41e512a7622">OtaAgentContext_t</a>, <a class="el" href="struct_ota_file_context__t.html#ab972bcc57370ba912390035067c39a7c">OtaFileContext_t</a></li>
 <li>setPlatformImageState&#160;:&#160;<a class="el" href="struct_ota_pal_interface__t.html#a4042675d1df2bcc0fca26a9121fe5668">OtaPalInterface_t</a></li>
-<li>size&#160;:&#160;<a class="el" href="struct_sig256__t.html#a03d5d9cc35524d46b65eeb6287e75ea3">Sig256_t</a></li>
+<li>size&#160;:&#160;<a class="el" href="struct_sig__t.html#a060a9746084edd6e0b0b5d3e6f53c9f5">Sig_t</a></li>
 <li>start&#160;:&#160;<a class="el" href="struct_ota_timer_interface__t.html#a6667d075f8cc8314a21ba87733d52d0e">OtaTimerInterface_t</a></li>
 <li>state&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#a61a065c01ec6c93e1f957b6ee0b8465b">OtaAgentContext_t</a></li>
 <li>statistics&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#a694d9d5b1f6d1073d81d143ff758ae09">OtaAgentContext_t</a></li>
@@ -284,7 +285,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>unsubscribe&#160;:&#160;<a class="el" href="struct_ota_mqtt_interface__t.html#afe7b58ce23961bd3023266e9abb26a85">OtaMqttInterface_t</a></li>
 <li>unsubscribeOnShutdown&#160;:&#160;<a class="el" href="struct_ota_agent_context__t.html#ab86e0efb9552ea4d9962e78d1feeb0f2">OtaAgentContext_t</a></li>
 <li>updateFilePathsize&#160;:&#160;<a class="el" href="struct_ota_app_buffer__t.html#a4260f4d420eeb703cf3af5dc85dcd70d">OtaAppBuffer_t</a></li>
-<li>updateJobStatus&#160;:&#160;<a class="el" href="struct_ota_control_interface__t.html#a91b6c320fc204e922adbea72c834c206">OtaControlInterface_t</a></li>
+<li>updateJobStatus&#160;:&#160;<a class="el" href="struct_ota_control_interface__t.html#aa710e01300ffcfc5cddc8ba8f206fb5e">OtaControlInterface_t</a></li>
 <li>updaterVersion&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a732b6021dc1856d54fea38588f65957d">OtaFileContext_t</a></li>
 <li>updateUrlMaxSize&#160;:&#160;<a class="el" href="struct_ota_file_context__t.html#a7dfc9c9989cbe538b78bc007748ecccb">OtaFileContext_t</a></li>
 <li>urlSize&#160;:&#160;<a class="el" href="struct_ota_app_buffer__t.html#a2b6bd46660f5f45859d36cfa330c8c90">OtaAppBuffer_t</a></li>

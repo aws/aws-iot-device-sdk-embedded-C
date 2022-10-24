@@ -31,7 +31,7 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.1.0</span>
+   <div id="projectname">AWS IoT Over-the-air Update<span id="projectnumber">&#160;v3.4.0</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT OTA</div>
   </td>
@@ -157,6 +157,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a169ad4ac7245555d858f10d4df42be25"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__config__defaults_8h.html#a169ad4ac7245555d858f10d4df42be25">otaconfigMAX_NUM_OTA_DATA_BUFFERS</a>&#160;&#160;&#160;1U</td></tr>
 <tr class="memdesc:a169ad4ac7245555d858f10d4df42be25"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of data buffers reserved by the OTA agent.  <a href="ota__config__defaults_8h.html#a169ad4ac7245555d858f10d4df42be25">More...</a><br /></td></tr>
 <tr class="separator:a169ad4ac7245555d858f10d4df42be25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6198be4c4b8952d25662b260e9e8323"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__config__defaults_8h.html#ac6198be4c4b8952d25662b260e9e8323">otaconfigOTA_FILE_TYPE</a>&#160;&#160;&#160;uint8_t</td></tr>
+<tr class="memdesc:ac6198be4c4b8952d25662b260e9e8323"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data type to represent a file.  <a href="ota__config__defaults_8h.html#ac6198be4c4b8952d25662b260e9e8323">More...</a><br /></td></tr>
+<tr class="separator:ac6198be4c4b8952d25662b260e9e8323"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95dac9f2da0f3bd64c2183caa6292efe"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__config__defaults_8h.html#a95dac9f2da0f3bd64c2183caa6292efe">otaconfigAllowDowngrade</a>&#160;&#160;&#160;0U</td></tr>
 <tr class="memdesc:a95dac9f2da0f3bd64c2183caa6292efe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag to enable booting into updates that have an identical or lower version than the current version.  <a href="ota__config__defaults_8h.html#a95dac9f2da0f3bd64c2183caa6292efe">More...</a><br /></td></tr>
 <tr class="separator:a95dac9f2da0f3bd64c2183caa6292efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,6 +175,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a96092c27429db9fcabd02c0c6a15756a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__config__defaults_8h.html#a96092c27429db9fcabd02c0c6a15756a">configOTA_PRIMARY_DATA_PROTOCOL</a>&#160;&#160;&#160;( <a class="el" href="ota__interface__private_8h.html#a21af8723c90fd4c4b899f76b51d23048">OTA_DATA_OVER_MQTT</a> )</td></tr>
 <tr class="memdesc:a96092c27429db9fcabd02c0c6a15756a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The preferred protocol selected for OTA data operations.  <a href="ota__config__defaults_8h.html#a96092c27429db9fcabd02c0c6a15756a">More...</a><br /></td></tr>
 <tr class="separator:a96092c27429db9fcabd02c0c6a15756a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf1e3fc7dc9fc4ff54e5b777e0a636c1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__config__defaults_8h.html#adf1e3fc7dc9fc4ff54e5b777e0a636c1">configOTA_POLLING_EVENTS_TIMEOUT_MS</a>&#160;&#160;&#160;( 1000U )</td></tr>
+<tr class="memdesc:adf1e3fc7dc9fc4ff54e5b777e0a636c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The polling timeout (milliseconds) to receive messages from event queue.  <a href="ota__config__defaults_8h.html#adf1e3fc7dc9fc4ff54e5b777e0a636c1">More...</a><br /></td></tr>
+<tr class="separator:adf1e3fc7dc9fc4ff54e5b777e0a636c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ota__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">LogError</a>(message)</td></tr>
 <tr class="memdesc:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the OTA library for logging "Error" level messages.  <a href="ota__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">More...</a><br /></td></tr>
 <tr class="separator:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,7 +246,7 @@ Macros</h2></td></tr>
 
 <p>The OTA agent task priority. Normally it runs at a low priority. </p>
 <p >For more information <a href="https://www.freertos.org/RTOS-task-priority.html">Link</a>.</p>
-<p ><b>Possible values:</b> 0 to ( configMAX_PRIORITIES – 1 ) <br  />
+<p ><b>Possible values:</b> 0 to ( configMAX_PRIORITIES - 1 ) <br  />
  <b>Default value:</b> Varies by platform. </p>
 
 </div>
@@ -395,6 +401,25 @@ Macros</h2></td></tr>
 
 </div>
 </div>
+<a id="ac6198be4c4b8952d25662b260e9e8323" name="ac6198be4c4b8952d25662b260e9e8323"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6198be4c4b8952d25662b260e9e8323">&#9670;&nbsp;</a></span>otaconfigOTA_FILE_TYPE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define otaconfigOTA_FILE_TYPE&#160;&#160;&#160;uint8_t</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Data type to represent a file. </p>
+<p >It is used to represent a file received via OTA. The file is declared as the pointer of this type: otaconfigOTA_FILE_TYPE * pFile.</p>
+<p ><b>Possible values:</b> Any data type. <br  />
+ <b>Default value:</b> FILE on Windows or Linux, uint8_t on other platforms. </p>
+
+</div>
+</div>
 <a id="a95dac9f2da0f3bd64c2183caa6292efe" name="a95dac9f2da0f3bd64c2183caa6292efe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a95dac9f2da0f3bd64c2183caa6292efe">&#9670;&nbsp;</a></span>otaconfigAllowDowngrade</h2>
 
@@ -492,6 +517,24 @@ Only MQTT is supported at this time for control operations.</dd></dl>
  Data over MQTT - ( OTA_DATA_OVER_MQTT ) <br  />
  Data over HTTP - ( OTA_DATA_OVER_HTTP ) <br  />
  <b>Default value:</b> 'OTA_DATA_OVER_MQTT' </p>
+
+</div>
+</div>
+<a id="adf1e3fc7dc9fc4ff54e5b777e0a636c1" name="adf1e3fc7dc9fc4ff54e5b777e0a636c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf1e3fc7dc9fc4ff54e5b777e0a636c1">&#9670;&nbsp;</a></span>configOTA_POLLING_EVENTS_TIMEOUT_MS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define configOTA_POLLING_EVENTS_TIMEOUT_MS&#160;&#160;&#160;( 1000U )</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The polling timeout (milliseconds) to receive messages from event queue. </p>
+<p ><b>Possible values:</b> Any unsigned 32 integer. <br  />
+ <b>Default value:</b> '1000' </p>
 
 </div>
 </div>
