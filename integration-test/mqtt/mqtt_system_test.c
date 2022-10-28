@@ -1853,6 +1853,7 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
     char * topicList[ 5 ];
     size_t i;
     const size_t topicCount = 5U;
+    MQTTQoS_t qos;
 
     topicList[ 0 ] = TEST_MQTT_TOPIC;
     topicList[ 1 ] = TEST_MQTT_TOPIC_2;
@@ -1887,31 +1888,35 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
     /* Publish to the same topic, that we subscribed to. */
     for( i = 0; i < topicCount; i++ )
     {
+        /* Set Qos to be either 1 or 0. */
+        qos = ( i % 2 );
+
         TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                                &context,
                                TEST_MQTT_TOPIC,
                                false,     /* setRetainFlag */
                                false,     /* isDuplicate */
-                               ( i % 2 ), /* QoS */
+                               qos,       /* QoS */
                                MQTT_GetPacketId( &context ) ) );
 
-        /* Only wait for PUBACK if QoS is not QoS0. */
-        if( ( i % 2 ) !=  0 )
-        {
-            /* Reset the PUBACK flag. */
-            receivedPubAck = false;
+        /* Reset the PUBACK flag. */
+        receivedPubAck = false;
 
-            /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
-             * same message that we published (as we have subscribed to the same topic). */
-            TEST_ASSERT_EQUAL( MQTTSuccess,
-                               processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+        /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
+         * same message that we published (as we have subscribed to the same topic). */
+        TEST_ASSERT_EQUAL( MQTTSuccess,
+                           processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+        /* Only wait for PUBACK if QoS is not QoS0. */
+        if( qos != MQTTQoS0 )
+        {
             /* Make sure we have received PUBACK response. */
             TEST_ASSERT_TRUE( receivedPubAck );
         }
 
         /* Make sure that we have received the same message from the server,
          * that was published (as we have subscribed to the same topic). */
-        TEST_ASSERT_EQUAL( ( i % 2 ), incomingInfo.qos );
+        TEST_ASSERT_EQUAL( qos, incomingInfo.qos );
         TEST_ASSERT_EQUAL( strlen( topicList[ i ] ), incomingInfo.topicNameLength );
         TEST_ASSERT_EQUAL_MEMORY( topicList[ i ],
                                   incomingInfo.pTopicName,
