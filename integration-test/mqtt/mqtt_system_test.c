@@ -1894,9 +1894,9 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
         TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                                &context,
                                topicList[ i ],
-                               false,     /* setRetainFlag */
-                               false,     /* isDuplicate */
-                               qos,       /* QoS */
+                               false, /* setRetainFlag */
+                               false, /* isDuplicate */
+                               qos,   /* QoS */
                                MQTT_GetPacketId( &context ) ) );
 
         /* Reset the PUBACK flag. */
