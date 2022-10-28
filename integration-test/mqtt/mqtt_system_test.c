@@ -1021,6 +1021,7 @@ TEST_GROUP_RUNNER( coreMQTT_Integration_AWS_IoT_Compatible )
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_ProcessLoop_KeepAlive );
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Resend_Unacked_Publish_QoS1 );
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1 );
+    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_SubUnsub_Multiple_Topics );
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Publish_With_Retain_Flag );
 }
 
@@ -1042,6 +1043,7 @@ TEST_GROUP_RUNNER( coreMQTT_Integration )
     RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_Resend_Unacked_Publish_QoS2 );
     RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos2 );
     RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag );
+    RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_SubUnsub_Multiple_Topics );
 }
 
 /* ========================== Test Cases ============================ */
