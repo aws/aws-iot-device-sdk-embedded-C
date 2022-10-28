@@ -1895,15 +1895,19 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
                                ( i % 2 ), /* QoS */
                                MQTT_GetPacketId( &context ) ) );
 
-        /* Reset the PUBACK flag. */
-        receivedPubAck = false;
+        /* Only wait for PUBACK if QoS is not QoS0. */
+        if( ( i % 2 ) !=  0 )
+        {
+            /* Reset the PUBACK flag. */
+            receivedPubAck = false;
 
-        /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
-         * same message that we published (as we have subscribed to the same topic). */
-        TEST_ASSERT_EQUAL( MQTTSuccess,
-                           processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
-        /* Make sure we have received PUBACK response. */
-        TEST_ASSERT_TRUE( receivedPubAck );
+            /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
+             * same message that we published (as we have subscribed to the same topic). */
+            TEST_ASSERT_EQUAL( MQTTSuccess,
+                               processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+            /* Make sure we have received PUBACK response. */
+            TEST_ASSERT_TRUE( receivedPubAck );
+        }
 
         /* Make sure that we have received the same message from the server,
          * that was published (as we have subscribed to the same topic). */
