@@ -1893,7 +1893,7 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
 
         TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
                                &context,
-                               TEST_MQTT_TOPIC,
+                               topicList[ i ],
                                false,     /* setRetainFlag */
                                false,     /* isDuplicate */
                                qos,       /* QoS */
