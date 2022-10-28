@@ -1850,7 +1850,6 @@ void test_MQTT_Publish_With_Retain_Flag( void )
 void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
 {
     MQTTSubscribeInfo_t subscribeParams[ 5 ];
-    uint16_t usPacketID;
     char * topicList[ 5 ];
     size_t i;
     const size_t topicCount = 5U;
@@ -1868,16 +1867,16 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
         subscribeParams[ i ].qos = ( i % 2 );
     }
 
-    usPacketID = MQTT_GetPacketId( &context );
+    globalSubscribePacketIdentifier = MQTT_GetPacketId( &context );
     /* Check that the packet ID is valid according to the MQTT spec. */
-    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, usPacketID );
-    TEST_ASSERT_NOT_EQUAL( 0U, usPacketID );
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, globalSubscribePacketIdentifier );
+    TEST_ASSERT_NOT_EQUAL( 0U, globalSubscribePacketIdentifier );
 
     /* Subscribe to all topics. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Subscribe( &context,
                                                     subscribeParams,
                                                     topicCount,
-                                                    usPacketID ) );
+                                                    globalSubscribePacketIdentifier ) );
 
     /* Expect a SUBACK from the broker for the subscribe operation. */
     TEST_ASSERT_FALSE( receivedSubAck );
@@ -1919,14 +1918,14 @@ void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
                                   incomingInfo.payloadLength );
     }
 
-    usPacketID = MQTT_GetPacketId( &context );
+    globalUnsubscribePacketIdentifier = MQTT_GetPacketId( &context );
     /* Check that the packet ID is valid according to the MQTT spec. */
-    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, usPacketID );
-    TEST_ASSERT_NOT_EQUAL( 0U, usPacketID );
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, globalUnsubscribePacketIdentifier );
+    TEST_ASSERT_NOT_EQUAL( 0U, globalUnsubscribePacketIdentifier );
 
     /* Un-subscribe from all the topics. */
     TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Unsubscribe(
-                           &context, subscribeParams, topicCount, usPacketID ) );
+                           &context, subscribeParams, topicCount, globalUnsubscribePacketIdentifier ) );
 
     receivedUnsubAck = false;
 
