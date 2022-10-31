@@ -135,6 +135,21 @@
 #define TEST_MQTT_TOPIC_2                       CLIENT_IDENTIFIER "/iot/integration/test2"
 
 /**
+ * @brief Sample topic filter 3 to use in tests.
+ */
+#define TEST_MQTT_TOPIC_3                       CLIENT_IDENTIFIER "/iot/integration/testTopic3"
+
+/**
+ * @brief Sample topic filter 4 to use in tests.
+ */
+#define TEST_MQTT_TOPIC_4                       CLIENT_IDENTIFIER "/iot/integration/testFour"
+
+/**
+ * @brief Sample topic filter 5 to use in tests.
+ */
+#define TEST_MQTT_TOPIC_5                       CLIENT_IDENTIFIER "/iot/integration/testTopicName5"
+
+/**
  * @brief Length of sample topic filter.
  */
 #define TEST_MQTT_TOPIC_LENGTH                  ( sizeof( TEST_MQTT_TOPIC ) - 1 )
@@ -1006,6 +1021,7 @@ TEST_GROUP_RUNNER( coreMQTT_Integration_AWS_IoT_Compatible )
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_ProcessLoop_KeepAlive );
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Resend_Unacked_Publish_QoS1 );
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos1 );
+    RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_SubUnsub_Multiple_Topics );
     RUN_TEST_CASE( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_Publish_With_Retain_Flag );
 }
 
@@ -1027,6 +1043,7 @@ TEST_GROUP_RUNNER( coreMQTT_Integration )
     RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_Resend_Unacked_Publish_QoS2 );
     RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_Restore_Session_Duplicate_Incoming_Publish_Qos2 );
     RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_Publish_With_Retain_Flag );
+    RUN_TEST_CASE( coreMQTT_Integration, test_MQTT_SubUnsub_Multiple_Topics );
 }
 
 /* ========================== Test Cases ============================ */
@@ -1821,6 +1838,128 @@ void test_MQTT_Publish_With_Retain_Flag( void )
 
     /* Make sure that the library did not receive an incoming PUBLISH from the broker. */
     TEST_ASSERT_FALSE( receivedRetainedMessage );
+}
+
+/**
+ * @brief Tests Subscribe and Unsubscribe operations to multiple topic filters
+ * in a single API call.
+ * The test subscribes to 6 topics, and then publishes to the same topics one
+ * at a time. The broker is expected to route the publish message back to the
+ * test for all topics.
+ */
+void test_MQTT_Subscribe_Unsubscribe_Multiple_Topics( void )
+{
+    MQTTSubscribeInfo_t subscribeParams[ 5 ];
+    char * topicList[ 5 ];
+    size_t i;
+    const size_t topicCount = 5U;
+    MQTTQoS_t qos;
+
+    topicList[ 0 ] = TEST_MQTT_TOPIC;
+    topicList[ 1 ] = TEST_MQTT_TOPIC_2;
+    topicList[ 2 ] = TEST_MQTT_TOPIC_3;
+    topicList[ 3 ] = TEST_MQTT_TOPIC_4;
+    topicList[ 4 ] = TEST_MQTT_TOPIC_5;
+
+    for( i = 0; i < topicCount; i++ )
+    {
+        subscribeParams[ i ].pTopicFilter = topicList[ i ];
+        subscribeParams[ i ].topicFilterLength = strlen( topicList[ i ] );
+        subscribeParams[ i ].qos = ( i % 2 );
+    }
+
+    globalSubscribePacketIdentifier = MQTT_GetPacketId( &context );
+    /* Check that the packet ID is valid according to the MQTT spec. */
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, globalSubscribePacketIdentifier );
+    TEST_ASSERT_NOT_EQUAL( 0U, globalSubscribePacketIdentifier );
+
+    /* Subscribe to all topics. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Subscribe( &context,
+                                                    subscribeParams,
+                                                    topicCount,
+                                                    globalSubscribePacketIdentifier ) );
+
+    /* Expect a SUBACK from the broker for the subscribe operation. */
+    TEST_ASSERT_FALSE( receivedSubAck );
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedSubAck );
+
+    /* Publish to the same topic, that we subscribed to. */
+    for( i = 0; i < topicCount; i++ )
+    {
+        /* Set Qos to be either 1 or 0. */
+        qos = ( i % 2 );
+
+        TEST_ASSERT_EQUAL( MQTTSuccess, publishToTopic(
+                               &context,
+                               topicList[ i ],
+                               false, /* setRetainFlag */
+                               false, /* isDuplicate */
+                               qos,   /* QoS */
+                               MQTT_GetPacketId( &context ) ) );
+
+        /* Reset the PUBACK flag. */
+        receivedPubAck = false;
+
+        /* Expect a PUBACK response for the PUBLISH and an incoming PUBLISH for the
+         * same message that we published (as we have subscribed to the same topic). */
+        TEST_ASSERT_EQUAL( MQTTSuccess,
+                           processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+
+        /* Only wait for PUBACK if QoS is not QoS0. */
+        if( qos != MQTTQoS0 )
+        {
+            /* Make sure we have received PUBACK response. */
+            TEST_ASSERT_TRUE( receivedPubAck );
+        }
+
+        /* Make sure that we have received the same message from the server,
+         * that was published (as we have subscribed to the same topic). */
+        TEST_ASSERT_EQUAL( qos, incomingInfo.qos );
+        TEST_ASSERT_EQUAL( strlen( topicList[ i ] ), incomingInfo.topicNameLength );
+        TEST_ASSERT_EQUAL_MEMORY( topicList[ i ],
+                                  incomingInfo.pTopicName,
+                                  strlen( topicList[ i ] ) );
+        TEST_ASSERT_EQUAL( strlen( MQTT_EXAMPLE_MESSAGE ), incomingInfo.payloadLength );
+        TEST_ASSERT_EQUAL_MEMORY( MQTT_EXAMPLE_MESSAGE,
+                                  incomingInfo.pPayload,
+                                  incomingInfo.payloadLength );
+    }
+
+    globalUnsubscribePacketIdentifier = MQTT_GetPacketId( &context );
+    /* Check that the packet ID is valid according to the MQTT spec. */
+    TEST_ASSERT_NOT_EQUAL( MQTT_PACKET_ID_INVALID, globalUnsubscribePacketIdentifier );
+    TEST_ASSERT_NOT_EQUAL( 0U, globalUnsubscribePacketIdentifier );
+
+    /* Un-subscribe from all the topics. */
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_Unsubscribe(
+                           &context, subscribeParams, topicCount, globalUnsubscribePacketIdentifier ) );
+
+    receivedUnsubAck = false;
+
+    /* Expect an UNSUBACK from the broker for the unsubscribe operation. */
+    TEST_ASSERT_EQUAL( MQTTSuccess,
+                       processLoopWithTimeout( &context, MQTT_PROCESS_LOOP_TIMEOUT_MS ) );
+    TEST_ASSERT_TRUE( receivedUnsubAck );
+}
+
+/**
+ * @brief Verifies the correct behavior of MQTT library when sending multiple
+ * subscribe and unsubscribe requests in a single API call.
+ */
+TEST( coreMQTT_Integration_AWS_IoT_Compatible, test_MQTT_SubUnsub_Multiple_Topics )
+{
+    test_MQTT_Subscribe_Unsubscribe_Multiple_Topics();
+}
+
+/**
+ * @brief Verifies the correct behavior of MQTT library when sending multiple
+ * subscribe and unsubscribe requests in a single API call.
+ */
+TEST( coreMQTT_Integration, test_MQTT_SubUnsub_Multiple_Topics )
+{
+    test_MQTT_Subscribe_Unsubscribe_Multiple_Topics();
 }
 
 /* Include test_MQTT_Publish_With_Retain_Flag test case in both test groups to
