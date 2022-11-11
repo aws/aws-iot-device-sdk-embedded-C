@@ -118,63 +118,98 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     int32_t bytesReceived = -1, pollStatus = 1;
     struct pollfd pollFds;
 
-    assert( pNetworkContext != NULL && pNetworkContext->pParams != NULL );
-    assert( pBuffer != NULL );
-    assert( bytesToRecv > 0 );
-
-    /* Get receive timeout from the socket to use as the timeout for #select. */
-    pPlaintextParams = pNetworkContext->pParams;
-
-    /* Initialize the file descriptor.
-     * #POLLPRI corresponds to high-priority data while #POLLIN corresponds
-     * to any other data that may be read. */
-    pollFds.events = POLLIN | POLLPRI;
-    pollFds.revents = 0;
-    /* Set the file descriptor for poll. */
-    pollFds.fd = pPlaintextParams->socketDescriptor;
-
-    /* Speculative read for the start of a payload.
-     * Note: This is done to avoid blocking when
-     * no data is available to be read from the socket. */
-    if( bytesToRecv == 1U )
+    if( pNetworkContext == NULL )
     {
-        /* Check if there is data to read (without blocking) from the socket. */
-        pollStatus = poll( &pollFds, 1, 0 );
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        bytesReceived = -1;
     }
-
-    if( pollStatus > 0 )
+    else if( pNetworkContext->pParams == NULL )
     {
-        /* The socket is available for receiving data. */
-        bytesReceived = ( int32_t ) recv( pPlaintextParams->socketDescriptor,
-                                          pBuffer,
-                                          bytesToRecv,
-                                          0 );
+        LogError( ( "Parameter check failed: pNetworkContext->pParams is NULL." ) );
+        bytesReceived = -1;
     }
-    else if( pollStatus < 0 )
+    else if( pBuffer == NULL )
     {
-        /* An error occurred while polling. */
+        LogError( ( "Parameter check failed: pBuffer is NULL." ) );
+        bytesReceived = -1;
+    }
+    else if( bytesToRecv == 0 )
+    {
+        LogError( ( "Parameter check failed: bytesToRecv is zero." ) );
         bytesReceived = -1;
     }
     else
     {
-        /* No data available to receive. */
-        bytesReceived = 0;
-    }
+        /* Get receive timeout from the socket to use as the timeout for #select. */
+        pPlaintextParams = pNetworkContext->pParams;
 
-    /* Note: A zero value return from recv() represents
-     * closure of TCP connection by the peer. */
-    if( ( pollStatus > 0 ) && ( bytesReceived == 0 ) )
-    {
-        /* Peer has closed the connection. Treat as an error. */
-        bytesReceived = -1;
-    }
-    else if( bytesReceived < 0 )
-    {
-        logTransportError( errno );
-    }
-    else
-    {
-        /* Empty else MISRA 15.7 */
+        /* Initialize the file descriptor.
+         * #POLLPRI corresponds to high-priority data while #POLLIN corresponds
+         * to any other data that may be read. */
+        pollFds.events = POLLIN | POLLPRI;
+        pollFds.revents = 0;
+        /* Set the file descriptor for poll. */
+        pollFds.fd = pPlaintextParams->socketDescriptor;
+
+        /* Speculative read for the start of a payload.
+         * Note: This is done to avoid blocking when
+         * no data is available to be read from the socket. */
+        if( bytesToRecv == 1U )
+        {
+            /* Check if there is data to read (without blocking) from the socket. */
+            pollStatus = poll( &pollFds, 1, 0 );
+        }
+
+        if( pollStatus > 0 )
+        {
+            /* The socket is available for receiving data. */
+            bytesReceived = ( int32_t ) recv( pPlaintextParams->socketDescriptor,
+                                              pBuffer,
+                                              bytesToRecv,
+                                              0 );
+        }
+        else if( pollStatus < 0 )
+        {
+            /* An error occurred while polling. */
+            bytesReceived = -1;
+        }
+        else
+        {
+            /* No data available to receive. */
+            bytesReceived = 0;
+        }
+
+        /* Note: A zero value return from recv() represents
+         * closure of TCP connection by the peer. */
+        if( ( pollStatus > 0 ) && ( bytesReceived == 0 ) )
+        {
+            /* Peer has closed the connection. Treat as an error. */
+            bytesReceived = -1;
+        }
+        else if( ( pollStatus > 0 ) && ( bytesReceived < 0 ) )
+        {
+            /* The socket blocked for timeout and no data is received situation.
+             * Return zero to indicate this operation can be retried. */
+            #if EAGAIN == EWOULDBLOCK
+                if( errno == EAGAIN )
+                {
+                    bytesReceived = 0;
+                }
+            #else
+                if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+                {
+                    bytesReceived = 0;
+                }
+            #endif
+        }
+        else if( bytesReceived < 0 )
+        {
+            logTransportError( errno );
+        }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
     }
 
     return bytesReceived;
@@ -192,56 +227,91 @@ int32_t Plaintext_Send( NetworkContext_t * pNetworkContext,
     int32_t bytesSent = -1, pollStatus = -1;
     struct pollfd pollFds;
 
-    assert( pNetworkContext != NULL && pNetworkContext->pParams != NULL );
-    assert( pBuffer != NULL );
-    assert( bytesToSend > 0 );
-
-    /* Get send timeout from the socket to use as the timeout for #select. */
-    pPlaintextParams = pNetworkContext->pParams;
-
-    /* Initialize the file descriptor. */
-    pollFds.events = POLLOUT;
-    pollFds.revents = 0;
-    /* Set the file descriptor for poll. */
-    pollFds.fd = pPlaintextParams->socketDescriptor;
-
-    /* Check if data can be written to the socket.
-     * Note: This is done to avoid blocking on send() when
-     * the socket is not ready to accept more data for network
-     * transmission (possibly due to a full TX buffer). */
-    pollStatus = poll( &pollFds, 1, 0 );
-
-    if( pollStatus > 0 )
+    if( pNetworkContext == NULL )
     {
-        /* The socket is available for sending data. */
-        bytesSent = ( int32_t ) send( pPlaintextParams->socketDescriptor,
-                                      pBuffer,
-                                      bytesToSend,
-                                      0 );
+        LogError( ( "Parameter check failed: pNetworkContext is NULL." ) );
+        bytesSent = -1;
     }
-    else if( pollStatus < 0 )
+    else if( pNetworkContext->pParams == NULL )
     {
-        /* An error occurred while polling. */
+        LogError( ( "Parameter check failed: pNetworkContext->pParams is NULL." ) );
+        bytesSent = -1;
+    }
+    else if( pBuffer == NULL )
+    {
+        LogError( ( "Parameter check failed: pBuffer is NULL." ) );
+        bytesSent = -1;
+    }
+    else if( bytesToSend == 0 )
+    {
+        LogError( ( "Parameter check failed: bytesToSend is zero." ) );
         bytesSent = -1;
     }
     else
     {
-        /* Socket is not available for sending data. */
-        bytesSent = 0;
-    }
+        /* Get send timeout from the socket to use as the timeout for #select. */
+        pPlaintextParams = pNetworkContext->pParams;
 
-    if( ( pollStatus > 0 ) && ( bytesSent == 0 ) )
-    {
-        /* Peer has closed the connection. Treat as an error. */
-        bytesSent = -1;
-    }
-    else if( bytesSent < 0 )
-    {
-        logTransportError( errno );
-    }
-    else
-    {
-        /* Empty else MISRA 15.7 */
+        /* Initialize the file descriptor. */
+        pollFds.events = POLLOUT;
+        pollFds.revents = 0;
+        /* Set the file descriptor for poll. */
+        pollFds.fd = pPlaintextParams->socketDescriptor;
+
+        /* Check if data can be written to the socket.
+         * Note: This is done to avoid blocking on send() when
+         * the socket is not ready to accept more data for network
+         * transmission (possibly due to a full TX buffer). */
+        pollStatus = poll( &pollFds, 1, 0 );
+
+        if( pollStatus > 0 )
+        {
+            /* The socket is available for sending data. */
+            bytesSent = ( int32_t ) send( pPlaintextParams->socketDescriptor,
+                                          pBuffer,
+                                          bytesToSend,
+                                          0 );
+        }
+        else if( pollStatus < 0 )
+        {
+            /* An error occurred while polling. */
+            bytesSent = -1;
+        }
+        else
+        {
+            /* Socket is not available for sending data. */
+            bytesSent = 0;
+        }
+
+        if( ( pollStatus > 0 ) && ( bytesSent == 0 ) )
+        {
+            /* Peer has closed the connection. Treat as an error. */
+            bytesSent = -1;
+        }
+        else if( ( pollStatus > 0 ) && ( bytesSent < 0 ) )
+        {
+            /* The socket blocked for timeout and no data is sent situation.
+             * Return zero to indicate this operation can be retried. */
+            #if EAGAIN == EWOULDBLOCK
+                if( errno == EAGAIN )
+                {
+                    bytesSent = 0;
+                }
+            #else
+                if( ( errno == EAGAIN ) || ( errno == EWOULDBLOCK ) )
+                {
+                    bytesSent = 0;
+                }
+            #endif
+        }
+        else if( bytesSent < 0 )
+        {
+            logTransportError( errno );
+        }
+        else
+        {
+            /* Empty else MISRA 15.7 */
+        }
     }
 
     return bytesSent;
