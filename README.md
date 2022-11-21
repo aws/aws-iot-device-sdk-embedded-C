@@ -50,6 +50,7 @@
         * [Configuring the AWS IoT Fleet Provisioning demo](#configuring-the-aws-iot-fleet-provisioning-demo)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
+        * [Setup for the Greengrass local auth demo](#setup-for-greengrass-local-auth-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
     * [Building and Running Demos](#building-and-running-demos)

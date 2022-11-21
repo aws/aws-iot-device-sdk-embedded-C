@@ -1,12 +1,15 @@
 # Greengrass local auth demo
 
 This demo shows connecting a device using coreMQTT to a Greengrass core using
-local authentication.
+local authentication. This feature is available since version [v2.9.0](https://docs.aws.amazon.com/greengrass/v2/developerguide/greengrass-release-2022-11-15.html)
 
 Connecting to a Greengrass core is similar to connecting to IoT core. The
 device's Thing will need to be registered on IoT core just as with connecting
 directly. When setting up the Greengrass core, use your own Root CA, and
 provision the connecting device with the Root CA used for the Greengrass core.
+
+To read more about using Greengrass with custom CAs, see the docs on
+[offline authentication](https://docs.aws.amazon.com/greengrass/v2/developerguide/offline-authentication.html).
 
 This demo uses macros in demo_config.h for provisioned data; the following need
 to be set:
