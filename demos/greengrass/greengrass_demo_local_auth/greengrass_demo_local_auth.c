@@ -295,34 +295,6 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext );
 static int publishToTopic( MQTTContext_t * pMqttContext );
 
 /**
- * @brief Function to get the free index at which an outgoing publish
- * can be stored.
- *
- * @param[out] pIndex The output parameter to return the index at which an
- * outgoing publish message can be stored.
- *
- * @return EXIT_FAILURE if no more publishes can be stored;
- * EXIT_SUCCESS if an index to store the next outgoing publish is obtained.
- */
-static int getNextFreeIndexForOutgoingPublishes( uint8_t * pIndex );
-
-/**
- * @brief Function to clean up an outgoing publish at given index from the
- * #outgoingPublishPackets array.
- *
- * @param[in] index The index at which a publish message has to be cleaned up.
- */
-static void cleanupOutgoingPublishAt( uint8_t index );
-
-/**
- * @brief Function to clean up the publish packet with the given packet id.
- *
- * @param[in] packetId Packet identifier of the packet to be cleaned up from
- * the array.
- */
-static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
-
-/**
  * @brief Function to update variable globalSubAckStatus with status
  * information from Subscribe ACK. Called by eventCallback after processing
  * incoming subscribe echo.
@@ -343,7 +315,6 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
     ServerInfo_t serverInfo;
     OpensslCredentials_t opensslCredentials = { 0 };
     uint16_t nextRetryBackOff;
-    bool createCleanSession;
 
     /* Initialize information to connect to the MQTT broker. */
     serverInfo.pHostName = GREENGRASS_ADDRESS;
@@ -886,7 +857,6 @@ int main( int argc,
     MQTTContext_t mqttContext = { 0 };
     NetworkContext_t networkContext = { 0 };
     OpensslParams_t opensslParams = { 0 };
-    bool clientSessionPresent = false, brokerSessionPresent = false;
     struct timespec tp;
 
     ( void ) argc;

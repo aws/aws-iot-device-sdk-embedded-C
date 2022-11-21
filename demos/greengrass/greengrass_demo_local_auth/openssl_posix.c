@@ -241,7 +241,11 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
                                      const OpensslCredentials_t * pOpensslCredentials )
 {
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
-    int32_t sslStatus = -1, verifyPeerCertStatus = X509_V_OK;
+    int32_t sslStatus = -1;
+
+    /* This is not used in this demo, but is left to keep the signature same
+     * between demos. */
+    ( void ) pServerInfo;
 
     /* Enable SSL peer verification. */
     if( returnStatus == OPENSSL_SUCCESS )
