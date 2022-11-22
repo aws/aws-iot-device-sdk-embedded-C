@@ -88,39 +88,6 @@ jobs:
       - name: Build Demos
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
-  build-check-system-tests:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Clone This Repo
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Configure CMake build
-        run: |
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
-          mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
-          -G "Unix Makefiles" \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_TESTS=1 \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
-          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
-          -DBROKER_ENDPOINT="broker-endpoint" \
-          -DCLIENT_CERT_PATH="cert/path" \
-          -DROOT_CA_CERT_PATH="cert/path" \
-          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
-          -DCLIENT_IDENTIFIER="ci-identifier" \
-          -DTHING_NAME="thing-name" \
-          -DS3_PRESIGNED_GET_URL="get-url" \
-          -DS3_PRESIGNED_PUT_URL="put-url" \
-          -DCLAIM_CERT_PATH="cert/path" \
-          -DCLAIM_PRIVATE_KEY_PATH="key/path" \
-          -DPROVISIONING_TEMPLATE_NAME="template-name" \
-          -DDEVICE_SERIAL_NUMBER="00000" \
-          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo"
-      - name: Build System Tests
-        run: make -C build/ help | grep system | tr -d '. ' | xargs make -C build/
   build-check-install:
     runs-on: ubuntu-18.04
     steps:
@@ -134,7 +101,7 @@ jobs:
           tar -xf cmake.tar.gz
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
-          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+          -DBUILD_DEMOS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../shared-libs-headers-install-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../shared-libs-install-dir"
       - name: Install shared libraries and verify custom install location
         run: |
@@ -154,7 +121,7 @@ jobs:
           cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
           -DBUILD_SHARED_LIBRARIES=OFF \
-          -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
+          -DBUILD_DEMOS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../static-libs-headers-install-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../static-libs-install-dir"
       - name: Install static libraries and verify custom install location
         run: |
@@ -195,58 +162,6 @@ jobs:
             fi
           # Each line of install_manifest.txt contains the location of an installed library or header
           done <install_manifest.txt
-  unittest:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Clone This Repo
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Download CMake 3.2.0
-        run: |
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
-          mkdir build
-          cmake-3.2.0-Linux-x86_64/bin/cmake . -Bbuild/ \
-          -G "Unix Makefiles" \
-          -DBUILD_TESTS=1 \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
-          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
-      - name: Build Unit Tests
-        run: |
-          sudo apt-get install -y lcov
-          make -C build/ help | grep utest | tr -d '. ' | xargs make -C build/
-      - name: Run ctest
-        run: |
-          cd build/
-          ctest -E system --output-on-failure
-          cd ..
-      - name: Run Coverage
-        run: |
-          make -C build/ coverage
-          declare -a EXCLUDE=("\*test\*" "\*CMakeCCompilerId\*" "\*mocks\*" "\*3rdparty\*" "\*netdb\*" "*openssl/*")
-          echo ${EXCLUDE[@]} | xargs lcov --rc lcov_branch_coverage=1 -r build/coverage.info -o build/coverage.info
-          lcov --rc lcov_branch_coverage=1 --list build/coverage.info
-      - name: Check Coverage
-        env:
-          MIN_COVERAGE: 100
-        run: |
-          LINE_COVERAGE=$(lcov --list build/coverage.info | tail -n 1 | cut -d '|' -f 2 | sed -n "s/\([^%]*\)%.*/\1/p")
-          BRANCH_COVERAGE=$(lcov --rc lcov_branch_coverage=1 --list build/coverage.info | tail -n 1 | cut -d '|' -f 4 | sed -n "s/\([^%]*\)%.*/\1/p")
-          RESULT=0
-          echo "Required line and branch coverages: $MIN_COVERAGE"
-          echo "Line coverage:   $LINE_COVERAGE"
-          if [[ $(echo "$LINE_COVERAGE < $MIN_COVERAGE" | bc) -ne 0 ]]; then
-            echo "Line Coverage is too low."
-            RESULT=1
-          fi
-          echo "Branch coverage: $BRANCH_COVERAGE"
-          if [[ $(echo "$BRANCH_COVERAGE < $MIN_COVERAGE" | bc) -ne 0 ]]; then
-            echo "Branch Coverage is too low."
-            RESULT=1
-          fi
-          exit $RESULT
   complexity:
     runs-on: ubuntu-18.04
     steps:
