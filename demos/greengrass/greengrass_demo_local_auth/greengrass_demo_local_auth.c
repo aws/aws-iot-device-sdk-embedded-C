@@ -756,7 +756,7 @@ static int subscribePublishLoop( MQTTContext_t * pMqttContext )
      * in eventCallback to reflect the status of the SUBACK sent by the broker. */
     if( ( returnStatus == EXIT_SUCCESS ) && ( globalSubAckStatus == MQTTSubAckFailure ) )
     {
-        LogInfo( ( "Server rejected subscription request." ) );
+        LogWarn( ( "Server rejected subscription request." ) );
         returnStatus = EXIT_FAILURE;
     }
 
