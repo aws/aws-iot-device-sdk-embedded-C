@@ -50,6 +50,7 @@
         * [Configuring the AWS IoT Fleet Provisioning demo](#configuring-the-aws-iot-fleet-provisioning-demo)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
+        * [Setup for the Greengrass local auth demo](#setup-for-the-greengrass-local-auth-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
     * [Building and Running Demos](#building-and-running-demos)
@@ -491,6 +492,9 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 
+#### Setup for the Greengrass local auth demo
+
+For setting up the Greengrass local auth demo, see [the README in the demo folder](./demos/greengrass/greengrass_demo_local_auth/README.md).
 
 #### Prerequisites for the AWS Over-The-Air Update (OTA) demos
    

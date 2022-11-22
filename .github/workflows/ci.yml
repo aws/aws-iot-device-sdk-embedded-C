@@ -39,7 +39,8 @@ jobs:
           -DCLAIM_PRIVATE_KEY_PATH="key/path" \
           -DPROVISIONING_TEMPLATE_NAME="template-name" \
           -DDEVICE_SERIAL_NUMBER="00000" \
-          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo"
+          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
+          -DGREENGRASS_ADDRESS="greengrass-address"
       - name: Build Demos
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
@@ -84,7 +85,8 @@ jobs:
           -DCLAIM_PRIVATE_KEY_PATH="key/path" \
           -DPROVISIONING_TEMPLATE_NAME="template-name" \
           -DDEVICE_SERIAL_NUMBER="00000" \
-          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo"
+          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
+          -DGREENGRASS_ADDRESS="greengrass-address"
       - name: Build Demos
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/

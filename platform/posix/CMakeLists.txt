@@ -6,7 +6,7 @@ add_library( clock_posix
                "clock_posix.c" )
 
 target_include_directories( clock_posix
-                              PRIVATE
+                              PUBLIC
                                 ${PLATFORM_DIR}/include )
 
 # Install clock abstraction as library of both static archive and shared type.
