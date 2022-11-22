@@ -45,7 +45,7 @@ jobs:
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
   build-check-demos-cpp:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -220,7 +220,7 @@ jobs:
             exit 0
           fi
   doxygen:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -286,7 +286,7 @@ jobs:
           include-file-types: .c,.h,.dox
           allowlist-file: ./.github/links_allowlist.txt
   verify-manifest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
