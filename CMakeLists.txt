@@ -32,6 +32,9 @@ set(3RDPARTY_DIR "${MODULES_DIR}/3rdparty" CACHE INTERNAL "3rdparty libraries ro
 include( "demos/logging-stack/logging.cmake" )
 
 # Configure options to always show in CMake GUI.
+option( BUILD_TESTS
+        "Set this to ON to build test executables."
+        OFF )
 option( BUILD_DEMOS
         "Set this to ON to build demo executables."
         ON )
@@ -74,6 +77,12 @@ if(DEFINED ENV{PWD})
     if(CLIENT_PRIVATE_KEY_PATH AND NOT IS_ABSOLUTE ${CLIENT_PRIVATE_KEY_PATH})
         set(CLIENT_PRIVATE_KEY_PATH "$ENV{PWD}/${CLIENT_PRIVATE_KEY_PATH}")
     endif()
+endif()
+
+# Build the tests if flag enabled.
+if(BUILD_TESTS)
+    enable_testing()
+    include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
 endif()
 
 include(GNUInstallDirs)
@@ -119,12 +128,22 @@ include( tools/cmake/utility.cmake )
 # Make THING_NAME an alias for CLIENT_IDENTIFIER
 set_alias( "CLIENT_IDENTIFIER" ALIASES "THING_NAME" )
 
+if(BUILD_TESTS)
+    # Add build configuration for integration tests.
+    add_subdirectory( integration-test )
+endif()
 if(BUILD_DEMOS)
     # Add build configuration for demos.
     add_subdirectory( demos )
 endif()
 
 if(DOWNLOAD_CERTS)
+    if(BUILD_TESTS)
+    set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
+        set(CERT_DOWNLOAD_DIR ${SYSTEM_TEST_DIR}/certificates)
+    else()
+        set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
+    endif()
     set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
     file(MAKE_DIRECTORY ${CERT_DOWNLOAD_DIR})
     # Download the Amazon Root CA certificate.
@@ -135,5 +154,9 @@ if(DOWNLOAD_CERTS)
     )
     # Copy certificates to the build directory.
     file(COPY "${CERT_DOWNLOAD_DIR}"
-         DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+      DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    if(BUILD_TESTS)
+        file(COPY "${CERT_DOWNLOAD_DIR}"
+             DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)
+    endif()
 endif()
