@@ -70,7 +70,7 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 For the latest release of C-SDK, please see the section for [Releases and Documentation](#releases-and-documentation).
 
-**C-SDK includes libraries that are part of the [FreeRTOS 202012.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.01-LTS) release. Learn more about the FreeRTOS 202012.01 LTS libraries by [clicking here](https://freertos.org/lts-libraries.html).**
+**C-SDK includes libraries that are part of the [FreeRTOS 202210.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.01-LTS) release. Learn more about the FreeRTOS 202210.01 LTS libraries by [clicking here](https://freertos.org/lts-libraries.html).**
 
 ### License
 
@@ -230,8 +230,15 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
 ### 202211.00
-
 [API documentation of 202211.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202108.00/index.html)
+
+This release includes a [major update](https://github.com/FreeRTOS/coreMQTT/blob/v2.1.1/CHANGELOG.md#v211-november-2022) to the coreMQTT library. It also removes some of the tests that lived in this repositroy, in favour of using the tests that live in the individual libraries.
+
+Additionally, this release brings in an overhaul into the MISRA compliance of all the included libraries. Additionally information can be found in the tools/coverity/README.md file located in each library.
+
+### 202108.00
+
+[API documentation of 202108.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202108.00/index.html)
 
 This release introduces the refactored [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library and the new [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library.
 
