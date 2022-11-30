@@ -12,6 +12,8 @@
 - [#1826](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1826) Adds a test to verify multiple subscription and unsubscribe requests succeed when done through a single API call.
 - [#1809](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1809) Reduce the likelihood of encountering transient connection issues by setting TRANSPORT_SEND_RECV_TIMEOUT_MS to a minimum of 1000ms in all tests and demos.
 
+## 202108.00 (August 2021)
+
 ### Major Changes
 - This release introduces the refactored **[AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk)** library and **[AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk)** library.
 These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk), static code analysis from [Coverity static analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
