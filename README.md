@@ -232,9 +232,9 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 ### 202211.00
 [API documentation of 202211.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/index.html)
 
-This release includes a [major update](https://github.com/FreeRTOS/coreMQTT/blob/v2.1.1/CHANGELOG.md#v211-november-2022) to the coreMQTT library. It also removes some of the tests that lived in this repositroy, in favour of using the tests that live in the individual libraries.
+This release includes an update to how the [Coverity static analysis](https://scan.coverity.com/) scans are performed. There is now a **tools/coverity/README.md** file in each library with instructions on how to perform a scan with 0 [MISRA coding standard](https://www.misra.org.uk) warnings or errors.
 
-Additionally, this release brings in an overhaul into the MISRA compliance of all the included libraries. Additionally information can be found in the tools/coverity/README.md file located in each library.
+Additionally, this release brings in major version upgrades to [coreMQTT](https://github.com/FreeRTOS/coreMQTT) and [coreHTTP](https://github.com/FreeRTOS/coreHTTP). It also brings in minor version upgrades to all other libraries.
 
 ### 202108.00
 
