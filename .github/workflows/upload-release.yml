@@ -17,7 +17,7 @@ on:
 jobs:
   create-release:
     name: Create Release and Upload Release Asset
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Create Release
         id: create_release
