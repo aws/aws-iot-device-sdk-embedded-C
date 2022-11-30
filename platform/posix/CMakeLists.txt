@@ -18,9 +18,5 @@ if(INSTALL_PLATFORM_ABSTRACTIONS)
       )
 endif()
 
-if(BUILD_TESTS)
-  add_subdirectory(utest)
-endif()
-
 # Add the transport targets
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/transport )
