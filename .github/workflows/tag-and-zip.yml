@@ -68,8 +68,9 @@ jobs:
           cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
           cmake -S . -B build/ \
           -G "Unix Makefiles" \
+          -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
           -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
           -DBROKER_ENDPOINT="broker-endpoint" \
           -DCLIENT_CERT_PATH="cert/path" \
@@ -83,7 +84,8 @@ jobs:
           -DCLAIM_PRIVATE_KEY_PATH="key/path" \
           -DPROVISIONING_TEMPLATE_NAME="template-name" \
           -DDEVICE_SERIAL_NUMBER="00000" \
-          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo"
+          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
+          -DGREENGRASS_ADDRESS="greengrass-address"
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/ -j8
           make -C demos/jobs/jobs_demo_mosquitto -j8
       - name : Build Check Tests
