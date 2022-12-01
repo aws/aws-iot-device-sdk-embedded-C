@@ -1,5 +1,17 @@
 # Changelog for AWS IoT Device SDK for Embedded C
 
+## 202211.00 (November 2022)
+
+### Major Changes
+ - This release includes an update to how the [Coverity static analysis](https://scan.coverity.com/) scans are performed. There is now a **tools/coverity/README.md** file in each library with instructions on how to perform a scan with 0 [MISRA coding standard](https://www.misra.org.uk) warnings or errors.
+- [#1823](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1823) Update library submodule pointers to use the same versions used in **[FreeRTOS LTS 202210.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/blob/202210-LTS/CHANGELOG.md)**. The versions of the libraries used for this release went through extensive testing as described in the **[LTS Code Quality Checklist](https://www.freertos.org/lts-libraries.html)**. Further information about the changes can be found in the CHANGELOG.md file in each library.
+- [#1779](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1779) Update version of MbedTLS from v2.26.0 to v2.28.0
+
+### Minor Changes
+- [#1831](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1831) Create a demo for connecting a device to a [Greengrass](https://docs.aws.amazon.com/greengrass/v2/developerguide/getting-started.html) core using the [new feature](https://docs.aws.amazon.com/greengrass/v2/developerguide/greengrass-release-2022-11-15.html) that allows using custom CAs.
+- [#1826](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1826) Adds a test to verify multiple subscription and unsubscribe requests succeed when done through a single API call.
+- [#1809](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1809) Reduce the likelihood of encountering transient connection issues by setting TRANSPORT_SEND_RECV_TIMEOUT_MS to a minimum of 1000ms in all tests and demos.
+
 ## 202108.00 (August 2021)
 
 ### Major Changes

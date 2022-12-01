@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -209,7 +209,7 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int32_t ( *pRng )( void *, unsigned char *, size_t ),
+                                          int32_t ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
 
 /*-----------------------------------------------------------*/
@@ -668,9 +668,9 @@ static int32_t privateKeySigningCallback( void * pContext,
                                           size_t hashLen,
                                           unsigned char * pSig,
                                           size_t * pSigLen,
-                                          int32_t ( *pRng )( void *,
-                                                             unsigned char *,
-                                                             size_t ),
+                                          int32_t ( * pRng )( void *,
+                                                              unsigned char *,
+                                                              size_t ),
                                           void * pRngContext )
 {
     CK_RV ret = CKR_OK;

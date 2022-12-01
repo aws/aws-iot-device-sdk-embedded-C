@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-check-demos:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -91,7 +91,7 @@ jobs:
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
   build-check-install:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -165,7 +165,7 @@ jobs:
           # Each line of install_manifest.txt contains the location of an installed library or header
           done <install_manifest.txt
   complexity:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Setup
@@ -175,7 +175,7 @@ jobs:
           find platform/ \( -iname '*.c' ! -wholename '*test*' \) |\
           xargs complexity --scores --threshold=0 --horrid-threshold=8
   spell-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Install spell
@@ -194,7 +194,7 @@ jobs:
             fi
           done
   formatting:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Install Uncrustify
@@ -229,7 +229,7 @@ jobs:
           submodules: recursive
       - name: Install Doxygen
         run: |
-          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.5/doxygen-1.9.5.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
+          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.2/doxygen-1.9.2.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
           sudo apt-get install -y libclang-9-dev libclang-cpp9 graphviz
       - name: Install Python3
         uses: actions/setup-python@v2
@@ -251,7 +251,7 @@ jobs:
           path: ./doxygen.zip
           retention-days: 2
   git-secrets:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -269,7 +269,7 @@ jobs:
           git-secrets --register-aws
           git-secrets --scan
   link-verifier:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:

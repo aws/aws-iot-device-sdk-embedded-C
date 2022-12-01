@@ -426,7 +426,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
             }
             else
             {
-                ( void ) strncpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
+                ( void ) memcpy( realFilePath, ( const char * ) C->pFilePath, strlen( ( const char * ) C->pFilePath ) + 1U );
             }
 
             if( status == OtaPalFileGenSuccess )
