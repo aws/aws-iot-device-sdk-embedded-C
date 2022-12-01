@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Doxygen generation
-        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@doxygenGenerationUpdate
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
         with:
           generate_command: |
             git submodule update --init --depth 1
