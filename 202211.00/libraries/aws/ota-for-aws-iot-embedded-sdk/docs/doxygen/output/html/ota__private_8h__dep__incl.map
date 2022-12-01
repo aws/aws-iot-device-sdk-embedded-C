@@ -1,0 +1,12 @@
+<map id="ota_private.h" name="ota_private.h">
+<area shape="rect" id="node1" title="Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo..." alt="" coords="339,5,447,32"/>
+<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="274,304,328,331"/>
+<area shape="rect" id="node3" href="$ota_8h.html" title="OTA Agent Interface." alt="" coords="370,155,424,181"/>
+<area shape="rect" id="node4" href="$ota__http_8c.html" title="Data transfer over HTTP routines." alt="" coords="48,304,135,331"/>
+<area shape="rect" id="node5" href="$ota__http__private_8h.html" title="Contains definitions of routines for OTA download using HTTP data plane." alt="" coords="21,229,162,256"/>
+<area shape="rect" id="node6" href="$ota__interface__private_8h.html" title="Contains function definitions and structures for data and control interfaces." alt="" coords="389,229,562,256"/>
+<area shape="rect" id="node8" href="$ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT." alt="" coords="664,304,756,331"/>
+<area shape="rect" id="node9" href="$ota__mqtt__private_8h.html" title="Contains function definitions of routines for OTA download and control using MQTT data plane." alt="" coords="637,229,784,256"/>
+<area shape="rect" id="node10" href="$ota__platform__interface_8h.html" title="Contains PAL interface statuses, type definitions and structure to store interface routines." alt="" coords="238,80,420,107"/>
+<area shape="rect" id="node7" href="$ota__interface_8c.html" title="Internal interface for setting the data and control planes." alt="" coords="416,304,535,331"/>
+</map>

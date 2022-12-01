@@ -1,0 +1,5 @@
+<map id="ota_cbor_private.h" name="ota_cbor_private.h">
+<area shape="rect" id="node1" title="Function declarations and field declarations for ota_cbor.c." alt="" coords="35,5,178,32"/>
+<area shape="rect" id="node2" href="$ota__cbor_8c.html" title="CBOR encode/decode routines for AWS IoT Over&#45;the&#45;Air updates." alt="" coords="5,80,93,107"/>
+<area shape="rect" id="node3" href="$ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT." alt="" coords="118,80,210,107"/>
+</map>

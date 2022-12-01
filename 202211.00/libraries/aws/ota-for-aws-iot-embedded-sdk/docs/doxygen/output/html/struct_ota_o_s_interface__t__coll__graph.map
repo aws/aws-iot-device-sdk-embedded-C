@@ -1,0 +1,6 @@
+<map id="OtaOSInterface_t" name="OtaOSInterface_t">
+<area shape="rect" id="node1" title="OTA OS Interface." alt="" coords="192,95,325,121"/>
+<area shape="rect" id="node2" href="$struct_ota_event_interface__t.html" title=" " alt="" coords="5,5,157,32"/>
+<area shape="rect" id="node3" href="$struct_ota_timer_interface__t.html" title="OTA Retry Timer Interface." alt="" coords="182,5,335,32"/>
+<area shape="rect" id="node4" href="$struct_ota_malloc_interface__t.html" title="OTA memory allocation interface." alt="" coords="359,5,518,32"/>
+</map>
