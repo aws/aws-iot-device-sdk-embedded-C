@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Deploy doxygen for release tag
-        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@doxygenGenerationUpdate
         with:
           ref: ${{ github.event.inputs.version_number }}
           add_release: "true"
