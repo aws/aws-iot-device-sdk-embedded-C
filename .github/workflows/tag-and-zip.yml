@@ -96,7 +96,7 @@ jobs:
           -G "Unix Makefiles" \
           -DCMAKE_BUILD_TYPE=Debug \
           -DBUILD_TESTS=1 \
-          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror' \
+          -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -Wno-unused-parameter' \
           -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
           -DBROKER_ENDPOINT="broker-endpoint" \
           -DCLIENT_CERT_PATH="cert/path" \
