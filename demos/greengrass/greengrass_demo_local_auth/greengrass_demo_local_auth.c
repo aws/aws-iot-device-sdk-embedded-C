@@ -675,7 +675,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
+    TransportInterface_t transport = { NULL };
     /* The network buffer must remain valid for the lifetime of the MQTT context. */
     static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 

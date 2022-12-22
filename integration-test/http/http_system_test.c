@@ -141,7 +141,7 @@ static OpensslParams_t opensslParams;
 /**
  * @brief The transport layer interface used by the HTTP Client library.
  */
-static TransportInterface_t transportInterface;
+static TransportInterface_t transportInterface = { 0 };
 
 /**
  * @brief Represents the hostname and port of the broker.
