@@ -225,24 +225,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Run doxygen build
+        uses: FreeRTOS/CI-CD-Github-Actions/doxygen@main
         with:
-          submodules: recursive
-      - name: Install Doxygen
-        run: |
-          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.5/doxygen-1.9.5.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
-          sudo apt-get install -y libclang-14-dev libclang-cpp14 graphviz
-      - name: Install Python3
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11.0'
-      - name: Generate doxygen output
-        run: |
-          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
-            echo 'Generate ZIP artifact of doxygen output'
-            python3 tools/doxygen/generate_docs.py --root . --zip
-          else
-            python3 tools/doxygen/generate_docs.py --root .
-          fi
+          path: ./
       - name: Upload doxygen artifact if main branch
         if: success() && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v2
