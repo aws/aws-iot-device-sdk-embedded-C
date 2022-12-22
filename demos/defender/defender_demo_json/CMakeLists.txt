@@ -13,7 +13,7 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake )
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the Device Defender library
-file( GLOB DEMO_SRCS "mqtt_operations.c" "*.c*" )
+file( GLOB DEMO_SRCS "*.c*" )
 
 # Demo target.
 add_executable( ${DEMO_NAME}
