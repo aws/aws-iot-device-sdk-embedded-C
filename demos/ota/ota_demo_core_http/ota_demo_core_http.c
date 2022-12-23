@@ -324,7 +324,7 @@ static char serverHost[ 256 ];
 static uint8_t httpUserBuffer[ HTTP_USER_BUFFER_LENGTH ];
 
 /* The transport layer interface used by the HTTP Client library. */
-TransportInterface_t transportInterfaceHttp { NULL };
+TransportInterface_t transportInterfaceHttp = { NULL };
 
 /**
  * @brief MQTT connection context used in this demo.
