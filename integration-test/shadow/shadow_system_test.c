@@ -367,7 +367,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   bool * pSessionPresent )
 {
     MQTTConnectInfo_t connectInfo;
-    TransportInterface_t transport;
+    TransportInterface_t transport = { NULL };
     MQTTFixedBuffer_t networkBuffer;
 
     assert( pContext != NULL );

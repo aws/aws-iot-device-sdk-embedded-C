@@ -884,7 +884,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
+    TransportInterface_t transport = { NULL };
 
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );

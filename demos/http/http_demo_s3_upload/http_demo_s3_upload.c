@@ -650,7 +650,7 @@ int main( int argc,
     size_t pathLen = 0;
 
     /* The transport layer interface used by the HTTP Client library. */
-    TransportInterface_t transportInterface;
+    TransportInterface_t transportInterface = { NULL };
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
     OpensslParams_t opensslParams;

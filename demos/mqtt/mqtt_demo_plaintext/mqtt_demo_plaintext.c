@@ -720,7 +720,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     MQTTConnectInfo_t connectInfo;
     bool sessionPresent;
     MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
+    TransportInterface_t transport = { NULL };
 
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
