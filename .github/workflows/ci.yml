@@ -229,7 +229,7 @@ jobs:
           submodules: recursive
       - name: Install Doxygen
         run: |
-          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.9.4.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
+          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.6/doxygen-1.9.6.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
           sudo apt-get install -y libclang-11-dev libclang-cpp11 graphviz
       - name: Install Python3
         uses: actions/setup-python@v2
