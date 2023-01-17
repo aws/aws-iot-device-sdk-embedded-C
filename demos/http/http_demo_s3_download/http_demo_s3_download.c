@@ -182,7 +182,7 @@
 /**
  * @brief HTTP header name for specifying the IOT Thing resource name in request to AWS S3.
  */
-#define AWS_IOT_THING_NAME_HEADER_FIELD               "x-amz-iot-thing-name"
+#define AWS_IOT_THING_NAME_HEADER_FIELD               "x-amzn-iot-thingname"
 
 /**
  * @brief Field name of the HTTP date header to read from the AWS IOT credential provider server response.
