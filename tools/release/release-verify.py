@@ -55,7 +55,7 @@ def validate_manifest(csdk_root, csdk_version, lib_versions):
         Please see tools/release/config.yml.
     """
     with open(os.path.join(csdk_root, "manifest.yml")) as manifest_file:
-        manifest = yaml.load(manifest_file, Loader=yaml.FullLoader)
+        manifest = yaml.safe_load(manifest_file, Loader=yaml.FullLoader)
 
     # Verify the CSDK version is correct.
     manifest_version = manifest["version"]
