@@ -61,7 +61,6 @@
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
             * [Installing httpbin to run HTTP demos locally](#installing-httpbin-to-run-http-demos-locally)
-    * [Installation](#installation)
 * [Generating Documentation](#generating-documentation)
 
 ## Overview
@@ -362,7 +361,7 @@ The libraries in this SDK are not dependent on any operating system. However, th
 
 * CMake 3.2.0 or any newer version for utilizing the build system of the repository.
 * C90 compiler such as gcc
-    * Due to the use of mbedtls in corePKCS11, a C99 compiler is required if building the PKCS11 demos or the CMake [install target](#installation).
+    * Due to the use of mbedtls in corePKCS11, a C99 compiler is required if building the PKCS11 demos.
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`, while `stdbool.h` is required for boolean parameters in coreMQTT. For compilers that do not provide these header files, [coreMQTT](https://github.com/FreeRTOS/coreMQTT) provides the files [stdint.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdint.readme) and [stdbool.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdbool.readme), which can be renamed to `stdint.h` and `stdbool.h`, respectively, to provide the required type definitions.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
@@ -672,71 +671,6 @@ To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in or
 Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceding it.
 
 You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demos/http/http_demo_basic_tls/demo_config.h` to the file path of the downloaded certificate.
-
-### Installation
-
-The C-SDK libraries and platform abstractions can be installed to a file system
-through CMake. To do so, run the following command in the root directory of the C-SDK.
-Note that installation is not required to run any of the demos.
-```sh
-cmake -S . -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
-cd build
-sudo make install
-```
-Note that because `make install` will automatically build the `all` target, it may
-be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
-unless they have already been configured. Super-user permissions may be needed if
-installing to a system include or system library path.
-
-To install only a subset of all libraries, pass `-DINSTALL_LIBS` to install only
-the libraries you need. By default, all libraries will be installed, but you may
-exclude any library that you don't need from this list:
-```
--DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
-```
-
-By default, the install path will be in the `project` directory of the SDK.
-You can also set `-DINSTALL_TO_SYSTEM=1` to install to the system path for
-headers and libraries in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
-
-Upon entering `make install`, the location of each library will be specified first
-followed by the location of all installed headers:
-```
--- Installing: /usr/local/lib/libaws_iot_defender.so
--- Installing: /usr/local/lib/libaws_iot_shadow.so
-...
--- Installing: /usr/local/include/aws/defender.h
--- Installing: /usr/local/include/aws/defender_config_defaults.h
--- Installing: /usr/local/include/aws/shadow.h
--- Installing: /usr/local/include/aws/shadow_config_defaults.h
-```
-
-You may also set an installation path of your choice by passing the
-following flags through CMake. Make sure to run the following command in the root directory of the C-SDK:
-```sh
-cmake -S . -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
--DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
-cd build
-sudo make install
-```
-
-POSIX platform abstractions are used together with the C-SDK libraries in the demos.
-By default, these abstractions are also installed but can be excluded by passing
-the flag: `-DINSTALL_PLATFORM_ABSTRACTIONS=0`.
-
-Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
-libraries to be compiled with a config of your choice:
-```
--DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-directory"
--DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-directory"
--DJOBS_CUSTOM_CONFIG_DIR="jobs-config-directory"
--DOTA_CUSTOM_CONFIG_DIR="ota-config-directory"
--DHTTP_CUSTOM_CONFIG_DIR="http-config-directory"
--DJSON_CUSTOM_CONFIG_DIR="json-config-directory"
--DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-directory"
--DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-directory"
-```
-Note that the file name of the header should not be included in the directory.
 
 ## Generating Documentation
 Note: For pre-generated documentation, please visit [Releases and Documentation](#releases-and-documentation) section.
