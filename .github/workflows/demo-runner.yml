@@ -11,9 +11,9 @@ jobs:
   start-mqtt-broker:
     runs-on: ubuntu-20.04
     steps:
-      -name: Start local MQTT broker
-       uses: jasonpcarroll/CI-CD-GitHub-Actions/mqtt-broker-mosquitto@main
-         
+      - name: Start local MQTT broker
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/mqtt-broker-mosquitto@main
+
   mqtt-plaintext-demo:
     runs-on: ubuntu-20.04
     steps:
