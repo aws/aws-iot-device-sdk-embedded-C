@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  Build and Run Demos:
-    name: Build and Run MQTT Plaintext Demo
+  build-and-run-demos:
+    name: Build and Run Demos
     runs-on: ubuntu-20.04
     steps:
       - name: Clone This Repo
