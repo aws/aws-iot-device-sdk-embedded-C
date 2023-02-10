@@ -52,3 +52,11 @@ jobs:
 
       - name: Build the MQTT Plaintext Demo
         run: cd build && make mqtt_demo_plaintext
+
+      - name: Run and monitor the MQTT Plaintext Demo
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_plaintext
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+          number-of-runs: 1
