@@ -8,24 +8,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  start-mqtt-broker:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Start local MQTT broker
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/mqtt-broker-mosquitto@main
-
-  mqtt-plaintext-demo:
+  Build and Run Demos:
+    name: Build and Run MQTT Plaintext Demo
     runs-on: ubuntu-20.04
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Configure CMake build
+
+      - name: Install CMake
         run: |
           sudo apt-get install -y libmosquitto-dev
           curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
           tar -xf cmake.tar.gz
+
+      - name: Start local MQTT broker
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/mqtt-broker-mosquitto@main
+
+      - name: Configure CMake build for MQTT PlainText Demo
+        run: |
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
           -G "Unix Makefiles" \
@@ -47,6 +49,6 @@ jobs:
           -DDEVICE_SERIAL_NUMBER="00000" \
           -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
           -DGREENGRASS_ADDRESS="greengrass-address"
+
       - name: Build the MQTT Plaintext Demo
-        run: |
-          ls
+        run: cd build && make mqtt_demo_plaintext
