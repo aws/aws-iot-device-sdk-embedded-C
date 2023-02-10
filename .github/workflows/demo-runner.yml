@@ -65,3 +65,12 @@ jobs:
           timeout-seconds: 300
           success-line: "Demo completed successfully."
           number-of-runs: 1
+
+      - name: List files
+        run: ls
+        
+      - name: 'Upload MQTT Plaintext Demo log'
+        uses: actions/upload-artifact@v3
+        with:
+          name: mqtt_demo_plaintext.log
+          path: mqtt_demo_plaintext.log
