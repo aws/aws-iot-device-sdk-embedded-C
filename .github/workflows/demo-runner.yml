@@ -29,7 +29,14 @@ jobs:
           tar -xf cmake.tar.gz
 
       - name: Start local MQTT broker
+        id: mqtt-broker
         uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
+
+      - name: Print MQTT broker credential paths
+        run: |
+          echo ${{ steps.mqtt-broker.outputs.root-ca-cert-path }}
+          echo ${{ steps.mqtt-broker.outputs.device-cert-path }}
+          echo ${{ steps.mqtt-broker.outputs.device-priv-key-path }}
 
       - name: Configure CMake build for MQTT PlainText Demo
         run: |
