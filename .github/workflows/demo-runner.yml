@@ -32,13 +32,7 @@ jobs:
         id: mqtt-broker
         uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
 
-      - name: Print MQTT broker credential paths
-        run: |
-          echo ${{ steps.mqtt-broker.outputs.root-ca-cert-path }}
-          echo ${{ steps.mqtt-broker.outputs.device-cert-path }}
-          echo ${{ steps.mqtt-broker.outputs.device-priv-key-path }}
-
-      - name: Configure CMake build for MQTT PlainText Demo
+      - name: Configure CMake build for local MQTT broker
         run: |
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
@@ -63,18 +57,15 @@ jobs:
           -DGREENGRASS_ADDRESS="greengrass-address"
 
       - name: Build the MQTT Plaintext Demo
-        run: cd build && make mqtt_demo_mutual_auth
+        run: cd build && make mqtt_demo_basic_tls
 
       - name: Run and monitor the MQTT Plaintext Demo
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
-          exe-path: ./build/bin/mqtt_demo_mutual_auth
+          exe-path: ./build/bin/mqtt_demo_basic_tls
           timeout-seconds: 300
           success-line: "Demo completed successfully."
           number-of-runs: 1
-
-      - name: List files
-        run: ls
         
       - name: 'Upload MQTT Plaintext Demo log'
         uses: actions/upload-artifact@v3
