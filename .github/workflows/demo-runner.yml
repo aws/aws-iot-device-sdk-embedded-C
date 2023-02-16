@@ -29,7 +29,7 @@ jobs:
           tar -xf cmake.tar.gz
 
       - name: Start local MQTT broker
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/mqtt-broker-mosquitto@main
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
 
       - name: Configure CMake build for MQTT PlainText Demo
         run: |
