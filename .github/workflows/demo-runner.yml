@@ -46,12 +46,12 @@ jobs:
           -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
-          -DAWS_IOT_ENDPOINT="aws-iot-endpoint" \
-          -DBROKER_ENDPOINT="test.mosquitto.org" \
-          -DCLIENT_CERT_PATH="cert/path" \
-          -DROOT_CA_CERT_PATH="cert/path" \
-          -DCLIENT_PRIVATE_KEY_PATH="key/path" \
-          -DCLIENT_IDENTIFIER="ci-identifier" \
+          -DAWS_IOT_ENDPOINT="localhost" \
+          -DBROKER_ENDPOINT="localhost" \
+          -DCLIENT_CERT_PATH=${{ steps.mqtt-broker.outputs.device-cert-path }} \
+          -DROOT_CA_CERT_PATH=${{ steps.mqtt-broker.outputs.root-ca-cert-path }} \
+          -DCLIENT_PRIVATE_KEY_PATH=${{ steps.mqtt-broker.outputs.device-priv-key-path }} \
+          -DCLIENT_IDENTIFIER="test" \
           -DTHING_NAME="thing-name" \
           -DS3_PRESIGNED_GET_URL="get-url" \
           -DS3_PRESIGNED_PUT_URL="put-url" \
@@ -63,12 +63,12 @@ jobs:
           -DGREENGRASS_ADDRESS="greengrass-address"
 
       - name: Build the MQTT Plaintext Demo
-        run: cd build && make mqtt_demo_plaintext
+        run: cd build && make mqtt_demo_mutual_auth
 
       - name: Run and monitor the MQTT Plaintext Demo
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
-          exe-path: ./build/bin/mqtt_demo_plaintext
+          exe-path: ./build/bin/mqtt_demo_mutual_auth
           timeout-seconds: 300
           success-line: "Demo completed successfully."
           number-of-runs: 1
