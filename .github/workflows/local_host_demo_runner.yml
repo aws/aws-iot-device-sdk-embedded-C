@@ -69,6 +69,42 @@ jobs:
           timeout-seconds: 300
           success-line: "Demo completed successfully."
           number-of-runs: 1
+
+      - name: Build the MQTT Plaintext Demo
+        run: cd build && make mqtt_demo_plaintext
+
+      - name: Run and monitor the MQTT Plaintext Demo
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_plaintext
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+          number-of-runs: 1
+
+      - name: Build the MQTT Serializer Demo
+        run: cd build && make mqtt_demo_serializer
+
+      - name: Run and monitor the MQTT Serializer Demo
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_serializer
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+          number-of-runs: 1
+
+      - name: Build the MQTT Subscription Manager Demo
+        run: cd build && make mqtt_demo_subscription_manager
+
+      - name: Run and monitor the MQTT Subscription Manager Demo
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_subscription_manager
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+          number-of-runs: 1
         
       - name: 'Upload demo logs'
         uses: actions/upload-artifact@v3
