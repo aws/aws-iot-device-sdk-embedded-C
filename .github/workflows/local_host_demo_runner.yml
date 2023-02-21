@@ -80,7 +80,7 @@ jobs:
         run: cd build && make mqtt_demo_plaintext
 
       - name: Run and monitor the MQTT Plaintext Demo
-        if: steps.build-mqtt-plaintext-demo.output == 'success'
+        if: steps.build-mqtt-plaintext-demo.outcome == 'success'
         continue-on-error: true
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
@@ -96,7 +96,7 @@ jobs:
         run: cd build && make mqtt_demo_serializer
 
       - name: Run and monitor the MQTT Serializer Demo
-        if: steps.build-mqtt-serializer-demo.output == 'success'
+        if: steps.build-mqtt-serializer-demo.outcome == 'success'
         continue-on-error: true
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
@@ -112,7 +112,7 @@ jobs:
         run: cd build && make mqtt_demo_subscription_manager
 
       - name: Run and monitor the MQTT Subscription Manager Demo
-        if: steps.build-mqtt-subscription-manager-demo.output == 'success'
+        if: steps.build-mqtt-subscription-manager-demo.outcome == 'success'
         continue-on-error: true
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
