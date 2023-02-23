@@ -132,15 +132,9 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     pollFds.revents = 0;
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
-
-    /* Speculative read for the start of a payload.
-     * Note: This is done to avoid blocking when
-     * no data is available to be read from the socket. */
-    if( bytesToRecv == 1U )
-    {
-        /* Check if there is data to read (without blocking) from the socket. */
-        pollStatus = poll( &pollFds, 1, 0 );
-    }
+    
+    /* Check if there is data to read (without blocking) from the socket. */
+    pollStatus = poll( &pollFds, 1, 0 );
 
     if( pollStatus > 0 )
     {
