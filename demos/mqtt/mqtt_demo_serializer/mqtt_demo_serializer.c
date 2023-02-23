@@ -133,6 +133,12 @@
 #define MQTT_MAX_RECV_ATTEMPTS               ( 10U )
 
 /**
+ * @brief Time to wait in milliseconds before attempting to obtain
+ * an MQTT packet in response to a previously sent message.
+ */
+#define MQTT_RESPONSE_WAIT_TIME_MS           ( 50U )
+
+/**
  * @brief Delay between two demo iterations.
  */
 #define MQTT_DEMO_ITERATION_DELAY_SECONDS    ( 5U )
@@ -506,6 +512,9 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
      */
     do
     {
+        /* Wait a bit before attempting to receive an incoming response to allow
+         * time for the server to respond. */
+        Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
         receiveAttempts++;
@@ -848,6 +857,9 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     /* Determine incoming packet type and remaining length. */
     do
     {
+        /* Wait a bit before attempting to receive an incoming response to allow
+         * time for the server to respond. */
+        Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
         receiveAttempts++;
