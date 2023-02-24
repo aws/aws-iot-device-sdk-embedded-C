@@ -45,8 +45,6 @@ jobs:
       - name: Start localhost HTTP server
         id: http-server
         uses: Eun/http-server-action@v1.0.6
-        with:
-          port: 80
 
       - name: Configure CMake Build for Localhost server
         run: |
@@ -71,6 +69,7 @@ jobs:
           -DDEVICE_SERIAL_NUMBER="00000" \
           -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
           -DGREENGRASS_ADDRESS="greengrass-address"
+          -DHTTP_PORT=8080
 
       - name: Build the HTTP Plaintext Demo
         id: build-http-plaintext
