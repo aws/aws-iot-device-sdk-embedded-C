@@ -34,9 +34,17 @@ jobs:
         id: generate-credentials
         uses: jasonpcarroll/CI-CD-GitHub-Actions/ssl-credential-creator@main
           
-      - name: Start local MQTT broker
+      - name: Start localhost MQTT broker
         id: mqtt-broker
         uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
+        with:
+          root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
+          server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
+          server-cert-path: ${{ steps.generate-credentials.outputs.server-cert-path }}
+
+      - name: Start localhost HTTP server
+        id: http-server
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-http-server
         with:
           root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
           server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
@@ -66,6 +74,19 @@ jobs:
           -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
           -DGREENGRASS_ADDRESS="greengrass-address"
 
+      - name: Build the HTTP Plaintext Demo
+        id: build-http-plaintext
+        run: cd build && make http_demo_plaintext
+
+      - name: Run and monitor the HTTP Plaintext Demo
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/http_demo_plaintext
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+          number-of-runs: 1
+        
       - name: Build the MQTT Basic TLS Demo
         id: build-mqtt-basic-tls
         continue-on-error: true
