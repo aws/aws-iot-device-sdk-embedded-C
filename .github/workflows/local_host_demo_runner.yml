@@ -69,7 +69,8 @@ jobs:
           -DDEVICE_SERIAL_NUMBER="00000" \
           -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
           -DGREENGRASS_ADDRESS="greengrass-address" \
-          -DHTTP_PORT=8080
+          -DNUM_OPENMP_THREADS:STRING="2"
+          -DHTTP_PORT:STRING="8080"
 
       - name: Build the HTTP Plaintext Demo
         id: build-http-plaintext
