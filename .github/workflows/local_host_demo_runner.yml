@@ -44,11 +44,9 @@ jobs:
 
       - name: Start localhost HTTP server
         id: http-server
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-http-server@main
+        uses: Eun/http-server-action@v1.0.6
         with:
-          root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
-          server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
-          server-cert-path: ${{ steps.generate-credentials.outputs.server-cert-path }}
+          port: 80
 
       - name: Configure CMake Build for Localhost server
         run: |
