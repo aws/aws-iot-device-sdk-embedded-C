@@ -44,7 +44,7 @@ jobs:
 
       - name: Start localhost HTTP server
         id: http-server
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-http-server
+        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-http-server@main
         with:
           root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
           server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
