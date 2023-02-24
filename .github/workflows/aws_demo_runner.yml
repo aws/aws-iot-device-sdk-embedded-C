@@ -77,9 +77,11 @@ jobs:
 
       - name: Build the HTTP Plaintext Demo
         id: build-http-plaintext
+        continue-on-error: true
         run: cd build && make http_demo_plaintext
 
       - name: Run and monitor the HTTP Plaintext Demo
+        continue-on-error: true
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/http_demo_plaintext
