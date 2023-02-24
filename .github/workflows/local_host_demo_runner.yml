@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-          
+
       - name: Install Python3
         uses: actions/setup-python@v2
         with:
@@ -33,7 +33,7 @@ jobs:
       - name: Generate SSL credentials
         id: generate-credentials
         uses: jasonpcarroll/CI-CD-GitHub-Actions/ssl-credential-creator@main
-          
+
       - name: Start localhost MQTT broker
         id: mqtt-broker
         uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
@@ -87,7 +87,7 @@ jobs:
           timeout-seconds: 300
           success-line: "Demo completed successfully."
           number-of-runs: 1
-        
+
       - name: Build the MQTT Basic TLS Demo
         id: build-mqtt-basic-tls
         continue-on-error: true
@@ -151,7 +151,7 @@ jobs:
           timeout-seconds: 300
           success-line: "Demo completed successfully."
           number-of-runs: 1
-        
+
       - name: 'Upload demo logs'
         uses: actions/upload-artifact@v3
         with:
