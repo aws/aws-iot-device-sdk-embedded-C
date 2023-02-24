@@ -132,7 +132,7 @@ int32_t Plaintext_Recv( NetworkContext_t * pNetworkContext,
     pollFds.revents = 0;
     /* Set the file descriptor for poll. */
     pollFds.fd = pPlaintextParams->socketDescriptor;
-    
+
     /* Check if there is data to read (without blocking) from the socket. */
     pollStatus = poll( &pollFds, 1, 0 );
 
