@@ -29,6 +29,12 @@
 /* MQTT API header. */
 #include "core_mqtt.h"
 
+/* corePKCS11 include. */
+#ifdef SSL_USED_MBEDTLS
+#include "core_pkcs11.h"
+#endif
+
+#ifdef SSL_USED_OPENSSL
 /**
  * @brief Establish a MQTT connection.
  *
@@ -48,7 +54,25 @@ int32_t EstablishMqttSession( MQTTEventCallback_t eventCallback );
  */
 void HandleOtherIncomingPacket( MQTTPacketInfo_t * pPacketInfo,
                                 uint16_t packetIdentifier );
+#else
+/**
+ * @brief Establish a MQTT connection.
+ *
+ * @param[in] publishCallback The callback function to receive incoming
+ * publishes from the MQTT broker.
+ * @param[in] p11Session The PKCS #11 session to use.
+ * @param[in] pClientCertLabel The client certificate PKCS #11 label to use.
+ * @param[in] pPrivateKeyLabel The private key PKCS #11 label for the client certificate.
+ *
+ * @return true if an MQTT session is established;
+ * false otherwise.
+ */
+int32_t EstablishMqttSession(MQTTEventCallback_t eventCallback,
+                             CK_SESSION_HANDLE p11Session,
+                             char * pClientCertLabel,
+                             char * pPrivateKeyLabel );
 
+#endif
 /**
  * @brief Close the MQTT connection.
  *

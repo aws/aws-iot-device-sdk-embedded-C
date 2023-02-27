@@ -66,6 +66,17 @@
 /* Clock for timer. */
 #include "clock.h"
 
+/* Demo config. */
+#include "demo_config.h"
+
+/* corePKCS11 includes. */
+#ifdef SSL_USED_MBEDTLS
+#include "core_pkcs11.h"
+#include "core_pkcs11_config.h"
+#include "pkcs11_operations.h"
+#endif
+
+
 /* shadow demo helpers header. */
 #include "shadow_demo_helpers.h"
 
@@ -179,6 +190,42 @@
  * @brief Length of #SHADOW_DELETE_REJECTED_ERROR_CODE_KEY
  */
 #define SHADOW_DELETE_REJECTED_ERROR_CODE_KEY_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_DELETE_REJECTED_ERROR_CODE_KEY ) - 1 ) )
+
+/**
+ * @brief Size of buffer in which to hold the certificate signing request (CSR).
+ */
+#define CSR_BUFFER_LENGTH                              2048
+
+/**
+ * @brief Size of buffer in which to hold the certificate.
+ */
+#define CERT_BUFFER_LENGTH                             2048
+
+/**
+ * @brief Size of buffer in which to hold the certificate id.
+ *
+ * See https://docs.aws.amazon.com/iot/latest/apireference/API_Certificate.html#iot-Type-Certificate-certificateId
+ */
+#define CERT_ID_BUFFER_LENGTH                          64
+
+/**
+ * @brief Size of buffer in which to hold the certificate ownership token.
+ */
+#define OWNERSHIP_TOKEN_BUFFER_LENGTH                  512
+
+
+/**
+ * @brief Buffer to hold responses received from the AWS IoT Fleet Provisioning
+ * APIs. When the MQTT publish callback receives an expected Fleet Provisioning
+ * accepted payload, it copies it into this buffer.
+ */
+static uint8_t payloadBuffer[ NETWORK_BUFFER_SIZE ];
+
+/**
+ * @brief Length of the payload stored in #payloadBuffer. This is set by the
+ * MQTT publish callback when it copies a received payload into #payloadBuffer.
+ */
+static size_t payloadLength;
 
 /*-----------------------------------------------------------*/
 
@@ -636,7 +683,7 @@ static void eventCallback( MQTTContext_t * pMqttContext,
     }
     else
     {
-        HandleOtherIncomingPacket( pPacketInfo, packetIdentifier );
+		HandleOtherIncomingPacket( pPacketInfo, packetIdentifier );
     }
 }
 
@@ -663,11 +710,34 @@ static void eventCallback( MQTTContext_t * pMqttContext,
  * loops to process incoming messages. Those are not the focus of this demo
  * and therefore, are placed in a separate file shadow_demo_helpers.c.
  */
-int main( int argc,
-          char ** argv )
+int main( int argc, char ** argv )
 {
     int returnStatus = EXIT_SUCCESS;
     int demoRunCount = 0;
+    bool connectionEstablished = false;
+
+#ifdef SSL_USED_MBEDTLS
+    bool status = false;
+
+    /* Buffer for holding the CSR. */
+    char csr[ CSR_BUFFER_LENGTH ] = { 0 };
+
+    size_t csrLength = 0;
+
+    /* Buffer for holding received certificate until it is saved. */
+    char certificate[ CERT_BUFFER_LENGTH ];
+    size_t certificateLength;
+
+    /* Buffer for holding the certificate ID. */
+    char certificateId[ CERT_ID_BUFFER_LENGTH ];
+    size_t certificateIdLength;
+
+    /* Buffer for holding the certificate ownership token. */
+    char ownershipToken[ OWNERSHIP_TOKEN_BUFFER_LENGTH ];
+    size_t ownershipTokenLength;
+    CK_SESSION_HANDLE p11Session;
+    CK_RV pkcs11ret = CKR_OK;
+#endif
 
     /* A buffer containing the update document. It has static duration to prevent
      * it from being placed on the call stack. */
@@ -678,7 +748,67 @@ int main( int argc,
 
     do
     {
+#ifdef SSL_USED_OPENSSL
         returnStatus = EstablishMqttSession( eventCallback );
+#else
+        /* Initialize the buffer lengths to their max lengths. */
+        certificateLength = CERT_BUFFER_LENGTH;
+        certificateIdLength = CERT_ID_BUFFER_LENGTH;
+        ownershipTokenLength = OWNERSHIP_TOKEN_BUFFER_LENGTH;
+
+        /* Initialize the PKCS #11 module */
+        pkcs11ret = xInitializePkcs11Session( &p11Session );
+
+        if( pkcs11ret != CKR_OK )
+        {
+            LogError( ( "Failed to initialize PKCS #11." ) );
+            status = false;
+        }
+        else
+        {
+            /* Insert the claim credentials into the PKCS #11 module */
+            status = loadClaimCredentials( p11Session,
+                                           CLIENT_CERT_PATH,
+                                           pkcs11configLABEL_CLAIM_CERTIFICATE,
+                                           CLIENT_PRIVATE_KEY_PATH,
+                                           pkcs11configLABEL_CLAIM_PRIVATE_KEY );
+
+            if( status == false )
+            {
+                LogError( ( "Failed to provision PKCS #11 with claim credentials." ) );
+            }
+        }
+
+        /**** Connect to AWS IoT Core with provisioning claim credentials *****/
+
+        /* We first use the claim credentials to connect to the broker. These
+         * credentials should allow use of the RegisterThing API and one of the
+         * CreateCertificatefromCsr or CreateKeysAndCertificate.
+         * In this demo we use CreateCertificatefromCsr. */
+
+        if (status == true)
+        {
+            /* Attempts to connect to the AWS IoT MQTT broker. If the
+             * connection fails, retries after a timeout. Timeout value will
+             * exponentially increase until maximum attempts are reached. */
+            LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
+
+            returnStatus = EstablishMqttSession(eventCallback,
+                                                p11Session,
+                                                pkcs11configLABEL_CLAIM_CERTIFICATE,
+                                                pkcs11configLABEL_CLAIM_PRIVATE_KEY );
+
+            if( returnStatus == EXIT_FAILURE )
+            {
+                LogError( ( "Failed to establish MQTT session." ) );
+            }
+            else
+            {
+                LogInfo( ( "Established connection with claim credentials." ) );
+                connectionEstablished = true;
+            }
+        }
+#endif
 
         if( returnStatus == EXIT_FAILURE )
         {
@@ -690,6 +820,7 @@ int main( int argc,
             /* Reset the shadow delete status flags. */
             deleteResponseReceived = false;
             shadowDeleted = false;
+            connectionEstablished = true;
 
             /* First of all, try to delete any Shadow document in the cloud.
              * Try to subscribe to `/delete/accepted` and `/delete/rejected` topics. */
@@ -887,7 +1018,14 @@ int main( int argc,
             }
 
             /* The MQTT session is always disconnected, even there were prior failures. */
-            returnStatus = DisconnectMqttSession();
+            if( connectionEstablished == true )
+            {
+                returnStatus = DisconnectMqttSession();
+                connectionEstablished = false;
+            }
+#ifdef SSL_USED_MBEDTLS
+            pkcs11CloseSession( p11Session );
+#endif
         }
 
         /* This demo performs only Device Shadow operations. If matching the Shadow

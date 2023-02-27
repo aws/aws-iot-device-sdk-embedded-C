@@ -45,7 +45,14 @@
 #include <unistd.h>
 
 /* OpenSSL sockets transport implementation. */
+#ifdef SSL_USED_OPENSSL
 #include "openssl_posix.h"
+#endif
+
+/* MbedTLS transport include. */
+#ifdef SSL_USED_MBEDTLS
+#include "mbedtls_pkcs11_posix.h"
+#endif
 
 /*Include backoff algorithm header for retry logic.*/
 #include "backoff_algorithm.h"
@@ -133,7 +140,7 @@
 /**
  * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
  */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 1000U )
+#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 500U )
 
 /**
  * @brief The maximum time interval in seconds which is allowed to elapse
@@ -197,7 +204,11 @@ typedef struct PublishPackets
 /* Each compilation unit must define the NetworkContext struct. */
 struct NetworkContext
 {
+#ifdef SSL_USED_OPENSSL
     OpensslParams_t * pParams;
+#else
+    MbedtlsPkcs11Context_t * pParams;
+#endif
 };
 
 /*-----------------------------------------------------------*/
@@ -240,14 +251,23 @@ static uint8_t buffer[ NETWORK_BUFFER_SIZE ];
 static MQTTContext_t mqttContext = { 0 };
 
 /**
- * @brief The network context used for Openssl operation.
+ * @brief The network context used for Openssl or MbedTLS operation.
  */
 static NetworkContext_t networkContext = { 0 };
 
 /**
  * @brief The parameters for Openssl operation.
  */
+#ifdef SSL_USED_OPENSSL
 static OpensslParams_t opensslParams = { 0 };
+#endif
+
+/**
+ * @brief The parameters for MbedTLS operation.
+ */
+#ifdef SSL_USED_MBEDTLS
+static MbedtlsPkcs11Context_t tlsContext = { 0 };
+#endif
 
 /**
  * @brief The flag to indicate the mqtt session changed.
@@ -293,7 +313,30 @@ static uint32_t generateRandomNumber();
  *
  * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
  */
+#ifdef SSL_USED_OPENSSL
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext );
+#endif
+
+/**
+ * @brief Connect to the MQTT broker with reconnection retries.
+ *
+ * If connection fails, retry is attempted after a timeout. Timeout value
+ * exponentially increases until maximum timeout value is reached or the number
+ * of attempts are exhausted.
+ *
+ * @param[out] pNetworkContext The created network context.
+ * @param[in] p11Session The PKCS #11 session to use.
+ * @param[in] pClientCertLabel The client certificate PKCS #11 label to use.
+ * @param[in] pPrivateKeyLabel The private key PKCS #11 label for the client certificate.
+ *
+ * @return false on failure; true on successful connection.
+ */
+#ifdef SSL_USED_MBEDTLS
+static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                                          CK_SESSION_HANDLE p11Session,
+                                                          char * pClientCertLabel,
+                                                          char * pPrivateKeyLabel );
+#endif
 
 /**
  * @brief Function to get the free index at which an outgoing publish
@@ -365,8 +408,7 @@ static int waitForPacketAck( MQTTContext_t * pMqttContext,
  *
  * @return Returns the return value of the last call to #MQTT_ProcessLoop.
  */
-static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
-                                            uint32_t ulTimeoutMs );
+static MQTTStatus_t processLoopWithTimeout(void);
 
 /*-----------------------------------------------------------*/
 
@@ -375,6 +417,7 @@ static uint32_t generateRandomNumber()
     return( rand() );
 }
 
+#ifdef SSL_USED_OPENSSL
 /*-----------------------------------------------------------*/
 
 static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext )
@@ -470,6 +513,99 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
 
     return returnStatus;
 }
+#endif
+
+#ifdef SSL_USED_MBEDTLS
+static int connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext,
+                                               CK_SESSION_HANDLE p11Session,
+                                               char * pClientCertLabel,
+                                               char * pPrivateKeyLabel )
+{
+    int returnStatus = EXIT_FAILURE;
+    BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
+    MbedtlsPkcs11Status_t tlsStatus = MBEDTLS_PKCS11_SUCCESS;
+    BackoffAlgorithmContext_t reconnectParams;
+    MbedtlsPkcs11Credentials_t tlsCredentials = { 0 };
+    uint16_t nextRetryBackOff = 0U;
+
+    /* Set the pParams member of the network context with desired transport. */
+    pNetworkContext->pParams = &tlsContext;
+
+    /* Initialize credentials for establishing TLS session. */
+    tlsCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+    tlsCredentials.pClientCertLabel = pClientCertLabel;
+    tlsCredentials.pPrivateKeyLabel = pPrivateKeyLabel;
+    tlsCredentials.p11Session = p11Session;
+
+    /* AWS IoT requires devices to send the Server Name Indication (SNI)
+     * extension to the Transport Layer Security (TLS) protocol and provide
+     * the complete endpoint address in the host_name field. Details about
+     * SNI for AWS IoT can be found in the link below.
+     * https://docs.aws.amazon.com/iot/latest/developerguide/transport-security.html
+     */
+    tlsCredentials.disableSni = false;
+
+    if( AWS_MQTT_PORT == 443 )
+    {
+        static const char * alpnProtoArray[] = AWS_IOT_ALPN_MQTT_CA_AUTH_MBEDTLS;
+
+        /* Pass the ALPN protocol name depending on the port being used.
+         * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
+         * in the link below.
+         * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
+         */
+        tlsCredentials.pAlpnProtos = alpnProtoArray;
+    }
+
+    /* Initialize reconnect attempts and interval */
+    BackoffAlgorithm_InitializeParams( &reconnectParams,
+                                       CONNECTION_RETRY_BACKOFF_BASE_MS,
+                                       CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS,
+                                       CONNECTION_RETRY_MAX_ATTEMPTS );
+
+    do
+    {
+        /* Establish a TLS session with the MQTT broker. This example connects
+         * to the MQTT broker as specified in AWS_IOT_ENDPOINT and AWS_MQTT_PORT
+         * at the demo config header. */
+        LogDebug( ( "Establishing a TLS session to %.*s:%d.",
+                    AWS_IOT_ENDPOINT_LENGTH,
+                    AWS_IOT_ENDPOINT,
+                    AWS_MQTT_PORT ) );
+
+        tlsStatus = Mbedtls_Pkcs11_Connect( pNetworkContext,
+                                            AWS_IOT_ENDPOINT,
+                                            AWS_MQTT_PORT,
+                                            &tlsCredentials,
+                                            TRANSPORT_SEND_RECV_TIMEOUT_MS );
+
+        if( tlsStatus == MBEDTLS_PKCS11_SUCCESS )
+        {
+            /* Connection successful. */
+            returnStatus = EXIT_SUCCESS;
+        }
+        else
+        {
+            /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
+
+            if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
+            {
+                LogError( ( "Connection to the broker failed, all attempts exhausted." ) );
+            }
+            else if( backoffAlgStatus == BackoffAlgorithmSuccess )
+            {
+                LogWarn( ( "Connection to the broker failed. Retrying connection "
+                           "after %hu ms backoff.",
+                           ( unsigned short ) nextRetryBackOff ) );
+                Clock_SleepMs( nextRetryBackOff );
+            }
+        }
+    } while( ( tlsStatus != MBEDTLS_PKCS11_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+
+    return returnStatus;
+}
+#endif
 
 /*-----------------------------------------------------------*/
 
@@ -591,25 +727,23 @@ static int waitForPacketAck( MQTTContext_t * pMqttContext,
 }
 
 /*-----------------------------------------------------------*/
-
-static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
-                                            uint32_t ulTimeoutMs )
+static MQTTStatus_t processLoopWithTimeout(void)
 {
     uint32_t ulMqttProcessLoopTimeoutTime;
     uint32_t ulCurrentTime;
 
     MQTTStatus_t eMqttStatus = MQTTSuccess;
 
-    ulCurrentTime = pMqttContext->getTime();
-    ulMqttProcessLoopTimeoutTime = ulCurrentTime + ulTimeoutMs;
+    ulCurrentTime = mqttContext.getTime();
+    ulMqttProcessLoopTimeoutTime = ulCurrentTime + MQTT_PROCESS_LOOP_TIMEOUT_MS;
 
     /* Call MQTT_ProcessLoop multiple times a timeout happens, or
      * MQTT_ProcessLoop fails. */
     while( ( ulCurrentTime < ulMqttProcessLoopTimeoutTime ) &&
            ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
     {
-        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
-        ulCurrentTime = pMqttContext->getTime();
+        eMqttStatus = MQTT_ProcessLoop( &mqttContext );
+        ulCurrentTime = mqttContext.getTime();
     }
 
     return eMqttStatus;
@@ -709,8 +843,14 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
 }
 
 /*-----------------------------------------------------------*/
-
+#ifdef SSL_USED_OPENSSL
 int EstablishMqttSession( MQTTEventCallback_t eventCallback )
+#else
+int EstablishMqttSession( MQTTEventCallback_t eventCallback,
+                          CK_SESSION_HANDLE p11Session,
+                          char * pClientCertLabel,
+                          char * pPrivateKeyLabel )
+#endif
 {
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -729,7 +869,15 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
     ( void ) memset( pMqttContext, 0U, sizeof( MQTTContext_t ) );
     ( void ) memset( pNetworkContext, 0U, sizeof( NetworkContext_t ) );
 
+#ifdef SSL_USED_OPENSSL
     returnStatus = connectToServerWithBackoffRetries( pNetworkContext );
+#endif
+#ifdef SSL_USED_MBEDTLS
+    returnStatus = connectToBrokerWithBackoffRetries( pNetworkContext,
+                                                      p11Session,
+                                                      pClientCertLabel,
+                                                      pPrivateKeyLabel );
+#endif
 
     if( returnStatus != EXIT_SUCCESS )
     {
@@ -745,8 +893,15 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
          * For this demo, TCP sockets are used to send and receive data
          * from network. Network context is SSL context for OpenSSL.*/
         transport.pNetworkContext = pNetworkContext;
+#ifdef SSL_USED_OPENSSL
         transport.send = Openssl_Send;
         transport.recv = Openssl_Recv;
+#endif
+#ifdef SSL_USED_MBEDTLS
+        transport.send = Mbedtls_Pkcs11_Send;
+        transport.recv = Mbedtls_Pkcs11_Recv;
+        transport.writev = NULL;
+#endif
 
         /* Fill the values for network buffer. */
         networkBuffer.pBuffer = buffer;
@@ -888,8 +1043,12 @@ int32_t DisconnectMqttSession( void )
     }
 
     /* End TLS session, then close TCP connection. */
+#ifdef SSL_USED_OPENSSL
     ( void ) Openssl_Disconnect( pNetworkContext );
-
+#endif
+#ifdef SSL_USED_MBEDTLS
+    ( void ) Mbedtls_Pkcs11_Disconnect( pNetworkContext );
+#endif
     return returnStatus;
 }
 
@@ -1073,7 +1232,7 @@ int32_t PublishToTopic( const char * pTopicFilter,
              * sends ping request to broker if MQTT_KEEP_ALIVE_INTERVAL_SECONDS
              * has expired since the last MQTT packet sent and receive
              * ping responses. */
-            mqttStatus = processLoopWithTimeout( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+            mqttStatus = processLoopWithTimeout();
 
             if( ( mqttStatus != MQTTSuccess ) && ( mqttStatus != MQTTNeedMoreBytes ) )
             {
