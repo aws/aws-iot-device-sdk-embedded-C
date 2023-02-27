@@ -123,6 +123,26 @@
 #endif
 
 /**
+ * @brief Subject name to use when creating the certificate signing request (CSR)
+ * for provisioning the demo client with using the Fleet Provisioning
+ * CreateCertificateFromCsr APIs.
+ *
+ * This is passed to MbedTLS; see https://tls.mbed.org/api/x509__csr_8h.html#a954eae166b125cea2115b7db8c896e90
+ */
+#ifndef CSR_SUBJECT_NAME
+    #define CSR_SUBJECT_NAME    "CN=Shadow_Demo"
+#endif
+
+/**
+ * @brief Defined the type of ssl libarary used, openssl or medtls.
+ *
+ * Only one must be defined, if none is defined, openssl is used by default.
+ */
+#if (!defined(SSL_USED_OPENSSL) && !defined(SSL_USED_MBEDTLS)) || (defined(SSL_USED_OPENSSL) && defined(SSL_USED_MBEDTLS))
+    #error "Plesase defined ssl library openssl or mbedtls, but only one can be defined."
+#endif
+
+/**
  * @brief MQTT client identifier.
  *
  * No two clients may use the same client identifier simultaneously.
