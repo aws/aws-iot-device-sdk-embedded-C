@@ -84,7 +84,7 @@ jobs:
 
       - name: Build the HTTP Plaintext Demo
         id: build-http-plaintext
-        if: steps.configure-http-plaintext.outcome == 'success'
+        if: success() || failure()
         run: cd build && make http_demo_plaintext
 
       - name: Run and monitor the HTTP Plaintext Demo
