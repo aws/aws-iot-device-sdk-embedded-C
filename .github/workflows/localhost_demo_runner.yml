@@ -77,18 +77,18 @@ jobs:
 
       - name: Configure the HTTP Plaintext Demo
         id: configure-http-plaintext
-        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        if: steps.configure-cmake-build.outcome == 'success'
         working-directory: demos/http/http_demo_plaintext
-        run: sed -i '1s/^/#define HTTP_PORT 8080\n/' demo_config.h
+        run: sed -i '1s/^/#define HTTP_PORT 8080\n/' demo_config.h && exit 1
         shell: bash
 
       - name: Build the HTTP Plaintext Demo
         id: build-http-plaintext
-        if: success() || failure() && steps.configure-http-plaintext.outcome == 'success'
+        if: steps.configure-http-plaintext.outcome == 'success'
         run: cd build && make http_demo_plaintext
 
       - name: Run and monitor the HTTP Plaintext Demo
-        if: success() || failure() && steps.build-http-plaintext.outcome == 'success'
+        if: steps.build-http-plaintext.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/http_demo_plaintext
@@ -99,11 +99,11 @@ jobs:
 
       - name: Build the MQTT Basic TLS Demo
         id: build-mqtt-basic-tls
-        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        if: steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_basic_tls
 
       - name: Run and monitor the MQTT Basic TLS Demo
-        if: success() || failure() && steps.build-mqtt-basic-tls.outcome == 'success'
+        if: steps.build-mqtt-basic-tls.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_basic_tls
