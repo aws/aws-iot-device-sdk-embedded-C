@@ -183,7 +183,6 @@ jobs:
 
       - name: Run and monitor the MQTT Serializer Demo
         if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
-        continue-on-error: true
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_serializer
