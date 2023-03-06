@@ -51,6 +51,7 @@ jobs:
           server-cert-path: ${{ steps.generate-credentials.outputs.server-cert-path }}
 
       - name: Configure CMake Build for Localhost servers
+        id: configure-cmake-build
         run: |
           mkdir build && cd build
           ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
@@ -75,17 +76,19 @@ jobs:
           -DGREENGRASS_ADDRESS="greengrass-address"
 
       - name: Configure the HTTP Plaintext Demo
+        id: configure-http-plaintext
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         working-directory: demos/http/http_demo_plaintext
         run: sed -i '1s/^/#define HTTP_PORT 8080\n/' demo_config.h
         shell: bash
 
       - name: Build the HTTP Plaintext Demo
         id: build-http-plaintext
-        continue-on-error: true
+        if: success() || failure() && steps.configure-http-plaintext.outcome == 'success'
         run: cd build && make http_demo_plaintext
 
       - name: Run and monitor the HTTP Plaintext Demo
-        continue-on-error: true
+        if: success() || failure() && steps.build-http-plaintext.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/http_demo_plaintext
@@ -96,12 +99,11 @@ jobs:
 
       - name: Build the MQTT Basic TLS Demo
         id: build-mqtt-basic-tls
-        continue-on-error: true
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_basic_tls
 
       - name: Run and monitor the MQTT Basic TLS Demo
-        if: steps.build-mqtt-basic-tls.outcome == 'success'
-        continue-on-error: true
+        if: success() || failure() && steps.build-mqtt-basic-tls.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_basic_tls
@@ -112,12 +114,11 @@ jobs:
 
       - name: Build the MQTT Plaintext Demo
         id: build-mqtt-plaintext-demo
-        continue-on-error: true
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_plaintext
 
       - name: Run and monitor the MQTT Plaintext Demo
-        if: steps.build-mqtt-plaintext-demo.outcome == 'success'
-        continue-on-error: true
+        if: success() || failure() && steps.build-mqtt-plaintext-demo.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_plaintext
@@ -128,11 +129,11 @@ jobs:
 
       - name: Build the MQTT Serializer Demo
         id: build-mqtt-serializer-demo
-        continue-on-error: true
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_serializer
 
       - name: Run and monitor the MQTT Serializer Demo
-        if: steps.build-mqtt-serializer-demo.outcome == 'success'
+        if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
         continue-on-error: true
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
@@ -144,12 +145,11 @@ jobs:
 
       - name: Build the MQTT Subscription Manager Demo
         id: build-mqtt-subscription-manager-demo
-        continue-on-error: true
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_subscription_manager
 
       - name: Run and monitor the MQTT Subscription Manager Demo
-        if: steps.build-mqtt-subscription-manager-demo.outcome == 'success'
-        continue-on-error: true
+        if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_subscription_manager
@@ -159,6 +159,7 @@ jobs:
           number-of-runs: 1
 
       - name: 'Upload demo logs'
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: demo_run_logs
