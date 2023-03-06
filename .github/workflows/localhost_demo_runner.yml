@@ -84,7 +84,7 @@ jobs:
         id: configure-http-basic-tls
         if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         working-directory: demos/http/http_demo_basic_tls
-        run: sed -i '1s/^/#define HTTP_PORT 4443\n/' demo_config.h
+        run: sed -i '1s/^/#define HTTPS_PORT 4443\n/' demo_config.h
         shell: bash
 
       - name: Build the HTTP Basic TLS Demo
@@ -106,7 +106,7 @@ jobs:
         id: configure-http-mutual-auth
         if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         working-directory: demos/http/http_demo_mutual_auth
-        run: sed -i '1s/^/#define HTTP_PORT 4443\n/' demo_config.h
+        run: sed -i '1s/^/#define HTTPS_PORT 4443\n/' demo_config.h
         shell: bash
 
       - name: Build the HTTP Mutual Auth Demo
