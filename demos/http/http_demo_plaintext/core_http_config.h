@@ -47,6 +47,7 @@
 
 #include "logging_stack.h"
 
+#define HTTP_RECV_RETRY_TIMEOUT_MS    ( 100U )
 
 /************ End of logging configuration ****************/
 
