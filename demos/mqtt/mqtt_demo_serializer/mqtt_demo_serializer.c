@@ -130,7 +130,7 @@
  * @brief Number of time network receive will be attempted
  * if it fails due to transportTimeout.
  */
-#define MQTT_MAX_RECV_ATTEMPTS               ( 10U )
+#define MQTT_MAX_RECV_ATTEMPTS               ( 100U )
 
 /**
  * @brief Time to wait in milliseconds before attempting to obtain
@@ -517,6 +517,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
+        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %s\n", MQTT_Status_strerror( result ) ) )
         receiveAttempts++;
     } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
 
