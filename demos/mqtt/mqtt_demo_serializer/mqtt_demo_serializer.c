@@ -458,7 +458,6 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
     MQTTPacketInfo_t incomingPacket;
     unsigned short packetId = 0;
     bool sessionPresent = false;
-    uint8_t receiveAttempts = 0;
 
     /***
      * For readability, error handling in this function is restricted to the use of
@@ -518,8 +517,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
         LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
-        receiveAttempts++;
-    } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
+    } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
     assert( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK );
@@ -843,7 +841,6 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     uint16_t packetId = 0;
     int status;
     bool sessionPresent = false;
-    uint16_t receiveAttempts = 0;
 
     /* Suppress unused variable warning when asserts are disabled in build. */
     ( void ) status;
@@ -864,8 +861,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
         LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
-        receiveAttempts++;
-    } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
+    } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
     assert( incomingPacket.remainingLength <= pFixedBuffer->size );
