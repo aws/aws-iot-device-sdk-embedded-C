@@ -517,7 +517,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %s\n", MQTT_Status_strerror( result ) ) )
+        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %s\n", MQTT_Status_strerror( result ) ) );
         receiveAttempts++;
     } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
 
