@@ -51,6 +51,7 @@
 
 /* MQTT Serializer Serializer API header. */
 #include "core_mqtt_serializer.h"
+#include "core_mqtt.h"
 
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
