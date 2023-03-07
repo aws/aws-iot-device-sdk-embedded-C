@@ -863,6 +863,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
+        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
         receiveAttempts++;
     } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
 
