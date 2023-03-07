@@ -51,7 +51,6 @@
 
 /* MQTT Serializer Serializer API header. */
 #include "core_mqtt_serializer.h"
-#include "core_mqtt.h"
 
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
@@ -518,7 +517,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %s\n", MQTT_Status_strerror( result ) ) );
+        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
         receiveAttempts++;
     } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
 
