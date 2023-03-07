@@ -130,7 +130,7 @@
  * @brief Number of time network receive will be attempted
  * if it fails due to transportTimeout.
  */
-#define MQTT_MAX_RECV_ATTEMPTS               ( 100U )
+#define MQTT_MAX_RECV_ATTEMPTS               ( 1000U )
 
 /**
  * @brief Time to wait in milliseconds before attempting to obtain
