@@ -181,6 +181,10 @@ jobs:
         if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_serializer
 
+      - name: Run MQTT Serializer Demo
+        if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
+        run: ./build/bin/mqtt_demo_serializer
+
       - name: Run and monitor the MQTT Serializer Demo
         if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
         uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
