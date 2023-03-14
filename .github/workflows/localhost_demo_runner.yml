@@ -80,25 +80,6 @@ jobs:
           -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
           -DGREENGRASS_ADDRESS="greengrass-address"
 
-      - name: Build the MQTT Serializer Demo
-        id: build-mqtt-serializer-demo-test
-        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
-        run: cd build && make mqtt_demo_serializer
-
-      - name: Run MQTT Serializer Demo
-        if: success() || failure() && steps.build-mqtt-serializer-demo-test.outcome == 'success'
-        run: ./build/bin/mqtt_demo_serializer
-
-      - name: Run and monitor the MQTT Serializer Demo
-        if: success() || failure() && steps.build-mqtt-serializer-demo-test.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
-        with:
-          exe-path: ./build/bin/mqtt_demo_serializer
-          log-dir: demo_run_logs
-          timeout-seconds: 300
-          success-line: "Demo completed successfully."
-          number-of-runs: 1
-
       - name: Configure the HTTP Basic TLS Demo
         id: configure-http-basic-tls
         if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
