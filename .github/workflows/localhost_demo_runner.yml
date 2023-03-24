@@ -27,7 +27,7 @@ jobs:
         run: sudo apt-get install -y libmosquitto-dev
 
       - name: Install CMake
-        id: install-cmake 
+        id: install-cmake
         uses: lukka/get-cmake@v3.26.0
         with:
           cmakeVersion: 3.2.0
