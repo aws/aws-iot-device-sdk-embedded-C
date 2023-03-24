@@ -100,7 +100,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: Configure the HTTP Mutual Auth Demo
         id: configure-http-mutual-auth
@@ -122,7 +121,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: Configure the HTTP Plaintext Demo
         id: configure-http-plaintext
@@ -144,7 +142,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: Build the MQTT Basic TLS Demo
         id: build-mqtt-basic-tls
@@ -159,7 +156,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: Build the MQTT Plaintext Demo
         id: build-mqtt-plaintext-demo
@@ -174,7 +170,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: Build the MQTT Serializer Demo
         id: build-mqtt-serializer-demo
@@ -193,7 +188,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: Build the MQTT Subscription Manager Demo
         id: build-mqtt-subscription-manager-demo
@@ -208,7 +202,6 @@ jobs:
           log-dir: demo_run_logs
           timeout-seconds: 300
           success-line: "Demo completed successfully."
-          number-of-runs: 1
 
       - name: 'Upload demo logs'
         if: always()
