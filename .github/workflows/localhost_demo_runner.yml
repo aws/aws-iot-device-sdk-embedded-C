@@ -34,12 +34,12 @@ jobs:
 
       - name: Generate SSL credentials
         id: generate-credentials
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/ssl-credential-creator@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/ssl-credential-creator@main
 
       - name: Start localhost MQTT broker
         id: mqtt-broker
         if: success() || failure() && steps.generate-credentials.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
         with:
           root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
           server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
@@ -48,7 +48,7 @@ jobs:
       - name: Start localhost HTTP server
         id: http-server
         if: success() || failure() && steps.generate-credentials.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/localhost-http-1.1-server@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/localhost-http-1.1-server@main
         with:
           root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
           server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
@@ -94,7 +94,7 @@ jobs:
 
       - name: Run and monitor the HTTP Basic TLS Demo
         if: success() || failure() && steps.build-http-basic-tls.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/http_demo_basic_tls
           log-dir: demo_run_logs
@@ -116,7 +116,7 @@ jobs:
 
       - name: Run and monitor the HTTP Mutual Auth Demo
         if: success() || failure() && steps.build-http-mutual-auth.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/http_demo_mutual_auth
           log-dir: demo_run_logs
@@ -138,7 +138,7 @@ jobs:
 
       - name: Run and monitor the HTTP Plaintext Demo
         if: success() || failure() && steps.build-http-plaintext.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/http_demo_plaintext
           log-dir: demo_run_logs
@@ -153,7 +153,7 @@ jobs:
 
       - name: Run and monitor the MQTT Basic TLS Demo
         if: success() || failure() && steps.build-mqtt-basic-tls.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_basic_tls
           log-dir: demo_run_logs
@@ -168,7 +168,7 @@ jobs:
 
       - name: Run and monitor the MQTT Plaintext Demo
         if: success() || failure() && steps.build-mqtt-plaintext-demo.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_plaintext
           log-dir: demo_run_logs
@@ -187,7 +187,7 @@ jobs:
 
       - name: Run and monitor the MQTT Serializer Demo
         if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_serializer
           log-dir: demo_run_logs
@@ -202,7 +202,7 @@ jobs:
 
       - name: Run and monitor the MQTT Subscription Manager Demo
         if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
-        uses: jasonpcarroll/CI-CD-GitHub-Actions/executable-monitor@main
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
         with:
           exe-path: ./build/bin/mqtt_demo_subscription_manager
           log-dir: demo_run_logs
