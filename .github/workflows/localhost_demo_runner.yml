@@ -27,10 +27,10 @@ jobs:
         run: sudo apt-get install -y libmosquitto-dev
 
       - name: Install CMake
-        id: install-cmake
-        run: |
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+        id: install-cmake 
+        uses: lukka/get-cmake@v3.26.0
+        with:
+          cmakeVersion: 3.2.0
 
       - name: Generate SSL credentials
         id: generate-credentials
@@ -59,7 +59,7 @@ jobs:
         if: success() || failure() && steps.install-cmake.outcome == 'success' && steps.install-libmosquitto.outcome == 'success'
         run: |
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -G "Unix Makefiles" \
           -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
