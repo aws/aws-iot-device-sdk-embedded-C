@@ -584,10 +584,10 @@ int main( int argc,
         if( status == true )
         {
             /* Publish the CSR to the CreateCertificatefromCsr API. */
-            PublishToTopic( FP_CBOR_CREATE_CERT_PUBLISH_TOPIC,
-                            FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
-                            ( char * ) payloadBuffer,
-                            payloadLength );
+            status = PublishToTopic( FP_CBOR_CREATE_CERT_PUBLISH_TOPIC,
+                                     FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
+                                     ( char * ) payloadBuffer,
+                                     payloadLength );
 
             if( status == false )
             {
@@ -663,10 +663,10 @@ int main( int argc,
         if( status == true )
         {
             /* Publish the RegisterThing request. */
-            PublishToTopic( FP_CBOR_REGISTER_PUBLISH_TOPIC( PROVISIONING_TEMPLATE_NAME ),
-                            FP_CBOR_REGISTER_PUBLISH_LENGTH( PROVISIONING_TEMPLATE_NAME_LENGTH ),
-                            ( char * ) payloadBuffer,
-                            payloadLength );
+            status = PublishToTopic( FP_CBOR_REGISTER_PUBLISH_TOPIC( PROVISIONING_TEMPLATE_NAME ),
+                                     FP_CBOR_REGISTER_PUBLISH_LENGTH( PROVISIONING_TEMPLATE_NAME_LENGTH ),
+                                     ( char * ) payloadBuffer,
+                                     payloadLength );
 
             if( status == false )
             {
