@@ -860,17 +860,17 @@ void Mbedtls_Pkcs11_Disconnect( NetworkContext_t * pNetworkContext )
         {
             LogInfo( ( "Closing TLS connection: TLS close-notify sent." ) );
         }
-        else if( ( tlsStatus == MBEDTLS_ERR_SSL_WANT_READ ) &&
+        else if( ( tlsStatus == MBEDTLS_ERR_SSL_WANT_READ ) ||
                  ( tlsStatus == MBEDTLS_ERR_SSL_WANT_WRITE ) )
         {
-            /* WANT_READ and WANT_WRITE can be ignored. Logging for debugging purposes. */
+            /* WANT_READ or WANT_WRITE can be ignored. Logging for debugging purposes. */
             LogInfo( ( "TLS close-notify sent; "
                        "received %s as the TLS status which can be ignored for close-notify.",
                        ( tlsStatus == MBEDTLS_ERR_SSL_WANT_READ ) ? "WANT_READ" : "WANT_WRITE" ) );
         }
         else
         {
-            /* Ignore the WANT_READ and WANT_WRITE return values. */
+            /* Ignore the WANT_READ or WANT_WRITE return values. */
             LogError( ( "Failed to send TLS close-notify: mbedTLSError= %s : %s.",
                         mbedtlsHighLevelCodeOrDefault( tlsStatus ),
                         mbedtlsLowLevelCodeOrDefault( tlsStatus ) ) );
