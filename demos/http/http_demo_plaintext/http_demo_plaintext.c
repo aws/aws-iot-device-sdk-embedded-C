@@ -274,6 +274,9 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     ( void ) memset( &response, 0, sizeof( response ) );
     ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
 
+    /* Set time function for retry timeout on receiving the response. */
+    response.getTime = getTimeMs;
+
     /* Initialize the request object. */
     requestInfo.pHost = SERVER_HOST;
     requestInfo.hostLen = SERVER_HOST_LENGTH;

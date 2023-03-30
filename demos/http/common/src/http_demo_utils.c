@@ -149,3 +149,17 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 }
 
 /*-----------------------------------------------------------*/
+
+uint32_t getTimeMs( void )
+{
+    uint32_t ms;
+    struct timespec spec;
+
+    clock_gettime( CLOCK_MONOTONIC, &spec );
+
+    ms = spec.tv_sec * 1000 + spec.tv_nsec / 1000000;
+
+    return ms;
+}
+
+/*-----------------------------------------------------------*/

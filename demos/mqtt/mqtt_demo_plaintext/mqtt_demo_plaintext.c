@@ -166,7 +166,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 1000 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 1000U )
 
 /**
  * @brief The length of the outgoing publish records array used by the coreMQTT

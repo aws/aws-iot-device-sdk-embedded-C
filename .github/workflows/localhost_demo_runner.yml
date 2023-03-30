@@ -1,0 +1,211 @@
+name: Localhost Server Demo Runner
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-run-localhost-demos:
+    name: Build and Run Localhost Server Demos
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Clone This Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install Python3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install libmosquitto
+        id: install-libmosquitto
+        run: sudo apt-get install -y libmosquitto-dev
+
+      - name: Install CMake
+        id: install-cmake
+        uses: lukka/get-cmake@v3.26.0
+        with:
+          cmakeVersion: 3.2.0
+
+      - name: Generate SSL credentials
+        id: generate-credentials
+        uses: FreeRTOS/CI-CD-GitHub-Actions/ssl-credential-creator@main
+
+      - name: Start localhost MQTT broker
+        id: mqtt-broker
+        if: success() || failure() && steps.generate-credentials.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/localhost-mqtt-broker@main
+        with:
+          root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
+          server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
+          server-cert-path: ${{ steps.generate-credentials.outputs.server-cert-path }}
+
+      - name: Start localhost HTTP server
+        id: http-server
+        if: success() || failure() && steps.generate-credentials.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/localhost-http-1.1-server@main
+        with:
+          root-ca-cert-path: ${{ steps.generate-credentials.outputs.root-ca-cert-path }}
+          server-priv-key-path: ${{ steps.generate-credentials.outputs.server-priv-key-path }}
+          server-cert-path: ${{ steps.generate-credentials.outputs.server-cert-path }}
+
+      - name: Configure CMake Build for Localhost servers
+        id: configure-cmake-build
+        if: success() || failure() && steps.install-cmake.outcome == 'success' && steps.install-libmosquitto.outcome == 'success'
+        run: |
+          mkdir build && cd build
+          cmake .. \
+          -G "Unix Makefiles" \
+          -DBUILD_DEMOS=1 \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS='-Wall -Wextra -Werror' \
+          -DAWS_IOT_ENDPOINT="localhost" \
+          -DBROKER_ENDPOINT="localhost" \
+          -DCLIENT_CERT_PATH=${{ steps.generate-credentials.outputs.device-cert-path }} \
+          -DROOT_CA_CERT_PATH=${{ steps.generate-credentials.outputs.root-ca-cert-path }} \
+          -DCLIENT_PRIVATE_KEY_PATH=${{ steps.generate-credentials.outputs.device-priv-key-path }} \
+          -DCLIENT_IDENTIFIER="test" \
+          -DTHING_NAME="thing-name" \
+          -DS3_PRESIGNED_GET_URL="get-url" \
+          -DS3_PRESIGNED_PUT_URL="put-url" \
+          -DCLAIM_CERT_PATH="cert/path" \
+          -DCLAIM_PRIVATE_KEY_PATH="key/path" \
+          -DPROVISIONING_TEMPLATE_NAME="template-name" \
+          -DDEVICE_SERIAL_NUMBER="00000" \
+          -DCSR_SUBJECT_NAME="CN=Fleet Provisioning Demo" \
+          -DGREENGRASS_ADDRESS="greengrass-address"
+
+      - name: Configure the HTTP Basic TLS Demo
+        id: configure-http-basic-tls
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        working-directory: demos/http/http_demo_basic_tls
+        run: sed -i 's/define HTTPS_PORT[[:blank:]]\{1,\}443/define HTTPS_PORT ( 4443 )/g' demo_config.h
+        shell: bash
+
+      - name: Build the HTTP Basic TLS Demo
+        id: build-http-basic-tls
+        if: success() || failure() && steps.configure-http-basic-tls.outcome == 'success'
+        run: cd build && make http_demo_basic_tls
+
+      - name: Run and monitor the HTTP Basic TLS Demo
+        if: success() || failure() && steps.build-http-basic-tls.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/http_demo_basic_tls
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: Configure the HTTP Mutual Auth Demo
+        id: configure-http-mutual-auth
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        working-directory: demos/http/http_demo_mutual_auth
+        run: sed -i 's/define AWS_HTTPS_PORT[[:blank:]]\{1,\}443/define AWS_HTTPS_PORT ( 4443 )/g' demo_config.h
+        shell: bash
+
+      - name: Build the HTTP Mutual Auth Demo
+        id: build-http-mutual-auth
+        if: success() || failure() && steps.configure-http-mutual-auth.outcome == 'success'
+        run: cd build && make http_demo_mutual_auth
+
+      - name: Run and monitor the HTTP Mutual Auth Demo
+        if: success() || failure() && steps.build-http-mutual-auth.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/http_demo_mutual_auth
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: Configure the HTTP Plaintext Demo
+        id: configure-http-plaintext
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        working-directory: demos/http/http_demo_plaintext
+        run: sed -i 's/define HTTP_PORT[[:blank:]]\{1,\}( 80 )/define HTTP_PORT ( 8080 )/g' demo_config.h
+        shell: bash
+
+      - name: Build the HTTP Plaintext Demo
+        id: build-http-plaintext
+        if: success() || failure() && steps.configure-http-plaintext.outcome == 'success'
+        run: cd build && make http_demo_plaintext
+
+      - name: Run and monitor the HTTP Plaintext Demo
+        if: success() || failure() && steps.build-http-plaintext.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/http_demo_plaintext
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: Build the MQTT Basic TLS Demo
+        id: build-mqtt-basic-tls
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        run: cd build && make mqtt_demo_basic_tls
+
+      - name: Run and monitor the MQTT Basic TLS Demo
+        if: success() || failure() && steps.build-mqtt-basic-tls.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_basic_tls
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: Build the MQTT Plaintext Demo
+        id: build-mqtt-plaintext-demo
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        run: cd build && make mqtt_demo_plaintext
+
+      - name: Run and monitor the MQTT Plaintext Demo
+        if: success() || failure() && steps.build-mqtt-plaintext-demo.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_plaintext
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: Build the MQTT Serializer Demo
+        id: build-mqtt-serializer-demo
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        run: cd build && make mqtt_demo_serializer
+
+      - name: Run MQTT Serializer Demo
+        if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
+        run: ./build/bin/mqtt_demo_serializer
+
+      - name: Run and monitor the MQTT Serializer Demo
+        if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_serializer
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: Build the MQTT Subscription Manager Demo
+        id: build-mqtt-subscription-manager-demo
+        if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
+        run: cd build && make mqtt_demo_subscription_manager
+
+      - name: Run and monitor the MQTT Subscription Manager Demo
+        if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
+        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+        with:
+          exe-path: ./build/bin/mqtt_demo_subscription_manager
+          log-dir: demo_run_logs
+          timeout-seconds: 300
+          success-line: "Demo completed successfully."
+
+      - name: 'Upload demo logs'
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: demo_run_logs
+          path: demo_run_logs

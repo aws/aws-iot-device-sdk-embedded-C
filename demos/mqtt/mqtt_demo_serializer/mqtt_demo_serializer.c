@@ -130,7 +130,13 @@
  * @brief Number of time network receive will be attempted
  * if it fails due to transportTimeout.
  */
-#define MQTT_MAX_RECV_ATTEMPTS               ( 10U )
+#define MQTT_MAX_RECV_ATTEMPTS               ( 1000U )
+
+/**
+ * @brief Time to wait in milliseconds before attempting to obtain
+ * an MQTT packet in response to a previously sent message.
+ */
+#define MQTT_RESPONSE_WAIT_TIME_MS           ( 50U )
 
 /**
  * @brief Delay between two demo iterations.
@@ -452,7 +458,6 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
     MQTTPacketInfo_t incomingPacket;
     unsigned short packetId = 0;
     bool sessionPresent = false;
-    uint8_t receiveAttempts = 0;
 
     /***
      * For readability, error handling in this function is restricted to the use of
@@ -506,10 +511,13 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
      */
     do
     {
+        /* Wait a bit before attempting to receive an incoming response to allow
+         * time for the server to respond. */
+        Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        receiveAttempts++;
-    } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
+        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
+    } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
     assert( incomingPacket.type == MQTT_PACKET_TYPE_CONNACK );
@@ -833,7 +841,6 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     uint16_t packetId = 0;
     int status;
     bool sessionPresent = false;
-    uint16_t receiveAttempts = 0;
 
     /* Suppress unused variable warning when asserts are disabled in build. */
     ( void ) status;
@@ -848,10 +855,13 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     /* Determine incoming packet type and remaining length. */
     do
     {
+        /* Wait a bit before attempting to receive an incoming response to allow
+         * time for the server to respond. */
+        Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        receiveAttempts++;
-    } while( ( result == MQTTNoDataAvailable ) && ( receiveAttempts < MQTT_MAX_RECV_ATTEMPTS ) );
+        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
+    } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
     assert( incomingPacket.remainingLength <= pFixedBuffer->size );

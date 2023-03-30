@@ -63,6 +63,13 @@ typedef int32_t ( * TransportConnect_t )( NetworkContext_t * pNetworkContext );
 int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
                                            NetworkContext_t * pNetworkContext );
 
+/**
+ * @brief Get the current time in milliseconds.
+ *
+ * @return Time in milliseconds.
+ */
+uint32_t getTimeMs( void );
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
