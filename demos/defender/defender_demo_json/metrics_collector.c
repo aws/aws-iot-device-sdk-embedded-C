@@ -612,7 +612,7 @@ MetricsCollectorStatus_t GetNetworkInferfaceInfo( char ( *pOutNetworkInterfaceNa
                 LogDebug( ( "File: /proc/net/arp, Content: %s.", &( lineBuffer[ 0 ] ) ) );
 
                 filledVariables = sscanf( lineBuffer,
-                                          "%u.%u.%u.%u %*s %*s %*s %*s %s",
+                                          "%u.%u.%u.%u %*s %*s %*s %*s %15s",
                                           &ipPart1,
                                           &ipPart2,
                                           &ipPart3,
