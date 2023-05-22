@@ -26,14 +26,14 @@
     * [202012.01](#20201201)
     * [202011.00](#20201100)
     * [202009.00](#20200900)
-    * [v3.1.2](#v312)
+    * [v3.1.5](#v315)
 * [Porting Guide for 202009.00 and newer releases](#porting-guide-for-20200900-and-newer-releases)
     * [Porting coreMQTT](#porting-coremqtt)
     * [Porting coreHTTP](#porting-corehttp)
     * [Porting AWS IoT Device Shadow](#porting-aws-iot-device-shadow)
     * [Porting AWS IoT Device Defender](#porting-aws-iot-device-defender)
     * [Porting AWS IoT Over-the-air Update](#porting-aws-iot-over-the-air-update)
-* [Migration guide from v3.1.2 to 202009.00 and newer releases](#migration-guide-from-v312-to-20200900-and-newer-releases)
+* [Migration guide from v3.1.5 to 202009.00 and newer releases](#migration-guide-from-v315-to-20200900-and-newer-releases)
     * [MQTT Migration](#mqtt-migration)
     * [Shadow Migration](#shadow-migration)
     * [Jobs Migration](#jobs-migration)
@@ -103,12 +103,12 @@ The [corePKCS11](https://github.com/FreeRTOS/corePKCS11) library is an implement
 
 The Cryptoki or PKCS #11 standard defines a platform-independent API to manage and use cryptographic tokens. The name, "PKCS #11", is used interchangeably to refer to the API itself and the standard which defines it.
 
-The PKCS #11 API is useful for writing software without taking a dependency on any particular implementation or hardware. By writing against the PKCS #11 standard interface, code can be used interchangeably with multiple algorithms, implementations and hardware. 
+The PKCS #11 API is useful for writing software without taking a dependency on any particular implementation or hardware. By writing against the PKCS #11 standard interface, code can be used interchangeably with multiple algorithms, implementations and hardware.
 
-Generally vendors for secure cryptoprocessors such as Trusted Platform Module ([TPM](https://en.wikipedia.org/wiki/Trusted_Platform_Module)), Hardware Security Module ([HSM](https://en.wikipedia.org/wiki/Hardware_security_module)), Secure Element, or any other type of secure hardware enclave, distribute a PKCS #11 implementation with the hardware. 
+Generally vendors for secure cryptoprocessors such as Trusted Platform Module ([TPM](https://en.wikipedia.org/wiki/Trusted_Platform_Module)), Hardware Security Module ([HSM](https://en.wikipedia.org/wiki/Hardware_security_module)), Secure Element, or any other type of secure hardware enclave, distribute a PKCS #11 implementation with the hardware.
 The purpose of corePKCS11 mock is therefore to provide a PKCS #11 implementation that allows for rapid prototyping and development before switching to a cryptoprocessor specific PKCS #11 implementation in production devices.
 
-Since the PKCS #11 interface is defined as part of the PKCS #11 [specification](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) replacing corePKCS11 with another implementation 
+Since the PKCS #11 interface is defined as part of the PKCS #11 [specification](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) replacing corePKCS11 with another implementation
 should require little porting effort, as the interface will not change. The system tests distributed in corePKCS11 repository can be leveraged to verify the behavior of a different implementation is similar to corePKCS11.
 
 See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
@@ -226,7 +226,7 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 ## Releases and Documentation
 
-All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
+All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.5](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.5).
 
 ### 202211.00
 [API documentation of 202211.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/index.html)
@@ -241,7 +241,7 @@ Additionally, this release brings in major version upgrades to [coreMQTT](https:
 
 This release introduces the refactored [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library and the new [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library.
 
-Additionally, this release brings minor version updates in the [AWS IoT Over-the-Air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) and [corePKCS11](https://github.com/FreeRTOS/corePKCS11) libraries. 
+Additionally, this release brings minor version updates in the [AWS IoT Over-the-Air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) and [corePKCS11](https://github.com/FreeRTOS/corePKCS11) libraries.
 
 ### 202103.00
 
@@ -271,11 +271,11 @@ This release includes refactored HTTP client, AWS IoT Device Defender, and AWS I
 
 This release includes refactored MQTT, JSON Parser, and AWS IoT Device Shadow libraries for optimized memory usage and modularity. These libraries are included in the SDK via [Git submoduling](https://git-scm.com/book/en/v2/Git-Tools-Submodules). These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score over 8, and checks against deviations from mandatory rules in the [MISRA coding standard](https://www.misra.org.uk). Deviations from the MISRA C:2012 guidelines are documented under [MISRA Deviations](MISRA.md). These libraries have also undergone both static code analysis from [Coverity static analysis](https://scan.coverity.com/), and validation of memory safety and data structure invariance through the [CBMC automated reasoning tool](https://www.cprover.org/cbmc/).
 
-If you are upgrading from v3.x API of the C-SDK to the 202009.00 release, please refer to [Migration guide from v3.1.2 to 202009.00 and newer releases](#migration-guide-from-v312-to-20200900-and-newer-releases). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to maintain this branch for critical bug fixes and security patches but will not add new features to it. See the C-SDK v4_beta_deprecated branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details.
+If you are upgrading from v3.x API of the C-SDK to the 202009.00 release, please refer to [Migration guide from v3.1.5 to 202009.00 and newer releases](#migration-guide-from-v315-to-20200900-and-newer-releases). If you are using the C-SDK v4_beta_deprecated branch, note that we will continue to maintain this branch for critical bug fixes and security patches but will not add new features to it. See the C-SDK v4_beta_deprecated branch [README](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/v4_beta_deprecated/README.md) for additional details.
 
-### v3.1.2
+### v3.1.5
 
-Details available [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
+Details available [here](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.5).
 
 ## Porting Guide for 202009.00 and newer releases
 
@@ -301,7 +301,7 @@ Guide for porting AWS IoT Device Defender library is available [here](https://aw
 
 Guide for porting OTA library to your platform is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
-## Migration guide from v3.1.2 to 202009.00 and newer releases
+## Migration guide from v3.1.5 to 202009.00 and newer releases
 
 ### MQTT Migration
 
@@ -400,12 +400,12 @@ You can pass the following configuration settings as command line options in ord
 ## optionally find your-aws-iot-endpoint from the command line
 aws iot describe-endpoint --endpoint-type iot:Data-ATS
 cmake -S . -Bbuild
--DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" 
+-DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>"
 ```
 
 In order to set these configurations manually, edit `demo_config.h` in `demos/mqtt/mqtt_demo_mutual_auth/` and `demos/http/http_demo_mutual_auth/` to `#define` the following:
 
-* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.<aws-region>.amazonaws.com` where `<aws-region>` can be an AWS region like `us-east-2`.  
+* Set `AWS_IOT_ENDPOINT` to your custom endpoint. This is found on the *Settings* page of the AWS IoT Console and has a format of `ABCDEFG1234567.iot.<aws-region>.amazonaws.com` where `<aws-region>` can be an AWS region like `us-east-2`.
    * Optionally, it can also be found with the AWS CLI command `aws iot describe-endpoint --endpoint-type iot:Data-ATS`.
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
@@ -420,7 +420,7 @@ To build the AWS IoT Device Defender and AWS IoT Device Shadow demos, you can pa
 cmake -S . -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_PATH="<your-path-to-amazon-root-ca>" -DCLIENT_CERT_PATH="<your-client-certificate-path>" -DCLIENT_PRIVATE_KEY_PATH="<your-client-private-key-path>" -DTHING_NAME="<your-registered-thing-name>"
 ```
 
-An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/). 
+An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/).
 
 In order to set these configurations manually, edit `demo_config.h` in the demo folder to `#define` the following:
 
@@ -487,8 +487,8 @@ If the platform does not contain the `libmosquitto` library, the demo will build
 
 `libmosquitto` 1.4.10 or any later version of the first major release is required to run this demo.
 
-2. A job that specifies the URL to download for the demo needs to be created on the AWS account for the Thing resource that will be used by the demo.  
-The job can be created directly from the [AWS IoT console](https://console.aws.amazon.com/iot/home) or using the aws cli tool. 
+2. A job that specifies the URL to download for the demo needs to be created on the AWS account for the Thing resource that will be used by the demo.
+The job can be created directly from the [AWS IoT console](https://console.aws.amazon.com/iot/home) or using the aws cli tool.
 
 The following creates a job that specifies a Linux Kernel link for downloading.
 
@@ -504,7 +504,7 @@ The following creates a job that specifies a Linux Kernel link for downloading.
 For setting up the Greengrass local auth demo, see [the README in the demo folder](./demos/greengrass/greengrass_demo_local_auth/README.md).
 
 #### Prerequisites for the AWS Over-The-Air Update (OTA) demos
-   
+
 1. To perform a successful OTA update, you need to complete the prerequisites mentioned [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html).
 1. A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html).
 
@@ -645,8 +645,8 @@ Any version after 1.6.14 will drop privileges as soon as the configuration file 
     docker run -it -p 8883:8883 -v $(pwd):/mosquitto/config/ --name mosquitto-basic-tls eclipse-mosquitto:1.6.14
     ```
 
-1. Update `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` to the following:  
-   Set `BROKER_ENDPOINT` to `localhost`.  
+1. Update `demos/mqtt/mqtt_demo_basic_tls/demo_config.h` to the following:
+   Set `BROKER_ENDPOINT` to `localhost`.
    Set `ROOT_CA_CERT_PATH` to the absolute path of the CA certificate created in step 4. for the local Mosquitto server.
 
 ##### Installing httpbin to run HTTP demos locally
