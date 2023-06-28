@@ -418,7 +418,7 @@ OtaPalStatus_t otaPal_CreateFileForRx( OtaFileContext_t * const C )
 
     if( C != NULL )
     {
-        if( ( C->pFilePath != NULL ) && ( strlen( ( const char * ) C->pFilePath ) + 1U > OTA_FILE_PATH_LENGTH_MAX ) )
+        if( ( C->pFilePath != NULL ) && ( ( strlen( ( const char * ) C->pFilePath ) + 1U ) > OTA_FILE_PATH_LENGTH_MAX ) )
         {
             LogError( ( "File path exceed length limit." ) );
             result = OTA_PAL_COMBINE_ERR( OtaPalRxFileCreateFailed, 0 );
