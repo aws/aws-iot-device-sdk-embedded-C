@@ -1,5 +1,5 @@
 <map id="ota_appversion32.h" name="ota_appversion32.h">
-<area shape="rect" id="node1" title="Structure to represent the application build version." alt="" coords="5,5,156,32"/>
-<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="5,80,60,107"/>
-<area shape="rect" id="node3" href="$ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT." alt="" coords="84,80,176,107"/>
+<area shape="rect" id="node1" title="Structure to represent the application build version." alt="" coords="5,5,156,31"/>
+<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="5,79,60,104"/>
+<area shape="rect" id="node3" href="$ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT." alt="" coords="84,79,176,104"/>
 </map>

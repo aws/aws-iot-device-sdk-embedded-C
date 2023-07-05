@@ -1,8 +1,8 @@
 <map id="ota_private.h" name="ota_private.h">
-<area shape="rect" id="node1" title="Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo..." alt="" coords="179,5,287,32"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,80,72,107"/>
-<area shape="rect" id="node3" title=" " alt="" coords="97,80,167,107"/>
-<area shape="rect" id="node4" title=" " alt="" coords="192,80,275,107"/>
-<area shape="rect" id="node5" title=" " alt="" coords="299,80,400,107"/>
-<area shape="rect" id="node6" href="$ota__config__defaults_8h.html" title="This represents the default values for the configuration macros for the OTA library." alt="" coords="425,80,586,107"/>
+<area shape="rect" id="node1" title="Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo..." alt="" coords="179,5,287,31"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,79,72,104"/>
+<area shape="rect" id="node3" title=" " alt="" coords="97,79,167,104"/>
+<area shape="rect" id="node4" title=" " alt="" coords="192,79,275,104"/>
+<area shape="rect" id="node5" title=" " alt="" coords="299,79,400,104"/>
+<area shape="rect" id="node6" href="$ota__config__defaults_8h.html" title="This represents the default values for the configuration macros for the OTA library." alt="" coords="425,79,586,104"/>
 </map>

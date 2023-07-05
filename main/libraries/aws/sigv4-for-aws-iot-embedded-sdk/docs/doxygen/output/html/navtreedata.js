@@ -25,10 +25,7 @@
 var NAVTREE =
 [
   [ "SigV4", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#sigv4_memory_requirements", null ],
-      [ "Design", "index.html#sigv4_design", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Configurations", "sigv4_config.html", [
       [ "SIGV4_DO_NOT_USE_CUSTOM_CONFIG", "sigv4_config.html#SIGV4_DO_NOT_USE_CUSTOM_CONFIG", null ],
       [ "LogError", "sigv4_config.html#sigv4_logerror", null ],
@@ -41,14 +38,13 @@ var NAVTREE =
       [ "Configuration Macros", "sigv4_porting.html#sigv4_config_macros", null ],
       [ "Crypto Interface", "sigv4_porting.html#sigv4_porting_cryptointerface", null ]
     ] ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"files.html"
+"group__sigv4__canonical__flags.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

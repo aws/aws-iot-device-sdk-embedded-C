@@ -1,4 +1,4 @@
 <map id="OtaStateTableEntry_t" name="OtaStateTableEntry_t">
-<area shape="rect" id="node1" title="OTA Agent state table entry." alt="" coords="5,95,164,121"/>
-<area shape="rect" id="node2" href="$struct_ota_event_data__t.html" title="The OTA Agent event and data structures." alt="" coords="22,5,147,32"/>
+<area shape="rect" id="node1" title="OTA Agent state table entry." alt="" coords="5,93,164,119"/>
+<area shape="rect" id="node2" href="$struct_ota_event_data__t.html" title="The OTA Agent event and data structures." alt="" coords="22,5,147,31"/>
 </map>

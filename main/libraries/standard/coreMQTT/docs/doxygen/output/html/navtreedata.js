@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "coreMQTT", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#mqtt_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Design", "mqtt_design.html", [
       [ "Interfaces and Callbacks", "mqtt_design.html#mqtt_interfaces", null ],
       [ "Serializers and Deserializers", "mqtt_design.html#mqtt_serializers", null ],
@@ -67,15 +65,13 @@ var NAVTREE =
       [ "Transport Interface Overview", "mqtt_transport_interface.html#mqtt_transport_interface_overview", null ],
       [ "Implementing the Transport Interface", "mqtt_transport_interface.html#mqtt_transport_interface_implementation", null ]
     ] ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"core__mqtt_8c.html",
-"group__mqtt__enum__types.html#gga0480de7552eedd739a26a23fa8e6fd94a5d2ee2709c6dc7a1eb8b9c40f318909b"
+"core_mqtt_config.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

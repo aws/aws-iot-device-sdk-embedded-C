@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "AWS IoT Device Defender", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#defender_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Design", "defender_design.html", null ],
     [ "Configurations", "defender_config.html", [
       [ "DEFENDER_DO_NOT_USE_CUSTOM_CONFIG", "defender_config.html#DEFENDER_DO_NOT_USE_CUSTOM_CONFIG", null ],
@@ -41,14 +39,13 @@ var NAVTREE =
     [ "Porting Guide", "defender_porting.html", [
       [ "Configuration Macros", "defender_porting.html#defender_porting_config", null ]
     ] ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"defender_8c.html"
+"defender_config.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

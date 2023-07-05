@@ -1,7 +1,7 @@
 var searchData=
 [
   ['base64_5findex_5fvalue_5fupper_5fbound_0',['BASE64_INDEX_VALUE_UPPER_BOUND',['../ota__base64_8c.html#aeaa249d3e7a39f2bf639d5a3a676f27b',1,'ota_base64.c']]],
-  ['base64decode_1',['base64Decode',['../ota__base64__private_8h.html#a94a9217b253f00b4c3e22132ef564393',1,'base64Decode(uint8_t *pDest, const size_t destLen, size_t *pResultLen, const uint8_t *pEncodedData, const size_t encodedLen):&#160;ota_base64.c'],['../ota__base64_8c.html#a94a9217b253f00b4c3e22132ef564393',1,'base64Decode(uint8_t *pDest, const size_t destLen, size_t *pResultLen, const uint8_t *pEncodedData, const size_t encodedLen):&#160;ota_base64.c']]],
+  ['base64decode_1',['base64Decode',['../ota__base64_8c.html#a94a9217b253f00b4c3e22132ef564393',1,'base64Decode(uint8_t *pDest, const size_t destLen, size_t *pResultLen, const uint8_t *pEncodedData, const size_t encodedLen):&#160;ota_base64.c'],['../ota__base64__private_8h.html#a94a9217b253f00b4c3e22132ef564393',1,'base64Decode(uint8_t *pDest, const size_t destLen, size_t *pResultLen, const uint8_t *pEncodedData, const size_t encodedLen):&#160;ota_base64.c']]],
   ['base64invalidbuffersize_2',['Base64InvalidBufferSize',['../ota__base64__private_8h.html#ad654d9148176cc1d7b054228c54bfca3af0372a809f58979a3cd2481b3b346ae5',1,'ota_base64_private.h']]],
   ['base64invalidinputsize_3',['Base64InvalidInputSize',['../ota__base64__private_8h.html#ad654d9148176cc1d7b054228c54bfca3a41dd573653f68e8a80cd68926f5e2fb9',1,'ota_base64_private.h']]],
   ['base64invalidpaddingsymbol_4',['Base64InvalidPaddingSymbol',['../ota__base64__private_8h.html#ad654d9148176cc1d7b054228c54bfca3a72a37beaf5de6649ed412996f9912722',1,'ota_base64_private.h']]],

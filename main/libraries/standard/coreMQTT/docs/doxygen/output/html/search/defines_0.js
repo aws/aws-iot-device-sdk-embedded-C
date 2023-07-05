@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['logdebug_0',['LogDebug',['../core__mqtt__default__logging_8h.html#af60e8ffc327d136e5d0d8441ed98c98d',1,'core_mqtt_default_logging.h']]],
-  ['logerror_1',['LogError',['../core__mqtt__default__logging_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1',1,'core_mqtt_default_logging.h']]],
-  ['loginfo_2',['LogInfo',['../core__mqtt__default__logging_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba',1,'core_mqtt_default_logging.h']]],
-  ['logwarn_3',['LogWarn',['../core__mqtt__default__logging_8h.html#a7da92048aaf0cbfcacde9539c98a0e05',1,'core_mqtt_default_logging.h']]]
+  ['core_5fmqtt_5fserialized_5flength_5ffield_5fbytes_0',['CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES',['../core__mqtt_8c.html#a989426922a1f5f04ea8b612fd1f4b185',1,'core_mqtt.c']]],
+  ['core_5fmqtt_5fsubscribe_5fper_5ftopic_5fvector_5flength_1',['CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH',['../core__mqtt_8c.html#a97f180c9cc32ca9e354e7c22378a386b',1,'core_mqtt.c']]],
+  ['core_5fmqtt_5funsubscribe_5fper_5ftopic_5fvector_5flength_2',['CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH',['../core__mqtt_8c.html#a42477ec456354f2b944b47646ee5a9ce',1,'core_mqtt.c']]]
 ];

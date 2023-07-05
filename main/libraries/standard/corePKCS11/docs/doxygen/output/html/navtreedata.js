@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "corePKCS11", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#pkcs11_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Design", "pkcs11_design.html", [
       [ "Dependencies of the corePKCS11 Wrapper for the PKCS #11 standard", "pkcs11_design.html#PKCS11_Wrapper", null ],
       [ "corePKCS11 Software Implementation Dependencies", "pkcs11_design.html#PKCS11_implementation", null ],
@@ -61,15 +59,13 @@ var NAVTREE =
     [ "PKCS #11 Wrapper Functions", "pkcs11_core_wrapper_function.html", "pkcs11_core_wrapper_function" ],
     [ "PKCS #11 PAL Functions", "pkcs11_core_pal_function.html", "pkcs11_core_pal_function" ],
     [ "PKCS #11 Utils Functions", "pkcs11_core_utils_function.html", "pkcs11_core_utils_function" ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"core__pkcs11_8c.html",
-"pkcs11_rng_seq.html"
+"group__pkcs11__datatypes.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

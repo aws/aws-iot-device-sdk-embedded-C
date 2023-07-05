@@ -16,8 +16,11 @@ var searchData=
   ['core_5fmqtt_2eh_13',['core_mqtt.h',['../core__mqtt_8h.html',1,'']]],
   ['core_5fmqtt_5fconfig_5fdefaults_2eh_14',['core_mqtt_config_defaults.h',['../core__mqtt__config__defaults_8h.html',1,'']]],
   ['core_5fmqtt_5fdefault_5flogging_2eh_15',['core_mqtt_default_logging.h',['../core__mqtt__default__logging_8h.html',1,'']]],
-  ['core_5fmqtt_5fserializer_2ec_16',['core_mqtt_serializer.c',['../core__mqtt__serializer_8c.html',1,'']]],
-  ['core_5fmqtt_5fserializer_2eh_17',['core_mqtt_serializer.h',['../core__mqtt__serializer_8h.html',1,'']]],
-  ['core_5fmqtt_5fstate_2ec_18',['core_mqtt_state.c',['../core__mqtt__state_8c.html',1,'']]],
-  ['core_5fmqtt_5fstate_2eh_19',['core_mqtt_state.h',['../core__mqtt__state_8h.html',1,'']]]
+  ['core_5fmqtt_5fserialized_5flength_5ffield_5fbytes_16',['CORE_MQTT_SERIALIZED_LENGTH_FIELD_BYTES',['../core__mqtt_8c.html#a989426922a1f5f04ea8b612fd1f4b185',1,'core_mqtt.c']]],
+  ['core_5fmqtt_5fserializer_2ec_17',['core_mqtt_serializer.c',['../core__mqtt__serializer_8c.html',1,'']]],
+  ['core_5fmqtt_5fserializer_2eh_18',['core_mqtt_serializer.h',['../core__mqtt__serializer_8h.html',1,'']]],
+  ['core_5fmqtt_5fstate_2ec_19',['core_mqtt_state.c',['../core__mqtt__state_8c.html',1,'']]],
+  ['core_5fmqtt_5fstate_2eh_20',['core_mqtt_state.h',['../core__mqtt__state_8h.html',1,'']]],
+  ['core_5fmqtt_5fsubscribe_5fper_5ftopic_5fvector_5flength_21',['CORE_MQTT_SUBSCRIBE_PER_TOPIC_VECTOR_LENGTH',['../core__mqtt_8c.html#a97f180c9cc32ca9e354e7c22378a386b',1,'core_mqtt.c']]],
+  ['core_5fmqtt_5funsubscribe_5fper_5ftopic_5fvector_5flength_22',['CORE_MQTT_UNSUBSCRIBE_PER_TOPIC_VECTOR_LENGTH',['../core__mqtt_8c.html#a42477ec456354f2b944b47646ee5a9ce',1,'core_mqtt.c']]]
 ];

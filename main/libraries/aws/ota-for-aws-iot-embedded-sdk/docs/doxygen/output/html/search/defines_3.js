@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['logdebug_0',['LogDebug',['../ota__config__defaults_8h.html#af60e8ffc327d136e5d0d8441ed98c98d',1,'ota_config_defaults.h']]],
-  ['logerror_1',['LogError',['../ota__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1',1,'ota_config_defaults.h']]],
-  ['loginfo_2',['LogInfo',['../ota__config__defaults_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba',1,'ota_config_defaults.h']]],
-  ['logwarn_3',['LogWarn',['../ota__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05',1,'ota_config_defaults.h']]]
+  ['job_5fname_5fmax_5flen_0',['JOB_NAME_MAX_LEN',['../ota__mqtt_8c.html#a06950b4fe27f046b19b36a94b6c8b759',1,'ota_mqtt.c']]],
+  ['jobs_5fapi_5fstatus_5ffailed_1',['JOBS_API_STATUS_FAILED',['../ota__mqtt_8c.html#a593d7e0360443075b28b79abdf8365f7',1,'ota_mqtt.c']]],
+  ['jobs_5fapi_5fstatus_5fin_5fprogress_2',['JOBS_API_STATUS_IN_PROGRESS',['../ota__mqtt_8c.html#a33538872ddc4e588809f5e3589b1ca80',1,'ota_mqtt.c']]],
+  ['jobs_5fapi_5fstatus_5frejected_3',['JOBS_API_STATUS_REJECTED',['../ota__mqtt_8c.html#aa856801466e59ece1094805a5664d80d',1,'ota_mqtt.c']]],
+  ['jobs_5fapi_5fstatus_5fsucceeded_4',['JOBS_API_STATUS_SUCCEEDED',['../ota__mqtt_8c.html#a4e66ea77d83acb7c0de30cb628bafdb8',1,'ota_mqtt.c']]]
 ];

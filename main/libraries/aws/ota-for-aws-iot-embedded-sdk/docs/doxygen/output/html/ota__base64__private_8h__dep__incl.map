@@ -1,5 +1,5 @@
 <map id="ota_base64_private.h" name="ota_base64_private.h">
-<area shape="rect" id="node1" title="Function declarations and error codes for ota_base64.c." alt="" coords="5,5,168,32"/>
-<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="7,80,62,107"/>
-<area shape="rect" id="node3" href="$ota__base64_8c.html" title="Implements a Base64 decoding routine." alt="" coords="86,80,194,107"/>
+<area shape="rect" id="node1" title="Function declarations and error codes for ota_base64.c." alt="" coords="5,5,168,31"/>
+<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="7,79,62,104"/>
+<area shape="rect" id="node3" href="$ota__base64_8c.html" title="Implements a Base64 decoding routine." alt="" coords="86,79,194,104"/>
 </map>

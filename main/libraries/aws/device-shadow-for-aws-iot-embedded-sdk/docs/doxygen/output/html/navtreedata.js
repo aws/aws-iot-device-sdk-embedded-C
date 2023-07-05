@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "AWS IoT Device Shadow", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#shadow_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Design", "shadow_design.html", null ],
     [ "Configurations", "shadow_config.html", [
       [ "SHADOW_DO_NOT_USE_CUSTOM_CONFIG", "shadow_config.html#SHADOW_DO_NOT_USE_CUSTOM_CONFIG", null ],
@@ -41,8 +39,7 @@ var NAVTREE =
       [ "Configuration Macros", "shadow_porting.html#shadow_porting_config", null ]
     ] ],
     [ "Deprecated List", "deprecated.html", null ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 

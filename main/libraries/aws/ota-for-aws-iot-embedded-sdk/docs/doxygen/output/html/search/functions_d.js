@@ -1,8 +1,8 @@
 var searchData=
 [
   ['searchtransition_0',['searchTransition',['../ota_8c.html#af9ce02cafbc0554480802b965bc3ee0c',1,'ota.c']]],
-  ['setcontrolinterface_1',['setControlInterface',['../ota__interface__private_8h.html#a9466ce63c950d5f52cfdc22e3d5da719',1,'setControlInterface(OtaControlInterface_t *pControlInterface):&#160;ota_interface.c'],['../ota__interface_8c.html#a9466ce63c950d5f52cfdc22e3d5da719',1,'setControlInterface(OtaControlInterface_t *pControlInterface):&#160;ota_interface.c']]],
-  ['setdatainterface_2',['setDataInterface',['../ota__interface__private_8h.html#a4a9279d8f03ad25704095d86160b6fd2',1,'setDataInterface(OtaDataInterface_t *pDataInterface, const uint8_t *pProtocol):&#160;ota_interface.c'],['../ota__interface_8c.html#a4a9279d8f03ad25704095d86160b6fd2',1,'setDataInterface(OtaDataInterface_t *pDataInterface, const uint8_t *pProtocol):&#160;ota_interface.c']]],
+  ['setcontrolinterface_1',['setControlInterface',['../ota__interface_8c.html#a9466ce63c950d5f52cfdc22e3d5da719',1,'setControlInterface(OtaControlInterface_t *pControlInterface):&#160;ota_interface.c'],['../ota__interface__private_8h.html#a9466ce63c950d5f52cfdc22e3d5da719',1,'setControlInterface(OtaControlInterface_t *pControlInterface):&#160;ota_interface.c']]],
+  ['setdatainterface_2',['setDataInterface',['../ota__interface_8c.html#a4a9279d8f03ad25704095d86160b6fd2',1,'setDataInterface(OtaDataInterface_t *pDataInterface, const uint8_t *pProtocol):&#160;ota_interface.c'],['../ota__interface__private_8h.html#a4a9279d8f03ad25704095d86160b6fd2',1,'setDataInterface(OtaDataInterface_t *pDataInterface, const uint8_t *pProtocol):&#160;ota_interface.c']]],
   ['setimagestatewithreason_3',['setImageStateWithReason',['../ota_8c.html#a1bafe150ea1ae18a214ff1387906c03b',1,'ota.c']]],
   ['shutdownhandler_4',['shutdownHandler',['../ota_8c.html#adc27b49696f1562fd90a031d9d59c129',1,'ota.c']]],
   ['starthandler_5',['startHandler',['../ota_8c.html#adc05572b247887937398695a7ae22428',1,'ota.c']]],

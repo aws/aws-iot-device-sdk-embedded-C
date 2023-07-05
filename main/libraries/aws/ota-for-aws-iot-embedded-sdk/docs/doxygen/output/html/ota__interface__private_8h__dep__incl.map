@@ -1,5 +1,5 @@
 <map id="ota_interface_private.h" name="ota_interface_private.h">
-<area shape="rect" id="node1" title="Contains function definitions and structures for data and control interfaces." alt="" coords="5,5,179,32"/>
-<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="10,80,65,107"/>
-<area shape="rect" id="node3" href="$ota__interface_8c.html" title="Internal interface for setting the data and control planes." alt="" coords="89,80,207,107"/>
+<area shape="rect" id="node1" title="Contains function definitions and structures for data and control interfaces." alt="" coords="5,5,179,31"/>
+<area shape="rect" id="node2" href="$ota_8c.html" title="Implementation of the AWS IoT Over&#45;The&#45;Air Updates Client Library." alt="" coords="10,79,65,104"/>
+<area shape="rect" id="node3" href="$ota__interface_8c.html" title="Internal interface for setting the data and control planes." alt="" coords="89,79,207,104"/>
 </map>

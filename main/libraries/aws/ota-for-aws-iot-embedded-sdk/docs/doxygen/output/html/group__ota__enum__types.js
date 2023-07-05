@@ -24,7 +24,8 @@ var group__ota__enum__types =
       [ "OtaErrFailedToEncodeCbor", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dad57de41d65cd3bd5de28228883e83084", null ],
       [ "OtaErrFailedToDecodeCbor", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da7fa31caf9e7a68df47ddbdb657f7f35d", null ],
       [ "OtaErrActivateFailed", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2daf5d3845d8b68e0c91cff60d2a38a2678", null ],
-      [ "OtaErrFileSizeOverflow", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914", null ]
+      [ "OtaErrFileSizeOverflow", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2da124b86050f54ae91942e693de587b914", null ],
+      [ "OtaErrEmptyJobDocument", "group__ota__enum__types.html#gga7ab3c74dc057383c56c6cb9aa6bf0b2dad509d2bda46fe24c83794db66e7ef8f4", null ]
     ] ],
     [ "OtaState_t", "group__ota__enum__types.html#ga1cb476a5e0ee81fa486f605e64419dcc", null ],
     [ "OtaJobParseErr_t", "group__ota__enum__types.html#gab8e370b46d0ae5d51879710d533a7314", null ],

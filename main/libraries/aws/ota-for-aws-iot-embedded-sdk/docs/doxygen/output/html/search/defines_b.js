@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['valid_5fbase64_5fsymbol_5findex_5frange_5fmax_0',['VALID_BASE64_SYMBOL_INDEX_RANGE_MAX',['../ota__base64_8c.html#a6d12699999e54d62368510009f299a06',1,'ota_base64.c']]]
+  ['u16_5foffset_0',['U16_OFFSET',['../ota_8c.html#a4342d17740cc60072d01f1bc9790bffa',1,'ota.c']]],
+  ['u32_5fmax_5flen_1',['U32_MAX_LEN',['../ota__mqtt_8c.html#a25ffab2259b4cc083e3c63f26d4f1f3b',1,'ota_mqtt.c']]]
 ];

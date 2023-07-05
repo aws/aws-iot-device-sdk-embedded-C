@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "coreHTTP", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#http_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Design", "http_design.html", [
       [ "Transport Interface", "http_design.html#http_transport_interface_blurb", null ],
       [ "Building an HTTP Request", "http_design.html#http_request_serialization", null ],
@@ -55,14 +53,13 @@ var NAVTREE =
       [ "Transport Interface Overview", "http_transport_interface.html#http_transport_interface_overview", null ],
       [ "Implementing the Transport Interface", "http_transport_interface.html#http_transport_interface_implementation", null ]
     ] ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"core__http__client_8c.html"
+"group__http__basic__types.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

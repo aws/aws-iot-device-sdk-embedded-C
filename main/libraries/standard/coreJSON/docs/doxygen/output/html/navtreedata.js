@@ -25,19 +25,15 @@
 var NAVTREE =
 [
   [ "coreJSON", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#json_memory_requirements", null ],
-      [ "Design", "index.html#json_design", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Functions", "json_functions.html", "json_functions" ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"core__json_8c.html"
+"group__json__enum__types.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

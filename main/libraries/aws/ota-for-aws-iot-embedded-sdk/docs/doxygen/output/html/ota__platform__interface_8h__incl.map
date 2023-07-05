@@ -1,9 +1,9 @@
 <map id="ota_platform_interface.h" name="ota_platform_interface.h">
-<area shape="rect" id="node1" title="Contains PAL interface statuses, type definitions and structure to store interface routines." alt="" coords="142,5,325,32"/>
-<area shape="rect" id="node2" href="$ota__private_8h.html" title="Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo..." alt="" coords="179,80,287,107"/>
-<area shape="rect" id="node3" title=" " alt="" coords="5,155,72,181"/>
-<area shape="rect" id="node4" title=" " alt="" coords="97,155,167,181"/>
-<area shape="rect" id="node5" title=" " alt="" coords="192,155,275,181"/>
-<area shape="rect" id="node6" title=" " alt="" coords="299,155,400,181"/>
-<area shape="rect" id="node7" href="$ota__config__defaults_8h.html" title="This represents the default values for the configuration macros for the OTA library." alt="" coords="425,155,586,181"/>
+<area shape="rect" id="node1" title="Contains PAL interface statuses, type definitions and structure to store interface routines." alt="" coords="142,5,325,31"/>
+<area shape="rect" id="node2" href="$ota__private_8h.html" title="Macros, enums, variables, and definitions internal to the OTA Agent module and shared by other OTA mo..." alt="" coords="179,79,287,104"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,152,72,177"/>
+<area shape="rect" id="node4" title=" " alt="" coords="97,152,167,177"/>
+<area shape="rect" id="node5" title=" " alt="" coords="192,152,275,177"/>
+<area shape="rect" id="node6" title=" " alt="" coords="299,152,400,177"/>
+<area shape="rect" id="node7" href="$ota__config__defaults_8h.html" title="This represents the default values for the configuration macros for the OTA library." alt="" coords="425,152,586,177"/>
 </map>

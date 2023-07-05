@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "AWS IoT Fleet Provisioning", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#fleet_provisioning_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Design", "fleet_provisioning_design.html", null ],
     [ "Configurations", "fleet_provisioning_config.html", [
       [ "FLEET_PROVISIONING_DO_NOT_USE_CUSTOM_CONFIG", "fleet_provisioning_config.html#FLEET_PROVISIONING_DO_NOT_USE_CUSTOM_CONFIG", null ],
@@ -40,14 +38,13 @@ var NAVTREE =
     [ "Porting Guide", "fleet_provisioning_porting.html", [
       [ "Configuration Macros", "fleet_provisioning_porting.html#fleet_provisioning_porting_config", null ]
     ] ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"files.html"
+"fleet_provisioning_config.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

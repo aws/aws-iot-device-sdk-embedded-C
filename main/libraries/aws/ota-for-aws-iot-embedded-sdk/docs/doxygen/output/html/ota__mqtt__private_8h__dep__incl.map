@@ -1,4 +1,4 @@
 <map id="ota_mqtt_private.h" name="ota_mqtt_private.h">
-<area shape="rect" id="node1" title="Contains function definitions of routines for OTA download and control using MQTT data plane." alt="" coords="5,5,152,32"/>
-<area shape="rect" id="node2" href="$ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT." alt="" coords="33,80,125,107"/>
+<area shape="rect" id="node1" title="Contains function definitions of routines for OTA download and control using MQTT data plane." alt="" coords="5,5,152,31"/>
+<area shape="rect" id="node2" href="$ota__mqtt_8c.html" title="Routines for supporting over the air updates using MQTT." alt="" coords="33,79,125,104"/>
 </map>

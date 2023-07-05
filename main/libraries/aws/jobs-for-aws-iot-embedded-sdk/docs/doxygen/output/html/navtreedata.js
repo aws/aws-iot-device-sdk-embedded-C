@@ -25,23 +25,20 @@
 var NAVTREE =
 [
   [ "AWS IoT Jobs", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#jobs_memory_requirements", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Features", "jobs_features.html", null ],
     [ "Configurations", "jobs_config.html", [
       [ "THINGNAME_MAX_LENGTH", "jobs_config.html#THINGNAME_MAX_LENGTH", null ],
       [ "JOBID_MAX_LENGTH", "jobs_config.html#JOBID_MAX_LENGTH", null ]
     ] ],
     [ "Functions", "jobs_functions.html", "jobs_functions" ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"files.html"
+"group__jobs__constants.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -25,9 +25,7 @@
 var NAVTREE =
 [
   [ "AWS IoT Device SDK C", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Libraries", "index.html#libraries_section", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Building and Running Demos", "building.html", [
       [ "Prerequisites", "building.html#build_prerequisites", null ],
       [ "AWS IoT Account Setup", "building.html#aws_iot_setup", null ],
@@ -51,14 +49,13 @@ var NAVTREE =
         [ "Installing Docker Containers for Demos", "building.html#docker_containers_for_demos", null ]
       ] ]
     ] ],
-    [ "Demos", "demos_main.html", "demos_main" ],
-    [ "Developer's Guide", "guide_developer.html", "guide_developer" ],
     [ "Logging Infrastructure", "logging.html", [
       [ "Design Architecture", "logging.html#design", null ],
       [ "Reference Implementation", "logging.html#reference_implementation", null ]
     ] ],
+    [ "Demos", "demos_main.html", "demos_main" ],
     [ "Migration Guide", "migration_guide.html", "migration_guide" ],
-    [ "Utility Files", "files.html", "files" ]
+    [ "Developer's Guide", "guide_developer.html", "guide_developer" ]
   ] ]
 ];
 

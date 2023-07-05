@@ -25,20 +25,16 @@
 var NAVTREE =
 [
   [ "backoffAlgorithm", "index.html", [
-    [ "Overview", "index.html", [
-      [ "Memory Requirements", "index.html#backoff_algorithm_memory_requirements", null ],
-      [ "Design", "index.html#backoff_algorithm_design", null ]
-    ] ],
+    [ "Overview", "index.html", "index" ],
     [ "Code Example for backoffAlgorithm API", "backoff_algorithm_example.html", null ],
     [ "Functions", "backoff_algorithm_functions.html", "backoff_algorithm_functions" ],
-    [ "Data types and Constants", "modules.html", "modules" ],
-    [ "Files", "files.html", "files" ]
+    [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-"backoff__algorithm_8c.html"
+"backoff_algorithm_example.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
