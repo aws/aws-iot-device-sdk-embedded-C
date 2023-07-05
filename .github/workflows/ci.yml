@@ -222,19 +222,19 @@ jobs:
             exit 0
           fi
   doxygen:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - name: Install Doxygen
         run: |
-          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.2/doxygen-1.9.2.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
-          sudo apt-get install -y libclang-9-dev libclang-cpp9 graphviz
+          wget -qO- "https://sourceforge.net/projects/doxygen/files/rel-1.9.6/doxygen-1.9.6.linux.bin.tar.gz/download" | sudo tar --strip-components=1 -xz -C /usr/local
+          sudo apt-get install -y libclang-11-dev libclang-cpp11 graphviz
       - name: Install Python3
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7.10'
+          python-version: '3.11.0'
       - name: Generate doxygen output
         run: |
           if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then

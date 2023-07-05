@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   doxygen-generation:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Doxygen generation
         uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
