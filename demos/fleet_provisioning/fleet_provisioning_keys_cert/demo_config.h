@@ -181,7 +181,7 @@
  * hold the GetCertificateFromCsr response, which, among other things, includes
  * a PEM encoded certificate.
  */
-#define NETWORK_BUFFER_SIZE       ( 2048U )
+#define NETWORK_BUFFER_SIZE       ( 4096U )
 
 /**
  * @brief The name of the operating system that the application is running on.
