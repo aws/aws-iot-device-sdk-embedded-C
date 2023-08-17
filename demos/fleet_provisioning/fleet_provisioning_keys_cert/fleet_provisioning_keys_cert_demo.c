@@ -247,7 +247,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
     }
     else
     {
-        if( api == FleetProvCborCreateCertFromCsrAccepted )
+        if( api == FleetProvCborCreateKeysAndCertAccepted )
         {
             LogInfo( ( "Received accepted response from Fleet Provisioning CreateKeysAndCertificate API." ) );
 
@@ -264,7 +264,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
             payloadLength = pPublishInfo->payloadLength;
         }
-        else if( api == FleetProvCborCreateCertFromCsrRejected )
+        else if( api == FleetProvCborCreateKeysAndCertRejected )
         {
             LogError( ( "Received rejected response from Fleet Provisioning CreateKeysAndCertificate API." ) );
 
