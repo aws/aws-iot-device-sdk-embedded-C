@@ -56,30 +56,6 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
                            const char * pClaimPrivKeyLabel );
 
 /**
- * @brief Generate a new public-private key pair in the PKCS #11 module, and
- * generate a certificate signing request (CSR) for them.
- *
- * This device-generated private key and CSR can be used with the
- * CreateCertificateFromCsr API of the the Fleet Provisioning feature of AWS IoT
- * Core in order to provision a unique client certificate.
- *
- * @param[in] p11Session The PKCS #11 session to use.
- * @param[in] pPrivKeyLabel PKCS #11 label for the private key.
- * @param[in] pPubKeyLabel PKCS #11 label for the public key.
- * @param[out] pCsrBuffer The buffer to write the CSR to.
- * @param[in] csrBufferLength Length of #pCsrBuffer.
- * @param[out] pOutCsrLength The length of the written CSR.
- *
- * @return True on success.
- */
-bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
-                        const char * pPrivKeyLabel,
-                        const char * pPubKeyLabel,
-                        char * pCsrBuffer,
-                        size_t csrBufferLength,
-                        size_t * pOutCsrLength );
-
-/**
  * @brief Save the device client certificate into the PKCS #11 module.
  *
  * @param[in] p11Session The PKCS #11 session to use.

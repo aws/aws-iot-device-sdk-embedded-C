@@ -39,10 +39,10 @@
  * Provisioning is an AWS IoT Core feature.
  *
  * This demo provisions a device certificate using the provisioning by claim
- * workflow with a Certificate Signing Request (CSR). The demo connects to AWS
+ * workflow with a Keys and Certificate Request. The demo connects to AWS
  * IoT Core using provided claim credentials (whose certificate needs to be
  * registered with IoT Core before running this demo), subscribes to the
- * CreateCertificateFromCsr topics, and obtains a certificate. It then
+ * CreateKeysAndCertificate topics, and obtains keys and certificate. It then
  * subscribes to the RegisterThing topics and activates the certificate and
  * obtains a Thing using the provisioning template. Finally, it reconnects to
  * AWS IoT Core using the new credentials.
@@ -126,7 +126,7 @@
 /**
  * @brief Size of buffer in which to hold the certificate signing request (CSR).
  */
-#define CSR_BUFFER_LENGTH                              2048
+#define PRIV_KEY_BUFFER_LENGTH                         2048
 
 /**
  * @brief Size of buffer in which to hold the certificate.
@@ -189,7 +189,7 @@ static size_t payloadLength;
 
 /**
  * @brief Callback to receive the incoming publish messages from the MQTT
- * broker. Sets responseStatus if an expected CreateCertificateFromCsr or
+ * broker. Sets responseStatus if an expected CreateKeysAndCertificate or
  * RegisterThing response is received, and copies the response into
  * responseBuffer if the response is an accepted one.
  *
@@ -205,14 +205,14 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 static bool waitForResponse( void );
 
 /**
- * @brief Subscribe to the CreateCertificateFromCsr accepted and rejected topics.
+ * @brief Subscribe to the CreateKeysAndCertificate accepted and rejected topics.
  */
-static bool subscribeToCsrResponseTopics( void );
+static bool subscribeToKeysCertResponseTopics( void );
 
 /**
- * @brief Unsubscribe from the CreateCertificateFromCsr accepted and rejected topics.
+ * @brief Unsubscribe from the CreateKeysAndCertificate accepted and rejected topics.
  */
-static bool unsubscribeFromCsrResponseTopics( void );
+static bool unsubscribeFromKeysCertResponseTopics( void );
 
 /**
  * @brief Subscribe to the RegisterThing accepted and rejected topics.
@@ -249,7 +249,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
     {
         if( api == FleetProvCborCreateCertFromCsrAccepted )
         {
-            LogInfo( ( "Received accepted response from Fleet Provisioning CreateCertificateFromCsr API." ) );
+            LogInfo( ( "Received accepted response from Fleet Provisioning CreateKeysAndCertificate API." ) );
 
             cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
             LogDebug( ( "Payload: %s", cborDump ) );
@@ -266,7 +266,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         }
         else if( api == FleetProvCborCreateCertFromCsrRejected )
         {
-            LogError( ( "Received rejected response from Fleet Provisioning CreateCertificateFromCsr API." ) );
+            LogError( ( "Received rejected response from Fleet Provisioning CreateKeysAndCertificate API." ) );
 
             cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
             LogError( ( "Payload: %s", cborDump ) );
@@ -334,30 +334,30 @@ static bool waitForResponse( void )
 }
 /*-----------------------------------------------------------*/
 
-static bool subscribeToCsrResponseTopics( void )
+static bool subscribeToKeysCertResponseTopics( void )
 {
     bool status;
 
-    status = SubscribeToTopic( FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC,
-                               FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH );
+    status = SubscribeToTopic( FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC,
+                               FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH );
 
     if( status == false )
     {
         LogError( ( "Failed to subscribe to fleet provisioning topic: %.*s.",
-                    FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH,
-                    FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC ) );
+                    FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH,
+                    FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC ) );
     }
 
     if( status == true )
     {
-        status = SubscribeToTopic( FP_CBOR_CREATE_CERT_REJECTED_TOPIC,
-                                   FP_CBOR_CREATE_CERT_REJECTED_LENGTH );
+        status = SubscribeToTopic( FP_CBOR_CREATE_KEYS_REJECTED_TOPIC,
+                                   FP_CBOR_CREATE_KEYS_REJECTED_LENGTH );
 
         if( status == false )
         {
             LogError( ( "Failed to subscribe to fleet provisioning topic: %.*s.",
-                        FP_CBOR_CREATE_CERT_REJECTED_LENGTH,
-                        FP_CBOR_CREATE_CERT_REJECTED_TOPIC ) );
+                        FP_CBOR_CREATE_KEYS_REJECTED_LENGTH,
+                        FP_CBOR_CREATE_KEYS_REJECTED_TOPIC ) );
         }
     }
 
@@ -365,30 +365,30 @@ static bool subscribeToCsrResponseTopics( void )
 }
 /*-----------------------------------------------------------*/
 
-static bool unsubscribeFromCsrResponseTopics( void )
+static bool unsubscribeFromKeysCertResponseTopics( void )
 {
     bool status;
 
-    status = UnsubscribeFromTopic( FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC,
-                                   FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH );
+    status = UnsubscribeFromTopic( FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC,
+                                   FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH );
 
     if( status == false )
     {
         LogError( ( "Failed to unsubscribe from fleet provisioning topic: %.*s.",
-                    FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH,
-                    FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC ) );
+                    FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH,
+                    FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC ) );
     }
 
     if( status == true )
     {
-        status = UnsubscribeFromTopic( FP_CBOR_CREATE_CERT_REJECTED_TOPIC,
-                                       FP_CBOR_CREATE_CERT_REJECTED_LENGTH );
+        status = UnsubscribeFromTopic( FP_CBOR_CREATE_KEYS_REJECTED_TOPIC,
+                                       FP_CBOR_CREATE_KEYS_REJECTED_LENGTH );
 
         if( status == false )
         {
             LogError( ( "Failed to unsubscribe from fleet provisioning topic: %.*s.",
-                        FP_CBOR_CREATE_CERT_REJECTED_LENGTH,
-                        FP_CBOR_CREATE_CERT_REJECTED_TOPIC ) );
+                        FP_CBOR_CREATE_KEYS_REJECTED_LENGTH,
+                        FP_CBOR_CREATE_KEYS_REJECTED_TOPIC ) );
         }
     }
 
@@ -466,12 +466,12 @@ int main( int argc,
           char ** argv )
 {
     bool status = false;
-    /* Buffer for holding the CSR. */
-    char csr[ CSR_BUFFER_LENGTH ] = { 0 };
-    size_t csrLength = 0;
     /* Buffer for holding received certificate until it is saved. */
     char certificate[ CERT_BUFFER_LENGTH ];
     size_t certificateLength;
+    /* Buffer for holding received private key until it is saved. */
+    char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
+    size_t privatekeyLength;
     /* Buffer for holding the certificate ID. */
     char certificateId[ CERT_ID_BUFFER_LENGTH ];
     size_t certificateIdLength;
@@ -491,6 +491,7 @@ int main( int argc,
     {
         /* Initialize the buffer lengths to their max lengths. */
         certificateLength = CERT_BUFFER_LENGTH;
+        privatekeyLength = PRIV_KEY_BUFFER_LENGTH;
         certificateIdLength = CERT_ID_BUFFER_LENGTH;
         ownershipTokenLength = OWNERSHIP_TOKEN_BUFFER_LENGTH;
 
@@ -522,7 +523,7 @@ int main( int argc,
         /* We first use the claim credentials to connect to the broker. These
          * credentials should allow use of the RegisterThing API and one of the
          * CreateCertificatefromCsr or CreateKeysAndCertificate.
-         * In this demo we use CreateCertificatefromCsr. */
+         * In this demo we use CreateKeysAndCertificate. */
 
         if( status == true )
         {
@@ -546,60 +547,37 @@ int main( int argc,
             }
         }
 
-        /**** Call the CreateCertificateFromCsr API ***************************/
+        /**** Call the CreateKeysAndCertificate API ***************************/
 
-        /* We use the CreateCertificatefromCsr API to obtain a client certificate
-         * for a key on the device by means of sending a certificate signing
-         * request (CSR). */
+        /* We use the CreateKeysAndCertificate API to obtain a client certificate
+         * and private key. */
         if( status == true )
         {
-            /* Subscribe to the CreateCertificateFromCsr accepted and rejected
+            /* Subscribe to the CreateKeysAndCertificate accepted and rejected
              * topics. In this demo we use CBOR encoding for the payloads,
              * so we use the CBOR variants of the topics. */
-            status = subscribeToCsrResponseTopics();
+            status = subscribeToKeysCertResponseTopics();
         }
 
         if( status == true )
         {
-            /* Create a new key and CSR. */
-            status = generateKeyAndCsr( p11Session,
-                                        pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                        pkcs11configLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                        csr,
-                                        CSR_BUFFER_LENGTH,
-                                        &csrLength );
-        }
-
-        if( status == true )
-        {
-            /* Create the request payload containing the CSR to publish to the
-             * CreateCertificateFromCsr APIs. */
-            status = generateCsrRequest( payloadBuffer,
-                                         NETWORK_BUFFER_SIZE,
-                                         csr,
-                                         csrLength,
-                                         &payloadLength );
-        }
-
-        if( status == true )
-        {
-            /* Publish the CSR to the CreateCertificatefromCsr API. */
-            status = PublishToTopic( FP_CBOR_CREATE_CERT_PUBLISH_TOPIC,
-                                     FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
-                                     ( char * ) payloadBuffer,
-                                     payloadLength );
+            /* Publish an empty payload to the CreateKeysAndCertificate API. */
+            status = PublishToTopic( FP_CBOR_CREATE_KEYS_PUBLISH_TOPIC,
+                                     FP_CBOR_CREATE_KEYS_PUBLISH_LENGTH,
+                                     "",
+                                     0 );
 
             if( status == false )
             {
                 LogError( ( "Failed to publish to fleet provisioning topic: %.*s.",
-                            FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
-                            FP_CBOR_CREATE_CERT_PUBLISH_TOPIC ) );
+                            FP_CBOR_CREATE_KEYS_PUBLISH_LENGTH,
+                            FP_CBOR_CREATE_KEYS_PUBLISH_TOPIC ) );
             }
         }
 
         if( status == true )
         {
-            /* Get the response to the CreateCertificatefromCsr request. */
+            /* Get the response to the CreateKeysAndCertificate request. */
             status = waitForResponse();
         }
 
@@ -607,14 +585,16 @@ int main( int argc,
         {
             /* From the response, extract the certificate, certificate ID, and
              * certificate ownership token. */
-            status = parseCsrResponse( payloadBuffer,
-                                       payloadLength,
-                                       certificate,
-                                       &certificateLength,
-                                       certificateId,
-                                       &certificateIdLength,
-                                       ownershipToken,
-                                       &ownershipTokenLength );
+            status = parseKeyCertResponse( payloadBuffer,
+                                           payloadLength,
+                                           certificate,
+                                           &certificateLength,
+                                           privatekey,
+                                           &privatekeyLength,
+                                           certificateId,
+                                           &certificateIdLength,
+                                           ownershipToken,
+                                           &ownershipTokenLength );
 
             if( status == true )
             {
@@ -633,8 +613,8 @@ int main( int argc,
 
         if( status == true )
         {
-            /* Unsubscribe from the CreateCertificateFromCsr topics. */
-            status = unsubscribeFromCsrResponseTopics();
+            /* Unsubscribe from the CreateKeysAndCertificate topics. */
+            status = unsubscribeFromKeysCertResponseTopics();
         }
 
         /**** Call the RegisterThing API **************************************/

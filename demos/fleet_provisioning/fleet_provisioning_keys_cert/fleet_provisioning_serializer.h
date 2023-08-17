@@ -32,23 +32,6 @@
 #include <stdbool.h>
 
 /**
- * @brief Creates the request payload to be published to the
- * CreateCertificateFromCsr API in order to request a certificate from AWS IoT
- * for the included Certificate Signing Request (CSR).
- *
- * @param[in] pBuffer Buffer into which to write the publish request payload.
- * @param[in] bufferLength Length of #pBuffer.
- * @param[in] pCsr The CSR to include in the request payload.
- * @param[in] csrLength The length of #pCsr.
- * @param[out] pOutLengthWritten The length of the publish request payload.
- */
-bool generateCsrRequest( uint8_t * pBuffer,
-                         size_t bufferLength,
-                         const char * pCsr,
-                         size_t csrLength,
-                         size_t * pOutLengthWritten );
-
-/**
  * @brief Creates the request payload to be published to the RegisterThing API
  * in order to activate the provisioned certificate and receive a Thing name.
  *
@@ -88,14 +71,16 @@ bool generateRegisterThingRequest( uint8_t * pBuffer,
  * @param[in,out] pOwnershipTokenBufferLength The length of
  * #pOwnershipTokenBuffer. The length written is output here.
  */
-bool parseCsrResponse( const uint8_t * pResponse,
-                       size_t length,
-                       char * pCertificateBuffer,
-                       size_t * pCertificateBufferLength,
-                       char * pCertificateIdBuffer,
-                       size_t * pCertificateIdBufferLength,
-                       char * pOwnershipTokenBuffer,
-                       size_t * pOwnershipTokenBufferLength );
+bool parseKeyCertResponse( const uint8_t * pResponse,
+                           size_t length,
+                           char * pCertificateBuffer,
+                           size_t * pCertificateBufferLength,
+                           char * pPrivateKeyBuffer,
+                           size_t * pPrivateKeyBufferLength,
+                           char * pCertificateIdBuffer,
+                           size_t * pCertificateIdBufferLength,
+                           char * pOwnershipTokenBuffer,
+                           size_t * pOwnershipTokenBufferLength );
 
 /**
  * @brief Extracts the Thing name from a RegisterThing accepted response.
