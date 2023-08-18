@@ -63,38 +63,6 @@
  */
 #define CLAIM_PRIVATE_KEY_BUFFER_LENGTH    2048
 
-/**
- * @brief Represents string to be logged when mbedTLS returned error
- * does not contain a high-level code.
- */
-static const char * pNoHighLevelMbedTlsCodeStr = "<No-High-Level-Code>";
-
-/**
- * @brief Represents string to be logged when mbedTLS returned error
- * does not contain a low-level code.
- */
-static const char * pNoLowLevelMbedTlsCodeStr = "<No-Low-Level-Code>";
-
-/**
- * @brief Utility for converting the high-level code in an mbedTLS error to
- * string, if the code-contains a high-level code; otherwise, using a default
- * string.
- */
-#define mbedtlsHighLevelCodeOrDefault( mbedTlsCode )     \
-    ( mbedtls_high_level_strerr( mbedTlsCode ) != NULL ) \
-    ? mbedtls_high_level_strerr( mbedTlsCode )           \
-    : pNoHighLevelMbedTlsCodeStr
-
-/**
- * @brief Utility for converting the level-level code in an mbedTLS error to
- * string, if the code-contains a level-level code; otherwise, using a default
- * string.
- */
-#define mbedtlsLowLevelCodeOrDefault( mbedTlsCode )     \
-    ( mbedtls_low_level_strerr( mbedTlsCode ) != NULL ) \
-    ? mbedtls_low_level_strerr( mbedTlsCode )           \
-    : pNoLowLevelMbedTlsCodeStr
-
 /* Length parameters for importing RSA-2048 private keys. */
 #define MODULUS_LENGTH        pkcs11RSA_2048_MODULUS_BITS / 8
 #define E_LENGTH              3
@@ -131,13 +99,6 @@ typedef struct SigningCallbackContext
     CK_SESSION_HANDLE p11Session;
     CK_OBJECT_HANDLE p11PrivateKey;
 } SigningCallbackContext_t;
-
-/**
- * @brief Parameters for the signing callback. This needs to be global as
- * MbedTLS passes the key context to the signing function, so we cannot pass
- * our own.
- */
-static SigningCallbackContext_t signingContext = { 0 };
 
 /*-----------------------------------------------------------*/
 

@@ -74,9 +74,9 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
  * @brief Save the device client certificate into the PKCS #11 module.
  *
  * @param[in] p11Session The PKCS #11 session to use.
- * @param[in] pPrivateKey The privateKey to load.
- * @param[in] pLabel PKCS #11 label for the privateKey.
- * @param[in] certificateLength Length of #pPrivateKey.
+ * @param[in] pPrivateKey The private key to load.
+ * @param[in] pLabel PKCS #11 label for the private key.
+ * @param[in] privateKeyLength Length of #pPrivateKey.
  *
  * @return True on success.
  */
