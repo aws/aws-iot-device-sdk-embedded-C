@@ -59,7 +59,7 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
  * @brief Save the device client certificate into the PKCS #11 module.
  *
  * @param[in] p11Session The PKCS #11 session to use.
- * @param[in] pCertificate The certificate to save.
+ * @param[in] pCertificate The certificate to load.
  * @param[in] pLabel PKCS #11 label for the certificate.
  * @param[in] certificateLength Length of #pCertificate.
  *
@@ -69,6 +69,21 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
                       const char * pCertificate,
                       const char * pLabel,
                       size_t certificateLength );
+
+/**
+ * @brief Save the device client certificate into the PKCS #11 module.
+ *
+ * @param[in] p11Session The PKCS #11 session to use.
+ * @param[in] pPrivateKey The privateKey to load.
+ * @param[in] pLabel PKCS #11 label for the privateKey.
+ * @param[in] certificateLength Length of #pPrivateKey.
+ *
+ * @return True on success.
+ */
+bool loadPrivateKey( CK_SESSION_HANDLE p11Session,
+                     const char * pPrivateKey,
+                     const char * pLabel,
+                     size_t privateKeyLength );
 
 /**
  * @brief Close the PKCS #11 session.

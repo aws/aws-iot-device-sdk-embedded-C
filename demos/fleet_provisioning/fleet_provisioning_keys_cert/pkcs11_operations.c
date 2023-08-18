@@ -793,6 +793,26 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
 
 /*-----------------------------------------------------------*/
 
+bool loadPrivateKey( CK_SESSION_HANDLE p11Session,
+                     const char * pPrivateKey,
+                     const char * pLabel,
+                     size_t privateKeyLength )
+{
+    CK_RV ret;
+
+    assert( pPrivateKey != NULL );
+    assert( pLabel != NULL );
+
+    ret = provisionPrivateKey( p11Session,
+                               pPrivateKey,
+                               privateKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
+                               pLabel );
+
+    return( ret == CKR_OK );
+}
+
+/*-----------------------------------------------------------*/
+
 bool pkcs11CloseSession( CK_SESSION_HANDLE p11Session )
 {
     CK_RV result = CKR_OK;

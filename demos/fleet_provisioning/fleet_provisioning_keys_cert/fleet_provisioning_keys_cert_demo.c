@@ -598,10 +598,18 @@ int main( int argc,
 
             if( status == true )
             {
-                LogInfo( ( "Received certificate with Id: %.*s", ( int ) certificateIdLength, certificateId ) );
+                LogInfo( ( "Received privatekey and certificate with Id: %.*s", ( int ) certificateIdLength, certificateId ) );
             }
         }
 
+        if( status == true )
+        {
+            /* Save the certificate into PKCS #11. */
+            status = loadPrivateKey( p11Session,
+                                     privatekey,
+                                     pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                     certificateLength );
+        }
         if( status == true )
         {
             /* Save the certificate into PKCS #11. */
