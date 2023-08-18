@@ -608,7 +608,7 @@ int main( int argc,
             status = loadPrivateKey( p11Session,
                                      privatekey,
                                      pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                     certificateLength );
+                                     privatekeyLength );
         }
         if( status == true )
         {
