@@ -611,6 +611,7 @@ int main( int argc,
                                      pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
                                      privatekeyLength );
         }
+
         if( status == true )
         {
             /* Save the certificate into PKCS #11. */
@@ -767,56 +768,61 @@ int main( int argc,
     {
         LogInfo( ( "Demo completed successfully." ) );
 
-#if defined(DOWNLOADED_CERT_WRITE_PATH)
-        {
-            int fd = open(DOWNLOADED_CERT_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-            if (-1 != fd)
+        #if defined( DOWNLOADED_CERT_WRITE_PATH )
             {
-                const ssize_t writtenBytes = write(fd, certificate, certificateLength);
-                if (writtenBytes == certificateLength)
+                int fd = open( DOWNLOADED_CERT_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR );
+
+                if( -1 != fd )
                 {
-                    LogInfo( ( "Written %s successfully.", DOWNLOADED_CERT_WRITE_PATH ) );
+                    const ssize_t writtenBytes = write( fd, certificate, certificateLength );
+
+                    if( writtenBytes == certificateLength )
+                    {
+                        LogInfo( ( "Written %s successfully.", DOWNLOADED_CERT_WRITE_PATH ) );
+                    }
+                    else
+                    {
+                        LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
+                    }
+
+                    close( fd );
                 }
                 else
                 {
-                    LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
+                    LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
                 }
-                close(fd);
             }
-            else
-            {
-                LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno )  ) );
-            }
-        }
-#else
-        LogInfo( ( "NOTE: define DOWNLOADED_CERT_WRITE_PATH in order to have the certificate written to disk." ) );
-#endif // DOWNLOADED_CERT_WRITE_PATH
+        #else  /* if defined( DOWNLOADED_CERT_WRITE_PATH ) */
+            LogInfo( ( "NOTE: define DOWNLOADED_CERT_WRITE_PATH in order to have the certificate written to disk." ) );
+        #endif // DOWNLOADED_CERT_WRITE_PATH
 
-#if defined(DOWNLOADED_PRIVATE_KEY_WRITE_PATH)
-        {
-            int fd = open(DOWNLOADED_PRIVATE_KEY_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
-            if (-1 != fd)
+        #if defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH )
             {
-                const ssize_t writtenBytes = write(fd, privatekey, privatekeyLength);
-                if (writtenBytes == privatekeyLength)
+                int fd = open( DOWNLOADED_PRIVATE_KEY_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR );
+
+                if( -1 != fd )
                 {
-                    LogInfo( ( "Written %s successfully.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) );
+                    const ssize_t writtenBytes = write( fd, privatekey, privatekeyLength );
+
+                    if( writtenBytes == privatekeyLength )
+                    {
+                        LogInfo( ( "Written %s successfully.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) );
+                    }
+                    else
+                    {
+                        LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
+                    }
+
+                    close( fd );
                 }
                 else
                 {
-                    LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
+                    LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
                 }
-                close(fd);
             }
-            else
-            {
-                LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno )  ) );
-            }
-        }
-#else
-        LogInfo( ( "NOTE: define DOWNLOADED_PRIVATE_KEY_WRITE_PATH in order to have the private key written to disk." ) );
-#endif // DOWNLOADED_PRIVATE_KEY_WRITE_PATH
-
+        #else  /* if defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) */
+            LogInfo( ( "NOTE: define DOWNLOADED_PRIVATE_KEY_WRITE_PATH in order to have the private key written to disk." ) );
+        #endif // DOWNLOADED_PRIVATE_KEY_WRITE_PATH
     }
 
     return ( status == true ) ? EXIT_SUCCESS : EXIT_FAILURE;

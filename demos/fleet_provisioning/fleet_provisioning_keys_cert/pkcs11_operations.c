@@ -64,17 +64,17 @@
 #define CLAIM_PRIVATE_KEY_BUFFER_LENGTH    2048
 
 /* Length parameters for importing RSA-2048 private keys. */
-#define MODULUS_LENGTH        pkcs11RSA_2048_MODULUS_BITS / 8
-#define E_LENGTH              3
-#define D_LENGTH              pkcs11RSA_2048_MODULUS_BITS / 8
-#define PRIME_1_LENGTH        128
-#define PRIME_2_LENGTH        128
-#define EXPONENT_1_LENGTH     128
-#define EXPONENT_2_LENGTH     128
-#define COEFFICIENT_LENGTH    128
+#define MODULUS_LENGTH                     pkcs11RSA_2048_MODULUS_BITS / 8
+#define E_LENGTH                           3
+#define D_LENGTH                           pkcs11RSA_2048_MODULUS_BITS / 8
+#define PRIME_1_LENGTH                     128
+#define PRIME_2_LENGTH                     128
+#define EXPONENT_1_LENGTH                  128
+#define EXPONENT_2_LENGTH                  128
+#define COEFFICIENT_LENGTH                 128
 
-#define EC_PARAMS_LENGTH      10
-#define EC_D_LENGTH           32
+#define EC_PARAMS_LENGTH                   10
+#define EC_D_LENGTH                        32
 
 /**
  * @brief Struct for holding parsed RSA-2048 private keys.
