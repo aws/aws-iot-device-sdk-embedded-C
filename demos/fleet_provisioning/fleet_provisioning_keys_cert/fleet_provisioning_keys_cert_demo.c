@@ -792,7 +792,7 @@ int main( int argc,
                     LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
                 }
             }
-        #else  /* if defined( DOWNLOADED_CERT_WRITE_PATH ) */
+        #else /* if defined( DOWNLOADED_CERT_WRITE_PATH ) */
             LogInfo( ( "NOTE: define DOWNLOADED_CERT_WRITE_PATH in order to have the certificate written to disk." ) );
         #endif // DOWNLOADED_CERT_WRITE_PATH
 
@@ -820,7 +820,7 @@ int main( int argc,
                     LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
                 }
             }
-        #else  /* if defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) */
+        #else /* if defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) */
             LogInfo( ( "NOTE: define DOWNLOADED_PRIVATE_KEY_WRITE_PATH in order to have the private key written to disk." ) );
         #endif // DOWNLOADED_PRIVATE_KEY_WRITE_PATH
     }
