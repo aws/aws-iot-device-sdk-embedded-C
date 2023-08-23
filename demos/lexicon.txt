@@ -575,6 +575,7 @@ ppath
 ppathlen
 ppayload
 ppkey
+pprivatekey
 pprivatekeylabel
 pprivatekeypath
 pprivkeylabel
