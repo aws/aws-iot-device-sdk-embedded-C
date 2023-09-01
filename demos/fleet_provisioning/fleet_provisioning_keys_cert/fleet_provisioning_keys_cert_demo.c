@@ -125,7 +125,7 @@
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_SECONDS    ( 5 )
 
 /**
- * @brief Size of buffer in which to hold the certificate signing request (CSR).
+ * @brief Size of buffer in which to hold the private key.
  */
 #define PRIV_KEY_BUFFER_LENGTH                         2048
 

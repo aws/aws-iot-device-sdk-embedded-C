@@ -66,6 +66,9 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
  * @param[in] p11Session The PKCS #11 session to use.
  * @param[in] pPrivKeyLabel PKCS #11 label for the private key.
  * @param[in] pPubKeyLabel PKCS #11 label for the public key.
+ * @param[out] pPrivateKey The buffer to write the private key to.
+ * @param[in] privKeyBufferLength Length of #pPrivateKey.
+ * @param[out] pOutPrivKeyLength The length of the written private key.
  * @param[out] pCsrBuffer The buffer to write the CSR to.
  * @param[in] csrBufferLength Length of #pCsrBuffer.
  * @param[out] pOutCsrLength The length of the written CSR.
@@ -75,6 +78,9 @@ bool loadClaimCredentials( CK_SESSION_HANDLE p11Session,
 bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
                         const char * pPrivKeyLabel,
                         const char * pPubKeyLabel,
+                        char * pPrivateKey,
+                        size_t privKeyBufferLength,
+                        size_t * pOutPrivKeyLength,
                         char * pCsrBuffer,
                         size_t csrBufferLength,
                         size_t * pOutCsrLength );
