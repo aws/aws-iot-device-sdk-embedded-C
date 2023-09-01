@@ -1096,6 +1096,8 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
     assert( pPrivKeyLabel != NULL );
     assert( pPubKeyLabel != NULL );
+    assert( pPrivateKey != NULL );
+    assert( pOutPrivKeyLength != NULL );
     assert( pCsrBuffer != NULL );
     assert( pOutCsrLength != NULL );
 
@@ -1148,6 +1150,16 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
             mbedtlsRet = mbedtls_x509write_csr_pem( &req, ( unsigned char * ) pCsrBuffer,
                                                     csrBufferLength, &randomCallback,
                                                     &p11Session );
+        }
+
+        if( mbedtlsRet == 0 )
+        {
+            mbedtlsRet = mbedtls_pk_write_key_pem( &privKey, pPrivateKey, privKeyBufferLength );
+
+            if( mbedtlsRet == 0 )
+            {
+                *pOutPrivKeyLength = strlen(pPrivateKey);
+            }
         }
 
         mbedtls_x509write_csr_free( &req );
