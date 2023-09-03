@@ -64,11 +64,6 @@
 #define CLAIM_PRIVATE_KEY_BUFFER_LENGTH    2048
 
 /**
- * @brief Size of buffer in which to hold the private key.
- */
-#define PRIVATE_KEY_BUFFER_LENGTH          2048
-
-/**
  * @brief Represents string to be logged when mbedTLS returned error
  * does not contain a high-level code.
  */
@@ -1082,12 +1077,15 @@ static CK_RV generateKeyPairEC( CK_SESSION_HANDLE session,
 bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
                         const char * pPrivKeyLabel,
                         const char * pPubKeyLabel,
+                        char * pPrivateKey,
+                        size_t privKeyBufferLength,
+                        size_t * pOutPrivKeyLength,
                         char * pCsrBuffer,
                         size_t csrBufferLength,
                         size_t * pOutCsrLength )
 {
     CK_RV pkcs11Ret = CKR_OK;
-    mbedtls_pk_context privKey;
+    mbedtls_pk_context privKey = { 0 };
     mbedtls_x509write_csr req;
     int32_t mbedtlsRet = -1;
 
@@ -1120,7 +1118,7 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
 #else
 
-    status = readFile( EXISTING_PRIVATE_KEY_PATH, privateKey, PRIVATE_KEY_BUFFER_LENGTH, &privateKeyLength );
+    status = readFile( EXISTING_PRIVATE_KEY_PATH, pPrivateKey, privKeyBufferLength, pOutPrivKeyLength );
     if( status != true )
     {
         LogError( ( "Unable to read private key " EXISTING_PRIVATE_KEY_PATH " from disk." ) );
@@ -1175,8 +1173,9 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
 #else
 
-            mbedtlsRet = mbedtls_pk_parse_key( &privKey, ( const uint8_t * ) privateKey,
-                                               privateKeyLength, NULL, 0 );
+            mbedtlsRet = mbedtls_pk_parse_key( &privKey, ( const uint8_t * ) pPrivateKey,
+                                               *pOutPrivKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
+                                                NULL, 0 );
             if( mbedtlsRet != 0 )
             {
                 LogError( ( "Unable to parse private key." ) );
@@ -1227,6 +1226,26 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
                                 pCertificate,
                                 certificateLength + 1, /* MbedTLS includes null character in length for PEM objects. */
                                 pLabel );
+
+    return( ret == CKR_OK );
+}
+
+/*-----------------------------------------------------------*/
+
+bool loadPrivateKey( CK_SESSION_HANDLE p11Session,
+                     const char * pPrivateKey,
+                     const char * pLabel,
+                     size_t privateKeyLength )
+{
+    CK_RV ret;
+
+    assert( pPrivateKey != NULL );
+    assert( pLabel != NULL );
+
+    ret = provisionPrivateKey( p11Session,
+                               pPrivateKey,
+                               privateKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
+                               pLabel );
 
     return( ret == CKR_OK );
 }

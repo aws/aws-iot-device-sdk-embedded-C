@@ -605,7 +605,7 @@ int main( int argc,
 
         if( status == true )
         {
-            /* Save the certificate into PKCS #11. */
+            /* Save the private key into PKCS #11. */
             status = loadPrivateKey( p11Session,
                                      privatekey,
                                      pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
