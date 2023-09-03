@@ -57,7 +57,10 @@
 /* POSIX includes. */
 #include <unistd.h>
 #include <errno.h>
+
+#if defined( DOWNLOADED_CERT_WRITE_PATH )
 #include <fcntl.h>
+#endif // DOWNLOADED_CERT_WRITE_PATH
 
 /* Demo config. */
 #include "demo_config.h"
@@ -634,6 +637,11 @@ int main( int argc,
             }
         }
 
+#if defined( EXISTING_PRIVATE_KEY_PATH )
+
+        /* NOTE: if the private key was not existing but generated from the demo,
+                 then it is already loaded at that time */
+
         if( status == true )
         {
             /* Save the private key into PKCS #11. */
@@ -642,6 +650,8 @@ int main( int argc,
                                      pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
                                      privatekeyLength );
         }
+
+#endif // EXISTING_PRIVATE_KEY_PATH
 
         if( status == true )
         {
