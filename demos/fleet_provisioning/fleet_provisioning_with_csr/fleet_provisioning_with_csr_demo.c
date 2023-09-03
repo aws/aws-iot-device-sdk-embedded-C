@@ -130,11 +130,6 @@
 #define CSR_BUFFER_LENGTH                              2048
 
 /**
- * @brief Size of buffer in which to hold the private key.
- */
-#define PRIV_KEY_BUFFER_LENGTH                         2048
-
-/**
  * @brief Size of buffer in which to hold the certificate.
  */
 #define CERT_BUFFER_LENGTH                             2048
@@ -478,9 +473,6 @@ int main( int argc,
     /* Buffer for holding received certificate until it is saved. */
     char certificate[ CERT_BUFFER_LENGTH ];
     size_t certificateLength;
-    /* Buffer for holding generated private key until it is saved. */
-    char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
-    size_t privatekeyLength;
     /* Buffer for holding the certificate ID. */
     char certificateId[ CERT_ID_BUFFER_LENGTH ];
     size_t certificateIdLength;
@@ -574,9 +566,6 @@ int main( int argc,
             status = generateKeyAndCsr( p11Session,
                                         pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
                                         pkcs11configLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                        privatekey,
-                                        PRIV_KEY_BUFFER_LENGTH,
-                                        &privatekeyLength,
                                         csr,
                                         CSR_BUFFER_LENGTH,
                                         &csrLength );
@@ -817,34 +806,6 @@ int main( int argc,
         #else /* if defined( DOWNLOADED_CERT_WRITE_PATH ) */
             LogInfo( ( "NOTE: define DOWNLOADED_CERT_WRITE_PATH in order to have the certificate written to disk." ) );
         #endif // DOWNLOADED_CERT_WRITE_PATH
-
-        #if defined( GENERATED_PRIVATE_KEY_WRITE_PATH )
-            {
-                int fd = open( GENERATED_PRIVATE_KEY_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR );
-
-                if( -1 != fd )
-                {
-                    const ssize_t writtenBytes = write( fd, privatekey, privatekeyLength );
-
-                    if( writtenBytes == privatekeyLength )
-                    {
-                        LogInfo( ( "Written %s successfully.", GENERATED_PRIVATE_KEY_WRITE_PATH ) );
-                    }
-                    else
-                    {
-                        LogError( ( "Could not write to %s. Error: %s.", GENERATED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
-                    }
-
-                    close( fd );
-                }
-                else
-                {
-                    LogError( ( "Could not open %s. Error: %s.", GENERATED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
-                }
-            }
-        #else /* if defined( GENERATED_PRIVATE_KEY_WRITE_PATH ) */
-            LogInfo( ( "NOTE: define GENERATED_PRIVATE_KEY_WRITE_PATH in order to have the private key written to disk." ) );
-        #endif // GENERATED_PRIVATE_KEY_WRITE_PATH
     }
 
     return ( status == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
