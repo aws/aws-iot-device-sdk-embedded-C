@@ -133,11 +133,6 @@
 #define CSR_BUFFER_LENGTH                              2048
 
 /**
- * @brief Size of buffer in which to hold the private key.
- */
-#define PRIV_KEY_BUFFER_LENGTH                         2048
-
-/**
  * @brief Size of buffer in which to hold the certificate.
  */
 #define CERT_BUFFER_LENGTH                             2048
@@ -481,9 +476,6 @@ int main( int argc,
     /* Buffer for holding received certificate until it is saved. */
     char certificate[ CERT_BUFFER_LENGTH ];
     size_t certificateLength;
-    /* Buffer for holding private key. */
-    char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
-    size_t privatekeyLength;
     /* Buffer for holding the certificate ID. */
     char certificateId[ CERT_ID_BUFFER_LENGTH ];
     size_t certificateIdLength;
@@ -577,9 +569,6 @@ int main( int argc,
             status = generateKeyAndCsr( p11Session,
                                         pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
                                         pkcs11configLABEL_DEVICE_PUBLIC_KEY_FOR_TLS,
-                                        privatekey,
-                                        PRIV_KEY_BUFFER_LENGTH,
-                                        &privatekeyLength,
                                         csr,
                                         CSR_BUFFER_LENGTH,
                                         &csrLength );
@@ -636,22 +625,6 @@ int main( int argc,
                 LogInfo( ( "Received certificate with Id: %.*s", ( int ) certificateIdLength, certificateId ) );
             }
         }
-
-#if defined( EXISTING_PRIVATE_KEY_PATH )
-
-        /* NOTE: if the private key was not existing but generated from the demo,
-                 then it is already loaded at that time */
-
-        if( status == true )
-        {
-            /* Save the private key into PKCS #11. */
-            status = loadPrivateKey( p11Session,
-                                     privatekey,
-                                     pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                     privatekeyLength );
-        }
-
-#endif // EXISTING_PRIVATE_KEY_PATH
 
         if( status == true )
         {
