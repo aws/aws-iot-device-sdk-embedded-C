@@ -1101,8 +1101,6 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
 #else
 
-    char privateKey[ CLAIM_PRIVATE_KEY_BUFFER_LENGTH ] = { 0 };
-    size_t privateKeyLength = 0;
     bool status;
 
 #endif // EXISTING_PRIVATE_KEY_PATH
@@ -1123,11 +1121,10 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 #else
 
     status = readFile( EXISTING_PRIVATE_KEY_PATH, privateKey, PRIVATE_KEY_BUFFER_LENGTH, &privateKeyLength );
-    if( status == true )
+    if( status != true )
     {
-        pkcs11Ret = provisionPrivateKey( p11Session, privateKey,
-                                         privateKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
-                                         pPrivKeyLabel );
+        LogError( ( "Unable to read private key " EXISTING_PRIVATE_KEY_PATH " from disk." ) );
+        pkcs11Ret = CKR_FUNCTION_FAILED;
     }
 
 #endif // EXISTING_PRIVATE_KEY_PATH
@@ -1180,6 +1177,10 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
             mbedtlsRet = mbedtls_pk_parse_key( &privKey, ( const uint8_t * ) privateKey,
                                                privateKeyLength, NULL, 0 );
+            if( mbedtlsRet != 0 )
+            {
+                LogError( ( "Unable to parse private key." ) );
+            }
 
 #endif // EXISTING_PRIVATE_KEY_PATH
 
