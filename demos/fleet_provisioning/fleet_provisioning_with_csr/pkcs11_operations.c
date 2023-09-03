@@ -1091,58 +1091,52 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
     mbedtls_x509write_csr req;
     int32_t mbedtlsRet = -1;
 
-#if !defined( EXISTING_PRIVATE_KEY_PATH )
-
-    CK_OBJECT_HANDLE privKeyHandle;
-    CK_OBJECT_HANDLE pubKeyHandle;
-    mbedtls_pk_info_t privKeyInfo;
-    mbedtls_ecdsa_context xEcdsaContext;
-    const mbedtls_pk_info_t * header = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
-
-#else
-
-    char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
-    size_t privatekeyLength;
-    bool status;
-
-#endif // EXISTING_PRIVATE_KEY_PATH
+    #if !defined( EXISTING_PRIVATE_KEY_PATH )
+        CK_OBJECT_HANDLE privKeyHandle;
+        CK_OBJECT_HANDLE pubKeyHandle;
+        mbedtls_pk_info_t privKeyInfo;
+        mbedtls_ecdsa_context xEcdsaContext;
+        const mbedtls_pk_info_t * header = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
+    #else
+        char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
+        size_t privatekeyLength;
+        bool status;
+    #endif // EXISTING_PRIVATE_KEY_PATH
 
     assert( pPrivKeyLabel != NULL );
     assert( pPubKeyLabel != NULL );
     assert( pCsrBuffer != NULL );
     assert( pOutCsrLength != NULL );
 
-#if !defined( EXISTING_PRIVATE_KEY_PATH )
+    #if !defined( EXISTING_PRIVATE_KEY_PATH )
+        pkcs11Ret = generateKeyPairEC( p11Session,
+                                       pPrivKeyLabel,
+                                       pPubKeyLabel,
+                                       &privKeyHandle,
+                                       &pubKeyHandle );
+    #else
+        status = readFile( EXISTING_PRIVATE_KEY_PATH, privatekey, PRIV_KEY_BUFFER_LENGTH, &privatekeyLength );
 
-    pkcs11Ret = generateKeyPairEC( p11Session,
-                                   pPrivKeyLabel,
-                                   pPubKeyLabel,
-                                   &privKeyHandle,
-                                   &pubKeyHandle );
-
-#else
-
-    status = readFile( EXISTING_PRIVATE_KEY_PATH, privatekey, PRIV_KEY_BUFFER_LENGTH, &privatekeyLength );
-    if( status != true )
-    {
-        LogError( ( "Unable to read private key " EXISTING_PRIVATE_KEY_PATH " from disk." ) );
-        pkcs11Ret = CKR_FUNCTION_FAILED;
-    }
-    else
-    {
-        /* Save the private key into PKCS #11. */
-        status = loadPrivateKey( p11Session,
-                                 privatekey,
-                                 pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                 privatekeyLength );
         if( status != true )
         {
-            LogError( ( "Unable to load private key." ) );
+            LogError( ( "Unable to read private key " EXISTING_PRIVATE_KEY_PATH " from disk." ) );
             pkcs11Ret = CKR_FUNCTION_FAILED;
         }
-    }
+        else
+        {
+            /* Save the private key into PKCS #11. */
+            status = loadPrivateKey( p11Session,
+                                     privatekey,
+                                     pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
+                                     privatekeyLength );
 
-#endif // EXISTING_PRIVATE_KEY_PATH
+            if( status != true )
+            {
+                LogError( ( "Unable to load private key." ) );
+                pkcs11Ret = CKR_FUNCTION_FAILED;
+            }
+        }
+    #endif // EXISTING_PRIVATE_KEY_PATH
 
     if( pkcs11Ret == CKR_OK )
     {
@@ -1166,39 +1160,34 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
             mbedtls_pk_init( &privKey );
         }
 
-#if !defined( EXISTING_PRIVATE_KEY_PATH )
-
-        if( mbedtlsRet == 0 )
-        {
-            mbedtlsRet = extractEcPublicKey( p11Session, &xEcdsaContext, pubKeyHandle );
-        }
-
-#endif // EXISTING_PRIVATE_KEY_PATH
-
-        if( mbedtlsRet == 0 )
-        {
-#if !defined( EXISTING_PRIVATE_KEY_PATH )
-
-            signingContext.p11Session = p11Session;
-            signingContext.p11PrivateKey = privKeyHandle;
-
-            memcpy( &privKeyInfo, header, sizeof( mbedtls_pk_info_t ) );
-
-            privKeyInfo.sign_func = privateKeySigningCallback;
-            privKey.pk_info = &privKeyInfo;
-            privKey.pk_ctx = &xEcdsaContext;
-
-#else
-
-            mbedtlsRet = mbedtls_pk_parse_key( &privKey, ( const uint8_t * ) privatekey,
-                                               privatekeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
-                                               NULL, 0 );
-            if( mbedtlsRet != 0 )
+        #if !defined( EXISTING_PRIVATE_KEY_PATH )
+            if( mbedtlsRet == 0 )
             {
-                LogError( ( "Unable to parse private key." ) );
+                mbedtlsRet = extractEcPublicKey( p11Session, &xEcdsaContext, pubKeyHandle );
             }
+        #endif // EXISTING_PRIVATE_KEY_PATH
 
-#endif // EXISTING_PRIVATE_KEY_PATH
+        if( mbedtlsRet == 0 )
+        {
+            #if !defined( EXISTING_PRIVATE_KEY_PATH )
+                signingContext.p11Session = p11Session;
+                signingContext.p11PrivateKey = privKeyHandle;
+
+                memcpy( &privKeyInfo, header, sizeof( mbedtls_pk_info_t ) );
+
+                privKeyInfo.sign_func = privateKeySigningCallback;
+                privKey.pk_info = &privKeyInfo;
+                privKey.pk_ctx = &xEcdsaContext;
+            #else
+                mbedtlsRet = mbedtls_pk_parse_key( &privKey, ( const uint8_t * ) privatekey,
+                                                   privatekeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
+                                                   NULL, 0 );
+
+                if( mbedtlsRet != 0 )
+                {
+                    LogError( ( "Unable to parse private key." ) );
+                }
+            #endif // EXISTING_PRIVATE_KEY_PATH
 
             mbedtls_x509write_csr_set_key( &req, &privKey );
 
@@ -1209,17 +1198,12 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
         mbedtls_x509write_csr_free( &req );
 
-#if !defined( EXISTING_PRIVATE_KEY_PATH )
-
-        mbedtls_ecdsa_free( &xEcdsaContext );
-        mbedtls_ecp_group_free( &( xEcdsaContext.grp ) );
-
-#else
-
-        mbedtls_pk_free( &privKey );
-
-#endif
-
+        #if !defined( EXISTING_PRIVATE_KEY_PATH )
+            mbedtls_ecdsa_free( &xEcdsaContext );
+            mbedtls_ecp_group_free( &( xEcdsaContext.grp ) );
+        #else
+            mbedtls_pk_free( &privKey );
+        #endif
     }
 
     *pOutCsrLength = strlen( pCsrBuffer );

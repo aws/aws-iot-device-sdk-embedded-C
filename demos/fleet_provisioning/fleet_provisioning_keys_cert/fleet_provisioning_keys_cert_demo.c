@@ -59,7 +59,7 @@
 #include <errno.h>
 
 #if defined( DOWNLOADED_CERT_WRITE_PATH ) || defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH )
-#include <fcntl.h>
+    #include <fcntl.h>
 #endif
 
 /* Demo config. */
