@@ -1105,6 +1105,8 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
 
     assert( pPrivKeyLabel != NULL );
     assert( pPubKeyLabel != NULL );
+    assert( pPrivateKey != NULL );
+    assert( pOutPrivKeyLength != NULL );
     assert( pCsrBuffer != NULL );
     assert( pOutCsrLength != NULL );
 

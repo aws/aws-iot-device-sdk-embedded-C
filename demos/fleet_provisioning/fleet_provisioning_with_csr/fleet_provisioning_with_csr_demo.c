@@ -481,7 +481,7 @@ int main( int argc,
     /* Buffer for holding received certificate until it is saved. */
     char certificate[ CERT_BUFFER_LENGTH ];
     size_t certificateLength;
-    /* Buffer for holding generated private key until it is saved. */
+    /* Buffer for holding private key. */
     char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
     size_t privatekeyLength;
     /* Buffer for holding the certificate ID. */
