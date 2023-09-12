@@ -410,8 +410,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/mq
 * Set `CLIENT_CERT_PATH` to the path of the client certificate downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 * Set `CLIENT_PRIVATE_KEY_PATH` to the path of the private key downloaded when setting up the device certificate in [AWS IoT Account Setup](#aws-iot-account-setup).
 
-It is possible to configure `ROOT_CA_CERT_PATH` to any PEM-encoded Root CA Certificate. However, this is optional because CMake will download and set it to [AmazonRootCA1.pem](https://www.amazontrust.com/repository/AmazonRootCA1.pem) when unspecified. If unspecified, the default Root CA
-path will be interpreted relative to where the demo binary is executed. For many demos, you can change this path by modifying it in the corresponding `demo_config.h`.
+It is possible to configure `ROOT_CA_CERT_PATH` to any PEM-encoded Root CA Certificate. However, this is optional because CMake will download and set it to [AmazonRootCA1.pem](https://www.amazontrust.com/repository/AmazonRootCA1.pem) when unspecified. If unspecified, the default Root CA path will be interpreted relative to where the demo binary is executed. For many demos, you can change this path by modifying it in the corresponding `demo_config.h`.
 
 #### Configuring AWS IoT Device Defender and AWS IoT Device Shadow demos
 
