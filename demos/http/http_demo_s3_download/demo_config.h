@@ -79,6 +79,24 @@
 #endif
 
 /**
+ * @brief Path of the file containing the server's root CA certificate for S3
+ * authentication.
+ *
+ * This certificate is used to identify the AWS S3 server and is publicly
+ * available. Refer to the AWS documentation available in the link below
+ * https://docs.aws.amazon.com/iot/latest/developerguide/server-authentication.html#server-authentication-certs
+ *
+ * Amazon's root CA certificate is automatically downloaded to the certificates
+ * directory from @ref https://www.amazontrust.com/repository/AmazonRootCA1.pem
+ * using the CMake build system.
+ *
+ * @note This certificate should be PEM-encoded.
+ */
+#ifndef ROOT_CA_CERT_PATH_S3
+    #define ROOT_CA_CERT_PATH_S3    ROOT_CA_CERT_PATH
+#endif
+
+/**
  * @brief Path of the file containing the client certificate for TLS
  * authentication with AWS IOT credential provider.
  *
@@ -101,7 +119,9 @@
 /**
  * @brief Define AWS IOT thing name.
  */
-#define AWS_IOT_THING_NAME                      "...insert here..."
+#ifndef AWS_IOT_THING_NAME
+    #define AWS_IOT_THING_NAME                      "...insert here..."
+#endif
 
 /**
  * @brief Endpoint for the AWS IOT credential provider.
@@ -110,7 +130,9 @@
  * `aws iot describe-endpoint --endpoint-type iot:CredentialProvider` from
  * the AWS CLI.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "...insert here..."
+#ifndef AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT
+    #define AWS_IOT_CREDENTIAL_PROVIDER_ENDPOINT    "...insert here..."
+#endif
 
 /**
  * @brief Role alias name for accessing the credential provider.
@@ -120,22 +142,30 @@
  * Refer to the demo setup instructions in the README.md file
  * within the same directory as this file in the repository.
  */
-#define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
+#ifndef AWS_IOT_CREDENTIAL_PROVIDER_ROLE
+    #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
+#endif
 
 /**
  * @brief Name of bucket in AWS S3 from where file needs to be downloaded.
  */
-#define AWS_S3_BUCKET_NAME                      "...insert here..."
+#ifndef AWS_S3_BUCKET_NAME
+    #define AWS_S3_BUCKET_NAME                      "...insert here..."
+#endif
 
 /**
  * @brief AWS Region where the bucket resides.
  */
-#define AWS_S3_BUCKET_REGION                    "...insert here..."
+#ifndef AWS_S3_BUCKET_REGION
+    #define AWS_S3_BUCKET_REGION                    "...insert here..."
+#endif
 
 /**
  * @brief Name of file that needs to be downloaded from AWS S3.
  */
-#define AWS_S3_OBJECT_NAME                      "...insert here..."
+#ifndef AWS_S3_OBJECT_NAME
+    #define AWS_S3_OBJECT_NAME                      "...insert here..."
+#endif
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
