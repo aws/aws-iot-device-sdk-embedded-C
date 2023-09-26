@@ -120,7 +120,7 @@
  * @brief Define AWS IOT thing name.
  */
 #ifndef AWS_IOT_THING_NAME
-    #define AWS_IOT_THING_NAME                      "...insert here..."
+    #define AWS_IOT_THING_NAME    "...insert here..."
 #endif
 
 /**
@@ -143,34 +143,34 @@
  * within the same directory as this file in the repository.
  */
 #ifndef AWS_IOT_CREDENTIAL_PROVIDER_ROLE
-    #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "...insert here..."
+    #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE    "...insert here..."
 #endif
 
 /**
  * @brief Name of bucket in AWS S3 from where file needs to be downloaded.
  */
 #ifndef AWS_S3_BUCKET_NAME
-    #define AWS_S3_BUCKET_NAME                      "...insert here..."
+    #define AWS_S3_BUCKET_NAME    "...insert here..."
 #endif
 
 /**
  * @brief AWS Region where the bucket resides.
  */
 #ifndef AWS_S3_BUCKET_REGION
-    #define AWS_S3_BUCKET_REGION                    "...insert here..."
+    #define AWS_S3_BUCKET_REGION    "...insert here..."
 #endif
 
 /**
  * @brief Name of file that needs to be downloaded from AWS S3.
  */
 #ifndef AWS_S3_OBJECT_NAME
-    #define AWS_S3_OBJECT_NAME                      "...insert here..."
+    #define AWS_S3_OBJECT_NAME    "...insert here..."
 #endif
 
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS          ( 5000 )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS    ( 5000 )
 
 /**
  * @brief The length in bytes of the user buffer.
@@ -180,7 +180,7 @@
  * be less than USER_BUFFER_LENGTH. We don't expect S3 to send more than 1024
  * bytes of headers.
  */
-#define USER_BUFFER_LENGTH                      ( 4096 )
+#define USER_BUFFER_LENGTH                ( 4096 )
 
 /**
  * @brief The size of the range of the file to download, with each request.
@@ -189,6 +189,6 @@
  * in the user buffer. We don't expect S3 to send more than 1024 bytes of
  * headers.
  */
-#define RANGE_REQUEST_LENGTH                    ( 2048 )
+#define RANGE_REQUEST_LENGTH              ( 2048 )
 
 #endif /* ifndef DEMO_CONFIG_H_ */
