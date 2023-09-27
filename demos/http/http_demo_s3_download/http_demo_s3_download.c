@@ -942,7 +942,7 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH_S3;
         opensslCredentials.sniHostName = serverHost;
 
         /* Initialize server information. */
