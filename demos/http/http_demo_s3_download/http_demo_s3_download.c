@@ -1524,20 +1524,19 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
 /**
  * @brief Entry point of demo.
  *
- * This example, using a pre-signed URL,  resolves a S3 domain, establishes a
- * TCP connection, validates the server's certificate using the root CA
- * certificate defined in the config header, then finally performs a TLS
- * handshake with the HTTP server so that all communication is encrypted. After
- * which, the HTTP Client library API is used to download the S3 file (by
- * sending multiple GET requests, filling up the response buffer each time until
- * all parts are downloaded). If any request fails, an error code is returned.
+ * This example connects to AWS IoT Core Credential Provider, obtains temporary
+ * AWS credentials, resolves an S3 domain, establishes a TCP connection, validates
+ * the server's certificate using the root CA certificate defined in the config
+ * header, then finally performs a TLS handshake with the HTTP server so that all
+ * communication is encrypted. After which, the HTTP Client library API is used
+ * to download the S3 file (by sending multiple GET requests, filling up the
+ * response buffer each time until all parts are downloaded). If any request
+ * fails, an error code is returned.
  *
  * @note This example is single-threaded and uses statically allocated memory.
  *
- * @note This demo requires user-generated pre-signed URLs to be pasted into
- * demo_config.h. Please use the provided script "presigned_urls_gen.py"
- * (located in located in demos/http/common/src) to generate these URLs. For
- * detailed instructions, see the accompanied README.md.
+ * @note This demo requires the credential provider endpoint and role to be pasted
+ * into demo_config.h, along with the S3 bucket name, region and object key.
  *
  * @note If your file requires more than 99 range requests to S3 (depending on
  * the size of the file and the length specified in RANGE_REQUEST_LENGTH), your
