@@ -139,7 +139,6 @@ endif()
 
 if(DOWNLOAD_CERTS)
     if(BUILD_TESTS)
-    set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
         set(CERT_DOWNLOAD_DIR ${SYSTEM_TEST_DIR}/certificates)
     else()
         set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)

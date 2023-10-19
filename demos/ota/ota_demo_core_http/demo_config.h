@@ -114,7 +114,7 @@
  * @note This certificate should be PEM-encoded.
  */
 #ifndef ROOT_CA_CERT_PATH_HTTP
-    #define ROOT_CA_CERT_PATH_HTTP    "certificates/AmazonRootCA1.crt"
+    #define ROOT_CA_CERT_PATH_HTTP    ROOT_CA_CERT_PATH
 #endif
 
 /**
