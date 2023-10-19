@@ -59,14 +59,9 @@
 #define CLAIM_CERT_BUFFER_LENGTH           2048
 
 /**
- * @brief Size of buffer in which to hold the claim private key.
+ * @brief Size of buffer in which to hold the certificate signing request (CSR).
  */
 #define CLAIM_PRIVATE_KEY_BUFFER_LENGTH    2048
-
-/**
- * @brief Size of buffer in which to hold the private key.
- */
-#define PRIV_KEY_BUFFER_LENGTH             2048
 
 /**
  * @brief Represents string to be logged when mbedTLS returned error
@@ -1086,57 +1081,26 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
                         size_t csrBufferLength,
                         size_t * pOutCsrLength )
 {
+    CK_OBJECT_HANDLE privKeyHandle;
+    CK_OBJECT_HANDLE pubKeyHandle;
     CK_RV pkcs11Ret = CKR_OK;
-    mbedtls_pk_context privKey = { 0 };
+    mbedtls_pk_context privKey;
+    mbedtls_pk_info_t privKeyInfo;
+    mbedtls_ecdsa_context xEcdsaContext;
     mbedtls_x509write_csr req;
     int32_t mbedtlsRet = -1;
-
-    #if !defined( EXISTING_PRIVATE_KEY_PATH )
-        CK_OBJECT_HANDLE privKeyHandle;
-        CK_OBJECT_HANDLE pubKeyHandle;
-        mbedtls_pk_info_t privKeyInfo;
-        mbedtls_ecdsa_context xEcdsaContext;
-        const mbedtls_pk_info_t * header = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
-    #else
-        char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
-        size_t privatekeyLength;
-        bool status;
-    #endif // EXISTING_PRIVATE_KEY_PATH
+    const mbedtls_pk_info_t * header = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
 
     assert( pPrivKeyLabel != NULL );
     assert( pPubKeyLabel != NULL );
     assert( pCsrBuffer != NULL );
     assert( pOutCsrLength != NULL );
 
-    #if !defined( EXISTING_PRIVATE_KEY_PATH )
-        pkcs11Ret = generateKeyPairEC( p11Session,
-                                       pPrivKeyLabel,
-                                       pPubKeyLabel,
-                                       &privKeyHandle,
-                                       &pubKeyHandle );
-    #else
-        status = readFile( EXISTING_PRIVATE_KEY_PATH, privatekey, PRIV_KEY_BUFFER_LENGTH, &privatekeyLength );
-
-        if( status != true )
-        {
-            LogError( ( "Unable to read private key " EXISTING_PRIVATE_KEY_PATH " from disk." ) );
-            pkcs11Ret = CKR_FUNCTION_FAILED;
-        }
-        else
-        {
-            /* Save the private key into PKCS #11. */
-            status = loadPrivateKey( p11Session,
-                                     privatekey,
-                                     pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                     privatekeyLength );
-
-            if( status != true )
-            {
-                LogError( ( "Unable to load private key." ) );
-                pkcs11Ret = CKR_FUNCTION_FAILED;
-            }
-        }
-    #endif // EXISTING_PRIVATE_KEY_PATH
+    pkcs11Ret = generateKeyPairEC( p11Session,
+                                   pPrivKeyLabel,
+                                   pPubKeyLabel,
+                                   &privKeyHandle,
+                                   &pubKeyHandle );
 
     if( pkcs11Ret == CKR_OK )
     {
@@ -1160,34 +1124,21 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
             mbedtls_pk_init( &privKey );
         }
 
-        #if !defined( EXISTING_PRIVATE_KEY_PATH )
-            if( mbedtlsRet == 0 )
-            {
-                mbedtlsRet = extractEcPublicKey( p11Session, &xEcdsaContext, pubKeyHandle );
-            }
-        #endif // EXISTING_PRIVATE_KEY_PATH
+        if( mbedtlsRet == 0 )
+        {
+            mbedtlsRet = extractEcPublicKey( p11Session, &xEcdsaContext, pubKeyHandle );
+        }
 
         if( mbedtlsRet == 0 )
         {
-            #if !defined( EXISTING_PRIVATE_KEY_PATH )
-                signingContext.p11Session = p11Session;
-                signingContext.p11PrivateKey = privKeyHandle;
+            signingContext.p11Session = p11Session;
+            signingContext.p11PrivateKey = privKeyHandle;
 
-                memcpy( &privKeyInfo, header, sizeof( mbedtls_pk_info_t ) );
+            memcpy( &privKeyInfo, header, sizeof( mbedtls_pk_info_t ) );
 
-                privKeyInfo.sign_func = privateKeySigningCallback;
-                privKey.pk_info = &privKeyInfo;
-                privKey.pk_ctx = &xEcdsaContext;
-            #else
-                mbedtlsRet = mbedtls_pk_parse_key( &privKey, ( const uint8_t * ) privatekey,
-                                                   privatekeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
-                                                   NULL, 0 );
-
-                if( mbedtlsRet != 0 )
-                {
-                    LogError( ( "Unable to parse private key." ) );
-                }
-            #endif // EXISTING_PRIVATE_KEY_PATH
+            privKeyInfo.sign_func = privateKeySigningCallback;
+            privKey.pk_info = &privKeyInfo;
+            privKey.pk_ctx = &xEcdsaContext;
 
             mbedtls_x509write_csr_set_key( &req, &privKey );
 
@@ -1197,13 +1148,8 @@ bool generateKeyAndCsr( CK_SESSION_HANDLE p11Session,
         }
 
         mbedtls_x509write_csr_free( &req );
-
-        #if !defined( EXISTING_PRIVATE_KEY_PATH )
-            mbedtls_ecdsa_free( &xEcdsaContext );
-            mbedtls_ecp_group_free( &( xEcdsaContext.grp ) );
-        #else
-            mbedtls_pk_free( &privKey );
-        #endif
+        mbedtls_ecdsa_free( &xEcdsaContext );
+        mbedtls_ecp_group_free( &( xEcdsaContext.grp ) );
     }
 
     *pOutCsrLength = strlen( pCsrBuffer );
@@ -1227,26 +1173,6 @@ bool loadCertificate( CK_SESSION_HANDLE p11Session,
                                 pCertificate,
                                 certificateLength + 1, /* MbedTLS includes null character in length for PEM objects. */
                                 pLabel );
-
-    return( ret == CKR_OK );
-}
-
-/*-----------------------------------------------------------*/
-
-bool loadPrivateKey( CK_SESSION_HANDLE p11Session,
-                     const char * pPrivateKey,
-                     const char * pLabel,
-                     size_t privateKeyLength )
-{
-    CK_RV ret;
-
-    assert( pPrivateKey != NULL );
-    assert( pLabel != NULL );
-
-    ret = provisionPrivateKey( p11Session,
-                               pPrivateKey,
-                               privateKeyLength + 1, /* MbedTLS includes null character in length for PEM objects. */
-                               pLabel );
 
     return( ret == CKR_OK );
 }

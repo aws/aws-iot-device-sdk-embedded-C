@@ -58,7 +58,7 @@ target_include_directories( ${DEMO_NAME}
 set_macro_definitions(TARGETS ${DEMO_NAME}
                       OPTIONAL
                         "DOWNLOADED_CERT_WRITE_PATH"
-                        "EXISTING_PRIVATE_KEY_PATH"
+                        "GENERATED_PRIVATE_KEY_WRITE_PATH"
                       REQUIRED
                         "AWS_IOT_ENDPOINT"
                         "ROOT_CA_CERT_PATH"

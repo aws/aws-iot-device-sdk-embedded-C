@@ -27,8 +27,8 @@
 	url = https://github.com/aws/device-defender-for-aws-iot-embedded-sdk.git
 [submodule "libraries/standard/corePKCS11"]
 	path = libraries/standard/corePKCS11
-	branch = main
-	url = https://github.com/FreeRTOS/corePKCS11.git
+	branch = GP_SupportWriteGeneratedPrivateKey
+	url = https://github.com/giuspen/corePKCS11.git
 [submodule "libraries/standard/backoffAlgorithm"]
 	path = libraries/standard/backoffAlgorithm
 	branch = main
