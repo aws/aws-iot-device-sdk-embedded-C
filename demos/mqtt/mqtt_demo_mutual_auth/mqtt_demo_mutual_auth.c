@@ -1122,7 +1122,10 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo = { 0 };
-    void * pMemchrPtr;
+
+    #ifdef CLIENT_USERNAME
+        void * pMemchrPtr;
+    #endif
 
     assert( pMqttContext != NULL );
     assert( pSessionPresent != NULL );
@@ -1181,7 +1184,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
 
         connectInfo.pPassword = CLIENT_PASSWORD;
         connectInfo.passwordLength = strlen( CLIENT_PASSWORD );
-    #else  /* ifdef CLIENT_USERNAME */
+    #else /* ifdef CLIENT_USERNAME */
         connectInfo.pUserName = METRICS_STRING;
         connectInfo.userNameLength = METRICS_STRING_LENGTH;
         /* Password for authentication is not used. */
