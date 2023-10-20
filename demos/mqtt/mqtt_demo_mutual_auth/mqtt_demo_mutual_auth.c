@@ -387,17 +387,6 @@ struct NetworkContext
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Check if client username contains parameter.
- *
- * @param[in] pClientUsername Pointer to client username.
- * @param[in] clientUsernameLength Length of client username pointed by pClientUsername;
- *
- * @return ture if client username contains parameter. Otherwise, false.
- */
-static bool checkUsernameParameter( const char * pClientUsername,
-                                    size_t clientUsernameLength );
-
-/**
  * @brief The random number generator to use for exponential backoff with
  * jitter retry logic.
  *
@@ -619,6 +608,7 @@ static int waitForPacketAck( MQTTContext_t * pMqttContext,
  */
 static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs );
+
 
 /*-----------------------------------------------------------*/
 
