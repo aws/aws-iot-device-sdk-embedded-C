@@ -241,15 +241,24 @@
 #define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 500 )
 
 /**
- * @brief The MQTT metrics string expected by AWS IoT.
+ * @brief The MQTT metrics parameters expected by AWS IoT.
  */
-#define METRICS_STRING                           "?SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+#define METRICS_PARAMETERS                       "SDK=" OS_NAME "&Version=" OS_VERSION "&Platform=" HARDWARE_PLATFORM_NAME "&MQTTLib=" MQTT_LIB
+
+/**
+ * @brief The MQTT metrics string to be appended if #CLIENT_USERNAME doesn't contain parameter.
+ */
+#define METRICS_STRING                           "?" METRICS_PARAMETERS
 
 /**
  * @brief The length of the MQTT metrics string expected by AWS IoT.
  */
 #define METRICS_STRING_LENGTH                    ( ( uint16_t ) ( sizeof( METRICS_STRING ) - 1 ) )
 
+/**
+ * @brief The MQTT metrics string to be appended if #CLIENT_USERNAME contains parameters.
+ */
+#define METRICS_STRING_APPEND                    "&" METRICS_PARAMETERS
 
 #ifdef CLIENT_USERNAME
 
@@ -259,7 +268,16 @@
  * This is to support both metrics reporting and username/password based client
  * authentication by AWS IoT.
  */
-    #define CLIENT_USERNAME_WITH_METRICS    CLIENT_USERNAME METRICS_STRING
+    #define CLIENT_USERNAME_WITH_METRICS      CLIENT_USERNAME METRICS_STRING
+
+/**
+ * @brief Append the username with the metrics string if #CLIENT_USERNAME contains parameter.
+ *
+ * #CLIENT_USERNAME can be appended with extra parameters like authorizer, token
+ * and signature. Use the #METRICS_STRING_APPEND if parameters are already appended
+ * in #CLIENT_USERNAME.
+ */
+    #define CLIENT_USERNAME_APPEND_METRICS    CLIENT_USERNAME METRICS_STRING_APPEND
 #endif
 
 /**
@@ -367,6 +385,17 @@ struct NetworkContext
 };
 
 /*-----------------------------------------------------------*/
+
+/**
+ * @brief Check if client username contains parameter.
+ *
+ * @param[in] pClientUsername Pointer to client username.
+ * @param[in] clientUsernameLength Length of client username pointed by pClientUsername;
+ *
+ * @return ture if client username contains parameter. Otherwise, false.
+ */
+static bool checkUsernameParameter( const char * pClientUsername,
+                                    size_t clientUsernameLength );
 
 /**
  * @brief The random number generator to use for exponential backoff with
@@ -590,7 +619,6 @@ static int waitForPacketAck( MQTTContext_t * pMqttContext,
  */
 static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
                                             uint32_t ulTimeoutMs );
-
 
 /*-----------------------------------------------------------*/
 
@@ -1104,6 +1132,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo = { 0 };
+    void * pMemchrPtr;
 
     assert( pMqttContext != NULL );
     assert( pSessionPresent != NULL );
@@ -1147,11 +1176,22 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
      * the metrics string is appended to the username to support both client
      * authentication and metrics collection. */
     #ifdef CLIENT_USERNAME
-        connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
-        connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
+        pMemchrPtr = memchr( CLIENT_USERNAME, '?', strlen( CLIENT_USERNAME ) );
+
+        if( pMemchrPtr != NULL )
+        {
+            connectInfo.pUserName = CLIENT_USERNAME_APPEND_METRICS;
+            connectInfo.userNameLength = strlen( CLIENT_USERNAME_APPEND_METRICS );
+        }
+        else
+        {
+            connectInfo.pUserName = CLIENT_USERNAME_WITH_METRICS;
+            connectInfo.userNameLength = strlen( CLIENT_USERNAME_WITH_METRICS );
+        }
+
         connectInfo.pPassword = CLIENT_PASSWORD;
         connectInfo.passwordLength = strlen( CLIENT_PASSWORD );
-    #else
+    #else  /* ifdef CLIENT_USERNAME */
         connectInfo.pUserName = METRICS_STRING;
         connectInfo.userNameLength = METRICS_STRING_LENGTH;
         /* Password for authentication is not used. */
