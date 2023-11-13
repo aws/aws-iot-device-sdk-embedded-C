@@ -58,6 +58,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#if defined( DOWNLOADED_CERT_WRITE_PATH )
+    #include <fcntl.h>
+#endif // DOWNLOADED_CERT_WRITE_PATH
+
 /* Demo config. */
 #include "demo_config.h"
 
@@ -777,6 +781,34 @@ int main( int argc,
     if( status == true )
     {
         LogInfo( ( "Demo completed successfully." ) );
+
+        #if defined( DOWNLOADED_CERT_WRITE_PATH )
+            {
+                int fd = open( DOWNLOADED_CERT_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR );
+
+                if( -1 != fd )
+                {
+                    const ssize_t writtenBytes = write( fd, certificate, certificateLength );
+
+                    if( writtenBytes == certificateLength )
+                    {
+                        LogInfo( ( "Written %s successfully.", DOWNLOADED_CERT_WRITE_PATH ) );
+                    }
+                    else
+                    {
+                        LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
+                    }
+
+                    close( fd );
+                }
+                else
+                {
+                    LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
+                }
+            }
+        #else /* if defined( DOWNLOADED_CERT_WRITE_PATH ) */
+            LogInfo( ( "NOTE: define DOWNLOADED_CERT_WRITE_PATH in order to have the certificate written to disk." ) );
+        #endif // DOWNLOADED_CERT_WRITE_PATH
     }
 
     return ( status == true ) ? EXIT_SUCCESS : EXIT_FAILURE;

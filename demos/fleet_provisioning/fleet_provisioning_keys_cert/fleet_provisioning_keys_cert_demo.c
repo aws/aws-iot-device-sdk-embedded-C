@@ -57,7 +57,10 @@
 /* POSIX includes. */
 #include <unistd.h>
 #include <errno.h>
-#include <fcntl.h>
+
+#if defined( DOWNLOADED_CERT_WRITE_PATH ) || defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH )
+    #include <fcntl.h>
+#endif
 
 /* Demo config. */
 #include "demo_config.h"
@@ -125,7 +128,7 @@
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_SECONDS    ( 5 )
 
 /**
- * @brief Size of buffer in which to hold the certificate signing request (CSR).
+ * @brief Size of buffer in which to hold the private key.
  */
 #define PRIV_KEY_BUFFER_LENGTH                         2048
 
@@ -605,7 +608,7 @@ int main( int argc,
 
         if( status == true )
         {
-            /* Save the certificate into PKCS #11. */
+            /* Save the private key into PKCS #11. */
             status = loadPrivateKey( p11Session,
                                      privatekey,
                                      pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,

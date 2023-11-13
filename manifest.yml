@@ -56,7 +56,7 @@ dependencies:
       url: "https://github.com/FreeRTOS/backoffAlgorithm"
       path: "libraries/standard/backoffAlgorithm"
   - name: "corePKCS11"
-    version: "db05642c6c1f97055128f17c7962d7daf725d3c5"
+    version: "c671c11f2de13c31e8eb9563858fb513b4c5b678"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/corePKCS11"

@@ -56,6 +56,9 @@ target_include_directories( ${DEMO_NAME}
                               "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils" )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
+                      OPTIONAL
+                        "DOWNLOADED_CERT_WRITE_PATH"
+                        "GENERATED_PRIVATE_KEY_WRITE_PATH"
                       REQUIRED
                         "AWS_IOT_ENDPOINT"
                         "ROOT_CA_CERT_PATH"
