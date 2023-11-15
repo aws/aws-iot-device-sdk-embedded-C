@@ -1,7 +1,16 @@
 
 ## Updating MQTT keep alive time
 
-When the MQTT keep alive time is increased and if its observed that the device disconnection is not detected, one possible reason might be that the TCP connection dies because the new MQTT keep alive exceeds the underlying TCP socket's keep alive configuration. On BSD (or similar) sockets it can be enabled by configuring the following options described in [socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html) and [tcp(7)](https://man7.org/linux/man-pages/man7/tcp.7.html) man pages:
+When you increase MQTT keep alive time and observe that the
+device is getting disconnected before the MQTT keep alive kicks in,
+one possible reason might be that the underlying TCP connection
+dies before the MQTT keep alive timer expires. 
+
+One possible solution is to enable TCP keep alive to ensure that the
+TCP connection does not die because of inactivity. On BSD (or similar)
+sockets it can be enabled by configuring the following options described
+in [socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html) and
+[tcp(7)](https://man7.org/linux/man-pages/man7/tcp.7.html) man pages:
 
 * `SO_KEEPALIVE` - Keep-alives are sent only when the `SO_KEEPALIVE` socket option is enabled.
 * `TCP_KEEPIDLE`- The time (in seconds) the connection needs to remain idle before TCP starts sending keepalive probes, if the socket option `SO_KEEPALIVE` has been set on this socket.
