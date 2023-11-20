@@ -18,37 +18,37 @@ Sample code snippet to update TCP keep alive configuration for BSD sockets:
 
     /* Enable keep alive feature. */
     status = setsockopt( *pTcpSocket,
-                            SOL_SOCKET,
-                            SO_KEEPALIVE,
-                            &keepAliveFlag,
-                            ( socklen_t ) sizeof( keepAliveFlag ) );
+                         SOL_SOCKET,
+                         SO_KEEPALIVE,
+                         &keepAliveFlag,
+                         ( socklen_t ) sizeof( keepAliveFlag ) );
     assert( status == 0 );
 
     /* If the connection is idle for 60 seconds, send keep
-    * alive probe. */
+     * alive probe. */
     status = setsockopt( *pTcpSocket,
-                            IPPROTO_TCP,
-                            TCP_KEEPIDLE,
-                            &keepAliveIdle,
-                            ( socklen_t ) sizeof( keepAliveIdle ) );
+                         IPPROTO_TCP,
+                         TCP_KEEPIDLE,
+                         &keepAliveIdle,
+                         ( socklen_t ) sizeof( keepAliveIdle ) );
     assert( status == 0 );
 
     /* When a keep alive probe is unacknowledged, this is time interval
-    * between keep alive probes sent. */
+     * between keep alive probes sent. */
     status = setsockopt( *pTcpSocket,
-                            IPPROTO_TCP,
-                            TCP_KEEPINTVL,
-                            &keepAliveInterval,
-                            ( socklen_t ) sizeof( keepAliveInterval ) );
+                         IPPROTO_TCP,
+                         TCP_KEEPINTVL,
+                         &keepAliveInterval,
+                         ( socklen_t ) sizeof( keepAliveInterval ) );
     assert( status == 0 );
 
     /* When these many keep alive probes go unacknowledged, declare the
-    * connection dead. */
+     * connection dead. */
     status = setsockopt( *pTcpSocket,
-                            IPPROTO_TCP,
-                            TCP_KEEPCNT,
-                            &keepAliveCount,
-                            ( socklen_t ) sizeof( keepAliveCount ) );
+                         IPPROTO_TCP,
+                         TCP_KEEPCNT,
+                         &keepAliveCount,
+                         ( socklen_t ) sizeof( keepAliveCount ) );
     assert( status == 0 );
 
 ```
