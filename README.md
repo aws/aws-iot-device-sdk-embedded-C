@@ -666,7 +666,28 @@ docker run -p 80:80 kennethreitz/httpbin
 
 `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
 
-To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in order to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
+To run `http_demo_basic_tls`, you could use either [Tunnelmole](https://github.com/robbie-cahill/tunnelmole-client), an open source tunneling tool, or [ngrok](https://ngrok.com/download), a popular closed source tunneling tool, to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
+
+**Using Tunnelmole**
+First, install Tunnelmole. On Linux, Mac and Windows Subsystem for Linux, use
+
+```sh
+curl -O https://tunnelmole.com/sh/install.sh && sudo bash install.sh
+```
+
+For Windows without WSL, [download tmole.exe](https://tunnelmole.com/downloads/tmole.exe) and add it to your [PATH](https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows).
+
+Then run `tmole 80`
+
+```sh
+tmole 80
+```
+
+Tunnelmole will provide a https link that can be substituted in `demos/http/http_demo_basic_tls/demo_config.h` and has a format of `https://bvdo5f-ip-49-183-170-144.tunnelmole.net`.
+
+Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by Tunnelmole, without `https://` preceding it.
+
+**Using ngrok**
 
 ```sh
 ./ngrok http 80 # May have to use ./ngrok.exe depending on OS or filename of the executable
