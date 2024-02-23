@@ -348,8 +348,7 @@ struct NetworkContext
 static int32_t connectToIotServer( NetworkContext_t * pNetworkContext );
 
 /**
- * @brief Send multiple HTTP GET requests, based on a specified path, to
- * download a file in chunks from the host S3 server.
+ * @brief Generate a pre-signed URL to an S3 object file and print it to stdout
  *
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
@@ -359,8 +358,8 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext );
  * @return The status of the file download using multiple GET requests to the
  * server: true on success, false on failure.
  */
-static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                                  const char * pPath );
+static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
+                                              const char * pPath );
 
 /**
  * @brief Retrieve the size of the S3 object that is specified in pPath.
@@ -373,14 +372,12 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
  * @param[in] pPath The Request-URI to the objects of interest. This string
  * should be null-terminated.
  *
- * @return The status of the file size acquisition using a GET request to the
- * server: true on success, false on failure.
+ * @return The status of the pre-signed URL generation: true on success, false on failure.
  */
-static bool getS3ObjectFileSize( size_t * pFileSize,
-                                 const TransportInterface_t * pTransportInterface,
-                                 const char * pHost,
-                                 size_t hostLen,
-                                 const char * pPath );
+static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
+                                           const char * pHost,
+                                           size_t hostLen,
+                                           const char * pPath );
 
 /**
  * @brief Parse the credentials retrieved from AWS IOT Credential Provider using coreJSON API.
@@ -846,14 +843,11 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
 
 /*-----------------------------------------------------------*/
 
-static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterface,
-                                  const char * pPath )
+static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
+                                              const char * pPath )
 {
     bool returnStatus = false;
     HTTPStatus_t httpStatus = HTTPSuccess;
-
-    /* The size of the file we are trying to download in S3. */
-    size_t fileSize = 0;
 
     /* The number of bytes we want to request with in each range of the file
      * bytes. */
@@ -900,22 +894,20 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
     response.pBuffer = userBuffer;
     response.bufferLen = USER_BUFFER_LENGTH;
 
-    /* Verify the file exists by retrieving the file size. */
-    returnStatus = getS3ObjectFileSize( &fileSize,
-                                        pTransportInterface,
-                                        serverHost,
-                                        serverHostLength,
-                                        pPath );
+    /* Generate and print the pre-signed URL. */
+    returnStatus = printS3ObjectFilePresignedURL( pTransportInterface,
+                                                  serverHost,
+                                                  serverHostLength,
+                                                  pPath );
     return true;
 }
 
 /*-----------------------------------------------------------*/
 
-static bool getS3ObjectFileSize( size_t * pFileSize,
-                                 const TransportInterface_t * pTransportInterface,
-                                 const char * pHost,
-                                 size_t hostLen,
-                                 const char * pPath )
+static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
+                                           const char * pHost,
+                                           size_t hostLen,
+                                           const char * pPath )
 {
     bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -1164,18 +1156,7 @@ int main( int argc,
     credentialResponse.pBuffer = pAwsIotHttpBuffer;
     credentialResponse.bufferLen = CREDENTIAL_BUFFER_LENGTH;
 
-#if 1
     credentialStatus = getTemporaryCredentials( &transportInterface, pDateISO8601, sizeof( pDateISO8601 ), &credentialResponse, &sigvCreds );
-#else
-    sigvCreds.pAccessKeyId = "ASIAVBKNXEL5KM7WKF5J";
-    sigvCreds.accessKeyIdLen = strlen(sigvCreds.pAccessKeyId);
-    sigvCreds.pSecretAccessKey = "S96+y1HoKqmKJV+M3rIaqHNiOJfez5Zw7/JKoOMn";
-    sigvCreds.secretAccessKeyLen = strlen(sigvCreds.pSecretAccessKey);
-    pSecurityToken = "IQoJb3JpZ2luX2VjENn//////////wEaDGV1LWNlbnRyYWwtMSJHMEUCID1N4fp5hf43SfExqAeR0TzAPNPqFN5BB602HNGQgayPAiEAoDmH1Qp9jQxkCw03aEQQgDnoz3wizi7G0YrrP8ZmbIQq5wMI0v//////////ARAAGgwzNDY0NDQ3MzUyMjYiDHcZJJt5/OOrYNMe5Sq7A0Ee9OnHTudb0VfrrPpDa+U4WA2gftulM0TcE5c3d/1CM18/K6RIP47XuG5eLKCWp2mnrs4584LPUB9p3JTzAb8+vqOZJddIgPq6UPo1lzXs8NaRu1AIUvmSeCZESYuzjz52uL0yMvREp+ndOfoesmn7h7ry1QeSvc30Wk48t7jVc/uZXTDrBBbk2oKzcsnFD09Z5XfTAZsCRF/FFxFsLYjpE9I1rreOXB9j43Jw4Sjboa6wb5EViFIlZhyht/qBsgF5yqNuRD/m5Y4z1s4nK9AyEzvclxr53FwrsAlYWD5LSq3QXpeJSuH6eJJcYiwEnPLLjG8XWlFUftzrci9eBa+HWjmN2MxJ87AY2++IMgh5PJlBB0rKAFCFtDMW5e+DWCf/s9HZHeXygXpfk3HW1Z41t24PiJJH0+/8v67bnMmSORb0YZ/qr81mnAbh/CXwyfKVCPDuMLr5prnCE7JRh0MldmS2QT+KHFJBWXsZno1X1Js86zIQO1wOhTYa6vQ6mX3TuPB+ugy/Ihb11a54Fk8snbUc8kVBrr7l/85XPWVap17X8Zz4WQloM+TsUaATFg0Bqa3qoXR+OzgDMKy/36gGOpoBOewB/N92nslpmeMPCK0G8FjdXDsRMGhPjDIbJkfMngM9y/ZNT+ahiQDY8iTUylxxlCec9FvQVs6i5X3vkDVY2pqnQ3L6JnnJ01LIikSMSzvOwuLAgEYin6cgvJ+k8VGNQta4xEFrCDgyZAS3mlyhZ2nqT0fcICwgd9c+gRObVMoonXvISE3CHPuRs5I+MCT1wsDy46rCBSIq6A==";
-    securityTokenLen = strlen(pSecurityToken);
-    memcpy(pDateISO8601, "20230930T084822Z", sizeof(pDateISO8601));
-    credentialStatus = true;
-#endif
 
     returnStatus = ( credentialStatus == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
 
@@ -1209,8 +1190,8 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            ret = downloadS3ObjectFile( &transportInterface,
-                                        pPath );
+            ret = generateS3ObjectFilePresignedURL( &transportInterface,
+                                                    pPath );
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
     }
