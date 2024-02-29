@@ -355,16 +355,14 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext );
  * @param[in] pPath The Request-URI to the objects of interest. This string
  * should be null-terminated.
  *
- * @return The status of the file download using multiple GET requests to the
- * server: true on success, false on failure.
+ * @return The status of the pre-signed URL generation: true on success, false on failure.
  */
 static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
                                               const char * pPath );
 
 /**
- * @brief Retrieve the size of the S3 object that is specified in pPath.
+ * @brief Generate and print a pre-signed URL to the S3 object file that is specified in pPath.
  *
- * @param[out] pFileSize The size of the S3 object.
  * @param[in] pTransportInterface The transport interface for making network
  * calls.
  * @param[in] pHost The server host address.
@@ -847,7 +845,6 @@ static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTran
                                               const char * pPath )
 {
     bool returnStatus = false;
-    HTTPStatus_t httpStatus = HTTPSuccess;
 
     /* The number of bytes we want to request with in each range of the file
      * bytes. */
@@ -899,7 +896,7 @@ static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTran
                                                   serverHost,
                                                   serverHostLength,
                                                   pPath );
-    return true;
+    return returnStatus;
 }
 
 /*-----------------------------------------------------------*/
@@ -915,13 +912,6 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
     HTTPRequestInfo_t requestInfo;
     HTTPResponse_t response;
     uint8_t userBuffer[ USER_BUFFER_LENGTH ];
-
-    /* The location of the file size in contentRangeValStr. */
-    char * pFileSizeStr = NULL;
-
-    /* String to store the Content-Range header value. */
-    char * contentRangeValStr = NULL;
-    size_t contentRangeValStrLength = 0;
 
     SigV4Status_t sigv4Status = SigV4Success;
     SigV4HttpParameters_t sigv4HttpParams;
@@ -986,7 +976,6 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
     strcat(x_amz_credentials, "/");
     strcat(x_amz_credentials, AWS_S3_BUCKET_REGION);
     strcat(x_amz_credentials, "/s3/aws4_request");
-    //LogInfo( ( "x_amz_credentials = '%s'", x_amz_credentials ) );
 
     // https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
     char canonical_queries[2048] = "";
@@ -1032,40 +1021,42 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
 
     if( returnStatus == true )
     {
-        char ota_temp_url[4096] = "https://" AWS_S3_ENDPOINT AWS_S3_URI_PATH "?";
-        strcat(ota_temp_url, "X-Amz-Algorithm=");
-        strcat(ota_temp_url, SIGV4_AWS4_HMAC_SHA256);
-        strcat(ota_temp_url, "&X-Amz-Credential=");
-        size_t encodedLen = sizeof(ota_temp_url) - strlen(ota_temp_url);
-        returnStatus = SigV4_EncodeURI( x_amz_credentials,
-                                        strlen(x_amz_credentials),
-                                        ota_temp_url + strlen(ota_temp_url),
-                                        &encodedLen,
-                                        true/* encode slash */,
-                                        false/* do not double encode equal */ );
-        if( returnStatus != SigV4Success )
+        char presigned_url[4096] = "https://" AWS_S3_ENDPOINT AWS_S3_URI_PATH "?";
+        strcat(presigned_url, "X-Amz-Algorithm=");
+        strcat(presigned_url, SIGV4_AWS4_HMAC_SHA256);
+        strcat(presigned_url, "&X-Amz-Credential=");
+        size_t encodedLen = sizeof(presigned_url) - strlen(presigned_url);
+        sigv4Status = SigV4_EncodeURI( x_amz_credentials,
+                                       strlen(x_amz_credentials),
+                                       presigned_url + strlen(presigned_url),
+                                       &encodedLen,
+                                       true/* encode slash */,
+                                       false/* do not double encode equal */ );
+        if( sigv4Status != SigV4Success )
         {
             LogError( ( "Failed to run SigV4_EncodeURI on '%s'.", x_amz_credentials ) );
+            returnStatus = false;
         }
-        strcat(ota_temp_url, "&X-Amz-Date=");
-        strncat(ota_temp_url, pDateISO8601, SIGV4_ISO_STRING_LEN);
-        strcat(ota_temp_url, "&X-Amz-Expires=3600");
-        strcat(ota_temp_url, "&X-Amz-SignedHeaders=host");
-        strcat(ota_temp_url, "&X-Amz-Security-Token=");
-        encodedLen = sizeof(ota_temp_url) - strlen(ota_temp_url);
-        returnStatus = SigV4_EncodeURI( pSecurityToken,
-                                        securityTokenLen,
-                                        ota_temp_url + strlen(ota_temp_url),
-                                        &encodedLen,
-                                        true/* encode slash */,
-                                        false/* do not double encode equal */ );
-        if( returnStatus != SigV4Success )
+        strcat(presigned_url, "&X-Amz-Date=");
+        strncat(presigned_url, pDateISO8601, SIGV4_ISO_STRING_LEN);
+        strcat(presigned_url, "&X-Amz-Expires=3600");
+        strcat(presigned_url, "&X-Amz-SignedHeaders=host");
+        strcat(presigned_url, "&X-Amz-Security-Token=");
+        encodedLen = sizeof(presigned_url) - strlen(presigned_url);
+        sigv4Status = SigV4_EncodeURI( pSecurityToken,
+                                       securityTokenLen,
+                                       presigned_url + strlen(presigned_url),
+                                       &encodedLen,
+                                       true/* encode slash */,
+                                       false/* do not double encode equal */ );
+        if( sigv4Status != SigV4Success )
         {
             LogError( ( "Failed to run SigV4_EncodeURI on '%s'.", pSecurityToken ) );
+            returnStatus = false;
         }
-        strcat(ota_temp_url, "&X-Amz-Signature=");
-        strncat(ota_temp_url, signature, signatureLen);
-        LogInfo( ( "ota_temp_url=\n%s", ota_temp_url ) );
+        strcat(presigned_url, "&X-Amz-Signature=");
+        strncat(presigned_url, signature, signatureLen);
+        LogInfo( ( "presigned_url=\n%s", presigned_url ) );
     }
 
     return returnStatus;
@@ -1076,27 +1067,8 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
 /**
  * @brief Entry point of demo.
  *
- * This example, using a pre-signed URL,  resolves a S3 domain, establishes a
- * TCP connection, validates the server's certificate using the root CA
- * certificate defined in the config header, then finally performs a TLS
- * handshake with the HTTP server so that all communication is encrypted. After
- * which, the HTTP Client library API is used to download the S3 file (by
- * sending multiple GET requests, filling up the response buffer each time until
- * all parts are downloaded). If any request fails, an error code is returned.
- *
- * @note This example is single-threaded and uses statically allocated memory.
- *
- * @note This demo requires user-generated pre-signed URLs to be pasted into
- * demo_config.h. Please use the provided script "presigned_urls_gen.py"
- * (located in located in demos/http/common/src) to generate these URLs. For
- * detailed instructions, see the accompanied README.md.
- *
- * @note If your file requires more than 99 range requests to S3 (depending on
- * the size of the file and the length specified in RANGE_REQUEST_LENGTH), your
- * connection may be dropped by S3. In this case, either increase the buffer
- * size and range request length (if feasible), to reduce the number of requests
- * required, or re-establish the connection with S3 after receiving a
- * "Connection: close" response header.
+ * This example generates and prints a pre-signed URL to an S3 object file
+ * using temporary credentials
  */
 int main( int argc,
           char ** argv )
