@@ -150,6 +150,43 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
 
 /*-----------------------------------------------------------*/
 
+void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeaders,
+                                       char ** pStartHeaderLoc,
+                                       size_t * pHeadersDataLen )
+{
+    size_t headerLen = requestHeaders.headersLen;
+    char * pHeaders = ( char * ) requestHeaders.pBuffer;
+    bool newLineFound = false;
+
+    assert( pStartHeaderLoc != NULL );
+    assert( pHeadersDataLen != NULL );
+
+    while( headerLen >= 2 )
+    {
+        if( 0 == strncmp( pHeaders, "\r\n", strlen( "\r\n" ) ) )
+        {
+            newLineFound = true;
+            break;
+        }
+
+        pHeaders++;
+        headerLen--;
+    }
+
+    if( newLineFound == false )
+    {
+        LogError( ( "Failed to find starting location of HTTP headers in HTTP request: \"\\r\\n\" missing before start of HTTP headers." ) );
+    }
+
+    assert( newLineFound != false );
+
+    /* Moving header pointer past "\r\n" .*/
+    *pHeadersDataLen = headerLen - 2;
+    *pStartHeaderLoc = pHeaders + 2;
+}
+
+/*-----------------------------------------------------------*/
+
 uint32_t getTimeMs( void )
 {
     uint32_t ms;

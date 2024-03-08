@@ -64,6 +64,17 @@ int32_t connectToServerWithBackoffRetries( TransportConnect_t connectFunction,
                                            NetworkContext_t * pNetworkContext );
 
 /**
+ * @brief Get the starting location of HTTP header in an HTTP request.
+ *
+ * @param[in] requestHeaders HTTP request headers that contains the HTTP request information.
+ * @param[out] pStartHeaderLoc Buffer to store the start Location of the HTTP header.
+ * @param[out] pHeadersDataLen Length of @p pStartHeaderLoc.
+ */
+void getHeaderStartLocFromHttpRequest( HTTPRequestHeaders_t requestHeaders,
+                                       char ** pStartHeaderLoc,
+                                       size_t * pHeadersDataLen );
+
+/**
  * @brief Get the current time in milliseconds.
  *
  * @return Time in milliseconds.

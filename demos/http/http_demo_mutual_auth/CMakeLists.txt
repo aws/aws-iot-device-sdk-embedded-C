@@ -8,7 +8,6 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorith
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the coreHTTP library
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
-file( GLOB DEMO_UTILS "${DEMOS_DIR}/http/common/src/*.c*" )
 
 # Disable some warnings for llhttp sources.
 set_source_files_properties(
@@ -21,7 +20,8 @@ set_source_files_properties(
 add_executable(
     ${DEMO_NAME}
         "${DEMO_FILE}"
-        ${DEMO_UTILS}
+        ${DEMOS_DIR}/http/common/src/http_demo_url_utils.c
+        ${DEMOS_DIR}/http/common/src/http_demo_utils.c
         ${HTTP_SOURCES}
         ${HTTP_THIRD_PARTY_SOURCES}
         ${BACKOFF_ALGORITHM_SOURCES}
