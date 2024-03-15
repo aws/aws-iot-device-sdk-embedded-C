@@ -253,7 +253,7 @@ static bool generateS3ObjectFilePresignedURL( const char * pPath );
 /**
  * @brief Generate and print a pre-signed URL to the S3 object file that is specified in pPath.
  *
-
+ *
  * @param[in] pHost The server host address.
  * @param[in] hostLen The length of the server host address.
  * @param[in] pPath The Request-URI to the objects of interest. This string
@@ -299,6 +299,7 @@ static SigV4Parameters_t sigv4Params =
 static bool generateS3ObjectFilePresignedURL( const char * pPath )
 {
     bool returnStatus = false;
+
     assert( pPath != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
@@ -403,11 +404,12 @@ static bool printS3ObjectFilePresignedURL( const char * pHost,
      * library and are not required by SigV4 library. */
     getHeaderStartLocFromHttpRequest( requestHeaders, &pHeaders, &headersLen );
 
+    int dateOffset = ( sigvCreds.accessKeyIdLen + 1 );
     /* <your-access-key-id>/<date>/<AWS Region>/<AWS-service>/aws4_request */
-    char x_amz_credentials[ 256 ] = "";
+    char x_amz_credentials[ 256 ] = { 0 };
     strncat( x_amz_credentials, sigvCreds.pAccessKeyId, sigvCreds.accessKeyIdLen );
     strcat( x_amz_credentials, "/" );
-    strncat( x_amz_credentials, pDateISO8601, 8 );
+    memcpy( x_amz_credentials + dateOffset, pDateISO8601, 8 );
     strcat( x_amz_credentials, "/" );
     strcat( x_amz_credentials, AWS_S3_BUCKET_REGION );
     strcat( x_amz_credentials, "/s3/aws4_request" );
