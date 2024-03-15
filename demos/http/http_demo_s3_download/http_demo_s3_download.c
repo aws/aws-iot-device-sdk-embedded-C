@@ -175,17 +175,17 @@
 /**
  * @brief Field name of the HTTP Authorization header to add to the request headers.
  */
-#define SIGV4_AUTH_HEADER_FIELD_NAME                  "Authorization"
+#define SIGV4_AUTH_HEADER_FIELD_NAME      "Authorization"
 
 /**
  * @brief Length of AWS HTTP Authorization header value generated using SigV4 library.
  */
-#define AWS_HTTP_AUTH_HEADER_VALUE_LEN                2048U
+#define AWS_HTTP_AUTH_HEADER_VALUE_LEN    2048U
 
 /**
  * @brief Represents empty payload for HTTP GET request sent to AWS S3.
  */
-#define S3_REQUEST_EMPTY_PAYLOAD                      ""
+#define S3_REQUEST_EMPTY_PAYLOAD          ""
 
 
 /**

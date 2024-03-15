@@ -137,10 +137,10 @@ static JSONStatus_t parseCredentials( HTTPResponse_t * response,
 /*-----------------------------------------------------------*/
 
 bool getTemporaryCredentials( TransportInterface_t * transportInterface,
-                                     char * pDateISO8601,
-                                     size_t pDateISO8601Len,
-                                     HTTPResponse_t * response,
-                                     SigV4Credentials_t * sigvCreds )
+                              char * pDateISO8601,
+                              size_t pDateISO8601Len,
+                              HTTPResponse_t * response,
+                              SigV4Credentials_t * sigvCreds )
 {
     bool returnStatus = true;
     HTTPRequestHeaders_t requestHeaders = { 0 };

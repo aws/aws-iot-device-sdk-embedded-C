@@ -742,6 +742,7 @@ statechanged
 std
 stderr
 stdlib
+stdout
 strerror
 strlen
 struct

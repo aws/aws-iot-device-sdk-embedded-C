@@ -45,12 +45,12 @@
 /**
  * @brief Length in bytes of hex encoded hash digest.
  */
-#define HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH         ( ( ( uint16_t ) 64 ) )
+#define HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH    ( ( ( uint16_t ) 64 ) )
 
 /**
  * @brief Length in bytes of SHA256 hash digest.
  */
-#define SHA256_HASH_DIGEST_LENGTH                     ( HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH / 2 )
+#define SHA256_HASH_DIGEST_LENGTH                ( HEX_ENCODED_SHA256_HASH_DIGEST_LENGTH / 2 )
 
 /**
  * @brief Maximum Length for AWS IOT Credential provider server host name.
@@ -58,7 +58,7 @@
  * @note length of the AWS IOT Credential provider server host name string
  * cannot exceed this value.
  */
-#define SERVER_HOST_NAME_MAX_LENGTH                   65U
+#define SERVER_HOST_NAME_MAX_LENGTH              65U
 
 /**
  * @brief The host address string extracted from the AWS IOT CREDENTIAL PROVIDER URL.

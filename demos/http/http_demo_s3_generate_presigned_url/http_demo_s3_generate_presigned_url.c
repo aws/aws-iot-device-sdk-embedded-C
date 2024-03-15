@@ -106,7 +106,7 @@
 /**
  * @brief The length of the HTTP GET method.
  */
-#define HTTP_METHOD_GET_LENGTH                    ( sizeof( HTTP_METHOD_GET ) - 1 )
+#define HTTP_METHOD_GET_LENGTH    ( sizeof( HTTP_METHOD_GET ) - 1 )
 
 /**
  * @brief The maximum number of times to run the loop in this demo.
@@ -155,12 +155,12 @@
 /**
  * @brief Length of AWS HTTP Authorization header value generated using SigV4 library.
  */
-#define AWS_HTTP_AUTH_HEADER_VALUE_LEN                2048U
+#define AWS_HTTP_AUTH_HEADER_VALUE_LEN    2048U
 
 /**
  * @brief Represents empty payload for HTTP GET request sent to AWS S3.
  */
-#define S3_REQUEST_EMPTY_PAYLOAD                      ""
+#define S3_REQUEST_EMPTY_PAYLOAD          ""
 
 
 /**
@@ -221,11 +221,6 @@ static uint8_t pAwsIotHttpBuffer[ CREDENTIAL_BUFFER_LENGTH ] = { 0 };
 static char pDateISO8601[ SIGV4_ISO_STRING_LEN ] = { 0 };
 
 /**
- * @brief Represents hash digest of payload.
- */
-static char pPayloadHashDigest[ SHA256_HASH_DIGEST_LENGTH ];
-
-/**
  * @brief Represents Authorization header value generated using SigV4 library.
  */
 static char pSigv4Auth[ AWS_HTTP_AUTH_HEADER_VALUE_LEN ];
@@ -248,21 +243,17 @@ struct NetworkContext
 /**
  * @brief Generate a pre-signed URL to an S3 object file and print it to stdout
  *
- * @param[in] pTransportInterface The transport interface for making network
- * calls.
  * @param[in] pPath The Request-URI to the objects of interest. This string
  * should be null-terminated.
  *
  * @return The status of the pre-signed URL generation: true on success, false on failure.
  */
-static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
-                                              const char * pPath );
+static bool generateS3ObjectFilePresignedURL( const char * pPath );
 
 /**
  * @brief Generate and print a pre-signed URL to the S3 object file that is specified in pPath.
  *
- * @param[in] pTransportInterface The transport interface for making network
- * calls.
+
  * @param[in] pHost The server host address.
  * @param[in] hostLen The length of the server host address.
  * @param[in] pPath The Request-URI to the objects of interest. This string
@@ -270,8 +261,7 @@ static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTran
  *
  * @return The status of the pre-signed URL generation: true on success, false on failure.
  */
-static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
-                                           const char * pHost,
+static bool printS3ObjectFilePresignedURL( const char * pHost,
                                            size_t hostLen,
                                            const char * pPath );
 
@@ -306,27 +296,9 @@ static SigV4Parameters_t sigv4Params =
 
 /*-----------------------------------------------------------*/
 
-static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
-                                              const char * pPath )
+static bool generateS3ObjectFilePresignedURL( const char * pPath )
 {
     bool returnStatus = false;
-
-    /* The number of bytes we want to request with in each range of the file
-     * bytes. */
-    size_t numReqBytes = 0;
-    /* curByte indicates which starting byte we want to download next. */
-    size_t curByte = 0;
-
-    SigV4Status_t sigv4Status = SigV4Success;
-    SigV4HttpParameters_t sigv4HttpParams;
-
-    char * pHeaders = NULL;
-    size_t headersLen = 0;
-
-    /* Store Signature used in AWS HTTP requests generated using SigV4 library. */
-    char * signature = NULL;
-    size_t signatureLen = 0;
-
     assert( pPath != NULL );
 
     /* Initialize all HTTP Client library API structs to 0. */
@@ -357,8 +329,7 @@ static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTran
     response.bufferLen = USER_BUFFER_LENGTH;
 
     /* Generate and print the pre-signed URL. */
-    returnStatus = printS3ObjectFilePresignedURL( pTransportInterface,
-                                                  serverHost,
+    returnStatus = printS3ObjectFilePresignedURL( serverHost,
                                                   serverHostLength,
                                                   pPath );
     return returnStatus;
@@ -366,8 +337,7 @@ static bool generateS3ObjectFilePresignedURL( const TransportInterface_t * pTran
 
 /*-----------------------------------------------------------*/
 
-static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTransportInterface,
-                                           const char * pHost,
+static bool printS3ObjectFilePresignedURL( const char * pHost,
                                            size_t hostLen,
                                            const char * pPath )
 {
@@ -433,27 +403,27 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
      * library and are not required by SigV4 library. */
     getHeaderStartLocFromHttpRequest( requestHeaders, &pHeaders, &headersLen );
 
-    // <your-access-key-id>/<date>/<AWS Region>/<AWS-service>/aws4_request
-    char x_amz_credentials[256] = "";
-    strncat(x_amz_credentials, sigvCreds.pAccessKeyId, sigvCreds.accessKeyIdLen);
-    strcat(x_amz_credentials, "/");
-    strncat(x_amz_credentials, pDateISO8601, 8);
-    strcat(x_amz_credentials, "/");
-    strcat(x_amz_credentials, AWS_S3_BUCKET_REGION);
-    strcat(x_amz_credentials, "/s3/aws4_request");
+    /* <your-access-key-id>/<date>/<AWS Region>/<AWS-service>/aws4_request */
+    char x_amz_credentials[ 256 ] = "";
+    strncat( x_amz_credentials, sigvCreds.pAccessKeyId, sigvCreds.accessKeyIdLen );
+    strcat( x_amz_credentials, "/" );
+    strncat( x_amz_credentials, pDateISO8601, 8 );
+    strcat( x_amz_credentials, "/" );
+    strcat( x_amz_credentials, AWS_S3_BUCKET_REGION );
+    strcat( x_amz_credentials, "/s3/aws4_request" );
 
-    // https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
-    char canonical_queries[2048] = "";
-    strcat(canonical_queries, "X-Amz-Algorithm=");
-    strcat(canonical_queries, SIGV4_AWS4_HMAC_SHA256);
-    strcat(canonical_queries, "&X-Amz-Credential=");
-    strcat(canonical_queries, x_amz_credentials);
-    strcat(canonical_queries, "&X-Amz-Date=");
-    strncat(canonical_queries, pDateISO8601, SIGV4_ISO_STRING_LEN);
-    strcat(canonical_queries, "&X-Amz-Expires=3600");
-    strcat(canonical_queries, "&X-Amz-Security-Token=");
-    strncat(canonical_queries, pSecurityToken, securityTokenLen);
-    strcat(canonical_queries, "&X-Amz-SignedHeaders=host");
+    /* https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html */
+    char canonical_queries[ 2048 ] = "";
+    strcat( canonical_queries, "X-Amz-Algorithm=" );
+    strcat( canonical_queries, SIGV4_AWS4_HMAC_SHA256 );
+    strcat( canonical_queries, "&X-Amz-Credential=" );
+    strcat( canonical_queries, x_amz_credentials );
+    strcat( canonical_queries, "&X-Amz-Date=" );
+    strncat( canonical_queries, pDateISO8601, SIGV4_ISO_STRING_LEN );
+    strcat( canonical_queries, "&X-Amz-Expires=3600" );
+    strcat( canonical_queries, "&X-Amz-Security-Token=" );
+    strncat( canonical_queries, pSecurityToken, securityTokenLen );
+    strcat( canonical_queries, "&X-Amz-SignedHeaders=host" );
 
     /* Setup the HTTP parameters. */
     sigv4HttpParams.pHttpMethod = requestInfo.pMethod;
@@ -463,7 +433,7 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
     sigv4HttpParams.pPath = requestInfo.pPath;
     sigv4HttpParams.pathLen = requestInfo.pathLen;
     sigv4HttpParams.pQuery = canonical_queries;
-    sigv4HttpParams.queryLen = strlen(canonical_queries);
+    sigv4HttpParams.queryLen = strlen( canonical_queries );
     sigv4HttpParams.pHeaders = pHeaders;
     sigv4HttpParams.headersLen = headersLen;
     sigv4HttpParams.pPayload = S3_REQUEST_EMPTY_PAYLOAD;
@@ -486,41 +456,45 @@ static bool printS3ObjectFilePresignedURL( const TransportInterface_t * pTranspo
 
     if( returnStatus == true )
     {
-        char presigned_url[4096] = "https://" AWS_S3_ENDPOINT AWS_S3_URI_PATH "?";
-        strcat(presigned_url, "X-Amz-Algorithm=");
-        strcat(presigned_url, SIGV4_AWS4_HMAC_SHA256);
-        strcat(presigned_url, "&X-Amz-Credential=");
-        size_t encodedLen = sizeof(presigned_url) - strlen(presigned_url);
+        char presigned_url[ 4096 ] = "https://" AWS_S3_ENDPOINT AWS_S3_URI_PATH "?";
+        strcat( presigned_url, "X-Amz-Algorithm=" );
+        strcat( presigned_url, SIGV4_AWS4_HMAC_SHA256 );
+        strcat( presigned_url, "&X-Amz-Credential=" );
+        size_t encodedLen = sizeof( presigned_url ) - strlen( presigned_url );
         sigv4Status = SigV4_EncodeURI( x_amz_credentials,
-                                       strlen(x_amz_credentials),
-                                       presigned_url + strlen(presigned_url),
+                                       strlen( x_amz_credentials ),
+                                       presigned_url + strlen( presigned_url ),
                                        &encodedLen,
-                                       true/* encode slash */,
-                                       false/* do not double encode equal */ );
+                                       true /* encode slash */,
+                                       false /* do not double encode equal */ );
+
         if( sigv4Status != SigV4Success )
         {
             LogError( ( "Failed to run SigV4_EncodeURI on '%s'.", x_amz_credentials ) );
             returnStatus = false;
         }
-        strcat(presigned_url, "&X-Amz-Date=");
-        strncat(presigned_url, pDateISO8601, SIGV4_ISO_STRING_LEN);
-        strcat(presigned_url, "&X-Amz-Expires=3600");
-        strcat(presigned_url, "&X-Amz-SignedHeaders=host");
-        strcat(presigned_url, "&X-Amz-Security-Token=");
-        encodedLen = sizeof(presigned_url) - strlen(presigned_url);
+
+        strcat( presigned_url, "&X-Amz-Date=" );
+        strncat( presigned_url, pDateISO8601, SIGV4_ISO_STRING_LEN );
+        strcat( presigned_url, "&X-Amz-Expires=3600" );
+        strcat( presigned_url, "&X-Amz-SignedHeaders=host" );
+        strcat( presigned_url, "&X-Amz-Security-Token=" );
+        encodedLen = sizeof( presigned_url ) - strlen( presigned_url );
         sigv4Status = SigV4_EncodeURI( pSecurityToken,
                                        securityTokenLen,
-                                       presigned_url + strlen(presigned_url),
+                                       presigned_url + strlen( presigned_url ),
                                        &encodedLen,
-                                       true/* encode slash */,
-                                       false/* do not double encode equal */ );
+                                       true /* encode slash */,
+                                       false /* do not double encode equal */ );
+
         if( sigv4Status != SigV4Success )
         {
             LogError( ( "Failed to run SigV4_EncodeURI on '%s'.", pSecurityToken ) );
             returnStatus = false;
         }
-        strcat(presigned_url, "&X-Amz-Signature=");
-        strncat(presigned_url, signature, signatureLen);
+
+        strcat( presigned_url, "&X-Amz-Signature=" );
+        strncat( presigned_url, signature, signatureLen );
         LogInfo( ( "presigned_url=\n%s", presigned_url ) );
     }
 
@@ -542,7 +516,6 @@ int main( int argc,
     int32_t returnStatus = EXIT_SUCCESS;
     /* Return value of private functions. */
     bool ret = false, credentialStatus = false;
-    int demoRunCount = 0;
 
     /* The transport layer interface used by the HTTP Client library. */
     TransportInterface_t transportInterface = { NULL };
@@ -627,8 +600,7 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            ret = generateS3ObjectFilePresignedURL( &transportInterface,
-                                                    pPath );
+            ret = generateS3ObjectFilePresignedURL( pPath );
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
     }
