@@ -241,16 +241,6 @@ struct NetworkContext
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Generate a pre-signed URL to an S3 object file and print it to stdout
- *
- * @param[in] pPath The Request-URI to the objects of interest. This string
- * should be null-terminated.
- *
- * @return The status of the pre-signed URL generation: true on success, false on failure.
- */
-static bool generateS3ObjectFilePresignedURL( const char * pPath );
-
-/**
  * @brief Generate and print a pre-signed URL to the S3 object file that is specified in pPath.
  *
  *
@@ -293,48 +283,6 @@ static SigV4Parameters_t sigv4Params =
     .pCryptoInterface = &cryptoInterface,
     .pHttpParameters  = NULL
 };
-
-/*-----------------------------------------------------------*/
-
-static bool generateS3ObjectFilePresignedURL( const char * pPath )
-{
-    bool returnStatus = false;
-
-    assert( pPath != NULL );
-
-    /* Initialize all HTTP Client library API structs to 0. */
-    ( void ) memset( &requestHeaders, 0, sizeof( requestHeaders ) );
-    ( void ) memset( &requestInfo, 0, sizeof( requestInfo ) );
-    ( void ) memset( &response, 0, sizeof( response ) );
-
-    /* Initialize the request object. */
-    requestInfo.pHost = serverHost;
-    requestInfo.hostLen = serverHostLength;
-    requestInfo.pMethod = HTTP_METHOD_GET;
-    requestInfo.methodLen = HTTP_METHOD_GET_LENGTH;
-    requestInfo.pPath = pPath;
-    requestInfo.pathLen = strlen( pPath );
-
-    /* Set "Connection" HTTP header to "keep-alive" so that multiple requests
-     * can be sent over the same established TCP connection. This is done in
-     * order to download the file in parts. */
-    requestInfo.reqFlags = HTTP_REQUEST_KEEP_ALIVE_FLAG;
-
-    /* Set the buffer used for storing request headers. */
-    requestHeaders.pBuffer = userBuffer;
-    requestHeaders.bufferLen = USER_BUFFER_LENGTH;
-
-    /* Initialize the response object. The same buffer used for storing request
-     * headers is reused here. */
-    response.pBuffer = userBuffer;
-    response.bufferLen = USER_BUFFER_LENGTH;
-
-    /* Generate and print the pre-signed URL. */
-    returnStatus = printS3ObjectFilePresignedURL( serverHost,
-                                                  serverHostLength,
-                                                  pPath );
-    return returnStatus;
-}
 
 /*-----------------------------------------------------------*/
 
@@ -596,13 +544,16 @@ int main( int argc,
             transportInterface.pNetworkContext = &networkContext;
         }
 
-        /******************** Download S3 Object File. **********************/
+        /******************** Print S3 Object Presigned URL. **********************/
 
         pPath = AWS_S3_URI_PATH;
 
         if( returnStatus == EXIT_SUCCESS )
         {
-            ret = generateS3ObjectFilePresignedURL( pPath );
+            ret = printS3ObjectFilePresignedURL( serverHost,
+                                                 serverHostLength,
+                                                 pPath );
+            
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
     }

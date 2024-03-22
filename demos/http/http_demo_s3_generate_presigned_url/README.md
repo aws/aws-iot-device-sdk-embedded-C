@@ -144,12 +144,6 @@ aws iot attach-policy --policy-name Thing_Policy_Name --target <certificate-arn>
 ```
 
 #### 6. Request a security token: 
-        
-Make an HTTPS request to the credentials provider to fetch a security token. You have to supply the following information:
-
-Certificate and key pair: Because this is an HTTP request over TLS mutual authentication, you have to provide the certificate and the corresponding key pair to your client while making the request. Use the same certificate and key pair that you used during certificate registration with AWS IoT.
-RoleAlias: Provide the role alias (in this example, Thermostat-dynamodb-access-role-alias) to be assumed in the request.
-ThingName: Provide the thing name that you created earlier in the AWS IoT thing registry database. This is passed as a header with the name, x-amzn-iot-thingname. Note that the thing name is mandatory only if you have thing attributes as policy variables in AWS IoT or IAM policies.
 
 Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the [DescribeEndpoint API documentation](https://docs.aws.amazon.com/iot/latest/apireference/API_DescribeEndpoint.html) for further details.
 
