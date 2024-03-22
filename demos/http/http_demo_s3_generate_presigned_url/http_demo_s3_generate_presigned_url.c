@@ -162,33 +162,6 @@
  */
 #define S3_REQUEST_EMPTY_PAYLOAD          ""
 
-
-/**
- * @brief A buffer used in the demo for storing HTTP request headers and HTTP
- * response headers and body.
- *
- * @note This demo shows how the same buffer can be re-used for storing the HTTP
- * response after the HTTP request is sent out. However, the user can decide how
- * to use buffers to store HTTP requests and responses.
- */
-static uint8_t userBuffer[ USER_BUFFER_LENGTH ];
-
-/**
- * @brief Represents header data that will be sent in an HTTP request.
- */
-static HTTPRequestHeaders_t requestHeaders;
-
-/**
- * @brief Configurations of the initial request headers that are passed to
- * #HTTPClient_InitializeRequestHeaders.
- */
-static HTTPRequestInfo_t requestInfo;
-
-/**
- * @brief Represents a response returned from an HTTP server.
- */
-static HTTPResponse_t response;
-
 /**
  * @brief The location of the path within the server URL.
  */
@@ -553,7 +526,7 @@ int main( int argc,
             ret = printS3ObjectFilePresignedURL( serverHost,
                                                  serverHostLength,
                                                  pPath );
-            
+
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
     }
