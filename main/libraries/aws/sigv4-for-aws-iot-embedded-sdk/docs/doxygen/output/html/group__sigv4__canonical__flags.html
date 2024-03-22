@@ -120,6 +120,9 @@ Macros</h2></td></tr>
 <tr class="memitem:gaedd7da067d42980597b62b0823491189"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sigv4__canonical__flags.html#gaedd7da067d42980597b62b0823491189">SIGV4_HTTP_PAYLOAD_IS_HASH</a>&#160;&#160;&#160;0x8U</td></tr>
 <tr class="memdesc:gaedd7da067d42980597b62b0823491189"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set this flag to indicate that the HTTP request payload is already hashed.  <br /></td></tr>
 <tr class="separator:gaedd7da067d42980597b62b0823491189"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7068c988dac367ad00aaed06d5ae0611"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sigv4__canonical__flags.html#ga7068c988dac367ad00aaed06d5ae0611">SIGV4_HTTP_IS_PRESIGNED_URL</a>&#160;&#160;&#160;0x10U</td></tr>
+<tr class="memdesc:ga7068c988dac367ad00aaed06d5ae0611"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set this flag to indicate that the HTTP request is a presigned URL.  <br /></td></tr>
+<tr class="separator:ga7068c988dac367ad00aaed06d5ae0611"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga00b06a304245f49ac6084734046a3cfb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sigv4__canonical__flags.html#ga00b06a304245f49ac6084734046a3cfb">SIGV4_HTTP_ALL_ARE_CANONICAL_FLAG</a>&#160;&#160;&#160;0x7U</td></tr>
 <tr class="memdesc:ga00b06a304245f49ac6084734046a3cfb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set this flag to indicate that the HTTP request path, query, and headers are all already canonicalized.  <br /></td></tr>
 <tr class="separator:ga00b06a304245f49ac6084734046a3cfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -192,6 +195,23 @@ Macros</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set this flag to indicate that the HTTP request payload is already hashed. </p>
+<p>This flag is valid only for <a class="el" href="struct_sig_v4_http_parameters__t.html#a788f7e5646c31e5562f64b4f4336fc3d" title="These flags are used to indicate if the path, query, or headers are already in the canonical form....">SigV4HttpParameters_t.flags</a>. </p>
+
+</div>
+</div>
+<a id="ga7068c988dac367ad00aaed06d5ae0611" name="ga7068c988dac367ad00aaed06d5ae0611"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7068c988dac367ad00aaed06d5ae0611">&#9670;&#160;</a></span>SIGV4_HTTP_IS_PRESIGNED_URL</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SIGV4_HTTP_IS_PRESIGNED_URL&#160;&#160;&#160;0x10U</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set this flag to indicate that the HTTP request is a presigned URL. </p>
 <p>This flag is valid only for <a class="el" href="struct_sig_v4_http_parameters__t.html#a788f7e5646c31e5562f64b4f4336fc3d" title="These flags are used to indicate if the path, query, or headers are already in the canonical form....">SigV4HttpParameters_t.flags</a>. </p>
 
 </div>

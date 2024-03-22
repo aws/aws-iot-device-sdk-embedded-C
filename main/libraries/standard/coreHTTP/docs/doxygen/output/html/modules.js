@@ -7,5 +7,6 @@ var modules =
     [ "Constants", "group__http__constants.html", "group__http__constants" ],
     [ "HTTPClient_Send Flags", "group__http__send__flags.html", "group__http__send__flags" ],
     [ "HTTPRequestInfo_t Flags", "group__http__request__flags.html", "group__http__request__flags" ],
-    [ "HTTPResponse_t Flags", "group__http__response__flags.html", "group__http__response__flags" ]
+    [ "HTTPResponse_t Flags", "group__http__response__flags.html", "group__http__response__flags" ],
+    [ "HTTPResponse_t Flags", "group__http__response__option__flags.html", "group__http__response__option__flags" ]
 ];

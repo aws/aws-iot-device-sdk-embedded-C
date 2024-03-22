@@ -154,7 +154,7 @@ Typedefs</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Transport interface for receiving data on the network. </p>
-<dl class="section note"><dt>Note</dt><dd>It is RECOMMENDED that the transport receive implementation does NOT block when requested to read a single byte. A single byte read request can be made by the caller to check whether there is a new frame available on the network for reading. However, the receive implementation MAY block for a timeout period when it is requested to read more than 1 byte. This is because once the caller is aware that a new frame is available to read on the network, then the likelihood of reading more than one byte over the network becomes high.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>It is HIGHLY RECOMMENDED that the transport receive implementation does NOT block. coreMQTT will continue to call the transport interface if it receives a partial packet until it accumulates enough data to get the complete MQTT packet.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pNetworkContext</td><td>Implementation-defined network context. </td></tr>

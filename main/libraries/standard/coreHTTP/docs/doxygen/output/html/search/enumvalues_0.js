@@ -10,12 +10,13 @@ var searchData=
   ['httpnetworkerror_7',['HTTPNetworkError',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa59fa581a112b1994db1c45d8a7f84160',1,'core_http_client.h']]],
   ['httpnoresponse_8',['HTTPNoResponse',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa8aa7c86301f91fd4b3c0b698ab8c177a',1,'core_http_client.h']]],
   ['httpparserinternalerror_9',['HTTPParserInternalError',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa37855790aef77f76074771d000b3e76b',1,'core_http_client.h']]],
-  ['httppartialresponse_10',['HTTPPartialResponse',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa2b345207e843dc4e3d2ef9ea34c7f024',1,'core_http_client.h']]],
-  ['httpsecurityalertextraneousresponsedata_11',['HTTPSecurityAlertExtraneousResponseData',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf6441d45e373b7686e45c2d9a0d12dd3',1,'core_http_client.h']]],
-  ['httpsecurityalertinvalidcharacter_12',['HTTPSecurityAlertInvalidCharacter',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa075511c32463db38713944d4e43cc01f',1,'core_http_client.h']]],
-  ['httpsecurityalertinvalidchunkheader_13',['HTTPSecurityAlertInvalidChunkHeader',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faef569c934115aa105cc2cff1f72ef78b',1,'core_http_client.h']]],
-  ['httpsecurityalertinvalidcontentlength_14',['HTTPSecurityAlertInvalidContentLength',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac1b1794cf29fd99be06e0b0ed5f9213d',1,'core_http_client.h']]],
-  ['httpsecurityalertinvalidprotocolversion_15',['HTTPSecurityAlertInvalidProtocolVersion',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fab6ed7f7e24e250896a7b35825006d460',1,'core_http_client.h']]],
-  ['httpsecurityalertinvalidstatuscode_16',['HTTPSecurityAlertInvalidStatusCode',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf53f0e027fd6d66ecd796bce19711562',1,'core_http_client.h']]],
-  ['httpsuccess_17',['HTTPSuccess',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd',1,'core_http_client.h']]]
+  ['httpparserpaused_10',['HTTPParserPaused',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fad1c7cbe87a4c04d163f84d0e7511dc44',1,'core_http_client.h']]],
+  ['httppartialresponse_11',['HTTPPartialResponse',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa2b345207e843dc4e3d2ef9ea34c7f024',1,'core_http_client.h']]],
+  ['httpsecurityalertextraneousresponsedata_12',['HTTPSecurityAlertExtraneousResponseData',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf6441d45e373b7686e45c2d9a0d12dd3',1,'core_http_client.h']]],
+  ['httpsecurityalertinvalidcharacter_13',['HTTPSecurityAlertInvalidCharacter',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa075511c32463db38713944d4e43cc01f',1,'core_http_client.h']]],
+  ['httpsecurityalertinvalidchunkheader_14',['HTTPSecurityAlertInvalidChunkHeader',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faef569c934115aa105cc2cff1f72ef78b',1,'core_http_client.h']]],
+  ['httpsecurityalertinvalidcontentlength_15',['HTTPSecurityAlertInvalidContentLength',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac1b1794cf29fd99be06e0b0ed5f9213d',1,'core_http_client.h']]],
+  ['httpsecurityalertinvalidprotocolversion_16',['HTTPSecurityAlertInvalidProtocolVersion',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fab6ed7f7e24e250896a7b35825006d460',1,'core_http_client.h']]],
+  ['httpsecurityalertinvalidstatuscode_17',['HTTPSecurityAlertInvalidStatusCode',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf53f0e027fd6d66ecd796bce19711562',1,'core_http_client.h']]],
+  ['httpsuccess_18',['HTTPSuccess',['../group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd',1,'core_http_client.h']]]
 ];

@@ -143,6 +143,12 @@ Data Fields</h2></td></tr>
 <tr class="memitem:a2cc9259ce7b23b3d11c126bde0b700da"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_response__t.html#a2cc9259ce7b23b3d11c126bde0b700da">headerCount</a></td></tr>
 <tr class="memdesc:a2cc9259ce7b23b3d11c126bde0b700da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count of the headers sent by the server.  <br /></td></tr>
 <tr class="separator:a2cc9259ce7b23b3d11c126bde0b700da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a993c356540eebb9b0143fd643714f353"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_response__t.html#a993c356540eebb9b0143fd643714f353">areHeadersComplete</a></td></tr>
+<tr class="memdesc:a993c356540eebb9b0143fd643714f353"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether the HTTP response headers have been fully received.  <br /></td></tr>
+<tr class="separator:a993c356540eebb9b0143fd643714f353"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d4b1ff385366d8185168634534557a0"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_response__t.html#a6d4b1ff385366d8185168634534557a0">respOptionFlags</a></td></tr>
+<tr class="memdesc:a6d4b1ff385366d8185168634534557a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flags to control the behavior of response parsing.  <br /></td></tr>
+<tr class="separator:a6d4b1ff385366d8185168634534557a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43d3cd31feebcd50ab2bd3078d1a77bc"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_h_t_t_p_response__t.html#a43d3cd31feebcd50ab2bd3078d1a77bc">respFlags</a></td></tr>
 <tr class="memdesc:a43d3cd31feebcd50ab2bd3078d1a77bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flags of useful headers found in the response.  <br /></td></tr>
 <tr class="separator:a43d3cd31feebcd50ab2bd3078d1a77bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -319,6 +325,40 @@ Data Fields</h2></td></tr>
 
 <p>Count of the headers sent by the server. </p>
 <p>This is updated by <a class="el" href="core__http__client_8c.html#aa33b3334128496487d820f0da7ae5601" title="Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...">HTTPClient_Send</a>. </p>
+
+</div>
+</div>
+<a id="a993c356540eebb9b0143fd643714f353" name="a993c356540eebb9b0143fd643714f353"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a993c356540eebb9b0143fd643714f353">&#9670;&#160;</a></span>areHeadersComplete</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t HTTPResponse_t::areHeadersComplete</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Indicates whether the HTTP response headers have been fully received. </p>
+<p>This variable is set to 1 after all headers have been received and processed by <a class="el" href="core__http__client_8c.html#aa33b3334128496487d820f0da7ae5601" title="Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...">HTTPClient_Send</a>. </p>
+
+</div>
+</div>
+<a id="a6d4b1ff385366d8185168634534557a0" name="a6d4b1ff385366d8185168634534557a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d4b1ff385366d8185168634534557a0">&#9670;&#160;</a></span>respOptionFlags</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t HTTPResponse_t::respOptionFlags</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Flags to control the behavior of response parsing. </p>
+<p>Please see <a class="el" href="group__http__response__option__flags.html">HTTPResponse_t Flags</a> for more information. </p>
 
 </div>
 </div>

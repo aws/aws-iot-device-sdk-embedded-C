@@ -12,5 +12,6 @@ var searchData=
   ['required_9',['required',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_json_doc_param__t.html#a96709fba52845d5f5ad914c89db05989',1,'JsonDocParam_t']]],
   ['reset_10',['reset',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_ota_pal_interface__t.html#a744b9602243baf92cbe2d1e8aef3b7ec',1,'OtaPalInterface_t']]],
   ['respflags_11',['respFlags',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a43d3cd31feebcd50ab2bd3078d1a77bc',1,'HTTPResponse_t']]],
-  ['retain_12',['retain',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_publish_info__t.html#a343b0af89c46a900db4aa5c775a0975a',1,'MQTTPublishInfo_t']]]
+  ['respoptionflags_12',['respOptionFlags',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a6d4b1ff385366d8185168634534557a0',1,'HTTPResponse_t']]],
+  ['retain_13',['retain',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_publish_info__t.html#a343b0af89c46a900db4aa5c775a0975a',1,'MQTTPublishInfo_t']]]
 ];

@@ -111,6 +111,9 @@ Macros</h2></td></tr>
 <tr class="memitem:gadec54e27d2d24006b4c22a7f945282de"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__request__flags.html#gadec54e27d2d24006b4c22a7f945282de">HTTP_REQUEST_KEEP_ALIVE_FLAG</a>&#160;&#160;&#160;0x1U</td></tr>
 <tr class="memdesc:gadec54e27d2d24006b4c22a7f945282de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set this flag to indicate that the request is for a persistent connection.  <br /></td></tr>
 <tr class="separator:gadec54e27d2d24006b4c22a7f945282de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf9c4b2a8cca192bdab55caa7414043d2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__http__request__flags.html#gaf9c4b2a8cca192bdab55caa7414043d2">HTTP_REQUEST_NO_USER_AGENT_FLAG</a>&#160;&#160;&#160;0x2U</td></tr>
+<tr class="memdesc:gaf9c4b2a8cca192bdab55caa7414043d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set this flag to skip the User-Agent in the request headers.  <br /></td></tr>
+<tr class="separator:gaf9c4b2a8cca192bdab55caa7414043d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Flags for <a class="el" href="struct_h_t_t_p_request_info__t.html#a157ebe1394fe870d342b25a5521f2505" title="Flags to activate other request header configurations.">HTTPRequestInfo_t.reqFlags</a>. These flags control what headers are written or not to the <a class="el" href="struct_h_t_t_p_request_headers__t.html#acaffc0e3ae5413bf7c673f83388bc7c6" title="Buffer to hold the raw HTTP request headers.">HTTPRequestHeaders_t.pBuffer</a> by <a class="el" href="core__http__client_8h.html#ab523c4d4e3b756928d463bd864361a9c" title="Initialize the request headers, stored in HTTPRequestHeaders_t.pBuffer, with initial configurations f...">HTTPClient_InitializeRequestHeaders</a>. </p>
@@ -130,6 +133,24 @@ Macros</h2></td></tr>
 
 <p>Set this flag to indicate that the request is for a persistent connection. </p>
 <p>Setting this will cause a "Connection: Keep-Alive" to be written to the request headers.</p>
+<p>This flag is valid only for <a class="el" href="struct_h_t_t_p_request_info__t.html" title="Configurations of the initial request headers.">HTTPRequestInfo_t</a> reqFlags parameter. </p>
+
+</div>
+</div>
+<a id="gaf9c4b2a8cca192bdab55caa7414043d2" name="gaf9c4b2a8cca192bdab55caa7414043d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf9c4b2a8cca192bdab55caa7414043d2">&#9670;&#160;</a></span>HTTP_REQUEST_NO_USER_AGENT_FLAG</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define HTTP_REQUEST_NO_USER_AGENT_FLAG&#160;&#160;&#160;0x2U</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set this flag to skip the User-Agent in the request headers. </p>
+<p>Setting this will cause the "User-Agent: &lt;Value&gt;" to be omitted in the request headers.</p>
 <p>This flag is valid only for <a class="el" href="struct_h_t_t_p_request_info__t.html" title="Configurations of the initial request headers.">HTTPRequestInfo_t</a> reqFlags parameter. </p>
 
 </div>

@@ -107,7 +107,6 @@ $(document).ready(function(){initNavTree('sigv4_8c.html',''); initResizable(); }
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;assert.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
-<code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;stdlib.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="sigv4_8h_source.html">sigv4.h</a>&quot;</code><br />
@@ -2324,10 +2323,10 @@ This function assumes the destination buffer is large enough to hold the string 
 <div class="line">{</div>
 <div class="line">   <span class="comment">// Failed to parse date</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__sigv4__constants_html_gaa96f2b005c358892fc9ae3f1ecc7f757"><div class="ttname"><a href="group__sigv4__constants.html#gaa96f2b005c358892fc9ae3f1ecc7f757">SIGV4_ISO_STRING_LEN</a></div><div class="ttdeci">#define SIGV4_ISO_STRING_LEN</div><div class="ttdef"><b>Definition:</b> sigv4.h:76</div></div>
-<div class="ttc" id="agroup__sigv4__enum__types_html_ga9473b37a4c9e1e9b1d45d90b062d8df9"><div class="ttname"><a href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a></div><div class="ttdeci">SigV4Status_t</div><div class="ttdoc">Return status of the SigV4 Library.</div><div class="ttdef"><b>Definition:</b> sigv4.h:142</div></div>
-<div class="ttc" id="agroup__sigv4__enum__types_html_gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627"><div class="ttname"><a href="group__sigv4__enum__types.html#gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627">SigV4Success</a></div><div class="ttdeci">@ SigV4Success</div><div class="ttdoc">The SigV4 library function completed successfully.</div><div class="ttdef"><b>Definition:</b> sigv4.h:150</div></div>
-<div class="ttc" id="asigv4_8c_html_ac6f3d9773a15116d43b050ab09456c20"><div class="ttname"><a href="sigv4_8c.html#ac6f3d9773a15116d43b050ab09456c20">SigV4_AwsIotDateToIso8601</a></div><div class="ttdeci">SigV4Status_t SigV4_AwsIotDateToIso8601(const char *pDate, size_t dateLen, char *pDateISO8601, size_t dateISO8601Len)</div><div class="ttdoc">Parse the date header value from the AWS IoT response, and generate the formatted ISO 8601 date requi...</div><div class="ttdef"><b>Definition:</b> sigv4.c:3110</div></div>
+<div class="ttc" id="agroup__sigv4__constants_html_gaa96f2b005c358892fc9ae3f1ecc7f757"><div class="ttname"><a href="group__sigv4__constants.html#gaa96f2b005c358892fc9ae3f1ecc7f757">SIGV4_ISO_STRING_LEN</a></div><div class="ttdeci">#define SIGV4_ISO_STRING_LEN</div><div class="ttdef"><b>Definition:</b> sigv4.h:77</div></div>
+<div class="ttc" id="agroup__sigv4__enum__types_html_ga9473b37a4c9e1e9b1d45d90b062d8df9"><div class="ttname"><a href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a></div><div class="ttdeci">SigV4Status_t</div><div class="ttdoc">Return status of the SigV4 Library.</div><div class="ttdef"><b>Definition:</b> sigv4.h:152</div></div>
+<div class="ttc" id="agroup__sigv4__enum__types_html_gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627"><div class="ttname"><a href="group__sigv4__enum__types.html#gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627">SigV4Success</a></div><div class="ttdeci">@ SigV4Success</div><div class="ttdoc">The SigV4 library function completed successfully.</div><div class="ttdef"><b>Definition:</b> sigv4.h:160</div></div>
+<div class="ttc" id="asigv4_8c_html_ac6f3d9773a15116d43b050ab09456c20"><div class="ttname"><a href="sigv4_8c.html#ac6f3d9773a15116d43b050ab09456c20">SigV4_AwsIotDateToIso8601</a></div><div class="ttdeci">SigV4Status_t SigV4_AwsIotDateToIso8601(const char *pDate, size_t dateLen, char *pDateISO8601, size_t dateISO8601Len)</div><div class="ttdoc">Parse the date header value from the AWS IoT response, and generate the formatted ISO 8601 date requi...</div><div class="ttdef"><b>Definition:</b> sigv4.c:3141</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2427,9 +2426,9 @@ This function assumes the destination buffer is large enough to hold the string 
 <div class="line">{</div>
 <div class="line">   <span class="comment">// Failed to generate authorization header.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="asigv4_8c_html_a46ab0bb656d9b24e3efdcf85c0b8a385"><div class="ttname"><a href="sigv4_8c.html#a46ab0bb656d9b24e3efdcf85c0b8a385">SigV4_GenerateHTTPAuthorization</a></div><div class="ttdeci">SigV4Status_t SigV4_GenerateHTTPAuthorization(const SigV4Parameters_t *pParams, char *pAuthBuf, size_t *authBufLen, char **pSignature, size_t *signatureLen)</div><div class="ttdoc">Generates the HTTP Authorization header value.</div><div class="ttdef"><b>Definition:</b> sigv4.c:3186</div></div>
-<div class="ttc" id="astruct_sig_v4_parameters__t_html"><div class="ttname"><a href="struct_sig_v4_parameters__t.html">SigV4Parameters_t</a></div><div class="ttdoc">Complete configurations required for generating &quot;String to Sign&quot; and &quot;Signing Key&quot; values.</div><div class="ttdef"><b>Definition:</b> sigv4.h:384</div></div>
-<div class="ttc" id="astruct_sig_v4_parameters__t_html_a5427dc690bbc4abdd61c334aed5cd256"><div class="ttname"><a href="struct_sig_v4_parameters__t.html#a5427dc690bbc4abdd61c334aed5cd256">SigV4Parameters_t::pCredentials</a></div><div class="ttdeci">SigV4Credentials_t * pCredentials</div><div class="ttdoc">The AccessKeyId, SecretAccessKey, and SecurityToken used to generate the Authorization header.</div><div class="ttdef"><b>Definition:</b> sigv4.h:389</div></div>
+<div class="ttc" id="asigv4_8c_html_a46ab0bb656d9b24e3efdcf85c0b8a385"><div class="ttname"><a href="sigv4_8c.html#a46ab0bb656d9b24e3efdcf85c0b8a385">SigV4_GenerateHTTPAuthorization</a></div><div class="ttdeci">SigV4Status_t SigV4_GenerateHTTPAuthorization(const SigV4Parameters_t *pParams, char *pAuthBuf, size_t *authBufLen, char **pSignature, size_t *signatureLen)</div><div class="ttdoc">Generates the HTTP Authorization header value.</div><div class="ttdef"><b>Definition:</b> sigv4.c:3217</div></div>
+<div class="ttc" id="astruct_sig_v4_parameters__t_html"><div class="ttname"><a href="struct_sig_v4_parameters__t.html">SigV4Parameters_t</a></div><div class="ttdoc">Complete configurations required for generating &quot;String to Sign&quot; and &quot;Signing Key&quot; values.</div><div class="ttdef"><b>Definition:</b> sigv4.h:394</div></div>
+<div class="ttc" id="astruct_sig_v4_parameters__t_html_a5427dc690bbc4abdd61c334aed5cd256"><div class="ttname"><a href="struct_sig_v4_parameters__t.html#a5427dc690bbc4abdd61c334aed5cd256">SigV4Parameters_t::pCredentials</a></div><div class="ttdeci">SigV4Credentials_t * pCredentials</div><div class="ttdoc">The AccessKeyId, SecretAccessKey, and SecurityToken used to generate the Authorization header.</div><div class="ttdef"><b>Definition:</b> sigv4.h:399</div></div>
 </div><!-- fragment --> 
 </div>
 </div>

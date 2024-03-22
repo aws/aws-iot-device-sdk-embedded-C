@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['send_0',['send',['../struct_transport_interface__t.html#a01cd9935e9a5266ca196243a0054d489',1,'TransportInterface_t']]],
-  ['state_1',['state',['../struct_h_t_t_p_parsing_context__t.html#acecc99ec16396a6a5f2fae9aeb77c11f',1,'HTTPParsingContext_t']]],
-  ['statuscode_2',['statusCode',['../struct_h_t_t_p_response__t.html#a2eaee249cd6a2bb4c86c4ea62362df1d',1,'HTTPResponse_t']]]
+  ['recv_0',['recv',['../struct_transport_interface__t.html#a7c34e9b865e2a509306f09c7dfa3699e',1,'TransportInterface_t']]],
+  ['reqflags_1',['reqFlags',['../struct_h_t_t_p_request_info__t.html#a157ebe1394fe870d342b25a5521f2505',1,'HTTPRequestInfo_t']]],
+  ['respflags_2',['respFlags',['../struct_h_t_t_p_response__t.html#a43d3cd31feebcd50ab2bd3078d1a77bc',1,'HTTPResponse_t']]],
+  ['respoptionflags_3',['respOptionFlags',['../struct_h_t_t_p_response__t.html#a6d4b1ff385366d8185168634534557a0',1,'HTTPResponse_t']]]
 ];

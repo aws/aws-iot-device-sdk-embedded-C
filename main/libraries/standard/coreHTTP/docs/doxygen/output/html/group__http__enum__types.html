@@ -124,7 +124,8 @@ Enumerations</h2></td></tr>
 , <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa075511c32463db38713944d4e43cc01f">HTTPSecurityAlertInvalidCharacter</a>
 , <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac1b1794cf29fd99be06e0b0ed5f9213d">HTTPSecurityAlertInvalidContentLength</a>
 , <br />
-&#160;&#160;<a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa37855790aef77f76074771d000b3e76b">HTTPParserInternalError</a>
+&#160;&#160;<a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fad1c7cbe87a4c04d163f84d0e7511dc44">HTTPParserPaused</a>
+, <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa37855790aef77f76074771d000b3e76b">HTTPParserInternalError</a>
 , <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fad2fc47ae0e9bbf4a459f38a36020824a">HTTPHeaderNotFound</a>
 , <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa8674a7c17d6878db3a6cf7e2e6e6a398">HTTPInvalidResponse</a>
 <br />
@@ -221,6 +222,12 @@ Enumerations</h2></td></tr>
 <p>Functions that may return this value:</p><ul>
 <li><a class="el" href="core__http__client_8h.html#aa33b3334128496487d820f0da7ae5601" title="Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...">HTTPClient_Send</a> </li>
 </ul>
+</td></tr>
+<tr><td class="fieldname"><a id="gga39fad9050063a355ffd95e95381e743fad1c7cbe87a4c04d163f84d0e7511dc44" name="gga39fad9050063a355ffd95e95381e743fad1c7cbe87a4c04d163f84d0e7511dc44"></a>HTTPParserPaused&#160;</td><td class="fielddoc"><p>Represents the paused state of the HTTP parser. </p>
+<p>This state indicates that the parser has encountered a pause condition and is waiting for further input.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="core__http__client_8h.html#aa33b3334128496487d820f0da7ae5601" title="Send the request headers in HTTPRequestHeaders_t.pBuffer and request body in pRequestBodyBuf over the...">HTTPClient_Send</a> </dd>
+<dd>
+<a class="el" href="core__http__client_8h.html#abe7bfa9af16125ebf1af6f45c099dfc7" title="Receive the HTTP response from the network and parse it.">HTTPClient_ReceiveAndParseHttpResponse</a> </dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="gga39fad9050063a355ffd95e95381e743fa37855790aef77f76074771d000b3e76b" name="gga39fad9050063a355ffd95e95381e743fa37855790aef77f76074771d000b3e76b"></a>HTTPParserInternalError&#160;</td><td class="fielddoc"><p>An error occurred in the third-party parsing library. </p>
 <p>Functions that may return this value:</p><ul>

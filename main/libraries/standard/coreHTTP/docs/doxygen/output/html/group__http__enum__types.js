@@ -13,6 +13,7 @@ var group__http__enum__types =
       [ "HTTPSecurityAlertInvalidStatusCode", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743faf53f0e027fd6d66ecd796bce19711562", null ],
       [ "HTTPSecurityAlertInvalidCharacter", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa075511c32463db38713944d4e43cc01f", null ],
       [ "HTTPSecurityAlertInvalidContentLength", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fac1b1794cf29fd99be06e0b0ed5f9213d", null ],
+      [ "HTTPParserPaused", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fad1c7cbe87a4c04d163f84d0e7511dc44", null ],
       [ "HTTPParserInternalError", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa37855790aef77f76074771d000b3e76b", null ],
       [ "HTTPHeaderNotFound", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fad2fc47ae0e9bbf4a459f38a36020824a", null ],
       [ "HTTPInvalidResponse", "group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa8674a7c17d6878db3a6cf7e2e6e6a398", null ]

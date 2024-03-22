@@ -212,6 +212,10 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>LLHTTP_STOP_PARSING</b>&#160;&#160;&#160;HPE_USER</td></tr>
 <tr class="memdesc:af5a36ead2ea9999b4c8a8de264971e37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return value for llhttp registered callback to signal halting further execution. <br /></td></tr>
 <tr class="separator:af5a36ead2ea9999b4c8a8de264971e37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14d8f06384ea3d37142457094191708b"><td class="memItemLeft" align="right" valign="top"><a id="a14d8f06384ea3d37142457094191708b" name="a14d8f06384ea3d37142457094191708b"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>LLHTTP_PAUSE_PARSING</b>&#160;&#160;&#160;HPE_PAUSED</td></tr>
+<tr class="memdesc:a14d8f06384ea3d37142457094191708b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return value for llhttp registered callback to signal to pause further execution. <br /></td></tr>
+<tr class="separator:a14d8f06384ea3d37142457094191708b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13cccade58f709272a38241313d5dad5"><td class="memItemLeft" align="right" valign="top"><a id="a13cccade58f709272a38241313d5dad5" name="a13cccade58f709272a38241313d5dad5"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>LLHTTP_STOP_PARSING_NO_BODY</b>&#160;&#160;&#160;1</td></tr>
 <tr class="memdesc:a13cccade58f709272a38241313d5dad5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return value for llhttp_t.on_headers_complete to signal that the HTTP response has no body and to halt further execution. <br /></td></tr>
@@ -760,7 +764,7 @@ Enumerations</h2></td></tr>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a9b42138b048d030fe583c0dd0b487b4caf6b11469258d9bca75e36a7a99287217" name="a9b42138b048d030fe583c0dd0b487b4caf6b11469258d9bca75e36a7a99287217"></a>HTTP_PARSING_NONE&#160;</td><td class="fielddoc"><p>The parser has not started reading any response. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a9b42138b048d030fe583c0dd0b487b4ca18581a8425b3cd0fe28fdcaceb357e39" name="a9b42138b048d030fe583c0dd0b487b4ca18581a8425b3cd0fe28fdcaceb357e39"></a>HTTP_PARSING_INCOMPLETE&#160;</td><td class="fielddoc"><p>The parser found a partial reponse. </p>
+<tr><td class="fieldname"><a id="a9b42138b048d030fe583c0dd0b487b4ca18581a8425b3cd0fe28fdcaceb357e39" name="a9b42138b048d030fe583c0dd0b487b4ca18581a8425b3cd0fe28fdcaceb357e39"></a>HTTP_PARSING_INCOMPLETE&#160;</td><td class="fielddoc"><p>The parser found a partial response. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a9b42138b048d030fe583c0dd0b487b4caa01f579f46229b464b106d044cd50f20" name="a9b42138b048d030fe583c0dd0b487b4caa01f579f46229b464b106d044cd50f20"></a>HTTP_PARSING_COMPLETE&#160;</td><td class="fielddoc"><p>The parser found the entire response. </p>
 </td></tr>

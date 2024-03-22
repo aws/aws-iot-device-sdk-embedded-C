@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['contentlength_0',['contentLength',['../struct_h_t_t_p_response__t.html#ab3787660398f9bb866ee39a976106748',1,'HTTPResponse_t']]]
+  ['bodylen_0',['bodyLen',['../struct_h_t_t_p_response__t.html#a055ce88aa4b185d6d5d9e73048a933fe',1,'HTTPResponse_t']]],
+  ['bufferlen_1',['bufferLen',['../struct_h_t_t_p_request_headers__t.html#abe5f1cb0cd15619a6f8716872d7f2617',1,'HTTPRequestHeaders_t::bufferLen()'],['../struct_h_t_t_p_response__t.html#a5b224d37c0a03f44326a86c27067b18a',1,'HTTPResponse_t::bufferLen()']]]
 ];
