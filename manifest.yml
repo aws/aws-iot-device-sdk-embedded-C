@@ -26,7 +26,7 @@ dependencies:
       url: "https://github.com/aws/Device-Shadow-for-AWS-IoT-embedded-sdk"
       path: "libraries/aws/device-shadow-for-aws-iot-embedded-sdk"
   - name: "coreHTTP"
-    version: "48ccceb4bc048a36012ff33a0adbb49bc891045f"
+    version: "1749807ef26d17cc8e5a14ad1c57aba62ffb5b21"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreHTTP"
@@ -68,7 +68,7 @@ dependencies:
       url: "https://github.com/aws/Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
       path: "libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk"
   - name: "sigv4-for-AWS-IoT-embedded-sdk"
-    version: "df863270afba4de9d013ae62063b2bfd0aa89039"
+    version: "e82835329069d804e0db883d69eb4e1124dd7f08"
     repository:
       type: "git"
       url: "https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk"

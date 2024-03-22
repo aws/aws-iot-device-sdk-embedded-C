@@ -40,6 +40,7 @@ if(NOT ${OpenSSL_FOUND})
             "http_demo_basic_tls"
             "http_demo_mutual_auth"
             "http_demo_s3_download"
+            "http_demo_s3_generate_presigned_url"
             "http_demo_s3_download_multithreaded"
             "http_demo_s3_upload"
             "mqtt_demo_basic_tls"

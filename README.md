@@ -479,6 +479,10 @@ You can generate the presigned urls using [demos/http/common/src/presigned_urls_
 
 Refer this [demos/http/http_demo_s3_download/README.md](demos/http/http_demo_s3_download/README.md) to follow the steps needed to configure and run the S3 Download HTTP Demo using SigV4 Library that generates the authorization HTTP header needed to authenticate the HTTP requests send to S3.
 
+####  Configure S3 Generate Pre-signed URL using SigV4 Library:
+
+Refer this [demos/http/http_demo_s3_generate_presigned_url/README.md](demos/http/http_demo_s3_generate_presigned_url/README.md) to follow the steps needed to configure and run the S3 Generate Pre-signed URL HTTP Demo using SigV4 Library that generates the authorization HTTP header needed to authenticate the HTTP requests send to S3.
+
 #### Setup for AWS IoT Jobs demo
 
 1. The demo requires the Linux platform to contain curl and libmosquitto. On a Debian platform, these dependencies can be installed with:
@@ -550,6 +554,7 @@ http_demo_basic_tls
 http_demo_mutual_auth
 http_demo_plaintext
 http_demo_s3_download
+http_demo_s3_generate_presigned_url
 http_demo_s3_download_multithreaded
 http_demo_s3_upload
 jobs_demo_mosquitto
