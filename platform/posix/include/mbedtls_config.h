@@ -279,7 +279,7 @@
  * unconditionally use the implementation for mbedtls_platform_gmtime_r()
  * supplied at compile time.
  */
-#define MBEDTLS_PLATFORM_GMTIME_R_ALT
+// #define MBEDTLS_PLATFORM_GMTIME_R_ALT
 
 /**
  * Uncomment the macro to let Mbed TLS use your alternate implementation of
@@ -1750,7 +1750,7 @@
  *
  * Uncomment this macro to enable support for the record_size_limit extension
  */
-//#define MBEDTLS_SSL_RECORD_SIZE_LIMIT
+#define MBEDTLS_SSL_RECORD_SIZE_LIMIT
 
 /**
  * \def MBEDTLS_SSL_PROTO_TLS1_2

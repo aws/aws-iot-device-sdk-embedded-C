@@ -687,14 +687,14 @@ int Mbedtls_Send( NetworkContext_t * pNetworkContext,
 static MbedtlsStatus_t writeKeyToFile( const char * pKeyPath,
                                        mbedtls_pk_context * pPkCtx )
 {
-    unsigned char pKeyBuffer[ 128 ];
+    unsigned char pKeyBuffer[ 2048 ];
     MbedtlsStatus_t status = MBEDTLS_SUCCESS;
     int result = 0;
 
     /* Serialize the private to a buffer */
-    result = mbedtls_pk_write_key_der( pPkCtx,
+    result = mbedtls_pk_write_key_pem( pPkCtx,
                                         pKeyBuffer,
-                                        128 );
+                                        2048 );
 
     if( result < 0 )
     {
@@ -707,8 +707,7 @@ static MbedtlsStatus_t writeKeyToFile( const char * pKeyPath,
     else
     {
         FILE * pKeyFile;
-        unsigned char * pKeyStart = &( pKeyBuffer[ result ] );
-        size_t derKeyLength = 128 - result;
+        size_t pemKeyLength = strnlen( ( char * ) pKeyBuffer, 2048 );
 
         pKeyFile = fopen( pKeyPath, "wb" );
         if( pKeyFile == NULL )
@@ -721,10 +720,10 @@ static MbedtlsStatus_t writeKeyToFile( const char * pKeyPath,
         }
         else
         {
-            if( fwrite( pKeyStart, derKeyLength, 1, pKeyFile ) != 1 )
+            if( fwrite( pKeyBuffer, 1, pemKeyLength, pKeyFile ) != pemKeyLength )
             {
                 LogError( ( "Failed to write %lu bytes path: %s, result: %s.",
-                            ( unsigned long ) derKeyLength,
+                            ( unsigned long ) pemKeyLength,
                             pKeyPath,
                             strerror( errno ) ) );
 
@@ -757,7 +756,7 @@ MbedtlsStatus_t Mbedtls_GenerateECKey( const char * pPrivateKeyPath )
     int result = 0;
 
     assert( pPrivateKeyPath != NULL );
-    assert( access( pPrivateKeyPath, W_OK ) == 0 );
+    // assert( access( pPrivateKeyPath, W_OK ) == 0 );
 
     /* Initialize mbedtls entropy, prng, and pk contexts */
     mbedtls_entropy_init( &entropyCtx );

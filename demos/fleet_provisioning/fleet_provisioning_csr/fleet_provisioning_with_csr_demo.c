@@ -485,6 +485,8 @@ int main( int argc,
     ( void ) argc;
     ( void ) argv;
 
+    psa_crypto_init();
+
     do
     {
         /* Initialize the buffer lengths to their max lengths. */
@@ -499,25 +501,22 @@ int main( int argc,
          * CreateCertificatefromCsr or CreateKeysAndCertificate.
          * In this demo we use CreateCertificatefromCsr. */
 
-        if( status == true )
-        {
-            /* Attempts to connect to the AWS IoT MQTT broker. If the
-             * connection fails, retries after a timeout. Timeout value will
-             * exponentially increase until maximum attempts are reached. */
-            LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
-            status = EstablishMqttSession( provisioningPublishCallback,
-                                           CLAIM_CERT_PATH,
-                                           CLAIM_PRIVATE_KEY_PATH );
+        /* Attempts to connect to the AWS IoT MQTT broker. If the
+            * connection fails, retries after a timeout. Timeout value will
+            * exponentially increase until maximum attempts are reached. */
+        LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
+        status = EstablishMqttSession( provisioningPublishCallback,
+                                        CLAIM_CERT_PATH,
+                                        CLAIM_PRIVATE_KEY_PATH );
 
-            if( status == false )
-            {
-                LogError( ( "Failed to establish MQTT session." ) );
-            }
-            else
-            {
-                LogInfo( ( "Established connection with claim credentials." ) );
-                connectionEstablished = true;
-            }
+        if( status == false )
+        {
+            LogError( ( "Failed to establish MQTT session." ) );
+        }
+        else
+        {
+            LogInfo( ( "Established connection with claim credentials." ) );
+            connectionEstablished = true;
         }
 
         /**** Call the CreateCertificateFromCsr API ***************************/
@@ -546,6 +545,10 @@ int main( int argc,
             if( Mbedtls_GenerateCSR( CLIENT_PRIVATE_KEY_PATH, csr, CSR_BUFFER_LENGTH ) != MBEDTLS_SUCCESS )
             {
                 status = false;
+            }
+            else
+            {
+                csrLength = strnlen( csr, CSR_BUFFER_LENGTH );
             }
         }
 

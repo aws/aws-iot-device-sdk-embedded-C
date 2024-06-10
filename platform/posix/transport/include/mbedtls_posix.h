@@ -47,7 +47,7 @@
 /* Logging configuration for the transport interface implementation which uses
  * MbedTLS and Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "Transport_MbedTLS_"
+    #define LIBRARY_LOG_NAME     "Transport_MbedTLS_Posix"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_WARN
@@ -85,7 +85,7 @@
  * See https://tls.mbed.org/api/debug_8h.html#a6629362e96b43725ace95c8ff01d9985
  * for valid values.
  */
-#define MBEDTLS_DEBUG_LOG_LEVEL    4
+#define MBEDTLS_DEBUG_LOG_LEVEL    0
 
 /**
  * @brief Context containing state for the MbedTLS and core based
