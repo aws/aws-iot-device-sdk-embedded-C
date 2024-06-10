@@ -18,6 +18,10 @@ set( OPENSSL_TRANSPORT_SOURCES
      ${CMAKE_CURRENT_LIST_DIR}/transport/src/openssl_posix.c )
 
 # MbedTLS transport source files.
+set( MBEDTLS_TRANSPORT_SOURCES
+     ${CMAKE_CURRENT_LIST_DIR}/transport/src/mbedtls_posix.c )
+
+# MbedTLS corePKCS11 transport source files.
 set( MBEDTLS_PKCS11_TRANSPORT_SOURCES
      ${CMAKE_CURRENT_LIST_DIR}/transport/src/mbedtls_pkcs11_posix.c )
 

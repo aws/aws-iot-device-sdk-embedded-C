@@ -1,7 +1,7 @@
 # For static library builds, link against static library of OpenSSL
-if(NOT BUILD_SHARED_LIBS)
-    set( OPENSSL_USE_STATIC_LIBS TRUE )
-endif()
+# if(NOT BUILD_SHARED_LIBS)
+#     set( OPENSSL_USE_STATIC_LIBS TRUE )
+# endif()
 find_package(OpenSSL)
 # Verify the minimum OpenSSL version required
 if( ${OPENSSL_FOUND} AND ( OPENSSL_VERSION MATCHES "0.9$" OR OPENSSL_VERSION MATCHES "1.0$" ) )

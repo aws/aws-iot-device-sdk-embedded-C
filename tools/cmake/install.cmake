@@ -9,7 +9,6 @@ set(FILEPATH_LOCATIONS
         ${MODULES_DIR}/standard/coreHTTP/httpFilePaths.cmake
         ${MODULES_DIR}/standard/coreJSON/jsonFilePaths.cmake
         ${MODULES_DIR}/standard/coreMQTT/mqttFilePaths.cmake
-        ${MODULES_DIR}/standard/corePKCS11/pkcsFilePaths.cmake
         ${PLATFORM_DIR}/posix/posixFilePaths.cmake
     )
 
@@ -30,23 +29,11 @@ set(LIBRARY_PREFIXES
         "OTA_MQTT"
         "BACKOFF_ALGORITHM"
         "HTTP"
-        "MQTT"
-        "PKCS")
-
-set(COREPKCS11_LOCATION "${MODULES_DIR}/standard/corePKCS11")
-set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdparty")
+        "MQTT")
 
 # Define any extra sources or includes outside the standard, making sure to use the same prefix.
 set(MQTT_EXTRA_SOURCES
         ${MQTT_SERIALIZER_SOURCES})
-set(PKCS_EXTRA_SOURCES
-        "${COREPKCS11_LOCATION}/source/portable/os/posix/core_pkcs11_pal.c"
-        "${COREPKCS11_LOCATION}/source/portable/os/core_pkcs11_pal_utils.c"
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils/mbedtls_utils.c")
-set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
-    PRIVATE
-        "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
-        "${COREPKCS11_LOCATION}/source/portable/os")
 set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
 foreach(ota_backend ${OTA_BACKENDS})
     set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
@@ -106,13 +93,6 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
                                     PRIVATE ${${config_prefix}_CUSTOM_CONFIG_DIR})
     else()
         target_compile_definitions("${library_name}" PRIVATE -D${config_prefix}_DO_NOT_USE_CUSTOM_CONFIG)
-        # PKCS11 requires a config so include the one from the demos by default.
-        if(${config_prefix} STREQUAL "PKCS")
-            target_include_directories("${library_name}" PRIVATE
-                                        ${DEMOS_DIR}/pkcs11/common/include
-                                        ${LOGGING_INCLUDE_DIRS})
-            target_link_libraries("${library_name}" PRIVATE mbedtls )
-        endif()
     endif()
 
     # Add public include directories to library target.

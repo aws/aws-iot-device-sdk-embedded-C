@@ -55,12 +55,6 @@ dependencies:
       type: "git"
       url: "https://github.com/FreeRTOS/backoffAlgorithm"
       path: "libraries/standard/backoffAlgorithm"
-  - name: "corePKCS11"
-    version: "c671c11f2de13c31e8eb9563858fb513b4c5b678"
-    repository:
-      type: "git"
-      url: "https://github.com/FreeRTOS/corePKCS11"
-      path: "libraries/standard/corePKCS11"
   - name: "Fleet-Provisioning-for-AWS-IoT-embedded-sdk"
     version: "8ce2b28325efb917c2e357aed2361e3fa6162ecf"
     repository:
