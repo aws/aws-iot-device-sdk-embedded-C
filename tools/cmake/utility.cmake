@@ -29,7 +29,7 @@ function(set_macro_definitions)
                     # Compile the application with the macro definition if it is defined.
                     target_compile_definitions(
                         ${application_target} PRIVATE
-                            ${optional_macro_definition}="${${optional_macro_definition}}"
+                            "${optional_macro_definition}=\"${${optional_macro_definition}}\""
                     )
                     list(APPEND DEFINED_MACROS_FROM_CMAKE "${optional_macro_definition}")
                 endif()
@@ -41,7 +41,7 @@ function(set_macro_definitions)
                 if(DEFINED ${required_macro_definition})
                     target_compile_definitions(
                         ${application_target} PRIVATE
-                            ${required_macro_definition}="${${required_macro_definition}}"
+                            "${required_macro_definition}=\"${${required_macro_definition}}\""
                     )
                     # This variable adds definitions to the file being run against `check_symbol_exists`.
                     list(APPEND CMAKE_REQUIRED_DEFINITIONS -D${required_macro_definition})
