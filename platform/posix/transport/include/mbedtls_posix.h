@@ -20,14 +20,14 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MBEDTLS_PKCS11_POSIX_H_
-#define MBEDTLS_PKCS11_POSIX_H_
+#ifndef MBEDTLS_POSIX_H_
+#define MBEDTLS_POSIX_H_
 
 /**
- * @file mbedtls_pkcs11_posix.h
+ * @file mbedtls_posix.h
  *
  * @brief Implementation for the transport interface using a mutually
- * authenticated TLS connection with MbedTLS for TLS and corePKCS11 for secure
+ * authenticated TLS connection with MbedTLS for TLS and core for secure
  * credential management.
  */
 
@@ -47,7 +47,7 @@
 /* Logging configuration for the transport interface implementation which uses
  * MbedTLS and Sockets. */
 #ifndef LIBRARY_LOG_NAME
-    #define LIBRARY_LOG_NAME     "Transport_MbedTLS_PKCS11"
+    #define LIBRARY_LOG_NAME     "Transport_MbedTLS_Posix"
 #endif
 #ifndef LIBRARY_LOG_LEVEL
     #define LIBRARY_LOG_LEVEL    LOG_WARN
@@ -66,17 +66,17 @@
 /* Standard includes. */
 #include <stdbool.h>
 
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
+
 /* MbedTLS includes. */
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/pk_internal.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
 
 /* Transport interface include. */
 #include "transport_interface.h"
-
-/* PKCS #11 includes. */
-#include "core_pkcs11.h"
 
 /**
  * @brief Debug logging level to use for MbedTLS.
@@ -88,14 +88,14 @@
 #define MBEDTLS_DEBUG_LOG_LEVEL    0
 
 /**
- * @brief Context containing state for the MbedTLS and corePKCS11 based
+ * @brief Context containing state for the MbedTLS and core based
  * transport interface implementation.
  *
  * @note Applications using this transport interface implementation should use
  * this struct as the #NetworkContext_t for the transport interface
  * configuration passed to coreMQTT or coreHTTP.
  */
-typedef struct MbedtlsPkcs11Context
+typedef struct MbedtlsContext
 {
     mbedtls_net_context socketContext;    /**< @brief MbedTLS socket context. */
     mbedtls_ssl_config config;            /**< @brief SSL connection configuration. */
@@ -104,33 +104,28 @@ typedef struct MbedtlsPkcs11Context
     mbedtls_x509_crt rootCa;              /**< @brief Root CA certificate context. */
     mbedtls_x509_crt clientCert;          /**< @brief Client certificate context. */
     mbedtls_pk_context privKey;           /**< @brief Client private key context. */
-    mbedtls_pk_info_t privKeyInfo;        /**< @brief Client private key info. */
-
-    /* PKCS #11. */
-    CK_FUNCTION_LIST_PTR pP11FunctionList; /**< @brief PKCS #11 function list. */
-    CK_SESSION_HANDLE p11Session;          /**< @brief PKCS #11 session. */
-    CK_OBJECT_HANDLE p11PrivateKey;        /**< @brief PKCS #11 handle for the private key to use for client authentication. */
-    CK_KEY_TYPE keyType;                   /**< @brief PKCS #11 key type corresponding to #p11PrivateKey. */
-} MbedtlsPkcs11Context_t;
+    mbedtls_entropy_context entropyCtx;   /**< @brief Entropy context */
+    mbedtls_ctr_drbg_context ctrDrbgCtx;  /**< @brief Random number generator context */
+} MbedtlsContext_t;
 
 /**
  * @brief TLS Connect / Disconnect return status.
  */
-typedef enum MbedtlsPkcs11Status
+typedef enum MbedtlsStatus
 {
-    MBEDTLS_PKCS11_SUCCESS = 0,         /**< Function successfully completed. */
-    MBEDTLS_PKCS11_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
-    MBEDTLS_PKCS11_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
-    MBEDTLS_PKCS11_INVALID_CREDENTIALS, /**< Provided credentials were invalid. */
-    MBEDTLS_PKCS11_HANDSHAKE_FAILED,    /**< Performing TLS handshake with server failed. */
-    MBEDTLS_PKCS11_INTERNAL_ERROR,      /**< A call to a system API resulted in an internal error. */
-    MBEDTLS_PKCS11_CONNECT_FAILURE      /**< Initial connection to the server failed. */
-} MbedtlsPkcs11Status_t;
+    MBEDTLS_SUCCESS = 0,         /**< Function successfully completed. */
+    MBEDTLS_INVALID_PARAMETER,   /**< At least one parameter was invalid. */
+    MBEDTLS_INSUFFICIENT_MEMORY, /**< Insufficient memory required to establish connection. */
+    MBEDTLS_INVALID_CREDENTIALS, /**< Provided credentials were invalid. */
+    MBEDTLS_HANDSHAKE_FAILED,    /**< Performing TLS handshake with server failed. */
+    MBEDTLS_INTERNAL_ERROR,      /**< A call to a system API resulted in an internal error. */
+    MBEDTLS_CONNECT_FAILURE      /**< Initial connection to the server failed. */
+} MbedtlsStatus_t;
 
 /**
  * @brief Contains the credentials necessary for tls connection setup.
  */
-typedef struct MbedtlsPkcs11Credentials
+typedef struct MbedtlsCredentials
 {
     /**
      * @brief To use ALPN, set this to a NULL-terminated list of supported
@@ -148,41 +143,40 @@ typedef struct MbedtlsPkcs11Credentials
     bool disableSni;
 
     const char * pRootCaPath;     /**< @brief String representing a trusted server root certificate. */
-    char * pClientCertLabel;      /**< @brief String representing the PKCS #11 label for the client certificate. */
-    char * pPrivateKeyLabel;      /**< @brief String representing the PKCS #11 label for the private key. */
-    CK_SESSION_HANDLE p11Session; /**< @brief PKCS #11 session handle. */
-} MbedtlsPkcs11Credentials_t;
+    const char * pClientCertPath; /**< @brief String representing the PKCS #11 label for the client certificate. */
+    const char * pPrivateKeyPath; /**< @brief String representing the PKCS #11 label for the private key. */
+} MbedtlsCredentials_t;
 
 /**
  * @brief Sets up a mutually authenticated TLS session on top of a TCP
- * connection using the MbedTLS library for TLS and the corePKCS11 library for
+ * connection using the MbedTLS library for TLS and the core library for
  * credential management.
  *
  * @param[out] pNetworkContext The output parameter to return the created network context.
  * @param[in] pHostName The hostname of the remote endpoint.
  * @param[in] port The destination port.
- * @param[in] pMbedtlsPkcs11Credentials Credentials for the TLS connection.
+ * @param[in] pMbedtlsCredentials Credentials for the TLS connection.
  * @param[in] recvTimeoutMs The timeout for socket receive operations.
  *
- * @note #recvTimeoutMs sets the maximum blocking time of the #Mbedtls_Pkcs11_Recv function.
+ * @note #recvTimeoutMs sets the maximum blocking time of the #Mbedtls_Recv function.
  *
- * @return #MBEDTLS_PKCS11_SUCCESS on success;
- * #MBEDTLS_PKCS11_INSUFFICIENT_MEMORY, #MBEDTLS_PKCS11_INVALID_CREDENTIALS,
- * #MBEDTLS_PKCS11_HANDSHAKE_FAILED, #MBEDTLS_PKCS11_INTERNAL_ERROR,
- * or #MBEDTLS_PKCS11_CONNECT_FAILURE on failure.
+ * @return #MBEDTLS_SUCCESS on success;
+ * #MBEDTLS_INSUFFICIENT_MEMORY, #MBEDTLS_INVALID_CREDENTIALS,
+ * #MBEDTLS_HANDSHAKE_FAILED, #MBEDTLS_INTERNAL_ERROR,
+ * or #MBEDTLS_CONNECT_FAILURE on failure.
  */
-MbedtlsPkcs11Status_t Mbedtls_Pkcs11_Connect( NetworkContext_t * pNetworkContext,
-                                              const char * pHostName,
-                                              uint16_t port,
-                                              const MbedtlsPkcs11Credentials_t * pMbedtlsPkcs11Credentials,
-                                              uint32_t recvTimeoutMs );
+MbedtlsStatus_t Mbedtls_Connect( NetworkContext_t * pNetworkContext,
+                                 const char * pHostName,
+                                 uint16_t port,
+                                 const MbedtlsCredentials_t * pMbedtlsCredentials,
+                                 uint32_t recvTimeoutMs );
 
 /**
  * @brief Gracefully disconnect an established TLS connection.
  *
  * @param[in] pNetworkContext Network context.
  */
-void Mbedtls_Pkcs11_Disconnect( NetworkContext_t * pNetworkContext );
+void Mbedtls_Disconnect( NetworkContext_t * pNetworkContext );
 
 /**
  * @brief Receives data over an established TLS session using the MbedTLS API.
@@ -190,16 +184,16 @@ void Mbedtls_Pkcs11_Disconnect( NetworkContext_t * pNetworkContext );
  * This function can be used as the #TransportInterface.recv implementation of
  * the transport interface to receive data from the network.
  *
- * @param[in] pNetworkContext The network context created using Mbedtls_Pkcs11_Connect API.
+ * @param[in] pNetworkContext The network context created using Mbedtls_Connect API.
  * @param[out] pBuffer Buffer to receive network data into.
  * @param[in] bytesToRecv Number of bytes requested from the network.
  *
  * @return Number of bytes received if successful; negative value to indicate failure.
  * A return value of zero represents that the receive operation can be retried.
  */
-int32_t Mbedtls_Pkcs11_Recv( NetworkContext_t * pNetworkContext,
-                             void * pBuffer,
-                             size_t bytesToRecv );
+int32_t Mbedtls_Recv( NetworkContext_t * pNetworkContext,
+                      void * pBuffer,
+                      size_t bytesToRecv );
 
 /**
  * @brief Sends data over an established TLS session using the MbedTLS API.
@@ -207,7 +201,7 @@ int32_t Mbedtls_Pkcs11_Recv( NetworkContext_t * pNetworkContext,
  * This function can be used as the #TransportInterface.send implementation of
  * the transport interface to send data over the network.
  *
- * @param[in] pNetworkContext The network context created using Mbedtls_Pkcs11_Connect API.
+ * @param[in] pNetworkContext The network context created using Mbedtls_Connect API.
  * @param[in] pBuffer Buffer containing the bytes to send over the network stack.
  * @param[in] bytesToSend Number of bytes to send over the network.
  *
@@ -216,9 +210,25 @@ int32_t Mbedtls_Pkcs11_Recv( NetworkContext_t * pNetworkContext,
  * @note This function does not return zero value because it cannot be retried
  * on send operation failure.
  */
-int32_t Mbedtls_Pkcs11_Send( NetworkContext_t * pNetworkContext,
-                             const void * pBuffer,
-                             size_t bytesToSend );
+int32_t Mbedtls_Send( NetworkContext_t * pNetworkContext,
+                      const void * pBuffer,
+                      size_t bytesToSend );
+
+/**
+ * @brief Generate a new EC Private Key
+ * This function generates a new EC private key and writes the resulting key
+ * in DER format to the provided path.
+ *
+ * @param[in] pPrivateKeyPath Path to store the resulting private key.
+ *
+ * @return #MBEDTLS_SUCCESS on success
+ */
+MbedtlsStatus_t Mbedtls_GenerateECKey( const char * pPrivateKeyPath );
+
+
+MbedtlsStatus_t Mbedtls_GenerateCSR( const char * pPrivateKeyPath,
+                                     char * pCsrPemBuffer,
+                                     size_t csrPemBufferLength );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
@@ -226,4 +236,4 @@ int32_t Mbedtls_Pkcs11_Send( NetworkContext_t * pNetworkContext,
 #endif
 /* *INDENT-ON* */
 
-#endif /* ifndef MBEDTLS_PKCS11_POSIX_H_ */
+#endif /* ifndef MBEDTLS_POSIX_H_ */

@@ -48,7 +48,7 @@
 #include "mqtt_operations.h"
 
 /* MbedTLS transport include. */
-#include "mbedtls_pkcs11_posix.h"
+#include "mbedtls_posix.h"
 
 /*Include backoff algorithm header for retry logic.*/
 #include "backoff_algorithm.h"
@@ -145,7 +145,7 @@
 /**
  * @brief Timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 1000U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS           ( 2000U )
 
 /**
  * @brief The MQTT metrics string expected by AWS IoT MQTT Broker.
@@ -190,7 +190,7 @@ typedef struct PublishPackets
 /* Each compilation unit must define the NetworkContext struct. */
 struct NetworkContext
 {
-    MbedtlsPkcs11Context_t * pParams;
+    MbedtlsContext_t * pParams;
 };
 /*-----------------------------------------------------------*/
 
@@ -243,7 +243,7 @@ static NetworkContext_t networkContext = { 0 };
 /**
  * @brief The parameters for MbedTLS operation.
  */
-static MbedtlsPkcs11Context_t tlsContext = { 0 };
+static MbedtlsContext_t tlsContext = { 0 };
 
 /**
  * @brief The flag to indicate that the mqtt session is established.
@@ -276,14 +276,6 @@ static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_LEN ];
 /*-----------------------------------------------------------*/
 
 /**
- * @brief The random number generator to use for exponential backoff with
- * jitter retry logic.
- *
- * @return The generated random number.
- */
-static uint32_t generateRandomNumber( void );
-
-/**
  * @brief Connect to the MQTT broker with reconnection retries.
  *
  * If connection fails, retry is attempted after a timeout. Timeout value
@@ -291,16 +283,14 @@ static uint32_t generateRandomNumber( void );
  * of attempts are exhausted.
  *
  * @param[out] pNetworkContext The created network context.
- * @param[in] p11Session The PKCS #11 session to use.
- * @param[in] pClientCertLabel The client certificate PKCS #11 label to use.
- * @param[in] pPrivateKeyLabel The private key PKCS #11 label for the client certificate.
+ * @param[in] pClientCertPath Path to the client certificate to use.
+ * @param[in] pPrivateKeyPath Path to the private key of the client certificate.
  *
  * @return false on failure; true on successful connection.
  */
 static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext,
-                                               CK_SESSION_HANDLE p11Session,
-                                               char * pClientCertLabel,
-                                               char * pPrivateKeyLabel );
+                                               const char * pClientCertPath,
+                                               const char * pPrivateKeyPath );
 
 /**
  * @brief Get the free index in the #outgoingPublishPackets array at which an
@@ -374,24 +364,18 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext );
 static bool waitForPacketAck( MQTTContext_t * pMqttContext,
                               uint16_t usPacketIdentifier,
                               uint32_t ulTimeout );
-/*-----------------------------------------------------------*/
 
-static uint32_t generateRandomNumber()
-{
-    return( ( uint32_t ) rand() );
-}
 /*-----------------------------------------------------------*/
 
 static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContext,
-                                               CK_SESSION_HANDLE p11Session,
-                                               char * pClientCertLabel,
-                                               char * pPrivateKeyLabel )
+                                               const char * pClientCertPath,
+                                               const char * pPrivateKeyPath )
 {
     bool returnStatus = false;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
-    MbedtlsPkcs11Status_t tlsStatus = MBEDTLS_PKCS11_SUCCESS;
+    MbedtlsStatus_t tlsStatus = MBEDTLS_SUCCESS;
     BackoffAlgorithmContext_t reconnectParams;
-    MbedtlsPkcs11Credentials_t tlsCredentials = { 0 };
+    MbedtlsCredentials_t tlsCredentials = { 0 };
     uint16_t nextRetryBackOff = 0U;
 
     /* Set the pParams member of the network context with desired transport. */
@@ -399,9 +383,8 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
 
     /* Initialize credentials for establishing TLS session. */
     tlsCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
-    tlsCredentials.pClientCertLabel = pClientCertLabel;
-    tlsCredentials.pPrivateKeyLabel = pPrivateKeyLabel;
-    tlsCredentials.p11Session = p11Session;
+    tlsCredentials.pClientCertPath = pClientCertPath;
+    tlsCredentials.pPrivateKeyPath = pPrivateKeyPath;
 
     /* AWS IoT requires devices to send the Server Name Indication (SNI)
      * extension to the Transport Layer Security (TLS) protocol and provide
@@ -439,13 +422,13 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
                     AWS_IOT_ENDPOINT,
                     AWS_MQTT_PORT ) );
 
-        tlsStatus = Mbedtls_Pkcs11_Connect( pNetworkContext,
+        tlsStatus = Mbedtls_Connect( pNetworkContext,
                                             AWS_IOT_ENDPOINT,
                                             AWS_MQTT_PORT,
                                             &tlsCredentials,
                                             TRANSPORT_SEND_RECV_TIMEOUT_MS );
 
-        if( tlsStatus == MBEDTLS_PKCS11_SUCCESS )
+        if( tlsStatus == MBEDTLS_SUCCESS )
         {
             /* Connection successful. */
             returnStatus = true;
@@ -453,7 +436,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
         else
         {
             /* Generate a random number and get back-off value (in milliseconds) for the next connection retry. */
-            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, generateRandomNumber(), &nextRetryBackOff );
+            backoffAlgStatus = BackoffAlgorithm_GetNextBackoff( &reconnectParams, ( uint32_t ) rand(), &nextRetryBackOff );
 
             if( backoffAlgStatus == BackoffAlgorithmRetriesExhausted )
             {
@@ -467,7 +450,7 @@ static bool connectToBrokerWithBackoffRetries( NetworkContext_t * pNetworkContex
                 Clock_SleepMs( nextRetryBackOff );
             }
         }
-    } while( ( tlsStatus != MBEDTLS_PKCS11_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
+    } while( ( tlsStatus != MBEDTLS_SUCCESS ) && ( backoffAlgStatus == BackoffAlgorithmSuccess ) );
 
     return returnStatus;
 }
@@ -728,16 +711,14 @@ static bool waitForPacketAck( MQTTContext_t * pMqttContext,
 /*-----------------------------------------------------------*/
 
 bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
-                           CK_SESSION_HANDLE p11Session,
-                           char * pClientCertLabel,
-                           char * pPrivateKeyLabel )
+                           char * pClientCertPath,
+                           char * pPrivateKeyPath )
 {
     bool returnStatus = false;
     MQTTStatus_t mqttStatus;
     MQTTConnectInfo_t connectInfo;
     MQTTFixedBuffer_t networkBuffer;
     TransportInterface_t transport = { NULL };
-    bool createCleanSession = false;
     MQTTContext_t * pMqttContext = &mqttContext;
     NetworkContext_t * pNetworkContext = &networkContext;
     bool sessionPresent = false;
@@ -750,9 +731,8 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
     ( void ) memset( pNetworkContext, 0U, sizeof( NetworkContext_t ) );
 
     returnStatus = connectToBrokerWithBackoffRetries( pNetworkContext,
-                                                      p11Session,
-                                                      pClientCertLabel,
-                                                      pPrivateKeyLabel );
+                                                      pClientCertPath,
+                                                      pPrivateKeyPath );
 
     if( returnStatus != true )
     {
@@ -768,8 +748,8 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
          * For this demo, TCP sockets are used to send and receive data
          * from the network. pNetworkContext is an SSL context for OpenSSL.*/
         transport.pNetworkContext = pNetworkContext;
-        transport.send = Mbedtls_Pkcs11_Send;
-        transport.recv = Mbedtls_Pkcs11_Recv;
+        transport.send = Mbedtls_Send;
+        transport.recv = Mbedtls_Recv;
         transport.writev = NULL;
 
         /* Fill the values for network buffer. */
@@ -810,11 +790,7 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback,
             {
                 /* Establish an MQTT session by sending a CONNECT packet. */
 
-                /* If #createCleanSession is true, start with a clean session
-                 * i.e. direct the MQTT broker to discard any previous session data.
-                 * If #createCleanSession is false, direct the broker to attempt to
-                 * reestablish a session which was already present. */
-                connectInfo.cleanSession = createCleanSession;
+                connectInfo.cleanSession = false;
 
                 /* The client identifier is used to uniquely identify this MQTT client to
                  * the MQTT broker. In a production device the identifier can be something
@@ -923,7 +899,7 @@ bool DisconnectMqttSession( void )
     }
 
     /* End TLS session, then close TCP connection. */
-    ( void ) Mbedtls_Pkcs11_Disconnect( pNetworkContext );
+    ( void ) Mbedtls_Disconnect( pNetworkContext );
 
     return returnStatus;
 }

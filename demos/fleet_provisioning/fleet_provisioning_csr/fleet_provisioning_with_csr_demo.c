@@ -39,10 +39,10 @@
  * Provisioning is an AWS IoT Core feature.
  *
  * This demo provisions a device certificate using the provisioning by claim
- * workflow with a Keys and Certificate Request. The demo connects to AWS
+ * workflow with a Certificate Signing Request (CSR). The demo connects to AWS
  * IoT Core using provided claim credentials (whose certificate needs to be
  * registered with IoT Core before running this demo), subscribes to the
- * CreateKeysAndCertificate topics, and obtains keys and certificate. It then
+ * CreateCertificateFromCsr topics, and obtains a certificate. It then
  * subscribes to the RegisterThing topics and activates the certificate and
  * obtains a Thing using the provisioning template. Finally, it reconnects to
  * AWS IoT Core using the new credentials.
@@ -58,24 +58,16 @@
 #include <unistd.h>
 #include <errno.h>
 
-#if defined( DOWNLOADED_CERT_WRITE_PATH ) || defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH )
-    #include <fcntl.h>
-#endif
-
 /* Demo config. */
 #include "demo_config.h"
-
-/* corePKCS11 includes. */
-#include "core_pkcs11.h"
-#include "core_pkcs11_config.h"
 
 /* AWS IoT Fleet Provisioning Library. */
 #include "fleet_provisioning.h"
 
 /* Demo includes. */
 #include "mqtt_operations.h"
-#include "pkcs11_operations.h"
 #include "fleet_provisioning_serializer.h"
+#include "mbedtls_posix.h"
 
 /**
  * These configurations are required. Throw compilation error if it is not
@@ -128,9 +120,9 @@
 #define DELAY_BETWEEN_DEMO_RETRY_ITERATIONS_SECONDS    ( 5 )
 
 /**
- * @brief Size of buffer in which to hold the private key.
+ * @brief Size of buffer in which to hold the certificate signing request (CSR).
  */
-#define PRIV_KEY_BUFFER_LENGTH                         2048
+#define CSR_BUFFER_LENGTH                              2048
 
 /**
  * @brief Size of buffer in which to hold the certificate.
@@ -193,7 +185,7 @@ static size_t payloadLength;
 
 /**
  * @brief Callback to receive the incoming publish messages from the MQTT
- * broker. Sets responseStatus if an expected CreateKeysAndCertificate or
+ * broker. Sets responseStatus if an expected CreateCertificateFromCsr or
  * RegisterThing response is received, and copies the response into
  * responseBuffer if the response is an accepted one.
  *
@@ -209,14 +201,14 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 static bool waitForResponse( void );
 
 /**
- * @brief Subscribe to the CreateKeysAndCertificate accepted and rejected topics.
+ * @brief Subscribe to the CreateCertificateFromCsr accepted and rejected topics.
  */
-static bool subscribeToKeysCertResponseTopics( void );
+static bool subscribeToCsrResponseTopics( void );
 
 /**
- * @brief Unsubscribe from the CreateKeysAndCertificate accepted and rejected topics.
+ * @brief Unsubscribe from the CreateCertificateFromCsr accepted and rejected topics.
  */
-static bool unsubscribeFromKeysCertResponseTopics( void );
+static bool unsubscribeFromCsrResponseTopics( void );
 
 /**
  * @brief Subscribe to the RegisterThing accepted and rejected topics.
@@ -251,9 +243,9 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
     }
     else
     {
-        if( api == FleetProvCborCreateKeysAndCertAccepted )
+        if( api == FleetProvCborCreateCertFromCsrAccepted )
         {
-            LogInfo( ( "Received accepted response from Fleet Provisioning CreateKeysAndCertificate API." ) );
+            LogInfo( ( "Received accepted response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
             cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
             LogDebug( ( "Payload: %s", cborDump ) );
@@ -268,9 +260,9 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
             payloadLength = pPublishInfo->payloadLength;
         }
-        else if( api == FleetProvCborCreateKeysAndCertRejected )
+        else if( api == FleetProvCborCreateCertFromCsrRejected )
         {
-            LogError( ( "Received rejected response from Fleet Provisioning CreateKeysAndCertificate API." ) );
+            LogError( ( "Received rejected response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
             cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
             LogError( ( "Payload: %s", cborDump ) );
@@ -338,30 +330,30 @@ static bool waitForResponse( void )
 }
 /*-----------------------------------------------------------*/
 
-static bool subscribeToKeysCertResponseTopics( void )
+static bool subscribeToCsrResponseTopics( void )
 {
     bool status;
 
-    status = SubscribeToTopic( FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC,
-                               FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH );
+    status = SubscribeToTopic( FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC,
+                               FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH );
 
     if( status == false )
     {
         LogError( ( "Failed to subscribe to fleet provisioning topic: %.*s.",
-                    FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH,
-                    FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC ) );
+                    FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH,
+                    FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC ) );
     }
 
     if( status == true )
     {
-        status = SubscribeToTopic( FP_CBOR_CREATE_KEYS_REJECTED_TOPIC,
-                                   FP_CBOR_CREATE_KEYS_REJECTED_LENGTH );
+        status = SubscribeToTopic( FP_CBOR_CREATE_CERT_REJECTED_TOPIC,
+                                   FP_CBOR_CREATE_CERT_REJECTED_LENGTH );
 
         if( status == false )
         {
             LogError( ( "Failed to subscribe to fleet provisioning topic: %.*s.",
-                        FP_CBOR_CREATE_KEYS_REJECTED_LENGTH,
-                        FP_CBOR_CREATE_KEYS_REJECTED_TOPIC ) );
+                        FP_CBOR_CREATE_CERT_REJECTED_LENGTH,
+                        FP_CBOR_CREATE_CERT_REJECTED_TOPIC ) );
         }
     }
 
@@ -369,30 +361,30 @@ static bool subscribeToKeysCertResponseTopics( void )
 }
 /*-----------------------------------------------------------*/
 
-static bool unsubscribeFromKeysCertResponseTopics( void )
+static bool unsubscribeFromCsrResponseTopics( void )
 {
     bool status;
 
-    status = UnsubscribeFromTopic( FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC,
-                                   FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH );
+    status = UnsubscribeFromTopic( FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC,
+                                   FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH );
 
     if( status == false )
     {
         LogError( ( "Failed to unsubscribe from fleet provisioning topic: %.*s.",
-                    FP_CBOR_CREATE_KEYS_ACCEPTED_LENGTH,
-                    FP_CBOR_CREATE_KEYS_ACCEPTED_TOPIC ) );
+                    FP_CBOR_CREATE_CERT_ACCEPTED_LENGTH,
+                    FP_CBOR_CREATE_CERT_ACCEPTED_TOPIC ) );
     }
 
     if( status == true )
     {
-        status = UnsubscribeFromTopic( FP_CBOR_CREATE_KEYS_REJECTED_TOPIC,
-                                       FP_CBOR_CREATE_KEYS_REJECTED_LENGTH );
+        status = UnsubscribeFromTopic( FP_CBOR_CREATE_CERT_REJECTED_TOPIC,
+                                       FP_CBOR_CREATE_CERT_REJECTED_LENGTH );
 
         if( status == false )
         {
             LogError( ( "Failed to unsubscribe from fleet provisioning topic: %.*s.",
-                        FP_CBOR_CREATE_KEYS_REJECTED_LENGTH,
-                        FP_CBOR_CREATE_KEYS_REJECTED_TOPIC ) );
+                        FP_CBOR_CREATE_CERT_REJECTED_LENGTH,
+                        FP_CBOR_CREATE_CERT_REJECTED_TOPIC ) );
         }
     }
 
@@ -470,12 +462,12 @@ int main( int argc,
           char ** argv )
 {
     bool status = false;
+    /* Buffer for holding the CSR. */
+    char csr[ CSR_BUFFER_LENGTH ] = { 0 };
+    size_t csrLength = 0;
     /* Buffer for holding received certificate until it is saved. */
     char certificate[ CERT_BUFFER_LENGTH ];
     size_t certificateLength;
-    /* Buffer for holding received private key until it is saved. */
-    char privatekey[ PRIV_KEY_BUFFER_LENGTH ];
-    size_t privatekeyLength;
     /* Buffer for holding the certificate ID. */
     char certificateId[ CERT_ID_BUFFER_LENGTH ];
     size_t certificateIdLength;
@@ -483,105 +475,109 @@ int main( int argc,
     char ownershipToken[ OWNERSHIP_TOKEN_BUFFER_LENGTH ];
     size_t ownershipTokenLength;
     bool connectionEstablished = false;
-    CK_SESSION_HANDLE p11Session;
     int demoRunCount = 0;
-    CK_RV pkcs11ret = CKR_OK;
 
     /* Silence compiler warnings about unused variables. */
     ( void ) argc;
     ( void ) argv;
 
+    psa_crypto_init();
+
     do
     {
         /* Initialize the buffer lengths to their max lengths. */
         certificateLength = CERT_BUFFER_LENGTH;
-        privatekeyLength = PRIV_KEY_BUFFER_LENGTH;
         certificateIdLength = CERT_ID_BUFFER_LENGTH;
         ownershipTokenLength = OWNERSHIP_TOKEN_BUFFER_LENGTH;
-
-        /* Initialize the PKCS #11 module */
-        pkcs11ret = xInitializePkcs11Session( &p11Session );
-
-        if( pkcs11ret != CKR_OK )
-        {
-            LogError( ( "Failed to initialize PKCS #11." ) );
-            status = false;
-        }
-        else
-        {
-            /* Insert the claim credentials into the PKCS #11 module */
-            status = loadClaimCredentials( p11Session,
-                                           CLAIM_CERT_PATH,
-                                           pkcs11configLABEL_CLAIM_CERTIFICATE,
-                                           CLAIM_PRIVATE_KEY_PATH,
-                                           pkcs11configLABEL_CLAIM_PRIVATE_KEY );
-
-            if( status == false )
-            {
-                LogError( ( "Failed to provision PKCS #11 with claim credentials." ) );
-            }
-        }
 
         /**** Connect to AWS IoT Core with provisioning claim credentials *****/
 
         /* We first use the claim credentials to connect to the broker. These
          * credentials should allow use of the RegisterThing API and one of the
          * CreateCertificatefromCsr or CreateKeysAndCertificate.
-         * In this demo we use CreateKeysAndCertificate. */
+         * In this demo we use CreateCertificatefromCsr. */
+
+        /* Attempts to connect to the AWS IoT MQTT broker. If the
+            * connection fails, retries after a timeout. Timeout value will
+            * exponentially increase until maximum attempts are reached. */
+        LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
+        status = EstablishMqttSession( provisioningPublishCallback,
+                                        CLAIM_CERT_PATH,
+                                        CLAIM_PRIVATE_KEY_PATH );
+
+        if( status == false )
+        {
+            LogError( ( "Failed to establish MQTT session." ) );
+        }
+        else
+        {
+            LogInfo( ( "Established connection with claim credentials." ) );
+            connectionEstablished = true;
+        }
+
+        /**** Call the CreateCertificateFromCsr API ***************************/
+
+        /* We use the CreateCertificatefromCsr API to obtain a client certificate
+         * for a key on the device by means of sending a certificate signing
+         * request (CSR). */
+        if( status == true )
+        {
+            /* Subscribe to the CreateCertificateFromCsr accepted and rejected
+             * topics. In this demo we use CBOR encoding for the payloads,
+             * so we use the CBOR variants of the topics. */
+            status = subscribeToCsrResponseTopics();
+        }
 
         if( status == true )
         {
-            /* Attempts to connect to the AWS IoT MQTT broker. If the
-             * connection fails, retries after a timeout. Timeout value will
-             * exponentially increase until maximum attempts are reached. */
-            LogInfo( ( "Establishing MQTT session with claim certificate..." ) );
-            status = EstablishMqttSession( provisioningPublishCallback,
-                                           p11Session,
-                                           pkcs11configLABEL_CLAIM_CERTIFICATE,
-                                           pkcs11configLABEL_CLAIM_PRIVATE_KEY );
-
-            if( status == false )
+            if( Mbedtls_GenerateECKey( CLIENT_PRIVATE_KEY_PATH ) != MBEDTLS_SUCCESS )
             {
-                LogError( ( "Failed to establish MQTT session." ) );
+                status = false;
+            }
+        }
+
+        if( status == true )
+        {
+            if( Mbedtls_GenerateCSR( CLIENT_PRIVATE_KEY_PATH, csr, CSR_BUFFER_LENGTH ) != MBEDTLS_SUCCESS )
+            {
+                status = false;
             }
             else
             {
-                LogInfo( ( "Established connection with claim credentials." ) );
-                connectionEstablished = true;
+                csrLength = strnlen( csr, CSR_BUFFER_LENGTH );
             }
         }
 
-        /**** Call the CreateKeysAndCertificate API ***************************/
-
-        /* We use the CreateKeysAndCertificate API to obtain a client certificate
-         * and private key. */
         if( status == true )
         {
-            /* Subscribe to the CreateKeysAndCertificate accepted and rejected
-             * topics. In this demo we use CBOR encoding for the payloads,
-             * so we use the CBOR variants of the topics. */
-            status = subscribeToKeysCertResponseTopics();
+            /* Create the request payload containing the CSR to publish to the
+             * CreateCertificateFromCsr APIs. */
+            status = generateCsrRequest( payloadBuffer,
+                                         NETWORK_BUFFER_SIZE,
+                                         csr,
+                                         csrLength,
+                                         &payloadLength );
         }
 
         if( status == true )
         {
-            /* Publish an empty payload to the CreateKeysAndCertificate API. */
-            status = PublishToTopic( FP_CBOR_CREATE_KEYS_PUBLISH_TOPIC,
-                                     FP_CBOR_CREATE_KEYS_PUBLISH_LENGTH,
-                                     "",
-                                     0 );
+            /* Publish the CSR to the CreateCertificatefromCsr API. */
+            status = PublishToTopic( FP_CBOR_CREATE_CERT_PUBLISH_TOPIC,
+                                     FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
+                                     ( char * ) payloadBuffer,
+                                     payloadLength );
 
             if( status == false )
             {
                 LogError( ( "Failed to publish to fleet provisioning topic: %.*s.",
-                            FP_CBOR_CREATE_KEYS_PUBLISH_LENGTH,
-                            FP_CBOR_CREATE_KEYS_PUBLISH_TOPIC ) );
+                            FP_CBOR_CREATE_CERT_PUBLISH_LENGTH,
+                            FP_CBOR_CREATE_CERT_PUBLISH_TOPIC ) );
             }
         }
 
         if( status == true )
         {
-            /* Get the response to the CreateKeysAndCertificate request. */
+            /* Get the response to the CreateCertificatefromCsr request. */
             status = waitForResponse();
         }
 
@@ -589,45 +585,49 @@ int main( int argc,
         {
             /* From the response, extract the certificate, certificate ID, and
              * certificate ownership token. */
-            status = parseKeyCertResponse( payloadBuffer,
-                                           payloadLength,
-                                           certificate,
-                                           &certificateLength,
-                                           privatekey,
-                                           &privatekeyLength,
-                                           certificateId,
-                                           &certificateIdLength,
-                                           ownershipToken,
-                                           &ownershipTokenLength );
+            status = parseCsrResponse( payloadBuffer,
+                                       payloadLength,
+                                       certificate,
+                                       &certificateLength,
+                                       certificateId,
+                                       &certificateIdLength,
+                                       ownershipToken,
+                                       &ownershipTokenLength );
 
             if( status == true )
             {
-                LogInfo( ( "Received privatekey and certificate with Id: %.*s", ( int ) certificateIdLength, certificateId ) );
+                LogInfo( ( "Received certificate with Id: %.*s", ( int ) certificateIdLength, certificateId ) );
             }
         }
 
         if( status == true )
         {
-            /* Save the private key into PKCS #11. */
-            status = loadPrivateKey( p11Session,
-                                     privatekey,
-                                     pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS,
-                                     privatekeyLength );
+            FILE * pFile = fopen(CLIENT_CERT_PATH, "w");
+
+            if( pFile == NULL )
+            {
+                status = false;
+            }
+            else
+            {
+                size_t bytesWritten = fwrite( certificate, 1, certificateLength, pFile );
+                if( bytesWritten != certificateLength )
+                {
+                    status = false;
+                    LogError( ( "Failed to write device certificate to file %s.", CLIENT_CERT_PATH ) );
+                }
+                else
+                {
+                    LogInfo( ( "Wrote client certificate to path: %s, length: %lu", CLIENT_CERT_PATH, ( unsigned long ) certificateLength ) );
+                }
+                fclose( pFile );
+            }
         }
 
         if( status == true )
         {
-            /* Save the certificate into PKCS #11. */
-            status = loadCertificate( p11Session,
-                                      certificate,
-                                      pkcs11configLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                      certificateLength );
-        }
-
-        if( status == true )
-        {
-            /* Unsubscribe from the CreateKeysAndCertificate topics. */
-            status = unsubscribeFromKeysCertResponseTopics();
+            /* Unsubscribe from the CreateCertificateFromCsr topics. */
+            status = unsubscribeFromCsrResponseTopics();
         }
 
         /**** Call the RegisterThing API **************************************/
@@ -714,9 +714,8 @@ int main( int argc,
         {
             LogInfo( ( "Establishing MQTT session with provisioned certificate..." ) );
             status = EstablishMqttSession( provisioningPublishCallback,
-                                           p11Session,
-                                           pkcs11configLABEL_DEVICE_CERTIFICATE_FOR_TLS,
-                                           pkcs11configLABEL_DEVICE_PRIVATE_KEY_FOR_TLS );
+                                           CLIENT_CERT_PATH,
+                                           CLIENT_PRIVATE_KEY_PATH );
 
             if( status != true )
             {
@@ -740,8 +739,6 @@ int main( int argc,
             DisconnectMqttSession();
             connectionEstablished = false;
         }
-
-        pkcs11CloseSession( p11Session );
 
         /**** Retry in case of failure ****************************************/
 
@@ -770,62 +767,6 @@ int main( int argc,
     if( status == true )
     {
         LogInfo( ( "Demo completed successfully." ) );
-
-        #if defined( DOWNLOADED_CERT_WRITE_PATH )
-            {
-                int fd = open( DOWNLOADED_CERT_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR );
-
-                if( -1 != fd )
-                {
-                    const ssize_t writtenBytes = write( fd, certificate, certificateLength );
-
-                    if( writtenBytes == certificateLength )
-                    {
-                        LogInfo( ( "Written %s successfully.", DOWNLOADED_CERT_WRITE_PATH ) );
-                    }
-                    else
-                    {
-                        LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
-                    }
-
-                    close( fd );
-                }
-                else
-                {
-                    LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_CERT_WRITE_PATH, strerror( errno ) ) );
-                }
-            }
-        #else /* if defined( DOWNLOADED_CERT_WRITE_PATH ) */
-            LogInfo( ( "NOTE: define DOWNLOADED_CERT_WRITE_PATH in order to have the certificate written to disk." ) );
-        #endif // DOWNLOADED_CERT_WRITE_PATH
-
-        #if defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH )
-            {
-                int fd = open( DOWNLOADED_PRIVATE_KEY_WRITE_PATH, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR );
-
-                if( -1 != fd )
-                {
-                    const ssize_t writtenBytes = write( fd, privatekey, privatekeyLength );
-
-                    if( writtenBytes == privatekeyLength )
-                    {
-                        LogInfo( ( "Written %s successfully.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) );
-                    }
-                    else
-                    {
-                        LogError( ( "Could not write to %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
-                    }
-
-                    close( fd );
-                }
-                else
-                {
-                    LogError( ( "Could not open %s. Error: %s.", DOWNLOADED_PRIVATE_KEY_WRITE_PATH, strerror( errno ) ) );
-                }
-            }
-        #else /* if defined( DOWNLOADED_PRIVATE_KEY_WRITE_PATH ) */
-            LogInfo( ( "NOTE: define DOWNLOADED_PRIVATE_KEY_WRITE_PATH in order to have the private key written to disk." ) );
-        #endif // DOWNLOADED_PRIVATE_KEY_WRITE_PATH
     }
 
     return ( status == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
