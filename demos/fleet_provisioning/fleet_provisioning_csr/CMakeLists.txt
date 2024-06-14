@@ -38,9 +38,6 @@ target_include_directories( ${DEMO_NAME}
                               ${CMAKE_CURRENT_LIST_DIR} )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
-                      OPTIONAL
-                        "DOWNLOADED_CERT_WRITE_PATH"
-                        "GENERATED_PRIVATE_KEY_WRITE_PATH"
                       REQUIRED
                         "AWS_IOT_ENDPOINT"
                         "ROOT_CA_CERT_PATH"
