@@ -273,6 +273,9 @@ static MbedtlsStatus_t configureMbedtls( MbedtlsContext_t * pMbedtlsContext,
         mbedtls_ssl_conf_read_timeout( &( pMbedtlsContext->config ),
                                        recvTimeoutMs );
 
+        mbedtls_ssl_conf_handshake_timeout( &( pMbedtlsContext->config ),
+                                            5000, 60000 );
+
         mbedtls_ssl_conf_dbg( &pMbedtlsContext->config,
                               mbedtlsDebugPrint,
                               NULL );
