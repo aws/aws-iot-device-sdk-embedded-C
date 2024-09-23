@@ -2,10 +2,10 @@ project ("http system test")
 cmake_minimum_required (VERSION 3.2.0)
 
 # Include HTTP library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # ====================  Define your project name (edit) ========================
 set(project_name "http_system")

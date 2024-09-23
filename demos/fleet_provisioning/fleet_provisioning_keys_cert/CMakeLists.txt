@@ -1,17 +1,17 @@
 set( DEMO_NAME "fleet_provisioning_keys_cert_demo" )
 
 # Include MQTT library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # Include Fleet Provisioning library's source and header path variables.
 include(
-    ${CMAKE_SOURCE_DIR}/libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/fleetprovisioningFilePaths.cmake )
+    ${ROOT_DIR}/libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/fleetprovisioningFilePaths.cmake )
 
 # Set path to corePKCS11 and it's third party libraries.
-set(COREPKCS11_LOCATION "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
+set(COREPKCS11_LOCATION "${ROOT_DIR}/libraries/standard/corePKCS11")
 set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdparty")
 
 # Include PKCS #11 library's source and header path variables.
@@ -50,7 +50,7 @@ target_include_directories( ${DEMO_NAME}
                               ${AWS_DEMO_INCLUDE_DIRS}
                               "${FLEET_PROVISIONING_INCLUDE_PUBLIC_DIRS}"
                               "${DEMOS_DIR}/pkcs11/common/include" # corePKCS11 config
-                              "${CMAKE_SOURCE_DIR}/platform/include"
+                              "${ROOT_DIR}/platform/include"
                               "${CMAKE_CURRENT_LIST_DIR}"
                             PRIVATE
                               "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils" )

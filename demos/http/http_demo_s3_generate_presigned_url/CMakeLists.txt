@@ -1,16 +1,16 @@
 set( DEMO_NAME "http_demo_s3_generate_presigned_url" )
 
 # Include HTTP library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # Include coreJSON library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # Include sigV4 library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/aws/sigv4-for-aws-iot-embedded-sdk/sigv4FilePaths.cmake )
+include( ${ROOT_DIR}/libraries/aws/sigv4-for-aws-iot-embedded-sdk/sigv4FilePaths.cmake )
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the coreHTTP library
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )

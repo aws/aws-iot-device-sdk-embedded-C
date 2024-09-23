@@ -1,16 +1,16 @@
 set( DEMO_NAME "shadow_demo_main" )
 
 # Include MQTT library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # Include Shadow library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake )
 
 # Include JSON library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the Device Shadow library
 file( GLOB DEMO_SRCS "shadow_demo_helpers.c" "*.c*" )

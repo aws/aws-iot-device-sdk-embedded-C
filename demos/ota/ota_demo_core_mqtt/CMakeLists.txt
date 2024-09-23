@@ -1,11 +1,11 @@
 set( DEMO_NAME "ota_demo_core_mqtt" )
 
 # Include required library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/aws/ota-for-aws-iot-embedded-sdk/otaFilePaths.cmake )
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/aws/ota-for-aws-iot-embedded-sdk/otaFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # Demo target.
 add_executable(

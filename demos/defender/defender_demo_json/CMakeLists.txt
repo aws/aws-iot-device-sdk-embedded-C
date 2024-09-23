@@ -1,16 +1,16 @@
 set( DEMO_NAME "defender_demo" )
 
 # Include MQTT library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # Include JSON library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # Include Defender library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake )
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the Device Defender library
 file( GLOB DEMO_SRCS "*.c*" )
