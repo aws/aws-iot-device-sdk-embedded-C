@@ -2,7 +2,7 @@ project ("mqtt system test")
 cmake_minimum_required (VERSION 3.2.0)
 
 # Include MQTT library's source and header path variables.
-include("${CMAKE_SOURCE_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake")
+include("${ROOT_DIR}/libraries/standard/coreMQTT/mqttFilePaths.cmake")
 
 # ====================  Define your project name (edit) ========================
 set(project_name "mqtt_system")

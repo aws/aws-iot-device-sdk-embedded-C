@@ -41,7 +41,7 @@ target_link_libraries( openssl_posix
                           ${CMAKE_DL_LIBS} )
 
 # Set path to corePKCS11 and it's third party libraries.
-set(COREPKCS11_LOCATION "${CMAKE_SOURCE_DIR}/libraries/standard/corePKCS11")
+set(COREPKCS11_LOCATION "${ROOT_DIR}/libraries/standard/corePKCS11")
 set(CORE_PKCS11_3RDPARTY_LOCATION "${COREPKCS11_LOCATION}/source/dependency/3rdparty")
 
 # Include PKCS #11 library's source and header path variables.

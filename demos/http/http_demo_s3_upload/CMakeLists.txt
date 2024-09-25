@@ -1,10 +1,10 @@
 set( DEMO_NAME "http_demo_s3_upload" )
 
 # Include HTTP library's source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 
 # Include backoffAlgorithm library file path configuration.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the coreHTTP library
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )

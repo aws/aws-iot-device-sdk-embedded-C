@@ -11,8 +11,8 @@ function(create_test test_name
     get_filename_component(test_src_absolute ${test_src} ABSOLUTE)
     add_custom_command(OUTPUT ${test_name}_runner.c
                   COMMAND ruby
-                    ${CMAKE_SOURCE_DIR}/libraries/3rdparty/CMock/vendor/unity/auto/generate_test_runner.rb
-                    ${CMAKE_SOURCE_DIR}/tools/cmock/project.yml
+                    ${ROOT_DIR}/libraries/3rdparty/CMock/vendor/unity/auto/generate_test_runner.rb
+                    ${ROOT_DIR}/tools/cmock/project.yml
                     ${test_src_absolute}
                     ${test_name}_runner.c
                   DEPENDS ${test_src}
@@ -26,10 +26,10 @@ function(create_test test_name
     if((DEFINED VARGS_USE_CUSTOM_RUNNER) AND (${VARGS_USE_CUSTOM_RUNNER}))
         add_executable(${test_name}
                          ${test_src}
-                         ${CMAKE_SOURCE_DIR}/integration-test/custom_test_runner/custom_unity_runner.c)
+                         ${ROOT_DIR}/integration-test/custom_test_runner/custom_unity_runner.c)
         target_include_directories(${test_name}
                                      PUBLIC
-                                     ${CMAKE_SOURCE_DIR}/integration-test/custom_test_runner)
+                                     ${ROOT_DIR}/integration-test/custom_test_runner)
         target_compile_definitions(${test_name} PUBLIC -DUSE_CUSTOM_RUNNER=1)
     else()
         add_executable(${test_name} ${test_src} ${test_name}_runner.c)
@@ -123,7 +123,7 @@ function(create_mock_list mock_name
         add_custom_command (
                   OUTPUT ${mocks_dir}/mock_${mock_file_name}.c
                   COMMAND ruby
-                  ${CMAKE_SOURCE_DIR}/libraries/3rdparty/CMock/lib/cmock.rb
+                  ${ROOT_DIR}/libraries/3rdparty/CMock/lib/cmock.rb
                   -o${cmock_config} ${mock_file_abs}
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 )

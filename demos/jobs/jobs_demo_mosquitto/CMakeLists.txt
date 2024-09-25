@@ -4,8 +4,8 @@ set( DEMO_NAME "jobs_demo_mosquitto" )
 set_source_files_properties( "${DEMO_NAME}.c" PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter" )
 
 # Include library source and header path variables.
-include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
-include( ${CMAKE_SOURCE_DIR}/libraries/aws/jobs-for-aws-iot-embedded-sdk/jobsFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
+include( ${ROOT_DIR}/libraries/aws/jobs-for-aws-iot-embedded-sdk/jobsFilePaths.cmake )
 
 # Demo target.
 add_executable(
