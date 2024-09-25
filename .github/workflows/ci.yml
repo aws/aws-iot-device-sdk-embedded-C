@@ -284,7 +284,7 @@ jobs:
         uses: FreeRTOS/CI-CD-GitHub-Actions/link-verifier@main
         with:
           path: ./
-          exclude-dirs: cmock,unity,cbmc,third-party,3rdparty,libmosquitto
+          exclude-dirs: cmock,unity,cbmc,third-party,3rdparty,libmosquitto,libraries
           include-file-types: .c,.h,.dox
           allowlist-file: ./.github/links_allowlist.txt
   verify-manifest:
