@@ -205,7 +205,7 @@ jobs:
 
       - name: 'Upload demo logs'
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: demo_run_logs
           path: demo_run_logs

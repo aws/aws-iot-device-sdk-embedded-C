@@ -110,7 +110,7 @@ jobs:
           ctest -E system --output-on-failure
           cd ..
       - name: Create artifact of ZIP
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip
           path: zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip

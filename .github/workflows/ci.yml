@@ -245,7 +245,7 @@ jobs:
           fi
       - name: Upload doxygen artifact if main branch
         if: success() && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: doxygen.zip
           path: ./doxygen.zip
