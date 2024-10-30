@@ -1944,6 +1944,8 @@ static void * otaThread( void * pParam )
     /* Calling OTA agent task. */
     OTA_EventProcessingTask( pParam );
     LogInfo( ( "OTA Agent stopped." ) );
+    pthread_detach(pthread_self());
+    pthread_exit(NULL);
     return NULL;
 }
 
