@@ -25,8 +25,10 @@ jobs:
         run: |
           git config --global user.name "Submodule Updater"
       - name: Update the submodules
+        env:
+          ALLOWED: ${{ github.event.inputs.allowed }}
         run: |
-          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "${{ github.event.inputs.allowed }}")
+          libs=$(find libraries/standard libraries/aws -maxdepth 1 -mindepth 1 | grep "$ALLOWED")
           git submodule update --remote $libs
       - name: Commit changes and Push to remote
         run: |
@@ -38,5 +40,6 @@ jobs:
       - name: Raise a Pull-Request
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.inputs.branch }}
         run: |
-          gh pr create --base ${{ github.event.inputs.branch }} --title 'Update library submodules to the latest' --body 'Update library submodules to the latest'
+          gh pr create --base "$BRANCH" --title 'Update library submodules to the latest' --body 'Update library submodules to the latest'

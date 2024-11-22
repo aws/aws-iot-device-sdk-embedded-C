@@ -16,22 +16,27 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_id }}
       - name: Configure git identity
         run: |
             git config --global user.name "Release Workflow"
       - name: Tag Commit and Push to remote
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          git tag ${{ github.event.inputs.version_number }} -a -m "AWS IoT Device SDK for Embedded C version ${{ github.event.inputs.version_number }}"
+          git tag "$VERSION_NUMBER" -a -m "AWS IoT Device SDK for Embedded C version $VERSION_NUMBER"
           git push origin --tags
       - name: Verify tag on remote
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+          COMMIT_ID: ${{ github.event.inputs.commit_id }}
         run: |
-          git tag -d ${{ github.event.inputs.version_number }}
+          git tag -d "$VERSION_NUMBER"
           git remote update
-          git checkout tags/${{ github.event.inputs.version_number }}
-          git diff ${{ github.event.inputs.commit_id }} tags/${{ github.event.inputs.version_number }}
+          git checkout tags/"$VERSION_NUMBER"
+          git diff "$COMMIT_ID" tags/"$VERSION_NUMBER"
   create-zip:
     needs: tag-commit
     name: Create ZIP and verify package for release asset.
@@ -40,7 +45,7 @@ jobs:
       - name: Install ZIP tools
         run: sudo apt-get install zip unzip
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_id }}
           path: aws-iot-device-sdk-embedded-C
@@ -54,18 +59,22 @@ jobs:
           zip -r aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip aws-iot-device-sdk-embedded-C -x "*.git*"
           ls ./
       - name: Validate created ZIP
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
           mkdir zip-check
-          mv aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip zip-check
+          mv aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER".zip zip-check
           cd zip-check
-          unzip aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}.zip -d aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
-          ls aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}
-          diff -r -x "*.git*" aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/ ../aws-iot-device-sdk-embedded-C/
+          unzip aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER".zip -d aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER"
+          ls aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER"
+          diff -r -x "*.git*" aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER"/aws-iot-device-sdk-embedded-C/ ../aws-iot-device-sdk-embedded-C/
           cd ../
       - name : Build Check Demos
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
           sudo apt-get install -y libmosquitto-dev
-          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
+          cd zip-check/aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER"/aws-iot-device-sdk-embedded-C/
           cmake -S . -B build/ \
           -G "Unix Makefiles" \
           -DBUILD_DEMOS=1 \
@@ -89,8 +98,10 @@ jobs:
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/ -j8
           make -C demos/jobs/jobs_demo_mosquitto -j8
       - name : Build Check Tests
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/
+          cd zip-check/aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER"/aws-iot-device-sdk-embedded-C/
           rm -rf ./build
           cmake -S . -B build/ \
           -G "Unix Makefiles" \
@@ -105,8 +116,10 @@ jobs:
           -DCLIENT_IDENTIFIER="ci-identifier"
           make -C build/ all -j8
       - name: Run Unit Tests
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
         run: |
-          cd zip-check/aws-iot-device-sdk-embedded-C-${{ github.event.inputs.version_number }}/aws-iot-device-sdk-embedded-C/build/
+          cd zip-check/aws-iot-device-sdk-embedded-C-"$VERSION_NUMBER"/aws-iot-device-sdk-embedded-C/build/
           ctest -E system --output-on-failure
           cd ..
       - name: Create artifact of ZIP
