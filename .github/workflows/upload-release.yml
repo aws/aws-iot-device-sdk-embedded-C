@@ -31,7 +31,7 @@ jobs:
           draft: false
           prerelease: false
       - name: Download ZIP artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v6
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           # Required, workflow file name or ID
