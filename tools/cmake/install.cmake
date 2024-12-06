@@ -22,8 +22,8 @@ endforeach()
 set(LIBRARY_PREFIXES
         "DEFENDER"
         "SHADOW"
-        "JOBS"
         "JSON"
+        "JOBS"
         "OTA"
         "OTA_HTTP"
         "OTA_MQTT"
@@ -75,6 +75,11 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         add_library("${library_name}"
         ${${library_prefix}_EXTRA_SOURCES}
         ${${library_prefix}_SOURCES})
+
+        if(${library_prefix} STREQUAL "JOBS")
+            target_include_directories("${library_name}" PUBLIC ${JSON_INCLUDE_PUBLIC_DIRS})
+            target_link_libraries("${library_name}" PRIVATE aws_iot_json)
+        endif()
     else()
         continue()
     endif()
@@ -142,20 +147,6 @@ if(INSTALL_PLATFORM_ABSTRACTIONS)
     set(PLATFORM_DIRECTORIES
             ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
             ${PLATFORM_DIR}/posix/ota_pal/source/include)
-    # Create target for POSIX port of OTA if LIB_RT is installed.
-    if(NOT(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND"))
-        add_library(ota_posix
-                     ${OTA_OS_POSIX_SOURCES})
-        target_link_libraries(ota_posix PUBLIC ${LIB_RT} ota_pal)
-        target_include_directories(ota_posix PUBLIC
-                                        ${OTA_INCLUDE_PUBLIC_DIRS}
-                                        ${OTA_INCLUDE_OS_POSIX_DIRS})
-        target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
-        install(TARGETS ota_posix
-                LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}"
-                ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}")
-        list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
-    endif()
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
         install(DIRECTORY ${platform_dir}/ DESTINATION ${CSDK_HEADER_INSTALL_PATH}
                 FILES_MATCHING PATTERN "*.h"

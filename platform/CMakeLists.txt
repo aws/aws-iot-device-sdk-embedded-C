@@ -19,6 +19,3 @@ find_library(LIB_RT ${LIB_RT_NAME})
 
 # Add the posix targets
 add_subdirectory( ${PLATFORM_DIR}/posix )
-
-# Add ota porting targets
-add_subdirectory( ${PLATFORM_DIR}/posix/ota_pal )
