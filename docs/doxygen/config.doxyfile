@@ -2345,7 +2345,6 @@ TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.ta
                          libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/defender.tag=../../../../libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/jobs.tag=../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/standard/backoffAlgorithm/docs/doxygen/output/backoffalgorithm.tag=../../../../libraries/standard/backoffAlgorithm/docs/doxygen/output/html \
-                         libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/ota.tag=../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/docs/doxygen/output/fleet_provisioning.tag=../../../../libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
                          libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/sigV4.tag=../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html
 
