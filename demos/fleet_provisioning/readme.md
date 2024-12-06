@@ -2,15 +2,15 @@
 
 ### Creating the Provisioning Policy
 
-1. Login to your AWS account and open AWS IoT Core. On the side bar click on security > policies > create policy 
-2. Set a relevant policy name 
+1. Login to your AWS account and open AWS IoT Core. On the side bar click on security > policies > create policy
+2. Set a relevant policy name
 3. Copy the contents in the demos/fleet_provisioning/fleet_provisioning_with_csr(or fleet_provisioning_keys_cert_demo)/example_claim_policy.json and paste it in the policy document on the AWS console.
 4. Create the policy
 
 
 ### Creating the Claim Certificate
 
-1. On the side bar of the AWS IoT Core click on security > certificates > add certificate. Make the “Certificate Status” active and download the certificate files from the prompt given.  
+1. On the side bar of the AWS IoT Core click on security > certificates > add certificate. Make the “Certificate Status” active and download the certificate files from the prompt given.
 2. Set the value of the macro CLAIM_CERT_PATH in the democonfig.h file to the path of the certificate downloaded and set the value of the macro CLAIM_PRIVATE_KEY_PATH in the democonfig.h file to the path of the private key downloaded. Alternatively you can set the values of these through command line parameters.
 3. Now click on the certificate > attach policies > select your provisioning policy made in the previous section and select attach policy.
 
