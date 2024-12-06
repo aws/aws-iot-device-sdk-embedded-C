@@ -4,7 +4,6 @@ set(FILEPATH_LOCATIONS
         ${MODULES_DIR}/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake
         ${MODULES_DIR}/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake
         ${MODULES_DIR}/aws/jobs-for-aws-iot-embedded-sdk/jobsFilePaths.cmake
-        ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/otaFilePaths.cmake
         ${MODULES_DIR}/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake
         ${MODULES_DIR}/standard/coreHTTP/httpFilePaths.cmake
         ${MODULES_DIR}/standard/coreJSON/jsonFilePaths.cmake
