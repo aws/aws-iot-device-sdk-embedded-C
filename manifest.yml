@@ -43,12 +43,6 @@ dependencies:
       type: "git"
       url: "https://github.com/aws/Jobs-for-AWS-IoT-embedded-sdk"
       path: "libraries/aws/jobs-for-aws-iot-embedded-sdk"
-  - name: "OTA-for-AWS-IoT-embedded-sdk"
-    version: "406415ef38d9f0fbabd69735623008fd090043b3"
-    repository:
-      type: "git"
-      url: "https://github.com/aws/ota-for-aws-iot-embedded-sdk"
-      path: "libraries/aws/ota-for-aws-iot-embedded-sdk"
   - name: "backoffAlgorithm"
     version: "v1.4.1"
     repository:
