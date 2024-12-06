@@ -11,7 +11,6 @@ The following libraries (along with their source repositories) are part of this 
 - [AWS IoT Device Shadow client](@ref shadow) - [device-shadow-for-aws-iot-embedded-sdk](https://github.com/aws/device-shadow-for-aws-iot-embedded-sdk)
 - [AWS IoT Device Defender client](@ref defender) - [device-defender-for-aws-iot-embedded-sdk](https://github.com/aws/device-defender-for-aws-iot-embedded-sdk)
 - [AWS IoT Jobs client](@ref jobs) - [jobs-for-aws-iot-embedded-sdk](https://github.com/aws/jobs-for-aws-iot-embedded-sdk)
-- [AWS IoT Over-the-air Update Library](@ref ota) - [ota-for-aws-iot-embedded-sdk](https://github.com/aws/ota-for-aws-iot-embedded-sdk)
 - [AWS IoT Fleet Provisioning Library](@ref fleet_provisioning) - [fleet-provisioning-for-aws-iot-embedded-sdk](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk)
 - [AWS SigV4 Library](@ref sigv4) - [sigv4-for-aws-iot-embedded-sdk](https://github.com/aws/sigv4-for-aws-iot-embedded-sdk)
 */
