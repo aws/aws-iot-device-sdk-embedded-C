@@ -443,7 +443,7 @@ cmake -S . -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_P
 
 An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/).
 
-To create a provisioning template and claim credentials, sign into your AWS account and visit [here][create_provtemplate]. Make sure to enable the "Use the AWS IoT registry to manage your device fleet" option. Once
+To create a provisioning template and claim credentials, sign into your AWS account and follow the steps given in the [readme.md in the demo folder](./demos/fleet_provisioning/readme.md) and visit [here][create_provtemplate]. Make sure to enable the "Use the AWS IoT registry to manage your device fleet" option. Once
 you have created the template and credentials, modify the claim certificate's policy to match the [sample policy][sample_claim_policy].
 
 In order to set these configurations manually, edit `demo_config.h` in the demo folder to `#define` the following:
@@ -505,6 +505,20 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
+3. After this we need to run the demo using the command:
+```
+/build/bin/jobs_demo_mosquitto
+```
+the above command will give all he instructions on how to run the demo. It will ask you to run the following command to run the demo:
+
+```
+./build/bin/jobs_demo_mosquitto \
+-n <thing-name> \
+-h <aws-iot endpoint> \
+--certfile <device certificate of the thing> \
+--keyfile <private key of the thing>
+```
+
 
 #### Setup for the Greengrass local auth demo
 
@@ -629,6 +643,7 @@ Any version after 1.6.14 will drop privileges as soon as the configuration file 
     openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
     ```
 
+    When asked for the Common Name (CN) after running the following command enter the same value as was added for the macro `BROKER_ENDPOINT` in the demo_config.h file, which in our case is just `localhost`
     ```sh
     # Generate server key and certificate.# Provide the Subject field information as appropriate for Server certificate. Make sure the Common Name (CN) field is different from the root CA certificate.
     openssl req -nodes -sha256 -new -keyout server.key -out server.csr # Sign with the CA cert.

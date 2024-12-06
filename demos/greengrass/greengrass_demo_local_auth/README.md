@@ -50,13 +50,50 @@ For setting up the Greengrass core, see [the Greengrass getting started guide](h
 
 Next you will need to set up a Root CA for your Greengrass device.
 
-On the Greengrass core, run the following command:
+On the Greengrass core, run the following:
 
+1. Create private key for the CA certificate 
 ```sh
-openssl req -x509 -new -nodes -key ca.key -sha256 -days 1826 -out ca.crt
+openssl genrsa -out ca.key 2048
 ```
+2. Use the private key of CA to generate a self signed certificate
+```sh
+openssl req -x509 -new -nodes \
+-key ca.key \
+-sha256 -days 1024 \
+-out ca.pem
+```
+3. Create a private key for the Thing device.
+```sh
+openssl genrsa -out thing_private.key 2048
+```
+4. Using the private key, create a certificate signing request
+```sh
+openssl req -new \
+-key thing_private.key \
+-out thing_csr.csr
+```
+5. Using the CSR, root CA and private key of root CA , create the client certificate
+```sh
+openssl x509 -req \
+-in thing_csr.csr \
+-CA ca.pem \
+-CAkey ca.key \
+-CAcreateserial \
+-out thing_cert.pem \
+-days 500 -sha256
+```
+6. Register the CA certificate to AWS IoT by going to AWS console → AWS IoT → Security → Certificates authorities → Register CA certificate. Upload the CA certificate and CA status to active, leave other settings as default. Click on Register.
 
-This will create a custom CA cert ca.crt and private key ca.key.
+7. Register the Device certificate to AWS IoT
+
+    * Go to console → AWS IoT → Security → Certificates → Add certificate → Register certificates.
+    * Select your Registered CA from the dropdown.
+    * Upload your device certificate (thing_cert.pem) and Activate it by selecting the certificate and clicking on the Activate button
+
+8. Create a new thing and link it with this new certificate thing_cert.pem and set the value of the macro `THING_NAME` in demo_config.h file to the name of this new thing
+
+9. Set the value of the macro `CLIENT_CERT_PATH` to the path of  thing_cert.pem and the value of the macro `CLIENT_PRIVATE_KEY_PATH` thing_private.key
 
 ### Configuring the GG core for local auth and MQTT
 
@@ -68,7 +105,7 @@ Deploy the following components to your Greengrass core:
 
 Set the configuration for the aws.greengrass.clientdevices.Auth component based
 off the [provided config](./greengrass_auth_conf.json). Ensure the certificate
-paths match the files created for your custom CA above.
+paths match the files created for your custom CA above and their absolute paths are written after `file://`
 
 This config will allow associated Things to publish and subscribe to any topic
 on the Greengrass core broker.
