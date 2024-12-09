@@ -52,8 +52,6 @@
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Setup for the Greengrass local auth demo](#setup-for-the-greengrass-local-auth-demo)
-        * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
-        * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
     * [Building and Running Demos](#building-and-running-demos)
         * [Build a single demo](#build-a-single-demo)
         * [Build all configured demos](#build-all-configured-demos)
@@ -138,14 +136,6 @@ The [AWS IoT Device Defender](https://github.com/aws/device-defender-for-aws-iot
 The AWS IoT Device Defender library has no dependencies on additional libraries other than the standard C library. It also doesn’t have any platform dependencies, such as threading or synchronization. It can be used with any MQTT library and any JSON library (see [demos](demos/defender) with coreMQTT and coreJSON).
 
 See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#defender_memory_requirements).
-
-#### AWS IoT Over-the-air Update
-
-The [AWS IoT Over-the-air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) (OTA) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the OTA library, you can logically separate firmware updates from the application running on your devices. You can also use the library to send other files (e.g. images, certificates) to one or more devices registered with AWS IoT. More details about OTA library can be found in [AWS IoT Over-the-air Update documentation](https://docs.aws.amazon.com/freertos/latest/userguide/freertos-ota-dev.html).
-
-The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS).
-
-See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
 
 #### AWS IoT Fleet Provisioning
 
@@ -297,10 +287,6 @@ Guide for porting AWS IoT Device Shadow library is available [here](https://aws.
 
 Guide for porting AWS IoT Device Defender library is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
 
-### Porting AWS IoT Over-the-air Update
-
-Guide for porting OTA library to your platform is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
-
 ## Migration guide from v3.1.5 to 202009.00 and newer releases
 
 ### MQTT Migration
@@ -379,8 +365,7 @@ Dependency | Version | Usage
 
 #### AWS IoT Account Setup
 
-You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library,
-AWS IoT OTA library and coreHTTP S3 download demos.
+You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, and coreHTTP S3 download demos.
 Also, the AWS account can be used for running the MQTT mutual auth demo against AWS IoT broker.
 Note that running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the demo.
 Follow the links to:
@@ -526,33 +511,6 @@ Note: Replace the placeholders in angle brackets with your specific information.
 
 For setting up the Greengrass local auth demo, see [the README in the demo folder](./demos/greengrass/greengrass_demo_local_auth/README.md).
 
-#### Prerequisites for the AWS Over-The-Air Update (OTA) demos
-
-1. To perform a successful OTA update, you need to complete the prerequisites mentioned [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html).
-1. A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html).
-1. The code signing certificate can be either baked into firmware as a string, or stored as a file.
-    1. For baked in certificate method, copy the certificate to signingcredentialSIGNING_CERTIFICATE_PEM in [ota_pal_posix.c](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/main/platform/posix/ota_pal/source/ota_pal_posix.c).
-    2. For file storage method, store the certificate as a file and supply the file path in "Path name of code signing certificate on device" field when creating the OTA job in AWS IoT Console.
-
-#### Scheduling an OTA Update Job
-
-After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
-1. Increase the version of the application by setting macro `APP_VERSION_BUILD` in `demos/ota/ota_demo_core_[mqtt/http]/demo_config.h` to a different version than what is running.
-1. Rebuild the application using the [build steps](#building-and-running-demos) below into a different directory, say `build-dir-2`.
-1. Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`
-1. Create an OTA job:
-    1. Go to the [AWS IoT Core console](https://console.aws.amazon.com/iot/).
-    1. Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select the corresponding name for your device from the thing list.
-    1. Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.
-    1. Select the image → Select the bucket you created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos) → Upload the binary `build-dir-2/bin/ota_demo2`.
-    1. The path on device should be the absolute path to place the executable and the binary name: e.g. `/home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2`.
-    1. Select the IAM role created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos).
-    1. Create the Job.
-1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
-1. After the initial executable has finished running, go to the directory where the downloaded firmware image resides which is the path name used when creating an OTA job.
-1. Change the permissions of the downloaded firmware to make it executable, as it may be downloaded with read (user default) permissions only: `chmod 775 ota_demo_core_mqtt2`
-1. Run the downloaded firmware image with the following command: `sudo ./ota_demo_core_mqtt2`
-
 ### Building and Running Demos
 
 Before building the demos, ensure you have installed the [prerequisite software](#prerequisites). On Ubuntu 18.04 and 20.04, `gcc`, `cmake`, and OpenSSL can be installed with:
@@ -579,8 +537,6 @@ mqtt_demo_mutual_auth
 mqtt_demo_plaintext
 mqtt_demo_serializer
 mqtt_demo_subscription_manager
-ota_demo_core_http
-ota_demo_core_mqtt
 pkcs11_demo_management_and_rng
 pkcs11_demo_mechanisms_and_digests
 pkcs11_demo_objects
