@@ -93,7 +93,7 @@ openssl x509 -req \
 
 8. Create a new thing and link it with this new certificate thing_cert.pem and set the value of the macro `THING_NAME` in demo_config.h file to the name of this new thing
 
-9. Set the value of the macro `CLIENT_CERT_PATH` to the path of  thing_cert.pem and the value of the macro `CLIENT_PRIVATE_KEY_PATH` thing_private.key
+9. Set the value of the macro `CLIENT_CERT_PATH` to the path of thing_cert.pem and the value of the macro `CLIENT_PRIVATE_KEY_PATH` to the path of thing_private.key
 
 ### Configuring the GG core for local auth and MQTT
 
@@ -105,7 +105,7 @@ Deploy the following components to your Greengrass core:
 
 Set the configuration for the aws.greengrass.clientdevices.Auth component based
 off the [provided config](./greengrass_auth_conf.json). Ensure the certificate
-paths match the files created for your custom CA above and their absolute paths are written after `file://`
+paths match the files created for your custom CA above and their absolute paths are written after `file://`.
 
 This config will allow associated Things to publish and subscribe to any topic
 on the Greengrass core broker.

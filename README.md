@@ -505,19 +505,21 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
-3. After this we need to run the demo using the command:
+3. Execute the following command:
 ```
 /build/bin/jobs_demo_mosquitto
 ```
-the above command will give all he instructions on how to run the demo. It will ask you to run the following command to run the demo:
+This command will provide detailed instructions for running the demo.
 
-```
+4. When prompted, run the demo using this command:
+```    
 ./build/bin/jobs_demo_mosquitto \
 -n <thing-name> \
 -h <aws-iot endpoint> \
 --certfile <device certificate of the thing> \
 --keyfile <private key of the thing>
-```
+``` 
+Note: Replace the placeholders in angle brackets with your specific information.
 
 
 #### Setup for the Greengrass local auth demo
@@ -643,7 +645,7 @@ Any version after 1.6.14 will drop privileges as soon as the configuration file 
     openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
     ```
 
-    When asked for the Common Name (CN) after running the following command enter the same value as was added for the macro `BROKER_ENDPOINT` in the demo_config.h file, which in our case is just `localhost`
+    You will be prompted to configure the Common Name (CN) after running the following command. It's crucial to enter the same value that was specified for the `BROKER_ENDPOINT` macro in the demo_config.h file. In this particular instance, the correct value to enter is simply "localhost".
     ```sh
     # Generate server key and certificate.# Provide the Subject field information as appropriate for Server certificate. Make sure the Common Name (CN) field is different from the root CA certificate.
     openssl req -nodes -sha256 -new -keyout server.key -out server.csr # Sign with the CA cert.
@@ -683,18 +685,30 @@ Run httpbin through port 80:
 docker pull kennethreitz/httpbin
 docker run -p 80:80 kennethreitz/httpbin
 ```
+The `kennetheitz/httpbin` docker image is not compatible with linux/arm64 platform that is used by Mac machines. Hence instead of that use `mccutchen/go-httpbin`.
+```sh
+#To install the image run:
+
+$ docker pull mccutchen/go-httpbin
+
+#To run the server on local host on port 80 run
+
+$ docker run -p 80:8080 mccutchen/go-httpbin
+```
+
 
 `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
 
 To run `http_demo_basic_tls`, you could use either [Tunnelmole](https://github.com/robbie-cahill/tunnelmole-client), an open source tunneling tool, or [ngrok](https://ngrok.com/download), a popular closed source tunneling tool, to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
 
 **Using Tunnelmole**
+
 First, install Tunnelmole. On Linux, Mac and Windows Subsystem for Linux, use
 
 ```sh
 curl -O https://tunnelmole.com/sh/install.sh && sudo bash install.sh
 ```
-
+The above may not function correctly on ARM machines like mac. As an alternative, you can clone the repository and build the application from its source code. 
 For Windows without WSL, [download tmole.exe](https://tunnelmole.com/downloads/tmole.exe) and add it to your [PATH](https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows).
 
 Then run `tmole 80`
@@ -717,7 +731,17 @@ Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https
 
 Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceding it.
 
-You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demos/http/http_demo_basic_tls/demo_config.h` to the file path of the downloaded certificate.
+**Getting the Root CA**
+
+Download the Root CA certificate from the obtained https link. To obtain this:
+
+1. Open the https link in your browser.
+2. Click on the https lock button in the url bar.
+3. Download the chain of certificates.
+4. Locate the last certificate in the chain - this is your required Root CA certificate.
+5. Copy this certificate and paste it into a new .pem file.
+
+Set the macro ROOT_CA_CERT_PATH in demo_config.h to the file path of your newly created Root CA certificate.
 
 ## Generating Documentation
 Note: For pre-generated documentation, please visit [Releases and Documentation](#releases-and-documentation) section.
