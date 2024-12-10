@@ -1,5 +1,23 @@
 # Changelog for AWS IoT Device SDK for Embedded C
 
+## 202412.00 (December 2024)
+
+### Major Changes
+
+- [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929) This release includes 202406.01-LTS versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries. These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/), static code analysis from [Coverity static analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
+- [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929)  Removes the OTA library and OTA demo . They are planned to be replaced by [aws-iot-core-mqtt-file-streams-embedded-c](https://github.com/aws/aws-iot-core-mqtt-file-streams-embedded-c) in future releases.
+
+### Minor Changes
+
+- [#1843](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1845), [#1848](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1848), [#1860](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1860), [#1859](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1859), [#1861](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1861), [#1870](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1870), [#1845](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1845) Minor bug fixes and improvements.
+- [#1850](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1850) Remove installation instructions.
+- [#1850](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1852) Add CI Workflows to build the non-aws demos on incoming pull-requests.
+- [#1844](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1844) Update doxygen to 1.9.6.
+- [#1875](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1875) Add a Fleet provisioning demo to get certificate and private key via CreateKeysAndCertificate API.
+- [#1899](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1899) Add Tunnelmole as an open source tunneling option in addition to ngrok.
+- [#1901](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1901) Add a HTTP demo to generate a pre-signed URL to an S3 object file.
+- Update readme instructions for demos for better user experience.
+
 ## 202211.00 (November 2022)
 
 ### Major Changes
