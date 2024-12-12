@@ -533,6 +533,7 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
                                   size_t privateKeyLength,
                                   const char * label )
 {
+    (void) sig_size;
     CK_RV result = CKR_OK;
     mbedtls_pk_type_t mbedKeyType = MBEDTLS_PK_NONE;
     int mbedResult = 0;

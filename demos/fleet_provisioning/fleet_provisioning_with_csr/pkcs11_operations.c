@@ -916,6 +916,7 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext )
 {
+    (void) sig_size;
     CK_RV ret = CKR_OK;
     int32_t result = 0;
     CK_MECHANISM mech = { 0 };
