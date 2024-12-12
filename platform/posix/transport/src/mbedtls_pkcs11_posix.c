@@ -475,6 +475,7 @@ static MbedtlsPkcs11Status_t configureMbedtlsFragmentLength( MbedtlsPkcs11Contex
 
     /* Set Maximum Fragment Length if enabled. */
     #ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
+
         /* Enable the max fragment extension. 4096 bytes is currently the largest fragment size permitted.
          * See RFC 6066 https://tools.ietf.org/html/rfc6066#page-8 for more information.
          *
