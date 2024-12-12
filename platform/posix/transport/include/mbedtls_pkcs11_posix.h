@@ -69,7 +69,7 @@
 /**
  * @brief To access the private members of the MbedTLS structs
  */
- #define MBEDTLS_ALLOW_PRIVATE_ACCESS
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
 
 /* MbedTLS includes. */
 #include "mbedtls/net_sockets.h"

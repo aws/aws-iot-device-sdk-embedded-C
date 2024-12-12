@@ -541,9 +541,9 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
     mbedtls_entropy_context entropy;
 
     mbedtls_pk_init( &mbedPkContext );
-    mbedtls_entropy_init(&entropy);
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
+    mbedtls_entropy_init( &entropy );
+    mbedtls_ctr_drbg_init( &ctr_drbg );
+    mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0 );
     mbedResult = mbedtls_pk_parse_key( &mbedPkContext, ( const uint8_t * ) privateKey,
                                        privateKeyLength, NULL, 0, mbedtls_ctr_drbg_random, &ctr_drbg );
 

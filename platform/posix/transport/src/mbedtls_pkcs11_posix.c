@@ -208,7 +208,7 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           const unsigned char * pHash,
                                           size_t hashLen,
                                           unsigned char * pSig,
-                                          size_t sig_size, 
+                                          size_t sig_size,
                                           size_t * pSigLen,
                                           int32_t ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
@@ -475,7 +475,6 @@ static MbedtlsPkcs11Status_t configureMbedtlsFragmentLength( MbedtlsPkcs11Contex
 
     /* Set Maximum Fragment Length if enabled. */
     #ifdef MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
-
         /* Enable the max fragment extension. 4096 bytes is currently the largest fragment size permitted.
          * See RFC 6066 https://tools.ietf.org/html/rfc6066#page-8 for more information.
          *
@@ -675,7 +674,7 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                                               size_t ),
                                           void * pRngContext )
 {
-    (void) sig_size;
+    ( void ) sig_size;
     CK_RV ret = CKR_OK;
     int32_t result = 0;
     MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = ( MbedtlsPkcs11Context_t * ) pContext->pk_ctx;

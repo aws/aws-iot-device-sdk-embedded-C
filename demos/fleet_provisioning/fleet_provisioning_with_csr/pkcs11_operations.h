@@ -30,7 +30,7 @@
 /**
  * @brief To access the private members of the MbedTLS structs
  */
- #define MBEDTLS_ALLOW_PRIVATE_ACCESS
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
 
 /* corePKCS11 include. */
 #include "core_pkcs11.h"
