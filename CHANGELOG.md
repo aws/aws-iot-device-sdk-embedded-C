@@ -4,8 +4,10 @@
 
 ### Major Changes
 
-- [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929) This release includes 202406.01-LTS versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries. These libraries have gone through code quality checks including verification that no function has a [GNU Complexity](https://www.gnu.org/software/complexity/manual/complexity.html) score greater than 8, checks against deviations from the mandatory rules in the [MISRA coding standard](https://www.misra.org.uk/), static code analysis from [Coverity static analysis](https://scan.coverity.com/) and validation of memory safety through the [CBMC automated reasoning tool](http://www.cs.cmu.edu/~modelcheck/cbmc/).
-- [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929)  Removes the OTA library and OTA demo . They are planned to be replaced by [aws-iot-core-mqtt-file-streams-embedded-c](https://github.com/aws/aws-iot-core-mqtt-file-streams-embedded-c) in future releases.
+- [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929) This release brings the following changes:
+  - Includes [202406.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/releases/tag/202406.01-LTS) versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries.
+  - Removes the OTA library and OTA demo . They are planned to be replaced by [aws-iot-core-mqtt-file-streams-embedded-c](https://github.com/aws/aws-iot-core-mqtt-file-streams-embedded-c) in future releases following [this announcement](https://aws.amazon.com/about-aws/whats-new/2023/12/freertos-modular-composable-ota-libraries/). To learn more about FreeRTOS OTA libraries, visit the [FreeRTOS OTA page](https://freertos.org/freertos-core/over-the-air-updates/index.html). To get started, see the new OTA [reference demo](https://freertos.org/freertos-core/over-the-air-updates/mqtt-ota-agent-orchestrator.html). 
+  - Update readme instructions for demos for better user experience.
 
 ### Minor Changes
 
@@ -16,7 +18,6 @@
 - [#1875](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1875) Add a Fleet provisioning demo to get certificate and private key via CreateKeysAndCertificate API.
 - [#1899](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1899) Add Tunnelmole as an open source tunneling option in addition to ngrok.
 - [#1901](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1901) Add a HTTP demo to generate a pre-signed URL to an S3 object file.
-- Update readme instructions for demos for better user experience.
 
 ## 202211.00 (November 2022)
 

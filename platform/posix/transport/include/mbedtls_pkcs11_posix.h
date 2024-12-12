@@ -66,11 +66,16 @@
 /* Standard includes. */
 #include <stdbool.h>
 
+/**
+ * @brief To access the private members of the MbedTLS structs
+ */
+ #define MBEDTLS_ALLOW_PRIVATE_ACCESS
+
 /* MbedTLS includes. */
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/pk_internal.h"
+#include "pk_wrap.h"
 
 /* Transport interface include. */
 #include "transport_interface.h"

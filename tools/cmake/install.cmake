@@ -24,9 +24,6 @@ set(LIBRARY_PREFIXES
         "SHADOW"
         "JSON"
         "JOBS"
-        "OTA"
-        "OTA_HTTP"
-        "OTA_MQTT"
         "BACKOFF_ALGORITHM"
         "HTTP"
         "MQTT"
@@ -46,21 +43,8 @@ set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
         "${COREPKCS11_LOCATION}/source/portable/os")
-set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
-foreach(ota_backend ${OTA_BACKENDS})
-    set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
-        ${OTA_INCLUDE_PUBLIC_DIRS})
-    set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
-        ${OTA_INCLUDE_PRIVATE_DIRS})
-endforeach()
 
 # Define any extra library dependencies, making sure to use the same prefix
-
-# Note for this to work for OTA "JSON" must be before it in the prefix list
-set(OTA_LIBRARY_DEPENDENCIES
-        aws_iot_json)
-set(OTA_MQTT_LIBRARY_DEPENDENCIES
-        tinycbor)
 
 if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
@@ -102,9 +86,6 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
 
     # Allow a path to a custom config header to be passed through a CMake flag.
     set(config_prefix "${library_prefix}")
-    if(";${OTA_BACKENDS};" MATCHES ";${library_prefix};")
-        set(config_prefix "OTA")
-    endif()
     if(DEFINED "${config_prefix}_CUSTOM_CONFIG_DIR")
         target_include_directories("${library_name}"
                                     PRIVATE ${${config_prefix}_CUSTOM_CONFIG_DIR})
@@ -145,8 +126,7 @@ endforeach()
 # Install platform abstractions as shared libraries if enabled.
 if(INSTALL_PLATFORM_ABSTRACTIONS)
     set(PLATFORM_DIRECTORIES
-            ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
-            ${PLATFORM_DIR}/posix/ota_pal/source/include)
+            ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS})
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
         install(DIRECTORY ${platform_dir}/ DESTINATION ${CSDK_HEADER_INSTALL_PATH}
                 FILES_MATCHING PATTERN "*.h"

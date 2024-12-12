@@ -8,7 +8,7 @@ on:
         required: true
         default: main
       allowed:
-        description: 'Optional regex pattern passed to `grep` to update only the specified library submodules, e.g. "ota\|jobs" updates only libraries with "ota" or "jobs" in the name.'
+        description: 'Optional regex pattern passed to `grep` to update only the specified library submodules, e.g. "jobs" updates only libraries with "jobs" in the name.'
         required: false
         default: .*
 

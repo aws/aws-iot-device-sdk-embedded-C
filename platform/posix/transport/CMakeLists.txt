@@ -72,6 +72,7 @@ target_include_directories(
         "${COREPKCS11_LOCATION}/source/portable/os"
         ${CORE_PKCS11_3RDPARTY_LOCATION}/pkcs11
         ${DEMOS_DIR}/pkcs11/common/include
+        ${ROOT_DIR}/libraries/3rdparty/mbedtls/library
     PRIVATE
         ${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils
 )

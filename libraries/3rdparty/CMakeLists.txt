@@ -77,7 +77,7 @@ target_include_directories(mbedtls
 target_compile_definitions(
     mbedtls
     PUBLIC
-        -DMBEDTLS_CONFIG_FILE="mbedtls_config.h"
+        -DMBEDTLS_CONFIG_FILE="${ROOT_DIR}/platform/posix/include/mbedtls_config.h"
 )
 
 set_source_files_properties(

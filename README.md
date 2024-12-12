@@ -488,13 +488,7 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
-3. Execute the following command:
-```
-/build/bin/jobs_demo_mosquitto
-```
-This command will provide detailed instructions for running the demo.
-
-4. When prompted, run the demo using this command:
+3. Run the demo using this command:
 ```    
 ./build/bin/jobs_demo_mosquitto \
 -n <thing-name> \

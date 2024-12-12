@@ -58,7 +58,6 @@ python3 tools/release/release-verify.py \
 --jobs-for-aws-iot-embedded-sdk-version <JOBS_VERSION> \
 --corepkcs11-version <PKCS11_VERSION> \
 --backoffalgorithm-version <BACKOFF_ALGORITHM_VERSION> \
---ota-for-aws-iot-embedded-sdk <OTA_LIBRARY_VERSION> \
 --disable-cbmc-checks-for <LIBRARY1> \
 --disable-cbmc-checks-for <LIBRARY2> \
 --disable-jenkins-server-verify

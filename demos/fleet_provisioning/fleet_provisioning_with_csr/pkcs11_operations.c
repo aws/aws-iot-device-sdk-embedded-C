@@ -44,11 +44,11 @@
 /* MbedTLS include. */
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
-#include "mbedtls/entropy_poll.h"
+#include "entropy_poll.h"
 #include "mbedtls/error.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/pk_internal.h"
+#include "pk_wrap.h"
 #include "mbedtls/sha256.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
@@ -243,11 +243,12 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
  * @param[in] pRng Unused.
  * @param[in] pRngContext Unused.
  */
-static int32_t privateKeySigningCallback( void * pContext,
+static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           mbedtls_md_type_t mdAlg,
                                           const unsigned char * pHash,
                                           size_t hashLen,
                                           unsigned char * pSig,
+                                          size_t sig_size,
                                           size_t * pSigLen,
                                           int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
@@ -636,10 +637,15 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
     mbedtls_pk_type_t mbedKeyType = MBEDTLS_PK_NONE;
     int mbedResult = 0;
     mbedtls_pk_context mbedPkContext = { 0 };
+    mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_entropy_context entropy;
 
     mbedtls_pk_init( &mbedPkContext );
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
     mbedResult = mbedtls_pk_parse_key( &mbedPkContext, ( const uint8_t * ) privateKey,
-                                       privateKeyLength, NULL, 0 );
+                                       privateKeyLength, NULL, 0, mbedtls_ctr_drbg_random, &ctr_drbg );
 
     if( mbedResult != 0 )
     {
@@ -900,11 +906,12 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
 
 /*-----------------------------------------------------------*/
 
-static int32_t privateKeySigningCallback( void * pContext,
+static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           mbedtls_md_type_t mdAlg,
                                           const unsigned char * pHash,
                                           size_t hashLen,
                                           unsigned char * pSig,
+                                          size_t sig_size,
                                           size_t * pSigLen,
                                           int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext )
