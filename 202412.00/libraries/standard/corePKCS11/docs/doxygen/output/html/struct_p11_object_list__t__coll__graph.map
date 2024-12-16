@@ -1,0 +1,4 @@
+<map id="P11ObjectList_t" name="P11ObjectList_t">
+<area shape="rect" id="node1" title="PKCS #11 object container list." alt="" coords="5,93,128,119"/>
+<area shape="rect" id="node2" href="$struct_p11_object__t.html" title="PKCS #11 object container." alt="" coords="17,5,117,31"/>
+</map>

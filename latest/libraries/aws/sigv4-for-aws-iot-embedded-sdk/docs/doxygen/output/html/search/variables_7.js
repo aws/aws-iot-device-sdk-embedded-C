@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['paccesskeyid_0',['pAccessKeyId',['../struct_sig_v4_credentials__t.html#a414515869b58a43398e114c615d19225',1,'SigV4Credentials_t']]],
+  ['palgorithm_1',['pAlgorithm',['../struct_sig_v4_parameters__t.html#abacc8103c2faa935211c8aa9c5b6e95b',1,'SigV4Parameters_t']]],
+  ['pathlen_2',['pathLen',['../struct_sig_v4_http_parameters__t.html#a918de9ee338f28a2911a6922a936e62f',1,'SigV4HttpParameters_t']]],
+  ['payloadlen_3',['payloadLen',['../struct_sig_v4_http_parameters__t.html#ad99a445c9494aabe945a20707933923b',1,'SigV4HttpParameters_t']]],
+  ['pbufprocessing_4',['pBufProcessing',['../struct_canonical_context__t.html#a4b11199fe2b285aaff4245aec33b1a19',1,'CanonicalContext_t']]],
+  ['pcredentials_5',['pCredentials',['../struct_sig_v4_parameters__t.html#a5427dc690bbc4abdd61c334aed5cd256',1,'SigV4Parameters_t']]],
+  ['pcryptointerface_6',['pCryptoInterface',['../struct_sig_v4_parameters__t.html#a97c3393c1033d2ca544bced05c7c4132',1,'SigV4Parameters_t::pCryptoInterface()'],['../struct_hmac_context__t.html#a6022260378710e9672d6bed505082630',1,'HmacContext_t::pCryptoInterface()']]],
+  ['pdata_7',['pData',['../struct_sig_v4_string__t.html#a89e684f1de03d3916bdb9e8ed9d243ca',1,'SigV4String_t::pData()'],['../struct_sig_v4_const_string__t.html#a0f39ef9b3df47ae873966722e561a8f4',1,'SigV4ConstString_t::pData()']]],
+  ['pdateiso8601_8',['pDateIso8601',['../struct_sig_v4_parameters__t.html#a841cd5268274f7c7152a8d291e6015aa',1,'SigV4Parameters_t']]],
+  ['phashcontext_9',['pHashContext',['../struct_sig_v4_crypto_interface__t.html#ace57ee60a700ebd799c694296138d43d',1,'SigV4CryptoInterface_t']]],
+  ['phashpayloadloc_10',['pHashPayloadLoc',['../struct_canonical_context__t.html#a895b7def47abd14e2183894f2980a1a6',1,'CanonicalContext_t']]],
+  ['pheaders_11',['pHeaders',['../struct_sig_v4_http_parameters__t.html#a519da616fabd4d2e1deae442bda3d0d7',1,'SigV4HttpParameters_t']]],
+  ['pheadersloc_12',['pHeadersLoc',['../struct_canonical_context__t.html#adfd9ff9341c383f2f8038769d6de3a5c',1,'CanonicalContext_t']]],
+  ['phttpmethod_13',['pHttpMethod',['../struct_sig_v4_http_parameters__t.html#ae40e818a9c82d9d5fd799318c63e9d9d',1,'SigV4HttpParameters_t']]],
+  ['phttpparameters_14',['pHttpParameters',['../struct_sig_v4_parameters__t.html#a9797871c5f447cddf75ecee6017ff2e9',1,'SigV4Parameters_t']]],
+  ['ppath_15',['pPath',['../struct_sig_v4_http_parameters__t.html#a0d4d892bd446073378a8d30c99ddfb72',1,'SigV4HttpParameters_t']]],
+  ['ppayload_16',['pPayload',['../struct_sig_v4_http_parameters__t.html#a76c646fbdb585dc150a390673923505f',1,'SigV4HttpParameters_t']]],
+  ['pquery_17',['pQuery',['../struct_sig_v4_http_parameters__t.html#aadb19498e58d35cd8feaa39e30b49d15',1,'SigV4HttpParameters_t']]],
+  ['pqueryloc_18',['pQueryLoc',['../struct_canonical_context__t.html#adba502444730e90ebd2cfa6e2c5c1080',1,'CanonicalContext_t']]],
+  ['pregion_19',['pRegion',['../struct_sig_v4_parameters__t.html#a2c259d0816a815c420509f6ca8ec1ca1',1,'SigV4Parameters_t']]],
+  ['psecretaccesskey_20',['pSecretAccessKey',['../struct_sig_v4_credentials__t.html#a34b2bfc8ec1fd9d977327a010c50142c',1,'SigV4Credentials_t']]],
+  ['pservice_21',['pService',['../struct_sig_v4_parameters__t.html#a2617dd8c3a3e1bb354882aff51ec8009',1,'SigV4Parameters_t']]]
+];

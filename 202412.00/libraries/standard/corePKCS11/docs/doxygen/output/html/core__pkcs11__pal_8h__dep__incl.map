@@ -1,0 +1,4 @@
+<map id="core_pkcs11_pal.h" name="core_pkcs11_pal.h">
+<area shape="rect" id="node1" title="Port Specific File Access functions for PKCS #11." alt="" coords="21,5,164,31"/>
+<area shape="rect" id="node2" href="$core__pkcs11__mbedtls_8c.html" title="mbedTLS&#45;based PKCS#11 implementation for software keys. This file deviates from the FreeRTOS style st..." alt="" coords="5,79,180,104"/>
+</map>
