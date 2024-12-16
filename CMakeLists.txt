@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.2.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 202211.00
+         VERSION 202412.00
          LANGUAGES C CXX )
 
 # Allow the project to be organized into folders.
