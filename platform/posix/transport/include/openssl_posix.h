@@ -69,7 +69,7 @@
  * implementation that uses OpenSSL and POSIX sockets.
  *
  * @note For this transport implementation, the socket descriptor and
- * SSL context is used.
+ * SSL context are kept.
  */
 typedef struct OpensslParams
 {
@@ -135,9 +135,9 @@ typedef struct OpensslCredentials
      *
      * @note These strings must be NULL-terminated because the OpenSSL API requires them to be.
      */
-    const char * pRootCaPath;     /**< @brief Filepath string to the trusted server root CA. */
-    const char * pClientCertPath; /**< @brief Filepath string to the client certificate. */
-    const char * pPrivateKeyPath; /**< @brief Filepath string to the client certificate's private key. */
+    const char * pRootCaPath;     /**< @brief File path or PKCS#11 URI to the trusted server root CA certificate. */
+    const char * pClientCertPath; /**< @brief File path or PKCS#11 URI to the tls client certificate. */
+    const char * pPrivateKeyPath; /**< @brief File path or PKCS#11 URI to the tls client private key. */
 } OpensslCredentials_t;
 
 /**

@@ -24,6 +24,7 @@
 /* Standard includes. */
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 
 /* POSIX socket includes. */
 #include <unistd.h>
@@ -34,6 +35,8 @@
 
 #include "openssl_posix.h"
 #include <openssl/err.h>
+#include <openssl/conf.h>
+#include <openssl/engine.h>
 
 /*-----------------------------------------------------------*/
 
@@ -51,6 +54,14 @@
  * @brief Label of client key when calling @ref logPath.
  */
 #define CLIENT_KEY_LABEL     "client's key"
+
+/**
+ * @brief Openssl engine_id corresponding to the libp11 engine.
+ */
+#define PKCS11_ENGINE_ID     "pkcs11"
+
+
+#define PKCS11_URI_PREFIX    "pkcs11:"
 
 /*-----------------------------------------------------------*/
 
@@ -73,12 +84,27 @@ struct NetworkContext
                          const char * fileType );
 #endif /* #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG ) */
 
+
 /**
- * @brief Add X509 certificate to the trusted list of root certificates.
+ * @brief Log the last openssl error.
+ */
+static int32_t opensslError( void );
+
+/**
+ * @brief Load a certificate with the given PKCS#11 URI and return the resulting openssl X509 object.
  *
- * OpenSSL does not provide a single function for reading and loading
- * certificates from files into stores, so the file API must be called. Start
- * with the root certificate.
+ * @param[out] ppX509Cert Location to store a pointer to the created X509 certificate object.
+ * @param[in] pEngine Pointer to the pre-initialized openssl PKCS11 engine.
+ * @param[in] pCertURI PKCS#11 URI for the desired certificate.
+ *
+ * @return 1 on success; -1, 0 on failure.
+ */
+static int32_t loadCertificateFromPkcs11( X509 ** ppX509Cert,
+                                          ENGINE * pEngine,
+                                          const char * pCertURI );
+
+/**
+ * @brief Add X509 certificate from a file to the trusted list of root certificates.
  *
  * @param[out] pSslContext SSL context to which the trusted server root CA is to
  * be added.
@@ -86,12 +112,24 @@ struct NetworkContext
  *
  * @return 1 on success; -1, 0 on failure.
  */
-static int32_t setRootCa( const SSL_CTX * pSslContext,
-                          const char * pRootCaPath );
+static int32_t setRootCaFromFile( const SSL_CTX * pSslContext,
+                                  const char * pRootCaPath );
 
 /**
- * @brief Set X509 certificate as client certificate for the server to
- * authenticate.
+ * @brief Add X509 certificate from a PKCS#11 token to the trusted list of root certificates.
+ *
+ * @param[out] pSslContext SSL context to which the trusted server root CA is to
+ * be added.
+ * @param[in] pRootCaURI Filepath string to the trusted server root CA.
+ *
+ * @return 1 on success; -1, 0 on failure.
+ */
+static int32_t setRootCaFromPkcs11( const SSL_CTX * pSslContext,
+                                    ENGINE * pEngine,
+                                    const char * pRootCaURI );
+
+/**
+ * @brief Load an X509 client certificate from a given file.
  *
  * @param[out] pSslContext SSL context to which the client certificate is to be
  * set.
@@ -99,19 +137,54 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
  *
  * @return 1 on success; 0 failure.
  */
-static int32_t setClientCertificate( SSL_CTX * pSslContext,
-                                     const char * pClientCertPath );
+static int32_t setClientCertificateFromFile( SSL_CTX * pSslContext,
+                                             const char * pClientCertPath );
+
+/**
+ * @brief Load an X509 client certificate from a PKCS11 module via a given engine.
+ *
+ * @param[out] pSslContext SSL context to which the client certificate is to be
+ * set.
+ * @param[in] pClientCertURI PKCS11 URI string for the client certificate object.
+ *
+ * @return 1 on success; 0 failure.
+ */
+static int32_t setClientCertificateFromPkcs11( SSL_CTX * pSslContext,
+                                               ENGINE * pEngine,
+                                               const char * pClientCertURI );
+
+/**
+ * @brief Load a private key into the ssl context from a given file path.
+ *
+ * @param[out] pSslContext SSL context to add the private key to.
+ * @param[in] pPrivateKeyPath Path to the client private key file in PEM format.
+ *
+ * @return 1 on success; 0 on failure.
+ */
+static int32_t setPrivateKeyFromFile( SSL_CTX * pSslContext,
+                                      const char * pPrivateKeyPath );
 
 /**
  * @brief Set private key for the client's certificate.
  *
- * @param[out] pSslContext SSL context to which the private key is to be added.
- * @param[in] pPrivateKeyPath Filepath string to the client private key.
+ * @param[out] pSslContext SSL context to add the private key to.
+ * @param[in] pEngine Openssl engine handle to read the key from.
+ * @param[in] pPrivateKeyURI PKCS#11 URI to load the private key from.
  *
  * @return 1 on success; 0 on failure.
  */
-static int32_t setPrivateKey( SSL_CTX * pSslContext,
-                              const char * pPrivateKeyPath );
+static int32_t setPrivateKeyFromPkcs11( SSL_CTX * pSslContext,
+                                        ENGINE * pEngine,
+                                        const char * pPrivateKeyURI );
+
+/**
+ * @brief Initialize the openssl pkcs11 engine.
+ *
+ * @param[out] ppEngine Pointer to write the resulting ENGINE object pointer to.
+ *
+ * @return 1 on success; 0 on failure.
+ */
+static int32_t initializePkcs11Engine( ENGINE ** ppEngine );
 
 /**
  * @brief Passes TLS credentials to the OpenSSL library.
@@ -297,9 +370,10 @@ static OpensslStatus_t tlsHandshake( const ServerInfo_t * pServerInfo,
 
     return returnStatus;
 }
+/*-----------------------------------------------------------*/
 
-static int32_t setRootCa( const SSL_CTX * pSslContext,
-                          const char * pRootCaPath )
+static int32_t setRootCaFromFile( const SSL_CTX * pSslContext,
+                                  const char * pRootCaPath )
 {
     int32_t sslStatus = 1;
     FILE * pRootCaFile = NULL;
@@ -387,10 +461,86 @@ static int32_t setRootCa( const SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int32_t setClientCertificate( SSL_CTX * pSslContext,
-                                     const char * pClientCertPath )
+static int32_t loadCertificateFromPkcs11( X509 ** ppX509Cert,
+                                          ENGINE * pEngine,
+                                          const char * pCertURI )
 {
-    int32_t sslStatus = -1;
+    int32_t sslStatus = 1;
+
+    struct
+    {
+        const char * pCertURI;
+        X509 * pX509Cert;
+    }
+    loadCertParams;
+
+    assert( ppX509Cert != NULL );
+    assert( pEngine != NULL );
+    assert( pCertURI != NULL );
+
+    loadCertParams.pCertURI = pCertURI;
+    loadCertParams.pX509Cert = NULL;
+
+    sslStatus = ENGINE_ctrl_cmd( pEngine, "LOAD_CERT_CTRL", 0,
+                                 &loadCertParams, NULL, 0 );
+
+    if( loadCertParams.pX509Cert == NULL )
+    {
+        LogError( ( "ENGINE_ctrl_cmd returned an empty certificate object "
+                    "from URI: %s .", pCertURI ) );
+        sslStatus = 0;
+    }
+    else if( sslStatus != 1 )
+    {
+        LogError( ( "ENGINE_ctrl_cmd failed to read "
+                    "certificate from URI: %s .", pCertURI ) );
+        sslStatus = opensslError();
+    }
+    else
+    {
+        *ppX509Cert = loadCertParams.pX509Cert;
+    }
+
+    return sslStatus;
+}
+/*-----------------------------------------------------------*/
+
+static int32_t setRootCaFromPkcs11( const SSL_CTX * pSslContext,
+                                    ENGINE * pEngine,
+                                    const char * pRootCaURI )
+{
+    int32_t sslStatus = 1;
+    X509 * pRootCa = NULL;
+
+    assert( pSslContext != NULL );
+    assert( pEngine != NULL );
+    assert( pRootCaURI != NULL );
+
+    sslStatus = loadCertificateFromPkcs11( &pRootCa, pEngine, pRootCaURI );
+
+    if( sslStatus == 1 )
+    {
+        LogInfo( ( "Successfully read client certificate from URI: %s .",
+                   pClientCertURI ) );
+
+        /* Import cert into context */
+        sslStatus = X509_STORE_add_cert( SSL_CTX_get_cert_store( pSslContext ), pRootCa );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "Failed to add Root CA certificate to SSL context from URI : %s .",
+                        pRootCaURI ) );
+        }
+    }
+
+    return sslStatus;
+}
+/*-----------------------------------------------------------*/
+
+static int32_t setClientCertificateFromFile( SSL_CTX * pSslContext,
+                                             const char * pClientCertPath )
+{
+    int32_t sslStatus = 0;
 
     assert( pSslContext != NULL );
     assert( pClientCertPath != NULL );
@@ -400,12 +550,13 @@ static int32_t setClientCertificate( SSL_CTX * pSslContext,
     #endif
 
     /* Import the client certificate. */
-    sslStatus = SSL_CTX_use_certificate_chain_file( pSslContext, pClientCertPath );
+    sslStatus = SSL_CTX_use_certificate_file( pSslContext, pClientCertPath,
+                                              SSL_FILETYPE_PEM );
 
     if( sslStatus != 1 )
     {
-        LogError( ( "SSL_CTX_use_certificate_chain_file failed to import "
-                    "client certificate at %s.",
+        LogError( ( "SSL_CTX_use_certificate_file failed to read "
+                    "client certificate from path %s.",
                     pClientCertPath ) );
     }
     else
@@ -417,10 +568,42 @@ static int32_t setClientCertificate( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
-static int32_t setPrivateKey( SSL_CTX * pSslContext,
-                              const char * pPrivateKeyPath )
+static int32_t setClientCertificateFromPkcs11( SSL_CTX * pSslContext,
+                                               ENGINE * pEngine,
+                                               const char * pClientCertURI )
 {
-    int32_t sslStatus = -1;
+    int32_t sslStatus = 1;
+    X509 * pX509Cert = NULL;
+
+    assert( pSslContext != NULL );
+    assert( pEngine != NULL );
+    assert( pClientCertURI != NULL );
+
+    sslStatus = loadCertificateFromPkcs11( &pX509Cert, pEngine, pClientCertURI );
+
+    if( sslStatus == 1 )
+    {
+        LogInfo( ( "Successfully read client certificate from URI: %s .",
+                   pClientCertURI ) );
+
+        /* Import cert into context */
+        sslStatus = SSL_CTX_use_certificate( pSslContext, pX509Cert );
+
+        if( sslStatus != 1 )
+        {
+            LogError( ( "Failed to copy certificate into SSL context from URI : %s .",
+                        pClientCertURI ) );
+        }
+    }
+
+    return sslStatus;
+}
+/*-----------------------------------------------------------*/
+
+static int32_t setPrivateKeyFromFile( SSL_CTX * pSslContext,
+                                      const char * pPrivateKeyPath )
+{
+    int32_t sslStatus = 0;
 
     assert( pSslContext != NULL );
     assert( pPrivateKeyPath != NULL );
@@ -429,7 +612,7 @@ static int32_t setPrivateKey( SSL_CTX * pSslContext,
         logPath( pPrivateKeyPath, CLIENT_KEY_LABEL );
     #endif
 
-    /* Import the client certificate private key. */
+    /* Read the private key from a file */
     sslStatus = SSL_CTX_use_PrivateKey_file( pSslContext, pPrivateKeyPath,
                                              SSL_FILETYPE_PEM );
 
@@ -448,29 +631,221 @@ static int32_t setPrivateKey( SSL_CTX * pSslContext,
 }
 /*-----------------------------------------------------------*/
 
+static int32_t setPrivateKeyFromPkcs11( SSL_CTX * pSslContext,
+                                        ENGINE * pEngine,
+                                        const char * pPrivateKeyURI )
+{
+    int32_t sslStatus = 0;
+    EVP_PKEY * pPrivateKey = NULL;
+
+    assert( pSslContext != NULL );
+    assert( pEngine != NULL );
+    assert( pPrivateKeyURI != NULL );
+
+    #if ( LIBRARY_LOG_LEVEL == LOG_DEBUG )
+        logPath( pPrivateKeyURI, CLIENT_KEY_LABEL );
+    #endif
+
+    pPrivateKey = ENGINE_load_private_key( pEngine, pPrivateKeyURI, NULL, NULL );
+
+    if( pPrivateKey == NULL )
+    {
+        LogError( ( "ENGINE_load_private_key failed to load private key at uri: %s.",
+                    pPrivateKeyURI ) );
+    }
+
+    /* Import the client certificate private key. */
+    sslStatus = SSL_CTX_use_PrivateKey( pSslContext, pPrivateKey );
+
+    if( sslStatus != 1 )
+    {
+        LogError( ( "SSL_CTX_use_PrivateKey failed to load private key "
+                    "with URI: %s.", pPrivateKeyURI ) );
+    }
+    else
+    {
+        LogDebug( ( "Successfully loaded client private key." ) );
+    }
+
+    return sslStatus;
+}
+/*-----------------------------------------------------------*/
+
+static int32_t opensslError( void )
+{
+    #if LIBRARY_LOG_LEVEL >= LOG_ERROR
+        int32_t errorCode = -1;
+        const char * pFile = NULL;
+        const char * pEmptyString = "";
+        int line = 0;
+        char * pErrorString = NULL;
+
+        errorCode = ( int32_t ) ERR_peek_last_error_line_data( &pFile, &line, NULL, NULL );
+
+        if( pFile == NULL )
+        {
+            pFile = pEmptyString;
+        }
+
+        pErrorString = ERR_error_string( errorCode, NULL );
+
+        SdkLog( ( "[ERROR] " "[openssl] [%s:%d] %d %s\r\n",
+                  pFile, line, errorCode, pErrorString ) );
+
+        return errorCode;
+    #else /* if LIBRARY_LOG_LEVEL >= LOG_ERROR */
+        return ( int32_t ) ERR_peek_last_error();
+    #endif /* if LIBRARY_LOG_LEVEL >= LOG_ERROR */
+}
+
+/*-----------------------------------------------------------*/
+static int32_t initializePkcs11Engine( ENGINE ** ppEngine )
+{
+    int32_t sslStatus = 1;
+    ENGINE * pEngine = NULL;
+
+    assert( ppEngine != NULL );
+
+    ENGINE_load_builtin_engines();
+
+    /* Acquire a structural reference for the pkcs11 engine */
+    pEngine = ENGINE_by_id( PKCS11_ENGINE_ID );
+
+    if( pEngine == NULL )
+    {
+        LogError( ( "Failed to load the openssl pkcs11 engine." ) );
+        sslStatus = opensslError();
+    }
+
+    /* Increase log level if necessary */
+    #if LIBRARY_LOG_LEVEL >= LOG_INFO
+        if( ( sslStatus == 1 ) &&
+            ( ENGINE_ctrl_cmd_string( pEngine, "VERBOSE", NULL, 0 ) != 1 ) )
+        {
+            LogError( ( "Failed to increment the pkcs11 engine verbosity level." ) );
+            sslStatus = opensslError();
+        }
+    #endif
+
+    if( sslStatus == 1 )
+    {
+        /* Initialize the pkcs11 engine and acquire a functional reference to it */
+        if( ENGINE_init( pEngine ) != 1 )
+        {
+            LogError( ( "Failed to initialize the openssl pkcs11 engine." ) );
+            sslStatus = opensslError();
+        }
+    }
+
+    if( sslStatus == 1 )
+    {
+        *ppEngine = pEngine;
+    }
+    else
+    {
+        ( void ) ENGINE_finish( pEngine );
+    }
+
+    return sslStatus;
+}
+
+/*-----------------------------------------------------------*/
 static int32_t setCredentials( SSL_CTX * pSslContext,
                                const OpensslCredentials_t * pOpensslCredentials )
 {
-    int32_t sslStatus = 0;
+    int32_t sslStatus = 1;
+    ENGINE * pEngine = NULL;
+    bool certFromP11 = false;
+    bool pkeyFromP11 = false;
+    bool rootCaFromP11 = false;
 
     assert( pSslContext != NULL );
     assert( pOpensslCredentials != NULL );
 
-    if( pOpensslCredentials->pRootCaPath != NULL )
+    /* Initialize the pkcs11 engine if needed */
+    if( ( pOpensslCredentials->pPrivateKeyPath != NULL ) &&
+        ( pOpensslCredentials->pClientCertPath != NULL ) )
     {
-        sslStatus = setRootCa( pSslContext, pOpensslCredentials->pRootCaPath );
+        if( strncmp( pOpensslCredentials->pPrivateKeyPath,
+                     PKCS11_URI_PREFIX, sizeof( PKCS11_URI_PREFIX ) - 1 ) == 0 )
+        {
+            pkeyFromP11 = true;
+        }
+
+        if( strncmp( pOpensslCredentials->pRootCaPath,
+                     PKCS11_URI_PREFIX, sizeof( PKCS11_URI_PREFIX ) - 1 ) == 0 )
+        {
+            rootCaFromP11 = true;
+        }
+
+        if( strncmp( pOpensslCredentials->pClientCertPath,
+                     PKCS11_URI_PREFIX, sizeof( PKCS11_URI_PREFIX ) - 1 ) == 0 )
+        {
+            certFromP11 = true;
+        }
+
+        if( ( pkeyFromP11 == true ) || ( certFromP11 == true ) || ( rootCaFromP11 == true ) )
+        {
+            sslStatus = initializePkcs11Engine( &pEngine );
+        }
+    }
+
+    if( ( sslStatus == 1 ) && ( pOpensslCredentials->pRootCaPath != NULL ) )
+    {
+        if( rootCaFromP11 == true )
+        {
+            sslStatus = setRootCaFromPkcs11( pSslContext,
+                                             pEngine,
+                                             pOpensslCredentials->pRootCaPath );
+        }
+        else
+        {
+            sslStatus = setRootCaFromFile( pSslContext,
+                                           pOpensslCredentials->pRootCaPath );
+        }
     }
 
     if( ( sslStatus == 1 ) && ( pOpensslCredentials->pClientCertPath != NULL ) )
     {
-        sslStatus =
-            setClientCertificate( pSslContext, pOpensslCredentials->pClientCertPath );
+        if( pkeyFromP11 == true )
+        {
+            sslStatus = setClientCertificateFromPkcs11( pSslContext,
+                                                        pEngine,
+                                                        pOpensslCredentials->pClientCertPath );
+        }
+        else
+        {
+            sslStatus = setClientCertificateFromFile( pSslContext,
+                                                      pOpensslCredentials->pClientCertPath );
+        }
     }
 
     if( ( sslStatus == 1 ) && ( pOpensslCredentials->pPrivateKeyPath != NULL ) )
     {
-        sslStatus =
-            setPrivateKey( pSslContext, pOpensslCredentials->pPrivateKeyPath );
+        if( pkeyFromP11 == true )
+        {
+            sslStatus = setPrivateKeyFromPkcs11( pSslContext,
+                                                 pEngine,
+                                                 pOpensslCredentials->pPrivateKeyPath );
+        }
+        else
+        {
+            sslStatus = setPrivateKeyFromFile( pSslContext,
+                                               pOpensslCredentials->pPrivateKeyPath );
+        }
+    }
+
+    /* Free structural and functional references to the engine */
+    if( pEngine != NULL )
+    {
+        sslStatus = ENGINE_finish( pEngine );
+        #if LIBRARY_LOG_LEVEL >= LOG_ERROR
+            if( sslStatus != 1 )
+            {
+                LogError( ( "Failed to free the openssl pkcs11 engine reference." ) );
+                ( void ) opensslError();
+            }
+        #endif
     }
 
     return sslStatus;
@@ -686,6 +1061,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     /* Clean up on error. */
     if( ( returnStatus != OPENSSL_SUCCESS ) && ( sslObjectCreated == 1u ) )
     {
+        /* Free SSL connection structure */
         SSL_free( pOpensslParams->pSsl );
         pOpensslParams->pSsl = NULL;
     }
