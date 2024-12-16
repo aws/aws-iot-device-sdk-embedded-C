@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202211.00
+ * AWS IoT Device SDK for Embedded C 202412.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
