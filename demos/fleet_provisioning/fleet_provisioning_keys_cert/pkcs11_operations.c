@@ -537,8 +537,8 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
     mbedtls_pk_type_t mbedKeyType = MBEDTLS_PK_NONE;
     int mbedResult = 0;
     mbedtls_pk_context mbedPkContext = { 0 };
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg = { 0 };
+    mbedtls_entropy_context entropy = { 0 };
 
     mbedtls_pk_init( &mbedPkContext );
     mbedtls_entropy_init( &entropy );

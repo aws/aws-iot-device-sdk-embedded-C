@@ -6,7 +6,9 @@
 
 - [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929) This release brings the following changes:
   - Includes [202406.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/releases/tag/202406.01-LTS) versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries.
-  - Removes the OTA library and OTA demo . They are planned to be replaced by [aws-iot-core-mqtt-file-streams-embedded-c](https://github.com/aws/aws-iot-core-mqtt-file-streams-embedded-c) in future releases following [this announcement](https://aws.amazon.com/about-aws/whats-new/2023/12/freertos-modular-composable-ota-libraries/). To learn more about FreeRTOS OTA libraries, visit the [FreeRTOS OTA page](https://freertos.org/freertos-core/over-the-air-updates/index.html). To get started, see the new OTA [reference demo](https://freertos.org/freertos-core/over-the-air-updates/mqtt-ota-agent-orchestrator.html).
+  - Removes the OTA library and its associated demo.
+
+    NOTE: We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
   - Update readme instructions for demos for better user experience.
 
 ### Minor Changes

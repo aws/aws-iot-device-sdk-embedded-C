@@ -675,7 +675,6 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                                               size_t ),
                                           void * pRngContext )
 {
-    ( void ) sig_size;
     CK_RV ret = CKR_OK;
     int32_t result = 0;
     MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = ( MbedtlsPkcs11Context_t * ) pContext->pk_ctx;
@@ -688,6 +687,7 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
     ( void ) ( pRng );
     ( void ) ( pRngContext );
     ( void ) ( mdAlg );
+    ( void ) ( sig_size );
 
     assert( pContext != NULL );
     assert( pHash != NULL );

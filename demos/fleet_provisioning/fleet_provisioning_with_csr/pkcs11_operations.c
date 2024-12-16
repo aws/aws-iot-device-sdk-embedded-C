@@ -239,6 +239,7 @@ static int extractEcPublicKey( CK_SESSION_HANDLE p11Session,
  * @param[in] pHash Data to sign.
  * @param[in] hashLen Length of #pHash.
  * @param[out] pSig The signature
+ * @param[in] sig_size Unused
  * @param[out] pSigLen The length of the signature.
  * @param[in] pRng Unused.
  * @param[in] pRngContext Unused.
@@ -637,8 +638,8 @@ static CK_RV provisionPrivateKey( CK_SESSION_HANDLE session,
     mbedtls_pk_type_t mbedKeyType = MBEDTLS_PK_NONE;
     int mbedResult = 0;
     mbedtls_pk_context mbedPkContext = { 0 };
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg = { 0 };
+    mbedtls_entropy_context entropy = { 0 };
 
     mbedtls_pk_init( &mbedPkContext );
     mbedtls_entropy_init( &entropy );
@@ -916,7 +917,6 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           int ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext )
 {
-    ( void ) sig_size;
     CK_RV ret = CKR_OK;
     int32_t result = 0;
     CK_MECHANISM mech = { 0 };
@@ -929,6 +929,7 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
     ( void ) ( pRng );
     ( void ) ( pRngContext );
     ( void ) ( mdAlg );
+    ( void ) ( sig_size );
 
     /* Sanity check buffer length. */
     if( hashLen > sizeof( toBeSigned ) )
