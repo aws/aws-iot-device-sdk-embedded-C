@@ -139,10 +139,6 @@ See memory requirements for the latest release [here](https://aws.github.io/aws-
 
 #### AWS IoT Over-the-air Update
 
-The [AWS IoT Over-the-air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) (OTA) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the OTA library, you can logically separate firmware updates from the application running on your devices. You can also use the library to send other files (e.g. images, certificates) to one or more devices registered with AWS IoT. More details about OTA library can be found in [AWS IoT Over-the-air Update documentation](https://docs.aws.amazon.com/freertos/latest/userguide/freertos-ota-dev.html).
-
-The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS).
-
 Removed since v2022412.00. We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
 
 #### AWS IoT Fleet Provisioning
