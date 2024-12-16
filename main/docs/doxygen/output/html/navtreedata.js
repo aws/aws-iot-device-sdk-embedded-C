@@ -38,13 +38,6 @@ var NAVTREE =
           [ "Parameter Info", "building.html#autotoc_md4", null ]
         ] ]
       ] ],
-      [ "Configuring the Over-the-air Update Demos", "building.html#configuring_ota_demos", [
-        [ "Requirements for OTA demo", "building.html#autotoc_md5", [
-          [ "Prerequisites", "building.html#autotoc_md6", null ],
-          [ "Configuration", "building.html#autotoc_md7", null ],
-          [ "Scheduling an OTA Update Job", "building.html#autotoc_md8", null ]
-        ] ]
-      ] ],
       [ "Build Steps", "building.html#building_demo_commmandline", [
         [ "Installing Docker Containers for Demos", "building.html#docker_containers_for_demos", null ]
       ] ]

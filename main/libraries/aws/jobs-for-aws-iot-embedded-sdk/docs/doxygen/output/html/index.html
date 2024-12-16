@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">AWS IoT Jobs<span id="projectnumber">&#160;v1.3.0</span>
+   <div id="projectname">AWS IoT Jobs<span id="projectnumber">&#160;v1.5.1</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT Jobs</div>
   </td>
@@ -101,7 +101,8 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>AWS IoT Jobs client library, part of the AWS IoT Device SDK for Embedded C<a class="anchor" id="jobs"></a></p>
-<p>AWS IoT jobs can be used to define a set of remote operations that are sent to and executed on one or more devices connected to AWS IoT. For documentation of the service, please see the <a href="https://docs.aws.amazon.com/iot/latest/developerguide/iot-jobs.html">AWS IoT Developer Guide</a>. Interactions with the jobs service use MQTT, a lightweight publish-subscribe protocol. This library provides a convenience API to compose and recognize the MQTT topic strings used by the jobs service. The library is written in C and designed to be compliant with ISO C90 and MISRA C:2012. It has proofs showing safe memory use and no heap allocation, making it suitable for IoT microcontrollers, but also fully portable to other platforms. </p>
+<p>AWS IoT jobs can be used to define a set of remote operations that are sent to and executed on one or more devices connected to AWS IoT. For documentation of the service, please see the <a href="https://docs.aws.amazon.com/iot/latest/developerguide/iot-jobs.html">AWS IoT Developer Guide</a>. Interactions with the jobs service use MQTT, a lightweight publish-subscribe protocol. This library provides a convenience API to compose and recognize the MQTT topic strings used by the jobs service. The library is written in C and designed to be compliant with ISO C99 and MISRA C:2012. It has proofs showing safe memory use and no heap allocation, making it suitable for IoT microcontrollers, but also fully portable to other platforms. </p>
+<p>AWS IoT OTA Job Parser can be used to Parse out the fields of an incoming Job Document sent to a device from AWS IoT. The library is written in C and designed to be compliant with ISO C99 and MISRA C:2012. It has proofs showing safe memory use and no heap allocation, making it suitable for IoT microcontrollers, but also fully portable to other platforms. </p>
 <blockquote class="doxtable">
 <p>&zwj;<b>NOTE</b>: If your application uses both AWS IoT Jobs library and <a href="https://github.com/aws/ota-for-aws-iot-embedded-sdk">OTA library</a> to communicate with AWS IoT through a shared MQTT connection, we suggest that you keep the application logic that uses these libraries within a single task/thread. As the OTA agent also makes calls to the AWS IoT Jobs service, keeping the use of libraries within the same thread context will avoid complexity of synchronizing communication with AWS IoT Jobs topics between multiple tasks/threads. However, if you choose to use different tasks/threads for calling these libraries, please be aware that the OTA library will subscribe and configurably, unsubscribe from AWS IoT Jobs topics, and also attempt to send status updates for incoming non-OTA jobs, if your application configures the OTA library to handle custom jobs. </p>
 </blockquote>
@@ -114,9 +115,15 @@ Memory Requirements</h1>
 <tr>
 <td><b>File</b> </td><td><b><center>With -O1 Optimization</center></b> </td><td><b><center>With -Os Optimization</center></b>  </td></tr>
 <tr>
-<td><a class="el" href="jobs_8c.html" title="Implementation of the APIs from jobs.h.">jobs.c</a> </td><td><center>1.9K</center> </td><td><center>1.6K</center>  </td></tr>
+<td><a class="el" href="jobs_8c.html" title="Implementation of the APIs from jobs.h.">jobs.c</a> </td><td><center>2.8K</center> </td><td><center>2.5K</center>  </td></tr>
 <tr>
-<td><b>Total estimates</b> </td><td><b><center>1.9K</center></b> </td><td><b><center>1.6K</center></b>  </td></tr>
+<td>job_parser.c </td><td><center>0.9K</center> </td><td><center>0.9K</center>  </td></tr>
+<tr>
+<td>ota_job_handler.c </td><td><center>0.2K</center> </td><td><center>0.2K</center>  </td></tr>
+<tr>
+<td>core_json.c </td><td><center>2.9K</center> </td><td><center>2.4K</center>  </td></tr>
+<tr>
+<td><b>Total estimates</b> </td><td><b><center>6.8K</center></b> </td><td><b><center>6.0K</center></b>  </td></tr>
 </table>
  </p>
 </div></div><!-- PageDoc -->

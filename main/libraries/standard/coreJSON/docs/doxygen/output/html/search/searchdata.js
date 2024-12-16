@@ -7,7 +7,7 @@ var indexSectionsWithContent =
   4: "jkv",
   5: "j",
   6: "j",
-  7: "jm",
+  7: "cjm",
   8: "es",
   9: "fjo"
 };

@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">AWS IoT Fleet Provisioning<span id="projectnumber">&#160;v1.1.0</span>
+   <div id="projectname">AWS IoT Fleet Provisioning<span id="projectnumber">&#160;v1.2.1</span>
    </div>
    <div id="projectbrief">AWS IoT Fleet Provisioning Library</div>
   </td>
@@ -101,7 +101,7 @@ $(document).ready(function(){initNavTree('fleet__provisioning_8h_source.html',''
 </div><!--header-->
 <div class="contents">
 <a href="fleet__provisioning_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/*</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * AWS IoT Fleet Provisioning v1.1.0</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * AWS IoT Fleet Provisioning v1.2.1</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * SPDX-License-Identifier: MIT</span></div>
@@ -462,8 +462,8 @@ $(document).ready(function(){initNavTree('fleet__provisioning_8h_source.html',''
 <div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span><span class="comment">/* *INDENT-ON* */</span></div>
 <div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span> </div>
 <div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span><span class="preprocessor">#endif </span><span class="comment">/* FLEET_PROVISIONING_H_ */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="afleet__provisioning_8h_html_a91ea5642331970028458fd423bd1aef6"><div class="ttname"><a href="fleet__provisioning_8h.html#a91ea5642331970028458fd423bd1aef6">FleetProvisioning_MatchTopic</a></div><div class="ttdeci">FleetProvisioningStatus_t FleetProvisioning_MatchTopic(const char *pTopic, uint16_t topicLength, FleetProvisioningTopic_t *pOutApi)</div><div class="ttdoc">Check if the given topic is one of the Fleet Provisioning topics.</div><div class="ttdef"><b>Definition:</b> fleet_provisioning.c:731</div></div>
-<div class="ttc" id="afleet__provisioning_8h_html_a93e9b2b2b04dce2b44bdcc3b119e1e60"><div class="ttname"><a href="fleet__provisioning_8h.html#a93e9b2b2b04dce2b44bdcc3b119e1e60">FleetProvisioning_GetRegisterThingTopic</a></div><div class="ttdeci">FleetProvisioningStatus_t FleetProvisioning_GetRegisterThingTopic(char *pTopicBuffer, uint16_t bufferLength, FleetProvisioningFormat_t format, FleetProvisioningApiTopics_t topic, const char *pTemplateName, uint16_t templateNameLength, uint16_t *pOutLength)</div><div class="ttdoc">Populate the topic string for a Fleet Provisioning RegisterThing topic.</div><div class="ttdef"><b>Definition:</b> fleet_provisioning.c:640</div></div>
+<div class="ttc" id="afleet__provisioning_8h_html_a91ea5642331970028458fd423bd1aef6"><div class="ttname"><a href="fleet__provisioning_8h.html#a91ea5642331970028458fd423bd1aef6">FleetProvisioning_MatchTopic</a></div><div class="ttdeci">FleetProvisioningStatus_t FleetProvisioning_MatchTopic(const char *pTopic, uint16_t topicLength, FleetProvisioningTopic_t *pOutApi)</div><div class="ttdoc">Check if the given topic is one of the Fleet Provisioning topics.</div><div class="ttdef"><b>Definition:</b> fleet_provisioning.c:729</div></div>
+<div class="ttc" id="afleet__provisioning_8h_html_a93e9b2b2b04dce2b44bdcc3b119e1e60"><div class="ttname"><a href="fleet__provisioning_8h.html#a93e9b2b2b04dce2b44bdcc3b119e1e60">FleetProvisioning_GetRegisterThingTopic</a></div><div class="ttdeci">FleetProvisioningStatus_t FleetProvisioning_GetRegisterThingTopic(char *pTopicBuffer, uint16_t bufferLength, FleetProvisioningFormat_t format, FleetProvisioningApiTopics_t topic, const char *pTemplateName, uint16_t templateNameLength, uint16_t *pOutLength)</div><div class="ttdoc">Populate the topic string for a Fleet Provisioning RegisterThing topic.</div><div class="ttdef"><b>Definition:</b> fleet_provisioning.c:638</div></div>
 <div class="ttc" id="afleet__provisioning__config__defaults_8h_html"><div class="ttname"><a href="fleet__provisioning__config__defaults_8h.html">fleet_provisioning_config_defaults.h</a></div><div class="ttdoc">Default config values for the AWS IoT Fleet Provisioning Library.</div></div>
 <div class="ttc" id="agroup__fleet__provisioning__enum__types_html_ga4becd179796394efce032c76c3b68a97"><div class="ttname"><a href="group__fleet__provisioning__enum__types.html#ga4becd179796394efce032c76c3b68a97">FleetProvisioningTopic_t</a></div><div class="ttdeci">FleetProvisioningTopic_t</div><div class="ttdoc">Fleet Provisioning topic values.</div><div class="ttdef"><b>Definition:</b> fleet_provisioning.h:71</div></div>
 <div class="ttc" id="agroup__fleet__provisioning__enum__types_html_ga7b8a658b4ff577b6bef3f91907462900"><div class="ttname"><a href="group__fleet__provisioning__enum__types.html#ga7b8a658b4ff577b6bef3f91907462900">FleetProvisioningApiTopics_t</a></div><div class="ttdeci">FleetProvisioningApiTopics_t</div><div class="ttdoc">Topics for each Fleet Provisioning APIs.</div><div class="ttdef"><b>Definition:</b> fleet_provisioning.h:98</div></div>

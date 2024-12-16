@@ -14,9 +14,10 @@ var searchData=
   ['hmacfinal_11',['hmacFinal',['../sigv4_8c.html#ab773cbedb30027889d6c3fd752c128f8',1,'sigv4.c']]],
   ['hmacintermediate_12',['hmacIntermediate',['../sigv4_8c.html#a91e0b178798f5ff4e3e88d8dc41f66aa',1,'sigv4.c']]],
   ['hmax_5fipad_5fxor_5fopad_5fbyte_13',['HMAX_IPAD_XOR_OPAD_BYTE',['../sigv4__internal_8h.html#adb53bbe2b7db581622569697d1dcefca',1,'sigv4_internal.h']]],
-  ['http_5fempty_5fpath_14',['HTTP_EMPTY_PATH',['../sigv4__internal_8h.html#af2bb2317c7f90b7db70b8f0150bb28fe',1,'sigv4_internal.h']]],
-  ['http_5fempty_5fpath_5flen_15',['HTTP_EMPTY_PATH_LEN',['../sigv4__internal_8h.html#a4842e1e66dec35cb8d5ad140db33be9e',1,'sigv4_internal.h']]],
-  ['http_5frequest_5fline_5fending_16',['HTTP_REQUEST_LINE_ENDING',['../sigv4__internal_8h.html#a524de65082b0444b0d5abc0ec3d55b4f',1,'sigv4_internal.h']]],
-  ['http_5frequest_5fline_5fending_5flen_17',['HTTP_REQUEST_LINE_ENDING_LEN',['../sigv4__internal_8h.html#a475afd1f322d8c81746800ad3485b579',1,'sigv4_internal.h']]],
-  ['httpmethodlen_18',['httpMethodLen',['../struct_sig_v4_http_parameters__t.html#aea67a40c05bc0c78667ea91fefd157cb',1,'SigV4HttpParameters_t']]]
+  ['hour_14',['hour',['../struct_sig_v4_date_time__t.html#a7316623f82fc84d3663eb495106b122a',1,'SigV4DateTime_t']]],
+  ['http_5fempty_5fpath_15',['HTTP_EMPTY_PATH',['../sigv4__internal_8h.html#af2bb2317c7f90b7db70b8f0150bb28fe',1,'sigv4_internal.h']]],
+  ['http_5fempty_5fpath_5flen_16',['HTTP_EMPTY_PATH_LEN',['../sigv4__internal_8h.html#a4842e1e66dec35cb8d5ad140db33be9e',1,'sigv4_internal.h']]],
+  ['http_5frequest_5fline_5fending_17',['HTTP_REQUEST_LINE_ENDING',['../sigv4__internal_8h.html#a524de65082b0444b0d5abc0ec3d55b4f',1,'sigv4_internal.h']]],
+  ['http_5frequest_5fline_5fending_5flen_18',['HTTP_REQUEST_LINE_ENDING_LEN',['../sigv4__internal_8h.html#a475afd1f322d8c81746800ad3485b579',1,'sigv4_internal.h']]],
+  ['httpmethodlen_19',['httpMethodLen',['../struct_sig_v4_http_parameters__t.html#aea67a40c05bc0c78667ea91fefd157cb',1,'SigV4HttpParameters_t']]]
 ];

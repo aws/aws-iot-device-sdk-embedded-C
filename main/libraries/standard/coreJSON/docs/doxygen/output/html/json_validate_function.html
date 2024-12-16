@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreJSON<span id="projectnumber">&#160;v3.2.0</span>
+   <div id="projectname">coreJSON<span id="projectnumber">&#160;v3.3.0</span>
    </div>
    <div id="projectbrief">Parser library for the ECMA-404 JSON standard</div>
   </td>
@@ -102,8 +102,8 @@ $(document).ready(function(){initNavTree('json_validate_function.html',''); init
 <div class="contents">
 <div class="textblock"><div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__json__enum__types.html#ga2b720193877345b237518677216f00a0">JSONStatus_t</a> <a class="code hl_function" href="core__json_8h.html#af4eb1eb1e2a2563abd0d5404b04aa9ff">JSON_Validate</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> * buf,</div>
 <div class="line">                            <span class="keywordtype">size_t</span> max );</div>
-<div class="ttc" id="acore__json_8h_html_af4eb1eb1e2a2563abd0d5404b04aa9ff"><div class="ttname"><a href="core__json_8h.html#af4eb1eb1e2a2563abd0d5404b04aa9ff">JSON_Validate</a></div><div class="ttdeci">JSONStatus_t JSON_Validate(const char *buf, size_t max)</div><div class="ttdoc">Parse a buffer to determine if it contains a valid JSON document.</div><div class="ttdef"><b>Definition:</b> core_json.c:1129</div></div>
-<div class="ttc" id="agroup__json__enum__types_html_ga2b720193877345b237518677216f00a0"><div class="ttname"><a href="group__json__enum__types.html#ga2b720193877345b237518677216f00a0">JSONStatus_t</a></div><div class="ttdeci">JSONStatus_t</div><div class="ttdoc">Return codes from coreJSON library functions.</div><div class="ttdef"><b>Definition:</b> core_json.h:47</div></div>
+<div class="ttc" id="acore__json_8h_html_af4eb1eb1e2a2563abd0d5404b04aa9ff"><div class="ttname"><a href="core__json_8h.html#af4eb1eb1e2a2563abd0d5404b04aa9ff">JSON_Validate</a></div><div class="ttdeci">JSONStatus_t JSON_Validate(const char *buf, size_t max)</div><div class="ttdoc">Parse a buffer to determine if it contains a valid JSON document.</div><div class="ttdef"><b>Definition:</b> core_json.c:1160</div></div>
+<div class="ttc" id="agroup__json__enum__types_html_ga2b720193877345b237518677216f00a0"><div class="ttname"><a href="group__json__enum__types.html#ga2b720193877345b237518677216f00a0">JSONStatus_t</a></div><div class="ttdeci">JSONStatus_t</div><div class="ttdoc">Return codes from coreJSON library functions.</div><div class="ttdef"><b>Definition:</b> core_json.h:57</div></div>
 </div><!-- fragment --><p>Parse a buffer to determine if it contains a valid JSON document.  </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -125,7 +125,7 @@ By default, a valid JSON document may contain a single element (e.g., string, bo
 <div class="line"> </div>
 <div class="line"><span class="comment">// JSON document is valid.</span></div>
 <div class="line">assert( result == <a class="code hl_enumvalue" href="group__json__enum__types.html#gga2b720193877345b237518677216f00a0a6b579c45491843ff8dbc535fb17a0402">JSONSuccess</a> );</div>
-<div class="ttc" id="agroup__json__enum__types_html_gga2b720193877345b237518677216f00a0a6b579c45491843ff8dbc535fb17a0402"><div class="ttname"><a href="group__json__enum__types.html#gga2b720193877345b237518677216f00a0a6b579c45491843ff8dbc535fb17a0402">JSONSuccess</a></div><div class="ttdeci">@ JSONSuccess</div><div class="ttdoc">JSON document is valid and complete.</div><div class="ttdef"><b>Definition:</b> core_json.h:49</div></div>
+<div class="ttc" id="agroup__json__enum__types_html_gga2b720193877345b237518677216f00a0a6b579c45491843ff8dbc535fb17a0402"><div class="ttname"><a href="group__json__enum__types.html#gga2b720193877345b237518677216f00a0a6b579c45491843ff8dbc535fb17a0402">JSONSuccess</a></div><div class="ttdeci">@ JSONSuccess</div><div class="ttdoc">JSON document is valid and complete.</div><div class="ttdef"><b>Definition:</b> core_json.h:59</div></div>
 </div><!-- fragment --><p>See <a class="el" href="core__json_8h.html" title="Include this header file to use coreJSON in your application.">core_json.h</a> for docs.</p>
 <p>Verify that the entire buffer contains exactly one scalar or collection within optional whitespace.   </p>
 </div></div><!-- contents -->

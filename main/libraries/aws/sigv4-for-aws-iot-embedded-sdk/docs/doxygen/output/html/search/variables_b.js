@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['value_0',['value',['../struct_sig_v4_key_value_pair__t.html#aaf2daf49a6cddf301490571da03484bc',1,'SigV4KeyValuePair_t']]]
+  ['uxcursorindex_0',['uxCursorIndex',['../struct_canonical_context__t.html#ab1c02cda0dcecadab827c92c31fa74a0',1,'CanonicalContext_t']]]
 ];

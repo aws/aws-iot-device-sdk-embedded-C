@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['uri_5fdouble_5fencoded_5fequals_5fchar_5fsize_0',['URI_DOUBLE_ENCODED_EQUALS_CHAR_SIZE',['../sigv4__internal_8h.html#af3a9ab06317ce6ea90f416247d5a3db9',1,'sigv4_internal.h']]],
-  ['uri_5fencoded_5fspecial_5fchar_5fsize_1',['URI_ENCODED_SPECIAL_CHAR_SIZE',['../sigv4__internal_8h.html#a51dda8485aa25442633af06df0ede3d7',1,'sigv4_internal.h']]]
+  ['validatedatetime_0',['validateDateTime',['../sigv4_8c.html#ad1d4b13610004d066894740c47e24db2',1,'sigv4.c']]],
+  ['value_1',['value',['../struct_sig_v4_key_value_pair__t.html#aaf2daf49a6cddf301490571da03484bc',1,'SigV4KeyValuePair_t']]],
+  ['verifyparamstogenerateauthheaderapi_2',['verifyParamsToGenerateAuthHeaderApi',['../sigv4_8c.html#a72386c1bb95ff33f62bfaf5c00596026',1,'sigv4.c']]]
 ];

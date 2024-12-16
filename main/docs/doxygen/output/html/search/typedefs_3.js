@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['otaappcallback_5ft_0',['OtaAppCallback_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__callback__types.html#ga737e6e873370cf18b0221373ae5590ec',1,]]],
-  ['otapalmainstatus_5ft_1',['OtaPalMainStatus_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__ota__constants.html#gac5c3148205ee4a0cac4246b2c7797765',1,]]]
+  ['transportrecv_5ft_0',['TransportRecv_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/group__mqtt__callback__types.html#ga227df31d6daf07e5d833537c12130167',1,'TransportRecv_t()(Global Namespace)'],['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/group__http__callback__types.html#ga227df31d6daf07e5d833537c12130167',1,'TransportRecv_t()(Global Namespace)']]],
+  ['transportsend_5ft_1',['TransportSend_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/group__mqtt__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5',1,'TransportSend_t()(Global Namespace)'],['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/group__http__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5',1,'TransportSend_t()(Global Namespace)']]],
+  ['transportwritev_5ft_2',['TransportWritev_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/group__mqtt__callback__types.html#ga47e779557b0c2db95949ef9526861dfb',1,'TransportWritev_t()(Global Namespace)'],['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/group__http__callback__types.html#ga47e779557b0c2db95949ef9526861dfb',1,'TransportWritev_t()(Global Namespace)']]]
 ];

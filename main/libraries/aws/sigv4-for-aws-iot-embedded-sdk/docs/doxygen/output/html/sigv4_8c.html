@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">SigV4<span id="projectnumber">&#160;v1.2.0</span>
+   <div id="projectname">SigV4<span id="projectnumber">&#160;v1.3.0</span>
    </div>
    <div id="projectbrief">SigV4 Library for AWS Authentication</div>
   </td>
@@ -121,21 +121,21 @@ Functions</h2></td></tr>
 <tr class="memitem:acc95a36d5ca043076852fd090405f873"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#acc95a36d5ca043076852fd090405f873">generateCanonicalAndSignedHeaders</a> (const char *pHeaders, size_t headersLen, uint32_t flags, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *canonicalRequest, char **pSignedHeaders, size_t *pSignedHeadersLen)</td></tr>
 <tr class="memdesc:acc95a36d5ca043076852fd090405f873"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract all header key-value pairs from the passed headers data and add them to the canonical request.  <br /></td></tr>
 <tr class="separator:acc95a36d5ca043076852fd090405f873"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1578b175aaaa9849a5e0d63a71d25ec"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#ae1578b175aaaa9849a5e0d63a71d25ec">appendSignedHeaders</a> (size_t headerCount, uint32_t flags, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *canonicalRequest, char **pSignedHeaders, size_t *pSignedHeadersLen)</td></tr>
-<tr class="memdesc:ae1578b175aaaa9849a5e0d63a71d25ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append Signed Headers to the Canonical Request buffer.  <br /></td></tr>
-<tr class="separator:ae1578b175aaaa9849a5e0d63a71d25ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6b5d3b71936542c8bb0322c32991d55"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#ab6b5d3b71936542c8bb0322c32991d55">appendCanonicalizedHeaders</a> (size_t headerCount, uint32_t flags, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *canonicalRequest)</td></tr>
-<tr class="memdesc:ab6b5d3b71936542c8bb0322c32991d55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Canonicalize headers and append it to the Canonical Request buffer.  <br /></td></tr>
-<tr class="separator:ab6b5d3b71936542c8bb0322c32991d55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1db270e2e75b82f0559c92fe76cece94"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a1db270e2e75b82f0559c92fe76cece94">appendSignedHeaders</a> (size_t headerCount, uint32_t flags, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *pCanonicalRequest, char **pSignedHeaders, size_t *pSignedHeadersLen)</td></tr>
+<tr class="memdesc:a1db270e2e75b82f0559c92fe76cece94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append Signed Headers to the Canonical Request buffer.  <br /></td></tr>
+<tr class="separator:a1db270e2e75b82f0559c92fe76cece94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab36813a9acc55b3f7f90072f7d4a52fa"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#ab36813a9acc55b3f7f90072f7d4a52fa">appendCanonicalizedHeaders</a> (size_t headerCount, uint32_t flags, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *pCanonicalRequest)</td></tr>
+<tr class="memdesc:ab36813a9acc55b3f7f90072f7d4a52fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Canonicalize headers and append it to the Canonical Request buffer.  <br /></td></tr>
+<tr class="separator:ab36813a9acc55b3f7f90072f7d4a52fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7076d1514a5c3680dbd24da9cbfab425"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a7076d1514a5c3680dbd24da9cbfab425">storeHashedPayloadLocation</a> (size_t headerIndex, const char *pAmzSHA256Header, size_t amzSHA256HeaderLen, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *pCanonicalRequest)</td></tr>
 <tr class="memdesc:a7076d1514a5c3680dbd24da9cbfab425"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store the location of HTTP request hashed payload in the HTTP request.  <br /></td></tr>
 <tr class="separator:a7076d1514a5c3680dbd24da9cbfab425"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a641788264214495655fc9905a2e22841"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a641788264214495655fc9905a2e22841">parseHeaderKeyValueEntries</a> (const char *pHeaders, size_t headersDataLen, uint32_t flags, size_t *headerCount, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *canonicalRequest)</td></tr>
-<tr class="memdesc:a641788264214495655fc9905a2e22841"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse each header key and value pair from HTTP headers.  <br /></td></tr>
-<tr class="separator:a641788264214495655fc9905a2e22841"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a257f2337a87f1eee1358b2dcaf150bdd"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a257f2337a87f1eee1358b2dcaf150bdd">copyHeaderStringToCanonicalBuffer</a> (const char *pData, size_t dataLen, uint32_t flags, char separator, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *canonicalRequest)</td></tr>
-<tr class="memdesc:a257f2337a87f1eee1358b2dcaf150bdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy header key or header value to the Canonical Request buffer.  <br /></td></tr>
-<tr class="separator:a257f2337a87f1eee1358b2dcaf150bdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b683400e5dc9051e92672e2aaec0d05"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a0b683400e5dc9051e92672e2aaec0d05">parseHeaderKeyValueEntries</a> (const char *pHeaders, size_t headersDataLen, uint32_t flags, size_t *headerCount, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *pCanonicalRequest)</td></tr>
+<tr class="memdesc:a0b683400e5dc9051e92672e2aaec0d05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse each header key and value pair from HTTP headers.  <br /></td></tr>
+<tr class="separator:a0b683400e5dc9051e92672e2aaec0d05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ad6cc52c71788300dbd53f3f7c4af8d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a6ad6cc52c71788300dbd53f3f7c4af8d">copyHeaderStringToCanonicalBuffer</a> (const char *pData, size_t dataLen, uint32_t flags, char separator, <a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *pCanonicalRequest)</td></tr>
+<tr class="memdesc:a6ad6cc52c71788300dbd53f3f7c4af8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy header key or header value to the Canonical Request buffer.  <br /></td></tr>
+<tr class="separator:a6ad6cc52c71788300dbd53f3f7c4af8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c55af8f76e7fd110ce75c5c7691339c"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sigv4_8c.html#a1c55af8f76e7fd110ce75c5c7691339c">isTrimmableSpace</a> (const char *value, size_t index, size_t valLen, size_t trimmedLength)</td></tr>
 <tr class="memdesc:a1c55af8f76e7fd110ce75c5c7691339c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to determine whether a header string character represents a space that can be trimmed when creating "Canonical Headers". All leading and trailing spaces in the header strings need to be trimmed. Also, sequential spaces in the header value need to be trimmed to a single space.  <br /></td></tr>
 <tr class="separator:a1c55af8f76e7fd110ce75c5c7691339c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -356,8 +356,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ae1578b175aaaa9849a5e0d63a71d25ec" name="ae1578b175aaaa9849a5e0d63a71d25ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae1578b175aaaa9849a5e0d63a71d25ec">&#9670;&#160;</a></span>appendSignedHeaders()</h2>
+<a id="a1db270e2e75b82f0559c92fe76cece94" name="a1db270e2e75b82f0559c92fe76cece94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1db270e2e75b82f0559c92fe76cece94">&#9670;&#160;</a></span>appendSignedHeaders()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -381,7 +381,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *&#160;</td>
-          <td class="paramname"><em>canonicalRequest</em>, </td>
+          <td class="paramname"><em>pCanonicalRequest</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -413,7 +413,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">headerCount</td><td>Number of headers which needs to be appended. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Flag to indicate if headers are already in the canonical form. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">canonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pCanonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pSignedHeaders</td><td>The starting location of the signed headers. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pSignedHeadersLen</td><td>The length of the signed headers. </td></tr>
   </table>
@@ -422,8 +422,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab6b5d3b71936542c8bb0322c32991d55" name="ab6b5d3b71936542c8bb0322c32991d55"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6b5d3b71936542c8bb0322c32991d55">&#9670;&#160;</a></span>appendCanonicalizedHeaders()</h2>
+<a id="ab36813a9acc55b3f7f90072f7d4a52fa" name="ab36813a9acc55b3f7f90072f7d4a52fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab36813a9acc55b3f7f90072f7d4a52fa">&#9670;&#160;</a></span>appendCanonicalizedHeaders()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -447,7 +447,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *&#160;</td>
-          <td class="paramname"><em>canonicalRequest</em>&#160;</td>
+          <td class="paramname"><em>pCanonicalRequest</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -467,7 +467,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">headerCount</td><td>Number of headers which needs to be appended. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Flag to indicate if headers are already in the canonical form. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">canonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pCanonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization.</td></tr>
   </table>
   </dd>
 </dl>
@@ -534,8 +534,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a641788264214495655fc9905a2e22841" name="a641788264214495655fc9905a2e22841"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a641788264214495655fc9905a2e22841">&#9670;&#160;</a></span>parseHeaderKeyValueEntries()</h2>
+<a id="a0b683400e5dc9051e92672e2aaec0d05" name="a0b683400e5dc9051e92672e2aaec0d05"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b683400e5dc9051e92672e2aaec0d05">&#9670;&#160;</a></span>parseHeaderKeyValueEntries()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -571,7 +571,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *&#160;</td>
-          <td class="paramname"><em>canonicalRequest</em>&#160;</td>
+          <td class="paramname"><em>pCanonicalRequest</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -593,7 +593,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">headersDataLen</td><td>Length of HTTP headers to parse. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Flag to indicate if headers are already in the canonical form. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">headerCount</td><td>Count of key-value pairs parsed from pData. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">canonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pCanonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization.</td></tr>
   </table>
   </dd>
 </dl>
@@ -601,8 +601,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a257f2337a87f1eee1358b2dcaf150bdd" name="a257f2337a87f1eee1358b2dcaf150bdd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a257f2337a87f1eee1358b2dcaf150bdd">&#9670;&#160;</a></span>copyHeaderStringToCanonicalBuffer()</h2>
+<a id="a6ad6cc52c71788300dbd53f3f7c4af8d" name="a6ad6cc52c71788300dbd53f3f7c4af8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ad6cc52c71788300dbd53f3f7c4af8d">&#9670;&#160;</a></span>copyHeaderStringToCanonicalBuffer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -638,7 +638,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="struct_canonical_context__t.html">CanonicalContext_t</a> *&#160;</td>
-          <td class="paramname"><em>canonicalRequest</em>&#160;</td>
+          <td class="paramname"><em>pCanonicalRequest</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -660,7 +660,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dataLen</td><td>Length of Header Key or value. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Flag to indicate if headers are already in the canonical form. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">separator</td><td>Character separating the multiple key-value pairs or key and values. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">canonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pCanonicalRequest</td><td>Struct to maintain intermediary buffer and state of canonicalization.</td></tr>
   </table>
   </dd>
 </dl>
@@ -2325,8 +2325,8 @@ This function assumes the destination buffer is large enough to hold the string 
 <div class="line">}</div>
 <div class="ttc" id="agroup__sigv4__constants_html_gaa96f2b005c358892fc9ae3f1ecc7f757"><div class="ttname"><a href="group__sigv4__constants.html#gaa96f2b005c358892fc9ae3f1ecc7f757">SIGV4_ISO_STRING_LEN</a></div><div class="ttdeci">#define SIGV4_ISO_STRING_LEN</div><div class="ttdef"><b>Definition:</b> sigv4.h:77</div></div>
 <div class="ttc" id="agroup__sigv4__enum__types_html_ga9473b37a4c9e1e9b1d45d90b062d8df9"><div class="ttname"><a href="group__sigv4__enum__types.html#ga9473b37a4c9e1e9b1d45d90b062d8df9">SigV4Status_t</a></div><div class="ttdeci">SigV4Status_t</div><div class="ttdoc">Return status of the SigV4 Library.</div><div class="ttdef"><b>Definition:</b> sigv4.h:152</div></div>
-<div class="ttc" id="agroup__sigv4__enum__types_html_gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627"><div class="ttname"><a href="group__sigv4__enum__types.html#gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627">SigV4Success</a></div><div class="ttdeci">@ SigV4Success</div><div class="ttdoc">The SigV4 library function completed successfully.</div><div class="ttdef"><b>Definition:</b> sigv4.h:160</div></div>
-<div class="ttc" id="asigv4_8c_html_ac6f3d9773a15116d43b050ab09456c20"><div class="ttname"><a href="sigv4_8c.html#ac6f3d9773a15116d43b050ab09456c20">SigV4_AwsIotDateToIso8601</a></div><div class="ttdeci">SigV4Status_t SigV4_AwsIotDateToIso8601(const char *pDate, size_t dateLen, char *pDateISO8601, size_t dateISO8601Len)</div><div class="ttdoc">Parse the date header value from the AWS IoT response, and generate the formatted ISO 8601 date requi...</div><div class="ttdef"><b>Definition:</b> sigv4.c:3141</div></div>
+<div class="ttc" id="agroup__sigv4__enum__types_html_gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627"><div class="ttname"><a href="group__sigv4__enum__types.html#gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627">SigV4Success</a></div><div class="ttdeci">@ SigV4Success</div><div class="ttdoc">The SigV4 library function completed successfully.</div><div class="ttdef"><b>Definition:</b> sigv4.h:161</div></div>
+<div class="ttc" id="asigv4_8c_html_ac6f3d9773a15116d43b050ab09456c20"><div class="ttname"><a href="sigv4_8c.html#ac6f3d9773a15116d43b050ab09456c20">SigV4_AwsIotDateToIso8601</a></div><div class="ttdeci">SigV4Status_t SigV4_AwsIotDateToIso8601(const char *pDate, size_t dateLen, char *pDateISO8601, size_t dateISO8601Len)</div><div class="ttdoc">Parse the date header value from the AWS IoT response, and generate the formatted ISO 8601 date requi...</div><div class="ttdef"><b>Definition:</b> sigv4.c:3041</div></div>
 </div><!-- fragment --> 
 </div>
 </div>
@@ -2426,9 +2426,9 @@ This function assumes the destination buffer is large enough to hold the string 
 <div class="line">{</div>
 <div class="line">   <span class="comment">// Failed to generate authorization header.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="asigv4_8c_html_a46ab0bb656d9b24e3efdcf85c0b8a385"><div class="ttname"><a href="sigv4_8c.html#a46ab0bb656d9b24e3efdcf85c0b8a385">SigV4_GenerateHTTPAuthorization</a></div><div class="ttdeci">SigV4Status_t SigV4_GenerateHTTPAuthorization(const SigV4Parameters_t *pParams, char *pAuthBuf, size_t *authBufLen, char **pSignature, size_t *signatureLen)</div><div class="ttdoc">Generates the HTTP Authorization header value.</div><div class="ttdef"><b>Definition:</b> sigv4.c:3217</div></div>
-<div class="ttc" id="astruct_sig_v4_parameters__t_html"><div class="ttname"><a href="struct_sig_v4_parameters__t.html">SigV4Parameters_t</a></div><div class="ttdoc">Complete configurations required for generating &quot;String to Sign&quot; and &quot;Signing Key&quot; values.</div><div class="ttdef"><b>Definition:</b> sigv4.h:394</div></div>
-<div class="ttc" id="astruct_sig_v4_parameters__t_html_a5427dc690bbc4abdd61c334aed5cd256"><div class="ttname"><a href="struct_sig_v4_parameters__t.html#a5427dc690bbc4abdd61c334aed5cd256">SigV4Parameters_t::pCredentials</a></div><div class="ttdeci">SigV4Credentials_t * pCredentials</div><div class="ttdoc">The AccessKeyId, SecretAccessKey, and SecurityToken used to generate the Authorization header.</div><div class="ttdef"><b>Definition:</b> sigv4.h:399</div></div>
+<div class="ttc" id="asigv4_8c_html_a46ab0bb656d9b24e3efdcf85c0b8a385"><div class="ttname"><a href="sigv4_8c.html#a46ab0bb656d9b24e3efdcf85c0b8a385">SigV4_GenerateHTTPAuthorization</a></div><div class="ttdeci">SigV4Status_t SigV4_GenerateHTTPAuthorization(const SigV4Parameters_t *pParams, char *pAuthBuf, size_t *authBufLen, char **pSignature, size_t *signatureLen)</div><div class="ttdoc">Generates the HTTP Authorization header value.</div><div class="ttdef"><b>Definition:</b> sigv4.c:3119</div></div>
+<div class="ttc" id="astruct_sig_v4_parameters__t_html"><div class="ttname"><a href="struct_sig_v4_parameters__t.html">SigV4Parameters_t</a></div><div class="ttdoc">Complete configurations required for generating &quot;String to Sign&quot; and &quot;Signing Key&quot; values.</div><div class="ttdef"><b>Definition:</b> sigv4.h:396</div></div>
+<div class="ttc" id="astruct_sig_v4_parameters__t_html_a5427dc690bbc4abdd61c334aed5cd256"><div class="ttname"><a href="struct_sig_v4_parameters__t.html#a5427dc690bbc4abdd61c334aed5cd256">SigV4Parameters_t::pCredentials</a></div><div class="ttdeci">SigV4Credentials_t * pCredentials</div><div class="ttdoc">The AccessKeyId, SecretAccessKey, and SecurityToken used to generate the Authorization header.</div><div class="ttdef"><b>Definition:</b> sigv4.h:401</div></div>
 </div><!-- fragment --> 
 </div>
 </div>

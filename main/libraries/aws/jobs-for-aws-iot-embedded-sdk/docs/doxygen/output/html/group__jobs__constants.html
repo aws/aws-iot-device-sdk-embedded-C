@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">AWS IoT Jobs<span id="projectnumber">&#160;v1.3.0</span>
+   <div id="projectname">AWS IoT Jobs<span id="projectnumber">&#160;v1.5.1</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT Jobs</div>
   </td>
@@ -108,6 +108,18 @@ $(document).ready(function(){initNavTree('group__jobs__constants.html',''); init
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ga3708a441b69f6d11309d17a278a52c34"><td class="memItemLeft" align="right" valign="top"><a id="ga3708a441b69f6d11309d17a278a52c34" name="ga3708a441b69f6d11309d17a278a52c34"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>TOPIC_BUFFER_SIZE</b>&#160;&#160;&#160;256U</td></tr>
+<tr class="memdesc:ga3708a441b69f6d11309d17a278a52c34"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of Topic Buffer. <br /></td></tr>
+<tr class="separator:ga3708a441b69f6d11309d17a278a52c34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafe00b72dedfd3aac85929f54dbbc1ac3"><td class="memItemLeft" align="right" valign="top"><a id="gafe00b72dedfd3aac85929f54dbbc1ac3" name="gafe00b72dedfd3aac85929f54dbbc1ac3"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>START_JOB_MSG_LENGTH</b>&#160;&#160;&#160;147U</td></tr>
+<tr class="memdesc:gafe00b72dedfd3aac85929f54dbbc1ac3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of Jobs Start Next Message Buffer. <br /></td></tr>
+<tr class="separator:gafe00b72dedfd3aac85929f54dbbc1ac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8810ef863076252803d6c035d1f73227"><td class="memItemLeft" align="right" valign="top"><a id="ga8810ef863076252803d6c035d1f73227" name="ga8810ef863076252803d6c035d1f73227"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>UPDATE_JOB_MSG_LENGTH</b>&#160;&#160;&#160;48U</td></tr>
+<tr class="memdesc:ga8810ef863076252803d6c035d1f73227"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of Jobs Update Message Buffer. <br /></td></tr>
+<tr class="separator:ga8810ef863076252803d6c035d1f73227"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2b2ec2a330942e5eb6fca9a597dcf8c4"><td class="memItemLeft" align="right" valign="top"><a id="ga2b2ec2a330942e5eb6fca9a597dcf8c4" name="ga2b2ec2a330942e5eb6fca9a597dcf8c4"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>JOBS_THINGNAME_MAX_LENGTH</b>&#160;&#160;&#160;128U      /* per AWS IoT API Reference */</td></tr>
 <tr class="memdesc:ga2b2ec2a330942e5eb6fca9a597dcf8c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum length of a thing name for the AWS IoT Jobs Service. <br /></td></tr>
@@ -291,7 +303,7 @@ Macros</h2></td></tr>
 <b>Value:</b><div class="fragment"><div class="line">    ( JOBS_API_COMMON_LENGTH( thingNameLength ) +                 \</div>
 <div class="line">      <a class="code hl_define" href="jobs_8h.html#a30bd49398cb42116098ed8b2e4afec8d">JOBID_MAX_LENGTH</a> + <span class="keyword">sizeof</span>( <span class="charliteral">&#39;/&#39;</span> ) + JOBS_API_UPDATE_LENGTH + \</div>
 <div class="line">      JOBS_API_SUCCESS_LENGTH + 1U )</div>
-<div class="ttc" id="ajobs_8h_html_a30bd49398cb42116098ed8b2e4afec8d"><div class="ttname"><a href="jobs_8h.html#a30bd49398cb42116098ed8b2e4afec8d">JOBID_MAX_LENGTH</a></div><div class="ttdeci">#define JOBID_MAX_LENGTH</div><div class="ttdoc">User defined maximum length of a job ID for the application.</div><div class="ttdef"><b>Definition:</b> jobs.h:73</div></div>
+<div class="ttc" id="ajobs_8h_html_a30bd49398cb42116098ed8b2e4afec8d"><div class="ttname"><a href="jobs_8h.html#a30bd49398cb42116098ed8b2e4afec8d">JOBID_MAX_LENGTH</a></div><div class="ttdeci">#define JOBID_MAX_LENGTH</div><div class="ttdoc">User defined maximum length of a job ID for the application.</div><div class="ttdef"><b>Definition:</b> jobs.h:92</div></div>
 </div><!-- fragment -->
 <p>The size needed to hold the longest topic for a given thing name length. </p>
 <dl class="section note"><dt>Note</dt><dd>This includes space for a terminating NUL character. </dd></dl>

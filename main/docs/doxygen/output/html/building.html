@@ -125,7 +125,7 @@ Prerequisites</h1>
 <h1><a class="anchor" id="aws_iot_setup"></a>
 AWS IoT Account Setup</h1>
 <p>Setting up AWS IoT to run demos.</p>
-<p>You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, AWS IoT OTA library and coreHTTP S3 download demos. Also, the AWS account can be used for running the MQTT mutual auth demo against AWS IoT broker. Note that running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the demo.</p><ul>
+<p>You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, and coreHTTP S3 download demos. Also, the AWS account can be used for running the MQTT mutual auth demo against AWS IoT broker. Note that running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the demo.</p><ul>
 <li><a href="https://portal.aws.amazon.com/billing/signup#/start">Setup an AWS account</a>.</li>
 <li><a href="https://console.aws.amazon.com/iot/home">Sign-in to the AWS IoT Console</a> after setting up the AWS account.</li>
 <li><a href="https://docs.aws.amazon.com/iot/latest/developerguide/iot-moisture-create-thing.html">Create a Thing resource</a>.</li>
@@ -198,65 +198,6 @@ Parameter Info</h3>
 <li><code>--key</code> : The name of the existing object you wish to download (GET), or the name of the object you wish to upload (PUT).</li>
 <li><code>--region</code> : The name of the region in which your S3 bucket was created. If this is not passed in, the region configured in AWS CLI (or us-east-1, if not configured) will be used.</li>
 </ul>
-<h1><a class="anchor" id="configuring_ota_demos"></a>
-Configuring the Over-the-air Update Demos</h1>
-<p>Configurations and Prerequisites for the OTA Demo</p>
-<h2><a class="anchor" id="autotoc_md5"></a>
-Requirements for OTA demo</h2>
-<h3><a class="anchor" id="autotoc_md6"></a>
-Prerequisites</h3>
-<ol>
-<li>
-To perform a successful OTA update you would need to complete the prerequisites mentioned here: <a href="https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html">https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html</a>  </li>
-<li>
-A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found here: <a href="https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html">https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html</a>  </li>
-</ol>
-<h3><a class="anchor" id="autotoc_md7"></a>
-Configuration</h3>
-<p>You will need to specify the following parameters in the file demo_config.h (located in <code>demos/ota/ota_demo_[mqtt/http]/</code>)</p>
-<ol>
-<li>
-AWS_IOT_ENDPOINT: This is the endpoint for your account. The endpoint should be for the region that your thing was created in. This can be found by going to the AWS IoT Core console, pressing the “Settings” tab on the left hand side of the page. It is under the section labeled “Custom endpoint”.  </li>
-<li>
-CLIENT_CERT_PATH: This is the client certificate that was downloaded when you created your thing. The path specified needs to be either an absolute path, or a path that is relative to the “cloned-repo-root-dir/build/bin" directory where the demo will be ran from.&lt;/li&gt;
-&lt;li&gt; CLIENT_PRIVATE_KEY_PATH: This is the client private key that was downloaded when you created your thing. The path specified needs to be either an absolute path, or a path that is relative to the “cloned-repo-root-dir/build/bin" directory where the demo will be ran from. </li>
-<li>
-CLIENT_IDENTIFIER: This is the name of the thing you created during the OTA Prerequisites section. </li>
-</ol>
-<p>An example expected output: </p><div class="fragment"><div class="line">#define AWS_IOT_ENDPOINT           &quot;endpoint##-ats.iot.us-west-2.amazonaws.com&quot;</div>
-<div class="line">#define CLIENT_CERT_PATH           &quot;/home/ubuntu/certificates/thing#-certificate.pem.crt&quot;</div>
-<div class="line">#define CLIENT_PRIVATE_KEY_PATH    &quot;/home/ubuntu/certificates/thing#-private.pem.key&quot;</div>
-<div class="line">#define CLIENT_IDENTIFIER          &quot;testclient&quot;</div>
-</div><!-- fragment --><h3><a class="anchor" id="autotoc_md8"></a>
-Scheduling an OTA Update Job</h3>
-<p>After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image. </p><ol>
-<li>
-Increase the version of the application by setting macro <code>APP_VERSION_BUILD</code> in demos/ota_demo_core_[mqtt/http]/demo_config.h to a different version than what is running. </li>
-<li>
-Rebuild the application using <a class="el" href="building.html#building_demo_commmandline">Build Steps</a> from below into a different directory, say build-dir-2 </li>
-<li>
-Rename the demo executable to reflect the change, e.g. <code>mv ota_demo_core_mqtt ota_demo_core_mqtt2</code> </li>
-<li>
-Create an OTA job: <ol>
-<li>
-Go to the AWS IoT Core console console.aws.amazon.com/iot/ (<a href="https://console.aws.amazon.com/iot/">https://console.aws.amazon.com/iot/</a>) </li>
-<li>
-Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select <code>testclient</code> from the thing list </li>
-<li>
-Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device. </li>
-<li>
-Select the image → Select the bucket you created in prerequisites → Upload the binary build-dir-2/bin/ota_demo2 </li>
-<li>
-The path on device should be the complete path to place the executable and the binary name: eg /home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2 </li>
-<li>
-Select the IAM role created in prerequisites </li>
-<li>
-Create the Job </li>
-</ol>
-</li>
-<li>
-Run the initial executable again with the following command: <code>sudo ./ota_demo_core_mqtt or sudo ./ota_demo_core_http</code> </li>
-</ol>
 <h1><a class="anchor" id="building_demo_commmandline"></a>
 Build Steps</h1>
 <p>How to build the demo applications on the command-line.</p>
@@ -276,7 +217,7 @@ Installing Docker Containers for Demos</h2>
 <div class="fragment"><div class="line">curl -fsSL https://get.docker.com -o get-docker.sh</div>
 <div class="line"> </div>
 <div class="line">sh get-docker.sh</div>
-</div><!-- fragment --><h4><a class="anchor" id="autotoc_md9"></a>
+</div><!-- fragment --><h4><a class="anchor" id="autotoc_md5"></a>
 Installing Mosquitto Broker to run MQTT demos locally</h4>
 <p>The following instructions have been tested on an Ubuntu 18.04 environment with Docker and OpenSSL installed. </p><ol>
 <li>

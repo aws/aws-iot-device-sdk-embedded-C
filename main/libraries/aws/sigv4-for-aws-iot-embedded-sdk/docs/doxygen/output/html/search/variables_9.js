@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['secretaccesskeylen_0',['secretAccessKeyLen',['../struct_sig_v4_credentials__t.html#a21641db40ff66baf3d03fca50500769f',1,'SigV4Credentials_t']]],
-  ['servicelen_1',['serviceLen',['../struct_sig_v4_parameters__t.html#aee666e124ca0c30f5b4acf715b0a7ac5',1,'SigV4Parameters_t']]]
+  ['regionlen_0',['regionLen',['../struct_sig_v4_parameters__t.html#ad6ead8df8d99af8e92ebb510ec95b9f9',1,'SigV4Parameters_t']]]
 ];

@@ -31,7 +31,8 @@ var NAVTREE =
       [ "THINGNAME_MAX_LENGTH", "jobs_config.html#THINGNAME_MAX_LENGTH", null ],
       [ "JOBID_MAX_LENGTH", "jobs_config.html#JOBID_MAX_LENGTH", null ]
     ] ],
-    [ "Functions", "jobs_functions.html", "jobs_functions" ],
+    [ "Jobs Functions", "jobs_functions.html", "jobs_functions" ],
+    [ "OTA Job Parser Functions", "ota_parser_functions.html", "ota_parser_functions" ],
     [ "Data types and Constants", "modules.html", "modules" ]
   ] ]
 ];

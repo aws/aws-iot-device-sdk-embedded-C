@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">AWS IoT Jobs<span id="projectnumber">&#160;v1.3.0</span>
+   <div id="projectname">AWS IoT Jobs<span id="projectnumber">&#160;v1.5.1</span>
    </div>
    <div id="projectbrief">Client library for AWS IoT Jobs</div>
   </td>
@@ -107,9 +107,9 @@ $(document).ready(function(){initNavTree('jobs_matchtopic_function.html',''); in
 <div class="line">                              <a class="code hl_enumeration" href="group__jobs__enum__types.html#ga315af209e86f50615c9e76948cf268ac">JobsTopic_t</a> * outApi,</div>
 <div class="line">                              <span class="keywordtype">char</span> ** outJobId,</div>
 <div class="line">                              uint16_t * outJobIdLength );</div>
-<div class="ttc" id="agroup__jobs__enum__types_html_ga315af209e86f50615c9e76948cf268ac"><div class="ttname"><a href="group__jobs__enum__types.html#ga315af209e86f50615c9e76948cf268ac">JobsTopic_t</a></div><div class="ttdeci">JobsTopic_t</div><div class="ttdoc">Topic values for subscription requests.</div><div class="ttdef"><b>Definition:</b> jobs.h:252</div></div>
-<div class="ttc" id="agroup__jobs__enum__types_html_gacc72f7076cee5bd66a46453420d97921"><div class="ttname"><a href="group__jobs__enum__types.html#gacc72f7076cee5bd66a46453420d97921">JobsStatus_t</a></div><div class="ttdeci">JobsStatus_t</div><div class="ttdoc">Return codes from jobs functions.</div><div class="ttdef"><b>Definition:</b> jobs.h:227</div></div>
-<div class="ttc" id="ajobs_8h_html_ae3e1205f419d335dcf9b338f0db19815"><div class="ttname"><a href="jobs_8h.html#ae3e1205f419d335dcf9b338f0db19815">Jobs_MatchTopic</a></div><div class="ttdeci">JobsStatus_t Jobs_MatchTopic(char *topic, size_t length, const char *thingName, uint16_t thingNameLength, JobsTopic_t *outApi, char **outJobId, uint16_t *outJobIdLength)</div><div class="ttdoc">Output a topic value if a Jobs API topic string is present. Optionally, output a pointer to a jobID w...</div><div class="ttdef"><b>Definition:</b> jobs.c:546</div></div>
+<div class="ttc" id="agroup__jobs__enum__types_html_ga315af209e86f50615c9e76948cf268ac"><div class="ttname"><a href="group__jobs__enum__types.html#ga315af209e86f50615c9e76948cf268ac">JobsTopic_t</a></div><div class="ttdeci">JobsTopic_t</div><div class="ttdoc">Topic values for subscription requests.</div><div class="ttdef"><b>Definition:</b> jobs.h:301</div></div>
+<div class="ttc" id="agroup__jobs__enum__types_html_gacc72f7076cee5bd66a46453420d97921"><div class="ttname"><a href="group__jobs__enum__types.html#gacc72f7076cee5bd66a46453420d97921">JobsStatus_t</a></div><div class="ttdeci">JobsStatus_t</div><div class="ttdoc">Return codes from jobs functions.</div><div class="ttdef"><b>Definition:</b> jobs.h:255</div></div>
+<div class="ttc" id="ajobs_8h_html_ae3e1205f419d335dcf9b338f0db19815"><div class="ttname"><a href="jobs_8h.html#ae3e1205f419d335dcf9b338f0db19815">Jobs_MatchTopic</a></div><div class="ttdeci">JobsStatus_t Jobs_MatchTopic(char *topic, size_t length, const char *thingName, uint16_t thingNameLength, JobsTopic_t *outApi, char **outJobId, uint16_t *outJobIdLength)</div><div class="ttdoc">Output a topic value if a Jobs API topic string is present. Optionally, output a pointer to a jobID w...</div><div class="ttdef"><b>Definition:</b> jobs.c:597</div></div>
 </div><!-- fragment --><p>Output a topic value if a Jobs API topic string is present. Optionally, output a pointer to a jobID within the topic and its length.  </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -207,7 +207,7 @@ Not all Jobs APIs have jobIDs within the topic string. NULL and 0 are output whe
 <div class="line">        <span class="comment">// Unexpected response.</span></div>
 <div class="line">    }</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__jobs__enum__types_html_ggacc72f7076cee5bd66a46453420d97921a23d9fa1f6d5d5e51f681e3682d9235f3"><div class="ttname"><a href="group__jobs__enum__types.html#ggacc72f7076cee5bd66a46453420d97921a23d9fa1f6d5d5e51f681e3682d9235f3">JobsSuccess</a></div><div class="ttdeci">@ JobsSuccess</div><div class="ttdoc">The buffer was properly written or a match was found.</div><div class="ttdef"><b>Definition:</b> jobs.h:229</div></div>
+<div class="ttc" id="agroup__jobs__enum__types_html_ggacc72f7076cee5bd66a46453420d97921a23d9fa1f6d5d5e51f681e3682d9235f3"><div class="ttname"><a href="group__jobs__enum__types.html#ggacc72f7076cee5bd66a46453420d97921a23d9fa1f6d5d5e51f681e3682d9235f3">JobsSuccess</a></div><div class="ttdeci">@ JobsSuccess</div><div class="ttdoc">The buffer was properly written or a match was found.</div><div class="ttdef"><b>Definition:</b> jobs.h:257</div></div>
 </div><!-- fragment --><p>Output a topic value if a Jobs API topic string is present. Optionally, output a pointer to a jobID within the topic and its length.</p>
 <p>See <a class="el" href="jobs_8h.html" title="Client library APIs for the AWS IoT Jobs service.">jobs.h</a> for docs.   </p>
 </div></div><!-- contents -->

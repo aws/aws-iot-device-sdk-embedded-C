@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['features_0',['Features',['../jobs_features.html',1,'']]],
-  ['functions_1',['Functions',['../jobs_functions.html',1,'']]]
+  ['enumerated_20types_0',['Enumerated Types',['../group__jobs__enum__types.html',1,'']]]
 ];

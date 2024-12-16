@@ -39,6 +39,7 @@ var NAVTREEINDEX0 =
 "modules.html":[4],
 "pages.html":[],
 "sig_v4_aws_iot_date_to_iso8601_function.html":[2,1],
+"sig_v4_encode_u_r_i_function.html":[2,2],
 "sig_v4_generate_h_t_t_p_authorization_function.html":[2,0],
 "sigv4_config.html":[1],
 "sigv4_config.html#SIGV4_DO_NOT_USE_CUSTOM_CONFIG":[1,0],

@@ -1,5 +1,8 @@
 var group__jobs__constants =
 [
+    [ "TOPIC_BUFFER_SIZE", "group__jobs__constants.html#ga3708a441b69f6d11309d17a278a52c34", null ],
+    [ "START_JOB_MSG_LENGTH", "group__jobs__constants.html#gafe00b72dedfd3aac85929f54dbbc1ac3", null ],
+    [ "UPDATE_JOB_MSG_LENGTH", "group__jobs__constants.html#ga8810ef863076252803d6c035d1f73227", null ],
     [ "JOBS_THINGNAME_MAX_LENGTH", "group__jobs__constants.html#ga2b2ec2a330942e5eb6fca9a597dcf8c4", null ],
     [ "JOBS_JOBID_MAX_LENGTH", "group__jobs__constants.html#ga1725f6f0c1997682b3100e7d23d138a1", null ],
     [ "JOBS_API_SUBSCRIBE_NEXTJOBCHANGED", "group__jobs__constants.html#ga3837d5c45a0628b3d771b2d55bba416b", null ],

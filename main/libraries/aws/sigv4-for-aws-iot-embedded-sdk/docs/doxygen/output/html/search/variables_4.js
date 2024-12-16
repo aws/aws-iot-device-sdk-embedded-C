@@ -7,5 +7,6 @@ var searchData=
   ['hashpayloadlen_4',['hashPayloadLen',['../struct_canonical_context__t.html#afe1dce4a61d28d27a563613bb372c725',1,'CanonicalContext_t']]],
   ['hashupdate_5',['hashUpdate',['../struct_sig_v4_crypto_interface__t.html#ae275450124b13abf2f39358efbf275cc',1,'SigV4CryptoInterface_t']]],
   ['headerslen_6',['headersLen',['../struct_sig_v4_http_parameters__t.html#ad2e5ed60470e71d67c8e133422f9d277',1,'SigV4HttpParameters_t']]],
-  ['httpmethodlen_7',['httpMethodLen',['../struct_sig_v4_http_parameters__t.html#aea67a40c05bc0c78667ea91fefd157cb',1,'SigV4HttpParameters_t']]]
+  ['hour_7',['hour',['../struct_sig_v4_date_time__t.html#a7316623f82fc84d3663eb495106b122a',1,'SigV4DateTime_t']]],
+  ['httpmethodlen_8',['httpMethodLen',['../struct_sig_v4_http_parameters__t.html#aea67a40c05bc0c78667ea91fefd157cb',1,'SigV4HttpParameters_t']]]
 ];

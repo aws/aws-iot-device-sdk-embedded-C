@@ -28,10 +28,6 @@ var demos_main =
     [ "AWS IoT Device Defender", "defender_demo.html", [
       [ "AWS IoT Device Defender Demo", "defender_demo.html#defender_demo_main", null ]
     ] ],
-    [ "AWS IoT Over-the-air Update", "ota_demos.html", [
-      [ "OTA over MQTT Demo", "ota_demos.html#ota_demo_core_mqtt", null ],
-      [ "OTA over HTTP Demo", "ota_demos.html#ota_demo_core_http", null ]
-    ] ],
     [ "AWS IoT Fleet Provisioning Demo", "fleet_provisioning_demo.html", [
       [ "AWS IoT Fleet Provisioning Demo Overview", "fleet_provisioning_demo.html#fleet_provisioning_demo_main", null ],
       [ "Instructions for setting up AWS resource before running the demo.", "fleet_provisioning_demo.html#fleet_provisioning_demo_setup", null ],

@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -136,6 +136,18 @@ Macros</h2></td></tr>
 <tr class="memitem:ac262cab68c4c713ebc2b91a2e4ab8b19"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19">MQTT_SEND_TIMEOUT_MS</a>&#160;&#160;&#160;( 20000U )</td></tr>
 <tr class="memdesc:ac262cab68c4c713ebc2b91a2e4ab8b19"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum duration allowed to send an MQTT packet over the transport interface.  <br /></td></tr>
 <tr class="separator:ac262cab68c4c713ebc2b91a2e4ab8b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">LogError</a>(message)</td></tr>
+<tr class="memdesc:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Error" level messages.  <br /></td></tr>
+<tr class="separator:a8d9dbaaa88129137a4c68ba0456a18b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7da92048aaf0cbfcacde9539c98a0e05"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">LogWarn</a>(message)</td></tr>
+<tr class="memdesc:a7da92048aaf0cbfcacde9539c98a0e05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Warning" level messages.  <br /></td></tr>
+<tr class="separator:a7da92048aaf0cbfcacde9539c98a0e05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00810b1cb9d2f25d25ce2d4d93815fba"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba">LogInfo</a>(message)</td></tr>
+<tr class="memdesc:a00810b1cb9d2f25d25ce2d4d93815fba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Info" level messages.  <br /></td></tr>
+<tr class="separator:a00810b1cb9d2f25d25ce2d4d93815fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af60e8ffc327d136e5d0d8441ed98c98d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="core__mqtt__config__defaults_8h.html#af60e8ffc327d136e5d0d8441ed98c98d">LogDebug</a>(message)</td></tr>
+<tr class="memdesc:af60e8ffc327d136e5d0d8441ed98c98d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro that is called in the MQTT library for logging "Debug" level messages.  <br /></td></tr>
+<tr class="separator:af60e8ffc327d136e5d0d8441ed98c98d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This represents the default values for the configuration macros for the MQTT library. </p>
@@ -276,6 +288,98 @@ If a dummy implementation of the <a class="el" href="group__mqtt__callback__type
 <dl class="section note"><dt>Note</dt><dd>If a dummy implementation of the <a class="el" href="group__mqtt__callback__types.html#gae3bea55b0e49e5208b8c5709a5ea23aa" title="Application provided function to query the time elapsed since a given epoch in milliseconds.">MQTTGetCurrentTimeFunc_t</a> timer function, is supplied to the library, then <a class="el" href="core__mqtt__config__defaults_8h.html#ac262cab68c4c713ebc2b91a2e4ab8b19" title="The maximum duration allowed to send an MQTT packet over the transport interface.">MQTT_SEND_TIMEOUT_MS</a> MUST be set to 0.</dd></dl>
 <p><b>Possible values:</b> Any positive 32 bit integer. <br  />
  <b>Default value:</b> <code>20000</code> </p>
+
+</div>
+</div>
+<a id="a8d9dbaaa88129137a4c68ba0456a18b1" name="a8d9dbaaa88129137a4c68ba0456a18b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d9dbaaa88129137a4c68ba0456a18b1">&#9670;&#160;</a></span>LogError</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LogError</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">message</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Macro that is called in the MQTT library for logging "Error" level messages. </p>
+<p>To enable error level logging in the MQTT library, this macro should be mapped to the application-specific logging implementation that supports error logging.</p>
+<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C">AWS IoT Embedded C SDK repository</a>.</dd></dl>
+<p><b>Default value</b>: Error logging is turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
+
+</div>
+</div>
+<a id="a7da92048aaf0cbfcacde9539c98a0e05" name="a7da92048aaf0cbfcacde9539c98a0e05"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7da92048aaf0cbfcacde9539c98a0e05">&#9670;&#160;</a></span>LogWarn</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LogWarn</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">message</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Macro that is called in the MQTT library for logging "Warning" level messages. </p>
+<p>To enable warning level logging in the MQTT library, this macro should be mapped to the application-specific logging implementation that supports warning logging.</p>
+<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/">AWS IoT Embedded C SDK repository</a>.</dd></dl>
+<p><b>Default value</b>: Warning logs are turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
+
+</div>
+</div>
+<a id="a00810b1cb9d2f25d25ce2d4d93815fba" name="a00810b1cb9d2f25d25ce2d4d93815fba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a00810b1cb9d2f25d25ce2d4d93815fba">&#9670;&#160;</a></span>LogInfo</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LogInfo</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">message</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Macro that is called in the MQTT library for logging "Info" level messages. </p>
+<p>To enable info level logging in the MQTT library, this macro should be mapped to the application-specific logging implementation that supports info logging.</p>
+<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/">AWS IoT Embedded C SDK repository</a>.</dd></dl>
+<p><b>Default value</b>: Info logging is turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
+
+</div>
+</div>
+<a id="af60e8ffc327d136e5d0d8441ed98c98d" name="af60e8ffc327d136e5d0d8441ed98c98d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af60e8ffc327d136e5d0d8441ed98c98d">&#9670;&#160;</a></span>LogDebug</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LogDebug</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">message</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Macro that is called in the MQTT library for logging "Debug" level messages. </p>
+<p>To enable debug level logging from MQTT library, this macro should be mapped to the application-specific logging implementation that supports debug logging.</p>
+<dl class="section note"><dt>Note</dt><dd>This logging macro is called in the MQTT library with parameters wrapped in double parentheses to be ISO C89/C90 standard compliant. For a reference POSIX implementation of the logging macros, refer to core_mqtt_config.h files, and the logging-stack in demos folder of the <a href="https://github.com/aws/aws-iot-device-sdk-embedded-C/">AWS IoT Embedded C SDK repository</a>.</dd></dl>
+<p><b>Default value</b>: Debug logging is turned off, and no code is generated for calls to the macro in the MQTT library on compilation. </p>
 
 </div>
 </div>

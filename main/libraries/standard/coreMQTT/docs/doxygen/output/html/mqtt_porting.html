@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -117,10 +117,10 @@ Configuration Macros</h1>
 <li><a class="el" href="core_mqtt_config.html#MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT">MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT</a></li>
 </ul>
 <p>In addition, the following logging macros are used throughout the library:</p><ul>
-<li><a class="el" href="core__mqtt__default__logging_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">LogError</a></li>
-<li><a class="el" href="core__mqtt__default__logging_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">LogWarn</a></li>
-<li><a class="el" href="core__mqtt__default__logging_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba">LogInfo</a></li>
-<li><a class="el" href="core__mqtt__default__logging_8h.html#af60e8ffc327d136e5d0d8441ed98c98d">LogDebug</a></li>
+<li><a class="el" href="core__mqtt__config__defaults_8h.html#a8d9dbaaa88129137a4c68ba0456a18b1">LogError</a></li>
+<li><a class="el" href="core__mqtt__config__defaults_8h.html#a7da92048aaf0cbfcacde9539c98a0e05">LogWarn</a></li>
+<li><a class="el" href="core__mqtt__config__defaults_8h.html#a00810b1cb9d2f25d25ce2d4d93815fba">LogInfo</a></li>
+<li><a class="el" href="core__mqtt__config__defaults_8h.html#af60e8ffc327d136e5d0d8441ed98c98d">LogDebug</a></li>
 </ul>
 <h1><a class="anchor" id="mqtt_porting_transport"></a>
 Transport Interface</h1>
@@ -130,13 +130,13 @@ Transport Interface</h1>
 <li><a class="el" href="group__mqtt__callback__types.html#ga227df31d6daf07e5d833537c12130167">Transport Receive</a>: A function to receive bytes from a network. <div class="fragment"><div class="line">int32_t (* <a class="code hl_typedef" href="group__mqtt__callback__types.html#ga227df31d6daf07e5d833537c12130167">TransportRecv_t</a> )(</div>
 <div class="line">    <a class="code hl_typedef" href="group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a> * pNetworkContext, <span class="keywordtype">void</span> * pBuffer, <span class="keywordtype">size_t</span> bytesToRecv</div>
 <div class="line">);</div>
-<div class="ttc" id="agroup__mqtt__callback__types_html_ga227df31d6daf07e5d833537c12130167"><div class="ttname"><a href="group__mqtt__callback__types.html#ga227df31d6daf07e5d833537c12130167">TransportRecv_t</a></div><div class="ttdeci">int32_t(* TransportRecv_t)(NetworkContext_t *pNetworkContext, void *pBuffer, size_t bytesToRecv)</div><div class="ttdoc">Transport interface for receiving data on the network.</div><div class="ttdef"><b>Definition:</b> transport_interface.h:221</div></div>
+<div class="ttc" id="agroup__mqtt__callback__types_html_ga227df31d6daf07e5d833537c12130167"><div class="ttname"><a href="group__mqtt__callback__types.html#ga227df31d6daf07e5d833537c12130167">TransportRecv_t</a></div><div class="ttdeci">int32_t(* TransportRecv_t)(NetworkContext_t *pNetworkContext, void *pBuffer, size_t bytesToRecv)</div><div class="ttdoc">Transport interface for receiving data on the network.</div><div class="ttdef"><b>Definition:</b> transport_interface.h:218</div></div>
 <div class="ttc" id="agroup__mqtt__struct__types_html_ga7769e434e7811caed8cd6fd7f9ec26ec"><div class="ttname"><a href="group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a></div><div class="ttdeci">struct NetworkContext NetworkContext_t</div><div class="ttdoc">The NetworkContext is an incomplete type. An implementation of this interface must define struct Netw...</div><div class="ttdef"><b>Definition:</b> transport_interface.h:191</div></div>
 </div><!-- fragment --></li>
 <li><a class="el" href="group__mqtt__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">Transport Send</a>: A function to send bytes over a network. <div class="fragment"><div class="line">int32_t (* <a class="code hl_typedef" href="group__mqtt__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">TransportSend_t</a> )(</div>
 <div class="line">    <a class="code hl_typedef" href="group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a> * pNetworkContext, <span class="keyword">const</span> <span class="keywordtype">void</span> * pBuffer, <span class="keywordtype">size_t</span> bytesToSend</div>
 <div class="line">);</div>
-<div class="ttc" id="agroup__mqtt__callback__types_html_ga2a39853ff952edd715ab07b33ab2a7c5"><div class="ttname"><a href="group__mqtt__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">TransportSend_t</a></div><div class="ttdeci">int32_t(* TransportSend_t)(NetworkContext_t *pNetworkContext, const void *pBuffer, size_t bytesToSend)</div><div class="ttdoc">Transport interface for sending data over the network.</div><div class="ttdef"><b>Definition:</b> transport_interface.h:243</div></div>
+<div class="ttc" id="agroup__mqtt__callback__types_html_ga2a39853ff952edd715ab07b33ab2a7c5"><div class="ttname"><a href="group__mqtt__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">TransportSend_t</a></div><div class="ttdeci">int32_t(* TransportSend_t)(NetworkContext_t *pNetworkContext, const void *pBuffer, size_t bytesToSend)</div><div class="ttdoc">Transport interface for sending data over the network.</div><div class="ttdef"><b>Definition:</b> transport_interface.h:240</div></div>
 </div><!-- fragment --></li>
 </ul>
 <p>The above two functions take in a pointer to a <a class="el" href="group__mqtt__struct__types.html#ga7769e434e7811caed8cd6fd7f9ec26ec">NetworkContext_t</a>, the typename of a <code>struct NetworkContext</code>. The NetworkContext struct must also be defined by the port, and ought to contain any information necessary to send and receive data with the <a class="el" href="group__mqtt__callback__types.html#ga2a39853ff952edd715ab07b33ab2a7c5">TransportSend_t</a> and <a class="el" href="group__mqtt__callback__types.html#ga227df31d6daf07e5d833537c12130167">TransportRecv_t</a> implementations, respectively: </p><div class="fragment"><div class="line"><span class="keyword">struct </span>NetworkContext {</div>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['json_5fsearch_0',['JSON_Search',['../core__json_8h.html#a1955fd7e92837fa6f234bdfb511cc59d',1,'core_json.h']]]
+  ['corejson_5fassert_0',['coreJSON_ASSERT',['../core__json_8h.html#a864c1a303fc35039a9a81efe1ceb5aa8',1,'core_json.h']]]
 ];

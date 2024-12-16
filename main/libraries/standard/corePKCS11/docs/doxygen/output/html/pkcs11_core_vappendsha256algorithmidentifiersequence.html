@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">corePKCS11<span id="projectnumber">&#160;v3.5.0</span>
+   <div id="projectname">corePKCS11<span id="projectnumber">&#160;v3.6.1</span>
    </div>
    <div id="projectbrief">PKCS #11 Cryptoki Library</div>
   </td>
@@ -102,7 +102,7 @@ $(document).ready(function(){initNavTree('pkcs11_core_vappendsha256algorithmiden
 <div class="contents">
 <div class="textblock"><div class="fragment"><div class="line">CK_RV <a class="code hl_function" href="core__pkcs11_8h.html#a2e58242913103993041305e349913c88">vAppendSHA256AlgorithmIdentifierSequence</a>( <span class="keyword">const</span> uint8_t * puc32ByteHashedMessage,</div>
 <div class="line">                                                uint8_t * puc51ByteHashOidBuffer );</div>
-<div class="ttc" id="acore__pkcs11_8h_html_a2e58242913103993041305e349913c88"><div class="ttname"><a href="core__pkcs11_8h.html#a2e58242913103993041305e349913c88">vAppendSHA256AlgorithmIdentifierSequence</a></div><div class="ttdeci">CK_RV vAppendSHA256AlgorithmIdentifierSequence(const uint8_t *puc32ByteHashedMessage, uint8_t *puc51ByteHashOidBuffer)</div><div class="ttdoc">Appends digest algorithm sequence to SHA-256 hash for RSA signatures.</div><div class="ttdef"><b>Definition:</b> core_pkcs11.c:382</div></div>
+<div class="ttc" id="acore__pkcs11_8h_html_a2e58242913103993041305e349913c88"><div class="ttname"><a href="core__pkcs11_8h.html#a2e58242913103993041305e349913c88">vAppendSHA256AlgorithmIdentifierSequence</a></div><div class="ttdeci">CK_RV vAppendSHA256AlgorithmIdentifierSequence(const uint8_t *puc32ByteHashedMessage, uint8_t *puc51ByteHashOidBuffer)</div><div class="ttdoc">Appends digest algorithm sequence to SHA-256 hash for RSA signatures.</div><div class="ttdef"><b>Definition:</b> core_pkcs11.c:378</div></div>
 </div><!-- fragment --><p>Appends digest algorithm sequence to SHA-256 hash for RSA signatures.  </p>
 <p>This function pre-appends the digest algorithm identifier to the SHA-256 hash of a message.</p>
 <p>DigestInfo :: = SEQUENCE{ digestAlgorithm DigestAlgorithmIdentifier, digest Digest }</p>

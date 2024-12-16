@@ -7,7 +7,7 @@ var searchData=
   ['completehashandhexencode_4',['completeHashAndHexEncode',['../sigv4_8c.html#a76c455d7bda8ed3d4816c0ec0b546709',1,'sigv4.c']]],
   ['completehmac_5',['completeHmac',['../sigv4_8c.html#aa3c20454de317a6f7460d2cf0498c132',1,'sigv4.c']]],
   ['configurations_6',['Configurations',['../sigv4_config.html',1,'']]],
-  ['copyheaderstringtocanonicalbuffer_7',['copyHeaderStringToCanonicalBuffer',['../sigv4_8c.html#a257f2337a87f1eee1358b2dcaf150bdd',1,'sigv4.c']]],
+  ['copyheaderstringtocanonicalbuffer_7',['copyHeaderStringToCanonicalBuffer',['../sigv4_8c.html#a6ad6cc52c71788300dbd53f3f7c4af8d',1,'sigv4.c']]],
   ['copystring_8',['copyString',['../sigv4_8c.html#ac7d33915690b63b45059c39e14f67bf0',1,'sigv4.c']]],
   ['credential_5fscope_5fseparator_9',['CREDENTIAL_SCOPE_SEPARATOR',['../sigv4__internal_8h.html#a3744aade0231260b8a129fe911085235',1,'sigv4_internal.h']]],
   ['credential_5fscope_5fseparator_5flen_10',['CREDENTIAL_SCOPE_SEPARATOR_LEN',['../sigv4__internal_8h.html#a9c54ab62deaec7b0eca7e32c2d557269',1,'sigv4_internal.h']]],

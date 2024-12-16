@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.1.0</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -140,7 +140,9 @@ Typedefs</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Application provided function to query the time elapsed since a given epoch in milliseconds. </p>
-<dl class="section note"><dt>Note</dt><dd>The timer should be a monotonic timer. It just needs to provide an incrementing count of milliseconds elapsed since a given epoch.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The timer should be a monotonic timer. It just needs to provide an incrementing count of milliseconds elapsed since a given epoch.</dd>
+<dd>
+As the timer is supposed to be a millisecond timer returning a 32-bit value, it will overflow in just under 50 days. But it will not cause any issues in the library as the time function is only used for calculating durations for timeouts and keep alive periods. The difference in unsigned numbers is used where unsigned wrap around is defined. Unless the timeout is bigger than 100 days (50*2) where the numbers can wrap around more than once the code should work properly.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>The time elapsed in milliseconds. </dd></dl>
 
 </div>
@@ -183,7 +185,7 @@ Typedefs</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Transport interface for receiving data on the network. </p>
-<dl class="section note"><dt>Note</dt><dd>It is RECOMMENDED that the transport receive implementation does NOT block when requested to read a single byte. A single byte read request can be made by the caller to check whether there is a new frame available on the network for reading. However, the receive implementation MAY block for a timeout period when it is requested to read more than 1 byte. This is because once the caller is aware that a new frame is available to read on the network, then the likelihood of reading more than one byte over the network becomes high.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>It is HIGHLY RECOMMENDED that the transport receive implementation does NOT block. coreMQTT will continue to call the transport interface if it receives a partial packet until it accumulates enough data to get the complete MQTT packet.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pNetworkContext</td><td>Implementation-defined network context. </td></tr>

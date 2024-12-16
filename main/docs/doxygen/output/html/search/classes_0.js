@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['appversion32_5ft_0',['AppVersion32_t',['../../../../../libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_app_version32__t.html',1,'']]]
+  ['afrotajobdocumentfields_5ft_0',['AfrOtaJobDocumentFields_t',['../../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_afr_ota_job_document_fields__t.html',1,'']]]
 ];

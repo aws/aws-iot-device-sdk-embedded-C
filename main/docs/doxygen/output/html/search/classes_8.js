@@ -1,8 +1,11 @@
 var searchData=
 [
-  ['p11object_5ft_0',['P11Object_t',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p11_object__t.html',1,'']]],
-  ['p11objectlist_5ft_1',['P11ObjectList_t',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p11_object_list__t.html',1,'']]],
-  ['p11session_5ft_2',['P11Session_t',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p11_session__t.html',1,'']]],
-  ['p11struct_5ft_3',['P11Struct_t',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p11_struct__t.html',1,'']]],
-  ['pkcs11_5fcertificatetemplate_5ft_4',['PKCS11_CertificateTemplate_t',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p_k_c_s11___certificate_template__t.html',1,'']]]
+  ['sigv4conststring_5ft_0',['SigV4ConstString_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_const_string__t.html',1,'']]],
+  ['sigv4credentials_5ft_1',['SigV4Credentials_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_credentials__t.html',1,'']]],
+  ['sigv4cryptointerface_5ft_2',['SigV4CryptoInterface_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_crypto_interface__t.html',1,'']]],
+  ['sigv4datetime_5ft_3',['SigV4DateTime_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_date_time__t.html',1,'']]],
+  ['sigv4httpparameters_5ft_4',['SigV4HttpParameters_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_http_parameters__t.html',1,'']]],
+  ['sigv4keyvaluepair_5ft_5',['SigV4KeyValuePair_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_key_value_pair__t.html',1,'']]],
+  ['sigv4parameters_5ft_6',['SigV4Parameters_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_parameters__t.html',1,'']]],
+  ['sigv4string_5ft_7',['SigV4String_t',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/struct_sig_v4_string__t.html',1,'']]]
 ];
