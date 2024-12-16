@@ -428,13 +428,6 @@ optionalquery
 org
 os
 ota
-otaagentstatestopped
-otafile
-otahttpinitfailed
-otahttprequestfailed
-otahttpsuccess
-otamqttsuccess
-otapalimagestatevalid
 outcsrlength
 outform
 outgoingpublishpackets

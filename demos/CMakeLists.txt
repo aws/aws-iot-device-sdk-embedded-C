@@ -26,8 +26,6 @@ check_symbol_exists(fork "unistd.h" HAVE_FORK)
 if(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND")
     set(librt_demos
             "http_demo_s3_download_multithreaded"
-            "ota_demo_core_http"
-            "ota_demo_core_mqtt"
     )
     message( WARNING "rt library could not be found. Demos that use it will be excluded from the default target." )
     foreach(demo_name ${librt_demos})
@@ -46,23 +44,11 @@ if(NOT ${OpenSSL_FOUND})
             "mqtt_demo_basic_tls"
             "mqtt_demo_mutual_auth"
             "mqtt_demo_subscription_manager"
-            "ota_demo_core_http"
-            "ota_demo_core_mqtt"
             "shadow_demo_main"
             "greengrass_demo_local_auth"
     )
     message( WARNING "OpenSSL library could not be found. Demos that use it will be excluded from the default target." )
     foreach(demo_name ${openssl_demos})
-        set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
-    endforeach()
-endif()
-if(NOT ${Threads_FOUND})
-    set(thread_demos
-            "ota_demo_core_http"
-            "ota_demo_core_mqtt"
-    )
-    message( WARNING "Threads library could not be found. Demos that use it will be excluded from the default target." )
-    foreach(demo_name ${thread_demos})
         set_target_properties(${demo_name} PROPERTIES EXCLUDE_FROM_ALL true)
     endforeach()
 endif()

@@ -4,7 +4,6 @@ set(FILEPATH_LOCATIONS
         ${MODULES_DIR}/aws/device-defender-for-aws-iot-embedded-sdk/defenderFilePaths.cmake
         ${MODULES_DIR}/aws/device-shadow-for-aws-iot-embedded-sdk/shadowFilePaths.cmake
         ${MODULES_DIR}/aws/jobs-for-aws-iot-embedded-sdk/jobsFilePaths.cmake
-        ${MODULES_DIR}/aws/ota-for-aws-iot-embedded-sdk/otaFilePaths.cmake
         ${MODULES_DIR}/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake
         ${MODULES_DIR}/standard/coreHTTP/httpFilePaths.cmake
         ${MODULES_DIR}/standard/coreJSON/jsonFilePaths.cmake
@@ -23,11 +22,8 @@ endforeach()
 set(LIBRARY_PREFIXES
         "DEFENDER"
         "SHADOW"
-        "JOBS"
         "JSON"
-        "OTA"
-        "OTA_HTTP"
-        "OTA_MQTT"
+        "JOBS"
         "BACKOFF_ALGORITHM"
         "HTTP"
         "MQTT"
@@ -47,21 +43,8 @@ set(PKCS_EXTRA_INCLUDE_PRIVATE_DIRS
     PRIVATE
         "${CORE_PKCS11_3RDPARTY_LOCATION}/mbedtls_utils"
         "${COREPKCS11_LOCATION}/source/portable/os")
-set(OTA_BACKENDS "OTA_HTTP" "OTA_MQTT")
-foreach(ota_backend ${OTA_BACKENDS})
-    set("${ota_backend}_EXTRA_INCLUDE_PUBLIC_DIRS"
-        ${OTA_INCLUDE_PUBLIC_DIRS})
-    set("${ota_backend}_EXTRA_INCLUDE_PRIVATE_DIRS"
-        ${OTA_INCLUDE_PRIVATE_DIRS})
-endforeach()
 
 # Define any extra library dependencies, making sure to use the same prefix
-
-# Note for this to work for OTA "JSON" must be before it in the prefix list
-set(OTA_LIBRARY_DEPENDENCIES
-        aws_iot_json)
-set(OTA_MQTT_LIBRARY_DEPENDENCIES
-        tinycbor)
 
 if(NOT DEFINED INSTALL_LIBS)
     set(INSTALL_LIBS ${LIBRARY_PREFIXES})
@@ -76,6 +59,11 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
         add_library("${library_name}"
         ${${library_prefix}_EXTRA_SOURCES}
         ${${library_prefix}_SOURCES})
+
+        if(${library_prefix} STREQUAL "JOBS")
+            target_include_directories("${library_name}" PUBLIC ${JSON_INCLUDE_PUBLIC_DIRS})
+            target_link_libraries("${library_name}" PRIVATE aws_iot_json)
+        endif()
     else()
         continue()
     endif()
@@ -98,9 +86,6 @@ foreach(library_prefix ${LIBRARY_PREFIXES})
 
     # Allow a path to a custom config header to be passed through a CMake flag.
     set(config_prefix "${library_prefix}")
-    if(";${OTA_BACKENDS};" MATCHES ";${library_prefix};")
-        set(config_prefix "OTA")
-    endif()
     if(DEFINED "${config_prefix}_CUSTOM_CONFIG_DIR")
         target_include_directories("${library_name}"
                                     PRIVATE ${${config_prefix}_CUSTOM_CONFIG_DIR})
@@ -141,22 +126,7 @@ endforeach()
 # Install platform abstractions as shared libraries if enabled.
 if(INSTALL_PLATFORM_ABSTRACTIONS)
     set(PLATFORM_DIRECTORIES
-            ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
-            ${PLATFORM_DIR}/posix/ota_pal/source/include)
-    # Create target for POSIX port of OTA if LIB_RT is installed.
-    if(NOT(${LIB_RT} STREQUAL "LIB_RT-NOTFOUND"))
-        add_library(ota_posix
-                     ${OTA_OS_POSIX_SOURCES})
-        target_link_libraries(ota_posix PUBLIC ${LIB_RT} ota_pal)
-        target_include_directories(ota_posix PUBLIC
-                                        ${OTA_INCLUDE_PUBLIC_DIRS}
-                                        ${OTA_INCLUDE_OS_POSIX_DIRS})
-        target_compile_definitions(ota_posix PRIVATE -DOTA_DO_NOT_USE_CUSTOM_CONFIG)
-        install(TARGETS ota_posix
-                LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}"
-                ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}")
-        list(APPEND PLATFORM_DIRECTORIES ${OTA_INCLUDE_OS_POSIX_DIRS})
-    endif()
+            ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS})
     foreach(platform_dir ${PLATFORM_DIRECTORIES})
         install(DIRECTORY ${platform_dir}/ DESTINATION ${CSDK_HEADER_INSTALL_PATH}
                 FILES_MATCHING PATTERN "*.h"

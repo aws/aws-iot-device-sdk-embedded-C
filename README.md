@@ -20,6 +20,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases and Documentation](#releases-and-documentation)
+    * [202412.00](#20241200)
     * [202211.00](#20221100)
     * [202108.00](#20210800)
     * [202103.00](#20210300)
@@ -32,7 +33,6 @@
     * [Porting coreHTTP](#porting-corehttp)
     * [Porting AWS IoT Device Shadow](#porting-aws-iot-device-shadow)
     * [Porting AWS IoT Device Defender](#porting-aws-iot-device-defender)
-    * [Porting AWS IoT Over-the-air Update](#porting-aws-iot-over-the-air-update)
 * [Migration guide from v3.1.5 to 202009.00 and newer releases](#migration-guide-from-v315-to-20200900-and-newer-releases)
     * [MQTT Migration](#mqtt-migration)
     * [Shadow Migration](#shadow-migration)
@@ -52,8 +52,6 @@
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
         * [Setup for the Greengrass local auth demo](#setup-for-the-greengrass-local-auth-demo)
-        * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
-        * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
     * [Building and Running Demos](#building-and-running-demos)
         * [Build a single demo](#build-a-single-demo)
         * [Build all configured demos](#build-all-configured-demos)
@@ -141,11 +139,7 @@ See memory requirements for the latest release [here](https://aws.github.io/aws-
 
 #### AWS IoT Over-the-air Update
 
-The [AWS IoT Over-the-air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) (OTA) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the OTA library, you can logically separate firmware updates from the application running on your devices. You can also use the library to send other files (e.g. images, certificates) to one or more devices registered with AWS IoT. More details about OTA library can be found in [AWS IoT Over-the-air Update documentation](https://docs.aws.amazon.com/freertos/latest/userguide/freertos-ota-dev.html).
-
-The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS) (see [demos](demos/ota) with coreMQTT and coreHTTP over Linux).
-
-See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
+Removed since v2022412.00. We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
 
 #### AWS IoT Fleet Provisioning
 
@@ -228,6 +222,12 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.5](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.5).
 
+### 202412.00
+
+This release includes [202406.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/releases/tag/202406.01-LTS) versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries.
+
+ Additionally it updates the MbedTLS version to v3.5.1 and removes the OTA library and its associated demo. We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
+
 ### 202211.00
 [API documentation of 202211.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/index.html)
 
@@ -296,10 +296,6 @@ Guide for porting AWS IoT Device Shadow library is available [here](https://aws.
 ### Porting AWS IoT Device Defender
 
 Guide for porting AWS IoT Device Defender library is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
-
-### Porting AWS IoT Over-the-air Update
-
-Guide for porting OTA library to your platform is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.5 to 202009.00 and newer releases
 
@@ -379,8 +375,7 @@ Dependency | Version | Usage
 
 #### AWS IoT Account Setup
 
-You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library,
-AWS IoT OTA library and coreHTTP S3 download demos.
+You need to setup an AWS account and access the AWS IoT console for running the AWS IoT Device Shadow library, AWS IoT Device Defender library, AWS IoT Jobs library, and coreHTTP S3 download demos.
 Also, the AWS account can be used for running the MQTT mutual auth demo against AWS IoT broker.
 Note that running the AWS IoT Device Defender, AWS IoT Jobs and AWS IoT Device Shadow library demos require the setup of a Thing resource for the device running the demo.
 Follow the links to:
@@ -443,7 +438,7 @@ cmake -S . -Bbuild -DAWS_IOT_ENDPOINT="<your-aws-iot-endpoint>" -DROOT_CA_CERT_P
 
 An Amazon Root CA certificate can be downloaded from [here](https://www.amazontrust.com/repository/).
 
-To create a provisioning template and claim credentials, sign into your AWS account and visit [here][create_provtemplate]. Make sure to enable the "Use the AWS IoT registry to manage your device fleet" option. Once
+To create a provisioning template and claim credentials, sign into your AWS account and follow the steps given in the [readme.md in the demo folder](./demos/fleet_provisioning/readme.md) and visit [here][create_provtemplate]. Make sure to enable the "Use the AWS IoT registry to manage your device fleet" option. Once
 you have created the template and credentials, modify the claim certificate's policy to match the [sample policy][sample_claim_policy].
 
 In order to set these configurations manually, edit `demo_config.h` in the demo folder to `#define` the following:
@@ -505,37 +500,20 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --targets arn:aws:iot:us-west-2:<account-id>:thing/<thing-name> \
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
+3. Run the demo using this command:
+```    
+./build/bin/jobs_demo_mosquitto \
+-n <thing-name> \
+-h <aws-iot endpoint> \
+--certfile <device certificate of the thing> \
+--keyfile <private key of the thing>
+``` 
+Note: Replace the placeholders in angle brackets with your specific information.
+
 
 #### Setup for the Greengrass local auth demo
 
 For setting up the Greengrass local auth demo, see [the README in the demo folder](./demos/greengrass/greengrass_demo_local_auth/README.md).
-
-#### Prerequisites for the AWS Over-The-Air Update (OTA) demos
-
-1. To perform a successful OTA update, you need to complete the prerequisites mentioned [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-prereqs.html).
-1. A code signing certificate is required to authenticate the update. A code signing certificate based on the SHA-256 ECDSA algorithm will work with the current demos. An example of how to generate this kind of certificate can be found [here](https://docs.aws.amazon.com/freertos/latest/userguide/ota-code-sign-cert-esp.html).
-1. The code signing certificate can be either baked into firmware as a string, or stored as a file.
-    1. For baked in certificate method, copy the certificate to signingcredentialSIGNING_CERTIFICATE_PEM in [ota_pal_posix.c](https://github.com/aws/aws-iot-device-sdk-embedded-C/blob/main/platform/posix/ota_pal/source/ota_pal_posix.c).
-    2. For file storage method, store the certificate as a file and supply the file path in "Path name of code signing certificate on device" field when creating the OTA job in AWS IoT Console.
-
-#### Scheduling an OTA Update Job
-
-After you build and run the initial executable you will have to create another executable and schedule an OTA update job with this image.
-1. Increase the version of the application by setting macro `APP_VERSION_BUILD` in `demos/ota/ota_demo_core_[mqtt/http]/demo_config.h` to a different version than what is running.
-1. Rebuild the application using the [build steps](#building-and-running-demos) below into a different directory, say `build-dir-2`.
-1. Rename the demo executable to reflect the change, e.g. `mv ota_demo_core_mqtt ota_demo_core_mqtt2`
-1. Create an OTA job:
-    1. Go to the [AWS IoT Core console](https://console.aws.amazon.com/iot/).
-    1. Manage → Jobs → Create → Create a FreeRTOS OTA update job → Select the corresponding name for your device from the thing list.
-    1. Sign a new firmware → Create a new profile → Select any SHA-ECDSA signing platform → Upload the code signing certificate(from prerequisites) and provide its path on the device.
-    1. Select the image → Select the bucket you created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos) → Upload the binary `build-dir-2/bin/ota_demo2`.
-    1. The path on device should be the absolute path to place the executable and the binary name: e.g. `/home/ubuntu/aws-iot-device-sdk-embedded-C-staging/build-dir/bin/ota_demo_core_mqtt2`.
-    1. Select the IAM role created during the [prerequisite steps](#prerequisites-for-the-aws-over-the-air-update-ota-demos).
-    1. Create the Job.
-1. Run the initial executable again with the following command: `sudo ./ota_demo_core_mqtt` or `sudo ./ota_demo_core_http`.
-1. After the initial executable has finished running, go to the directory where the downloaded firmware image resides which is the path name used when creating an OTA job.
-1. Change the permissions of the downloaded firmware to make it executable, as it may be downloaded with read (user default) permissions only: `chmod 775 ota_demo_core_mqtt2`
-1. Run the downloaded firmware image with the following command: `sudo ./ota_demo_core_mqtt2`
 
 ### Building and Running Demos
 
@@ -563,8 +541,6 @@ mqtt_demo_mutual_auth
 mqtt_demo_plaintext
 mqtt_demo_serializer
 mqtt_demo_subscription_manager
-ota_demo_core_http
-ota_demo_core_mqtt
 pkcs11_demo_management_and_rng
 pkcs11_demo_mechanisms_and_digests
 pkcs11_demo_objects
@@ -629,6 +605,7 @@ Any version after 1.6.14 will drop privileges as soon as the configuration file 
     openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout ca.key -out ca.crt
     ```
 
+    You will be prompted to configure the Common Name (CN) after running the following command. It's crucial to enter the same value that was specified for the `BROKER_ENDPOINT` macro in the demo_config.h file. In this particular instance, the correct value to enter is simply "localhost".
     ```sh
     # Generate server key and certificate.# Provide the Subject field information as appropriate for Server certificate. Make sure the Common Name (CN) field is different from the root CA certificate.
     openssl req -nodes -sha256 -new -keyout server.key -out server.csr # Sign with the CA cert.
@@ -668,18 +645,30 @@ Run httpbin through port 80:
 docker pull kennethreitz/httpbin
 docker run -p 80:80 kennethreitz/httpbin
 ```
+The `kennetheitz/httpbin` docker image is not compatible with linux/arm64 platform that is used by Mac machines. Hence instead of that use `mccutchen/go-httpbin`.
+```sh
+#To install the image run:
+
+$ docker pull mccutchen/go-httpbin
+
+#To run the server on local host on port 80 run
+
+$ docker run -p 80:8080 mccutchen/go-httpbin
+```
+
 
 `SERVER_HOST` defined in `demos/http/http_demo_plaintext/demo_config.h` can now be set to `localhost`.
 
 To run `http_demo_basic_tls`, you could use either [Tunnelmole](https://github.com/robbie-cahill/tunnelmole-client), an open source tunneling tool, or [ngrok](https://ngrok.com/download), a popular closed source tunneling tool, to create an HTTPS tunnel to the httpbin server currently hosted on port 80:
 
 **Using Tunnelmole**
+
 First, install Tunnelmole. On Linux, Mac and Windows Subsystem for Linux, use
 
 ```sh
 curl -O https://tunnelmole.com/sh/install.sh && sudo bash install.sh
 ```
-
+The above may not function correctly on ARM machines like mac. As an alternative, you can clone the repository and build the application from its source code. 
 For Windows without WSL, [download tmole.exe](https://tunnelmole.com/downloads/tmole.exe) and add it to your [PATH](https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows).
 
 Then run `tmole 80`
@@ -702,7 +691,17 @@ Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https
 
 Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceding it.
 
-You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demos/http/http_demo_basic_tls/demo_config.h` to the file path of the downloaded certificate.
+**Getting the Root CA**
+
+Download the Root CA certificate from the obtained https link. To obtain this:
+
+1. Open the https link in your browser.
+2. Click on the https lock button in the url bar.
+3. Download the chain of certificates.
+4. Locate the last certificate in the chain - this is your required Root CA certificate.
+5. Copy this certificate and paste it into a new .pem file.
+
+Set the macro ROOT_CA_CERT_PATH in demo_config.h to the file path of your newly created Root CA certificate.
 
 ## Generating Documentation
 Note: For pre-generated documentation, please visit [Releases and Documentation](#releases-and-documentation) section.

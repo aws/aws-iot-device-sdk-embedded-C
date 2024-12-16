@@ -36,6 +36,7 @@
 
 /* MBEDTLS API header. */
 #include "mbedtls/sha256.h"
+#include "mbedtls/compat-2.x.h"
 
 /* OpenSSL transport header. */
 #include "openssl_posix.h"

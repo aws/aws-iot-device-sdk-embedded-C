@@ -92,12 +92,6 @@ extern size_t securityTokenLen;
 extern const char * pExpiration;
 
 /**
- * @brief Length of expiration time for the temporary credentials retrieved
- * from AWS IoT credential provider service.
- */
-size_t expirationLen;
-
-/**
  * @brief Retrieve the temporary credentials from AWS IOT Credential Provider.
  *
  * @param[in] pTransportInterface The transport interface for performing network send/recv operations.

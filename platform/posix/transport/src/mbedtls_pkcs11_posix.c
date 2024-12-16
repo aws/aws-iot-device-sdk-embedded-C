@@ -203,11 +203,12 @@ static bool initializeClientKeys( MbedtlsPkcs11Context_t * pContext,
  *
  * @return Zero on success.
  */
-static int32_t privateKeySigningCallback( void * pContext,
+static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           mbedtls_md_type_t mdAlg,
                                           const unsigned char * pHash,
                                           size_t hashLen,
                                           unsigned char * pSig,
+                                          size_t sig_size,
                                           size_t * pSigLen,
                                           int32_t ( * pRng )( void *, unsigned char *, size_t ),
                                           void * pRngContext );
@@ -662,11 +663,12 @@ static bool initializeClientKeys( MbedtlsPkcs11Context_t * pContext,
 
 /*-----------------------------------------------------------*/
 
-static int32_t privateKeySigningCallback( void * pContext,
+static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
                                           mbedtls_md_type_t mdAlg,
                                           const unsigned char * pHash,
                                           size_t hashLen,
                                           unsigned char * pSig,
+                                          size_t sig_size,
                                           size_t * pSigLen,
                                           int32_t ( * pRng )( void *,
                                                               unsigned char *,
@@ -675,7 +677,7 @@ static int32_t privateKeySigningCallback( void * pContext,
 {
     CK_RV ret = CKR_OK;
     int32_t result = 0;
-    MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = ( MbedtlsPkcs11Context_t * ) pContext;
+    MbedtlsPkcs11Context_t * pMbedtlsPkcs11Context = ( MbedtlsPkcs11Context_t * ) pContext->pk_ctx;
     CK_MECHANISM mech = { 0 };
     /* Buffer big enough to hold data to be signed. */
     CK_BYTE toBeSigned[ 256 ];
@@ -685,6 +687,7 @@ static int32_t privateKeySigningCallback( void * pContext,
     ( void ) ( pRng );
     ( void ) ( pRngContext );
     ( void ) ( mdAlg );
+    ( void ) ( sig_size );
 
     assert( pContext != NULL );
     assert( pHash != NULL );

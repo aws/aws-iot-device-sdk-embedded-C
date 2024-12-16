@@ -1,5 +1,27 @@
 # Changelog for AWS IoT Device SDK for Embedded C
 
+## 202412.00 (December 2024)
+
+### Major Changes
+
+- [#1929](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1929) This release brings the following changes:
+  - Include [202406.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/releases/tag/202406.01-LTS) versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries.
+  - Remove the OTA library and its associated demo.
+
+    NOTE: We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
+  - Update MbedTLS version to v3.5.1
+  - Update readme instructions for demos for better user experience.
+
+### Minor Changes
+
+- [#1843](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1845), [#1848](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1848), [#1860](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1860), [#1859](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1859), [#1861](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1861), [#1870](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1870), [#1845](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1845) Minor bug fixes and improvements.
+- [#1850](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1850) Remove installation instructions.
+- [#1850](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1852) Add CI Workflows to build the non-aws demos on incoming pull-requests.
+- [#1844](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1844) Update doxygen to 1.9.6.
+- [#1875](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1875) Add a Fleet provisioning demo to get certificate and private key via CreateKeysAndCertificate API.
+- [#1899](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1899) Add Tunnelmole as an open source tunneling option in addition to ngrok.
+- [#1901](https://github.com/aws/aws-iot-device-sdk-embedded-C/pull/1901) Add a HTTP demo to generate a pre-signed URL to an S3 object file.
+
 ## 202211.00 (November 2022)
 
 ### Major Changes
