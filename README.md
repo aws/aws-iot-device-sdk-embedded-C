@@ -13,12 +13,14 @@
         * [AWS IoT Device Shadow](#aws-iot-device-shadow)
         * [AWS IoT Jobs](#aws-iot-jobs)
         * [AWS IoT Device Defender](#aws-iot-device-defender)
+        * [AWS IoT Over-the-air Update Library](#aws-iot-over-the-air-update)
         * [AWS IoT Fleet Provisoning](#aws-iot-fleet-provisioning)
         * [AWS SigV4](#aws-sigv4)
         * [backoffAlgorithm](#backoffalgorithm)
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases and Documentation](#releases-and-documentation)
+    * [202412.00](#20241200)
     * [202211.00](#20221100)
     * [202108.00](#20210800)
     * [202103.00](#20210300)
@@ -135,6 +137,14 @@ The AWS IoT Device Defender library has no dependencies on additional libraries 
 
 See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#defender_memory_requirements).
 
+#### AWS IoT Over-the-air Update
+
+The [AWS IoT Over-the-air Update](https://github.com/aws/ota-for-aws-iot-embedded-sdk) (OTA) library enables you to manage the notification of a newly available update, download the update, and perform cryptographic verification of the firmware update. Using the OTA library, you can logically separate firmware updates from the application running on your devices. You can also use the library to send other files (e.g. images, certificates) to one or more devices registered with AWS IoT. More details about OTA library can be found in [AWS IoT Over-the-air Update documentation](https://docs.aws.amazon.com/freertos/latest/userguide/freertos-ota-dev.html).
+
+The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS) (see [demos](demos/ota) with coreMQTT and coreHTTP over Linux).
+
+Removed since v2022412.00. We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
+
 #### AWS IoT Fleet Provisioning
 
 The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library enables you to interact with the [AWS IoT Fleet Provisioning MQTT APIs](https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html) in order to provison IoT devices without preexisting device certificates. With AWS IoT Fleet Provisioning, devices can securely receive unique device certificates from AWS IoT when they connect for the first time. For an overview of all provisioning options offered by AWS IoT, see [device provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provision.html). For details about Fleet Provisioning, refer to the [AWS IoT Fleet Provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
@@ -215,6 +225,12 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 ## Releases and Documentation
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.5](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.5).
+
+### 202412.00
+
+This release includes [202406.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/releases/tag/202406.01-LTS) versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries.
+
+ Additionally it updates the MbedTLS version to v3.5.1 and removes the OTA library and its associated demo. We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
 
 ### 202211.00
 [API documentation of 202211.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/index.html)
