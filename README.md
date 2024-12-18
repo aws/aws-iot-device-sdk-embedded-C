@@ -224,6 +224,8 @@ All of the released versions of the C-SDK libraries are available as git tags. F
 
 ### 202412.00
 
+[API documentation of 202412.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202412.00/index.html)
+
 This release includes [202406.01-LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/releases/tag/202406.01-LTS) versions of coreMQTT, corePKCS11, coreHTTP, coreJSON, backoffAlgorithm, AWS IoT Device Shadow, AWS IoT Jobs, AWS IoT Device Defender, AWS IoT Fleet Provisioning and SigV4 libraries.
 
  Additionally it updates the MbedTLS version to v3.5.1 and removes the OTA library and its associated demo. We recommend transitioning to the [new modular and composable OTA approach](https://freertos.org/Documentation/03-Libraries/07-Modular-over-the-air-updates/01-Over-the-air-updates) . To get started, see the new [OTA reference demo](https://github.com/FreeRTOS/Lab-Project-ota-example-for-AWS-IoT-Core?tab=readme-ov-file).
