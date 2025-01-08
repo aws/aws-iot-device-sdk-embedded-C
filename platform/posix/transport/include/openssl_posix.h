@@ -119,6 +119,11 @@ typedef struct OpensslCredentials
     const char * sniHostName;
 
     /**
+     * @brief If non-zero, don't compare hostname to server certificate subject.
+     */
+    uint8_t disableHostnameCheck;
+
+    /**
      * @brief Set the value for the TLS max fragment length (TLS MFLN)
      *
      * OpenSSL allows this value to be in the range of:
