@@ -226,7 +226,8 @@ struct NetworkContext
  */
 static bool printS3ObjectFilePresignedURL( const char * pHost,
                                            size_t hostLen,
-                                           const char * pPath );
+                                           const char * pPath,
+                                           const bool is_get );
 
 /**
  * @brief CryptoInterface provided to SigV4 library for generating the hash digest.
@@ -261,7 +262,8 @@ static SigV4Parameters_t sigv4Params =
 
 static bool printS3ObjectFilePresignedURL( const char * pHost,
                                            size_t hostLen,
-                                           const char * pPath )
+                                           const char * pPath,
+                                           const bool is_get )
 {
     bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -291,8 +293,16 @@ static bool printS3ObjectFilePresignedURL( const char * pHost,
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
     requestInfo.hostLen = hostLen;
-    requestInfo.pMethod = HTTP_METHOD_GET;
-    requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
+    if( is_get )
+    {
+        requestInfo.pMethod = HTTP_METHOD_GET;
+        requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
+    }
+    else
+    {
+        requestInfo.pMethod = HTTP_METHOD_PUT;
+        requestInfo.methodLen = sizeof( HTTP_METHOD_PUT ) - 1;
+    }
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
 
@@ -523,9 +533,20 @@ int main( int argc,
 
         if( returnStatus == EXIT_SUCCESS )
         {
+            LogInfo( ( "HTTP_METHOD_GET:" ) );
             ret = printS3ObjectFilePresignedURL( serverHost,
                                                  serverHostLength,
-                                                 pPath );
+                                                 pPath,
+                                                 true/*is_get*/ );
+
+            if( ret )
+            {
+                LogInfo( ( "HTTP_METHOD_PUT:" ) );
+                ret = printS3ObjectFilePresignedURL( serverHost,
+                                                     serverHostLength,
+                                                     pPath,
+                                                     false/*is_get*/ );
+            }
 
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
