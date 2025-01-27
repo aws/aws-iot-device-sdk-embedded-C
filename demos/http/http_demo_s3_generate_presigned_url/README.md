@@ -59,14 +59,15 @@ Run the following command in the AWS CLI to create an IAM role with the precedin
 ```sh
 aws iam create-role --role-name s3-access-role --assume-role-policy-document file://trustpolicyforiot.json
 ```
-The following s3 access policy allows you to perform actions on S3. Put the following policy in a text document and save the document with the name `accesspolicyfors3.json`.
+The following s3 access policy allows you to perform GET and PUT actions on S3. You can remove the "s3:PutObject" if only download is required (no upload e.g. http_demo_s3_upload). Put the following policy in a text document and save the document with the name `accesspolicyfors3.json`.
 ```
 {
    "Version": "2012-10-17",
    "Statement": {
    "Effect": "Allow",
    "Action": [
-             "s3:GetObject"
+             "s3:GetObject",
+             "s3:PutObject"
              ],
    "Resource": "arn:aws:s3:::BUCKET_NAME/*"
     }

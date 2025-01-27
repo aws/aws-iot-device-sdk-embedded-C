@@ -470,7 +470,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
-You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
+You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py) (more info can be found [here](demos/http/common/src/README.md)) or [demos/http/http_demo_s3_generate_presigned_url/README.md](demos/http/http_demo_s3_generate_presigned_url/README.md).
 
 ####  Configure S3 Download HTTP Demo using SigV4 Library:
 
