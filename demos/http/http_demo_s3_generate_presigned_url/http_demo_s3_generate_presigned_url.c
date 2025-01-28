@@ -227,7 +227,7 @@ struct NetworkContext
 static bool printS3ObjectFilePresignedURL( const char * pHost,
                                            size_t hostLen,
                                            const char * pPath,
-                                           const bool is_get );
+                                           const bool isGet );
 
 /**
  * @brief CryptoInterface provided to SigV4 library for generating the hash digest.
@@ -263,7 +263,7 @@ static SigV4Parameters_t sigv4Params =
 static bool printS3ObjectFilePresignedURL( const char * pHost,
                                            size_t hostLen,
                                            const char * pPath,
-                                           const bool is_get )
+                                           const bool isGet )
 {
     bool returnStatus = true;
     HTTPStatus_t httpStatus = HTTPSuccess;
@@ -293,7 +293,7 @@ static bool printS3ObjectFilePresignedURL( const char * pHost,
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
     requestInfo.hostLen = hostLen;
-    if( is_get )
+    if( isGet )
     {
         requestInfo.pMethod = HTTP_METHOD_GET;
         requestInfo.methodLen = sizeof( HTTP_METHOD_GET ) - 1;
