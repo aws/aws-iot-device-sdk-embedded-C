@@ -537,7 +537,7 @@ int main( int argc,
             ret = printS3ObjectFilePresignedURL( serverHost,
                                                  serverHostLength,
                                                  pPath,
-                                                 true/*is_get*/ );
+                                                 true );
 
             if( ret )
             {
@@ -545,7 +545,7 @@ int main( int argc,
                 ret = printS3ObjectFilePresignedURL( serverHost,
                                                      serverHostLength,
                                                      pPath,
-                                                     false/*is_get*/ );
+                                                     false );
             }
 
             returnStatus = ( ret == true ) ? EXIT_SUCCESS : EXIT_FAILURE;
