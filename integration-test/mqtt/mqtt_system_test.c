@@ -1981,13 +1981,13 @@ int main()
     UnityBegin( __FILE__ );
 
     #if ( TEST_AGAINST_IOT_CORE )
-        {
-            RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
-        }
+    {
+        RUN_TEST_GROUP( coreMQTT_Integration_AWS_IoT_Compatible );
+    }
     #else
-        {
-            RUN_TEST_GROUP( coreMQTT_Integration );
-        }
+    {
+        RUN_TEST_GROUP( coreMQTT_Integration );
+    }
     #endif
 
     return UnityEnd();

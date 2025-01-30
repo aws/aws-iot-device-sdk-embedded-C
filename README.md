@@ -503,13 +503,13 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 3. Run the demo using this command:
-```    
+```
 ./build/bin/jobs_demo_mosquitto \
 -n <thing-name> \
 -h <aws-iot endpoint> \
 --certfile <device certificate of the thing> \
 --keyfile <private key of the thing>
-``` 
+```
 Note: Replace the placeholders in angle brackets with your specific information.
 
 
@@ -670,7 +670,7 @@ First, install Tunnelmole. On Linux, Mac and Windows Subsystem for Linux, use
 ```sh
 curl -O https://tunnelmole.com/sh/install.sh && sudo bash install.sh
 ```
-The above may not function correctly on ARM machines like mac. As an alternative, you can clone the repository and build the application from its source code. 
+The above may not function correctly on ARM machines like mac. As an alternative, you can clone the repository and build the application from its source code.
 For Windows without WSL, [download tmole.exe](https://tunnelmole.com/downloads/tmole.exe) and add it to your [PATH](https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows).
 
 Then run `tmole 80`

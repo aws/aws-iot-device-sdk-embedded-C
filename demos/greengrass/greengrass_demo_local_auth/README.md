@@ -52,7 +52,7 @@ Next you will need to set up a Root CA for your Greengrass device.
 
 On the Greengrass core, run the following:
 
-1. Create private key for the CA certificate 
+1. Create private key for the CA certificate
 ```sh
 openssl genrsa -out ca.key 2048
 ```

@@ -16,9 +16,9 @@
    ```
 
 1. You will need an AWS Account with S3 access before beginning. You must install and configure the AWS CLI in order to
-   use this script.  
-   For information on AWS S3 please see: https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html  
-   For AWS CLI installation information please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html  
+   use this script.
+   For information on AWS S3 please see: https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html
+   For AWS CLI installation information please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
    For AWS CLI configuration information please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
    ```sh

@@ -293,6 +293,7 @@ static bool printS3ObjectFilePresignedURL( const char * pHost,
     /* Initialize the request object. */
     requestInfo.pHost = pHost;
     requestInfo.hostLen = hostLen;
+
     if( isGet )
     {
         requestInfo.pMethod = HTTP_METHOD_GET;
@@ -303,6 +304,7 @@ static bool printS3ObjectFilePresignedURL( const char * pHost,
         requestInfo.pMethod = HTTP_METHOD_PUT;
         requestInfo.methodLen = sizeof( HTTP_METHOD_PUT ) - 1;
     }
+
     requestInfo.pPath = pPath;
     requestInfo.pathLen = strlen( pPath );
 
