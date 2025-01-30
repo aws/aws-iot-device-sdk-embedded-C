@@ -470,7 +470,7 @@ In order to set these configurations manually, edit `demo_config.h` in `demos/ht
 * Set `S3_PRESIGNED_GET_URL` to a S3 presigned URL with GET access.
 * Set `S3_PRESIGNED_PUT_URL` to a S3 presigned URL with PUT access.
 
-You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py). More info can be found [here](demos/http/common/src/README.md).
+You can generate the presigned urls using [demos/http/common/src/presigned_urls_gen.py](demos/http/common/src/presigned_urls_gen.py) (more info can be found [here](demos/http/common/src/README.md)) or [demos/http/http_demo_s3_generate_presigned_url/README.md](demos/http/http_demo_s3_generate_presigned_url/README.md).
 
 ####  Configure S3 Download HTTP Demo using SigV4 Library:
 
@@ -503,13 +503,13 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 3. Run the demo using this command:
-```    
+```
 ./build/bin/jobs_demo_mosquitto \
 -n <thing-name> \
 -h <aws-iot endpoint> \
 --certfile <device certificate of the thing> \
 --keyfile <private key of the thing>
-``` 
+```
 Note: Replace the placeholders in angle brackets with your specific information.
 
 
@@ -670,7 +670,7 @@ First, install Tunnelmole. On Linux, Mac and Windows Subsystem for Linux, use
 ```sh
 curl -O https://tunnelmole.com/sh/install.sh && sudo bash install.sh
 ```
-The above may not function correctly on ARM machines like mac. As an alternative, you can clone the repository and build the application from its source code. 
+The above may not function correctly on ARM machines like mac. As an alternative, you can clone the repository and build the application from its source code.
 For Windows without WSL, [download tmole.exe](https://tunnelmole.com/downloads/tmole.exe) and add it to your [PATH](https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows).
 
 Then run `tmole 80`

@@ -4,9 +4,9 @@ Following steps needs to be followed to configure HTTP Generate Pre-signed URL D
 
 ### Prerequisites
 
-1. You will need an AWS Account with S3 access before beginning. You must be familiar with AWS IoT and IAM to perform steps using the AWS CLI. You must install and configure the AWS CLI in order to follow the steps.  
-   For information on AWS S3 please see: https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html  
-   For AWS CLI installation information please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html  
+1. You will need an AWS Account with S3 access before beginning. You must be familiar with AWS IoT and IAM to perform steps using the AWS CLI. You must install and configure the AWS CLI in order to follow the steps.
+   For information on AWS S3 please see: https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html
+   For AWS CLI installation information please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
    For AWS CLI configuration information please see: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
    ```sh
@@ -15,7 +15,7 @@ Following steps needs to be followed to configure HTTP Generate Pre-signed URL D
 
 ### Detailed Steps
 
-#### 1. Create an AWS IoT thing: 
+#### 1. Create an AWS IoT thing:
 
 You may utilize an already existing AWS IoT Thing or create a new one in the IoT Core section of the AWS Management Console UI.
 
@@ -37,8 +37,8 @@ Run the following command in the AWS CLI to attach the device certificate to you
 ```sh
 aws iot attach-thing-principal --thing-name device_thing_name --principal <certificate-arn>
 ```
-    
-#### 3. Configure an IAM role: 
+
+#### 3. Configure an IAM role:
 
 Next, configure an IAM role in your AWS account that will be assumed by the credentials provider on behalf of your device. You are required to associate two policies with the role: a trust policy that controls who can assume the role, and an access policy that controls which actions can be performed on which resources by assuming the role.
 
@@ -59,14 +59,15 @@ Run the following command in the AWS CLI to create an IAM role with the precedin
 ```sh
 aws iam create-role --role-name s3-access-role --assume-role-policy-document file://trustpolicyforiot.json
 ```
-The following s3 access policy allows you to perform actions on S3. Put the following policy in a text document and save the document with the name `accesspolicyfors3.json`.
+The following s3 access policy allows you to perform GET and PUT actions on S3. You can remove the "s3:PutObject" if only download is required (no upload e.g. http_demo_s3_upload). Put the following policy in a text document and save the document with the name `accesspolicyfors3.json`.
 ```
 {
    "Version": "2012-10-17",
    "Statement": {
    "Effect": "Allow",
    "Action": [
-             "s3:GetObject"
+             "s3:GetObject",
+             "s3:PutObject"
              ],
    "Resource": "arn:aws:s3:::BUCKET_NAME/*"
     }
@@ -108,8 +109,8 @@ Now, run the following command to attach the policy to the IAM user.
 aws iam attach-user-policy --policy-arn arn:aws:iam::<your_aws_account_id>:policy/passrolepermission --user-name <user_name>
 ```
 
-#### 4. Create a role alias: 
-         
+#### 4. Create a role alias:
+
 Now that you have configured the IAM role, you will create a role alias with AWS IoT. You must provide the following pieces of information when creating a role alias:
 
 RoleAlias: This is the primary key of the role alias data model and hence a mandatory attribute. It is a string; the minimum length is 1 character, and the maximum length is 128 characters.
@@ -120,7 +121,7 @@ Run the following command in the AWS CLI to create a role alias. Use the credent
 aws iot create-role-alias --role-alias name-s3-access-role-alias --role-arn arn:aws:iam::<your_aws_account_id>:role/s3-access-role --credential-duration-seconds 3600
 ```
 
-#### 5. Attach a policy: 
+#### 5. Attach a policy:
 You created and registered a certificate with AWS IoT earlier for successful authentication of your device. Now, you need to create and attach a policy to the certificate to authorize the request for the security token.
 ```
 {
@@ -143,7 +144,7 @@ Use the following command to attach the policy with the certificate you register
 aws iot attach-policy --policy-name Thing_Policy_Name --target <certificate-arn>
 ```
 
-#### 6. Request a security token: 
+#### 6. Request a security token:
 
 Run the following command in the AWS CLI to obtain your AWS account-specific endpoint for the credentials provider. See the [DescribeEndpoint API documentation](https://docs.aws.amazon.com/iot/latest/apireference/API_DescribeEndpoint.html) for further details.
 
@@ -168,13 +169,13 @@ The following is sample output of the describe-endpoint command. It contains the
 
 #### 8. After the following the above steps, configure the below macros in `demo_config.h`.
 ```c
-#define AWS_IOT_THING_NAME                      "Name of IOT Thing that you provided in STEP 1" 
+#define AWS_IOT_THING_NAME                      "Name of IOT Thing that you provided in STEP 1"
 #define AWS_IOT_CREDENTIAL_PROVIDER_ROLE        "Name of ROLE ALIAS that you provided in STEP 4"
 #define AWS_S3_BUCKET_NAME                      "Name of Bucket that contains the object whose pre-signed URL needs to be generated"
 #define AWS_S3_BUCKET_REGION                    "Region where Bucket is located"
 #define AWS_S3_OBJECT_NAME                      "Name of object hose pre-signed URL needs to be generated"
 ```
-         
+
 ### Parameters
 
 #### device_thing_name
