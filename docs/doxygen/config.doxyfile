@@ -2337,7 +2337,7 @@ SKIP_FUNCTION_MACROS   = YES
 # the path). If a tag file is not located in the directory in which doxygen is
 # run, you must also specify the path to the tagfile here.
 
-TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html \
+TAGFILES               = libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt.tag=../../../../libraries/standard/coreMQTT/docs/doxygen/output/html \
                          libraries/standard/coreJSON/docs/doxygen/output/json.tag=../../../../libraries/standard/coreJSON/docs/doxygen/output/html \
                          libraries/standard/corePKCS11/docs/doxygen/output/core_pkcs11.tag=../../../../libraries/standard/corePKCS11/docs/doxygen/output/html \
                          libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/shadow.tag=../../../../libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html \
