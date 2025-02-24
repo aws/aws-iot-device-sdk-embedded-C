@@ -8,7 +8,7 @@ description: |-
   See dependencies for included libraries."
 dependencies:
   - name: "coreMQTT"
-    version: "8dfeccb02abe6bfdeb826ac17add7d9368aef8fa"
+    version: "86a5750bb31e05fa69ef3f4e2f5e69d9317fae44"
     repository:
       type: "git"
       url: "https://github.com/FreeRTOS/coreMQTT"
