@@ -7,5 +7,6 @@ var searchData=
   ['mqttpacketinfo_5ft_4',['MQTTPacketInfo_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_packet_info__t.html',1,'']]],
   ['mqttpubackinfo_5ft_5',['MQTTPubAckInfo_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_pub_ack_info__t.html',1,'']]],
   ['mqttpublishinfo_5ft_6',['MQTTPublishInfo_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_publish_info__t.html',1,'']]],
-  ['mqttsubscribeinfo_5ft_7',['MQTTSubscribeInfo_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_subscribe_info__t.html',1,'']]]
+  ['mqttsubscribeinfo_5ft_7',['MQTTSubscribeInfo_t',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_subscribe_info__t.html',1,'']]],
+  ['mqttvec_8',['MQTTVec',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_vec.html',1,'']]]
 ];

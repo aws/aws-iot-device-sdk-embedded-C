@@ -6,5 +6,6 @@ var searchData=
   ['reqflags_3',['reqFlags',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_request_info__t.html#a157ebe1394fe870d342b25a5521f2505',1,'HTTPRequestInfo_t']]],
   ['respflags_4',['respFlags',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a43d3cd31feebcd50ab2bd3078d1a77bc',1,'HTTPResponse_t']]],
   ['respoptionflags_5',['respOptionFlags',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a6d4b1ff385366d8185168634534557a0',1,'HTTPResponse_t']]],
-  ['retain_6',['retain',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_publish_info__t.html#a343b0af89c46a900db4aa5c775a0975a',1,'MQTTPublishInfo_t']]]
+  ['retain_6',['retain',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_publish_info__t.html#a343b0af89c46a900db4aa5c775a0975a',1,'MQTTPublishInfo_t']]],
+  ['retrievefunction_7',['retrieveFunction',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_context__t.html#a270e9e595ecd60948c960d059f8fe718',1,'MQTTContext_t']]]
 ];

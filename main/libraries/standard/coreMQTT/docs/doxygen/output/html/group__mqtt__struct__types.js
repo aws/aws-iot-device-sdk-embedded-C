@@ -22,7 +22,10 @@ var group__mqtt__struct__types =
       [ "index", "struct_m_q_t_t_context__t.html#a41b7735cd0746563483b72e17cf103aa", null ],
       [ "keepAliveIntervalSec", "struct_m_q_t_t_context__t.html#afd6071827ef48b230212a5725c2075be", null ],
       [ "pingReqSendTimeMs", "struct_m_q_t_t_context__t.html#acca3efa4146d85f7e874c7c326e23556", null ],
-      [ "waitingForPingResp", "struct_m_q_t_t_context__t.html#ac7073f43645f7b7c0c5b7763980004bb", null ]
+      [ "waitingForPingResp", "struct_m_q_t_t_context__t.html#ac7073f43645f7b7c0c5b7763980004bb", null ],
+      [ "storeFunction", "struct_m_q_t_t_context__t.html#ac205fc33078b0cfa0dfc62807bd9574f", null ],
+      [ "retrieveFunction", "struct_m_q_t_t_context__t.html#a270e9e595ecd60948c960d059f8fe718", null ],
+      [ "clearFunction", "struct_m_q_t_t_context__t.html#a36e3d500e6efa050d6e666aefa3ff577", null ]
     ] ],
     [ "MQTTDeserializedInfo_t", "struct_m_q_t_t_deserialized_info__t.html", [
       [ "packetIdentifier", "struct_m_q_t_t_deserialized_info__t.html#af4df2a9926a4a68059195daa712d9b84", null ],

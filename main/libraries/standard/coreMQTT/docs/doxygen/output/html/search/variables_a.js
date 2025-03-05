@@ -15,5 +15,6 @@ var searchData=
   ['ptopicfilter_12',['pTopicFilter',['../struct_m_q_t_t_subscribe_info__t.html#adb0b28240fdcd82a85f11cf2f8b5bbf0',1,'MQTTSubscribeInfo_t']]],
   ['ptopicname_13',['pTopicName',['../struct_m_q_t_t_publish_info__t.html#aa80e8ca282d01630f878ad0afe81d7a4',1,'MQTTPublishInfo_t']]],
   ['publishstate_14',['publishState',['../struct_m_q_t_t_pub_ack_info__t.html#a61314203ef87a231c6489c68b579de34',1,'MQTTPubAckInfo_t']]],
-  ['pusername_15',['pUserName',['../struct_m_q_t_t_connect_info__t.html#a1118d7d3251a11445318557280db53b4',1,'MQTTConnectInfo_t']]]
+  ['pusername_15',['pUserName',['../struct_m_q_t_t_connect_info__t.html#a1118d7d3251a11445318557280db53b4',1,'MQTTConnectInfo_t']]],
+  ['pvector_16',['pVector',['../struct_m_q_t_t_vec.html#a35ba714afe80db56d4346949ce635a5f',1,'MQTTVec']]]
 ];

@@ -24,5 +24,6 @@ var searchData=
   ['sigv4success_21',['SigV4Success',['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__sigv4__enum__types.html#gga9473b37a4c9e1e9b1d45d90b062d8df9a238f75db46434dcb1fa3e8bbdf048627',1,]]],
   ['size_22',['size',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636',1,'MQTTFixedBuffer_t']]],
   ['state_23',['state',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_parsing_context__t.html#acecc99ec16396a6a5f2fae9aeb77c11f',1,'HTTPParsingContext_t']]],
-  ['statuscode_24',['statusCode',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a2eaee249cd6a2bb4c86c4ea62362df1d',1,'HTTPResponse_t']]]
+  ['statuscode_24',['statusCode',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a2eaee249cd6a2bb4c86c4ea62362df1d',1,'HTTPResponse_t']]],
+  ['storefunction_25',['storeFunction',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_context__t.html#ac205fc33078b0cfa0dfc62807bd9574f',1,'MQTTContext_t']]]
 ];

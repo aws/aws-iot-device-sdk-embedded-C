@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1+</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -101,9 +101,9 @@ $(document).ready(function(){initNavTree('mqtt_serializedisconnect_function.html
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a> <a class="code hl_function" href="core__mqtt__serializer_8h.html#a6aae40d4656eb533a74b67bf9c827d3b">MQTT_SerializeDisconnect</a>( <span class="keyword">const</span> <a class="code hl_struct" href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a> * pFixedBuffer );</div>
-<div class="ttc" id="acore__mqtt__serializer_8h_html_a6aae40d4656eb533a74b67bf9c827d3b"><div class="ttname"><a href="core__mqtt__serializer_8h.html#a6aae40d4656eb533a74b67bf9c827d3b">MQTT_SerializeDisconnect</a></div><div class="ttdeci">MQTTStatus_t MQTT_SerializeDisconnect(const MQTTFixedBuffer_t *pFixedBuffer)</div><div class="ttdoc">Serialize an MQTT DISCONNECT packet into the given buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.c:2341</div></div>
+<div class="ttc" id="acore__mqtt__serializer_8h_html_a6aae40d4656eb533a74b67bf9c827d3b"><div class="ttname"><a href="core__mqtt__serializer_8h.html#a6aae40d4656eb533a74b67bf9c827d3b">MQTT_SerializeDisconnect</a></div><div class="ttdeci">MQTTStatus_t MQTT_SerializeDisconnect(const MQTTFixedBuffer_t *pFixedBuffer)</div><div class="ttdoc">Serialize an MQTT DISCONNECT packet into the given buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.c:2337</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gaba7ec045874a1c3432f99173367f735c"><div class="ttname"><a href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a></div><div class="ttdeci">MQTTStatus_t</div><div class="ttdoc">Return codes from MQTT functions.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:87</div></div>
-<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a></div><div class="ttdoc">Buffer passed to MQTT library.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:123</div></div>
+<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a></div><div class="ttdoc">Buffer passed to MQTT library.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:130</div></div>
 </div><!-- fragment --><p>Serialize an MQTT DISCONNECT packet into the given buffer.  </p>
 <p>The input <a class="el" href="struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636" title="Size of buffer.">MQTTFixedBuffer_t.size</a> must be at least as large as the size returned by <a class="el" href="core__mqtt__serializer_8h.html#a6fdd8cbde6b7c4ff85c20aaca0fd8741" title="Get the size of an MQTT DISCONNECT packet.">MQTT_GetDisconnectPacketSize</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -133,10 +133,10 @@ $(document).ready(function(){initNavTree('mqtt_serializedisconnect_function.html
 <div class="line">{</div>
 <div class="line">     <span class="comment">// The disconnect packet can now be sent to the broker.</span></div>
 <div class="line">}</div>
-<div class="ttc" id="acore__mqtt__serializer_8h_html_a6fdd8cbde6b7c4ff85c20aaca0fd8741"><div class="ttname"><a href="core__mqtt__serializer_8h.html#a6fdd8cbde6b7c4ff85c20aaca0fd8741">MQTT_GetDisconnectPacketSize</a></div><div class="ttdeci">MQTTStatus_t MQTT_GetDisconnectPacketSize(size_t *pPacketSize)</div><div class="ttdoc">Get the size of an MQTT DISCONNECT packet.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.c:2321</div></div>
+<div class="ttc" id="acore__mqtt__serializer_8h_html_a6fdd8cbde6b7c4ff85c20aaca0fd8741"><div class="ttname"><a href="core__mqtt__serializer_8h.html#a6fdd8cbde6b7c4ff85c20aaca0fd8741">MQTT_GetDisconnectPacketSize</a></div><div class="ttdeci">MQTTStatus_t MQTT_GetDisconnectPacketSize(size_t *pPacketSize)</div><div class="ttdoc">Get the size of an MQTT DISCONNECT packet.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.c:2317</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056"><div class="ttname"><a href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056">MQTTSuccess</a></div><div class="ttdeci">@ MQTTSuccess</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:88</div></div>
-<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_a0b0b6a93cc62751ebeb03095d5431636"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636">MQTTFixedBuffer_t::size</a></div><div class="ttdeci">size_t size</div><div class="ttdoc">Size of buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:125</div></div>
-<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_acea147448e044870fb36b7fa2347dbd6"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#acea147448e044870fb36b7fa2347dbd6">MQTTFixedBuffer_t::pBuffer</a></div><div class="ttdeci">uint8_t * pBuffer</div><div class="ttdoc">Pointer to buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:124</div></div>
+<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_a0b0b6a93cc62751ebeb03095d5431636"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636">MQTTFixedBuffer_t::size</a></div><div class="ttdeci">size_t size</div><div class="ttdoc">Size of buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:132</div></div>
+<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_acea147448e044870fb36b7fa2347dbd6"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#acea147448e044870fb36b7fa2347dbd6">MQTTFixedBuffer_t::pBuffer</a></div><div class="ttdeci">uint8_t * pBuffer</div><div class="ttdoc">Pointer to buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:131</div></div>
 </div><!-- fragment -->   </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

@@ -54,7 +54,8 @@ var searchData=
   ['size_51',['size',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636',1,'MQTTFixedBuffer_t']]],
   ['state_52',['state',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_parsing_context__t.html#acecc99ec16396a6a5f2fae9aeb77c11f',1,'HTTPParsingContext_t']]],
   ['statuscode_53',['statusCode',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/struct_h_t_t_p_response__t.html#a2eaee249cd6a2bb4c86c4ea62362df1d',1,'HTTPResponse_t']]],
-  ['struct_20types_54',['Struct Types',['../../../../../libraries/standard/coreJSON/docs/doxygen/output/html/group__json__struct__types.html',1,'(Global Namespace)'],['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__sigv4__struct__types.html',1,'(Global Namespace)']]],
-  ['structs_55',['Structs',['../../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__jobs__structs.html',1,'']]],
-  ['style_20guide_56',['Style Guide',['../guide_developer_styleguide.html',1,'guide_developer']]]
+  ['storefunction_54',['storeFunction',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_context__t.html#ac205fc33078b0cfa0dfc62807bd9574f',1,'MQTTContext_t']]],
+  ['struct_20types_55',['Struct Types',['../../../../../libraries/standard/coreJSON/docs/doxygen/output/html/group__json__struct__types.html',1,'(Global Namespace)'],['../../../../../libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__sigv4__struct__types.html',1,'(Global Namespace)']]],
+  ['structs_56',['Structs',['../../../../../libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/group__jobs__structs.html',1,'']]],
+  ['style_20guide_57',['Style Guide',['../guide_developer_styleguide.html',1,'guide_developer']]]
 ];

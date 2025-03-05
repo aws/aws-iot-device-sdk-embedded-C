@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1+</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -178,6 +178,18 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>pingReqSendTimeMs
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>waitingForPingResp</b></td></tr>
 <tr class="memdesc:ac7073f43645f7b7c0c5b7763980004bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">If the library is currently awaiting a PINGRESP. <br /></td></tr>
 <tr class="separator:ac7073f43645f7b7c0c5b7763980004bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac205fc33078b0cfa0dfc62807bd9574f"><td class="memItemLeft" align="right" valign="top"><a id="ac205fc33078b0cfa0dfc62807bd9574f" name="ac205fc33078b0cfa0dfc62807bd9574f"></a>
+<a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba">MQTTStorePacketForRetransmit</a>&#160;</td><td class="memItemRight" valign="bottom"><b>storeFunction</b></td></tr>
+<tr class="memdesc:ac205fc33078b0cfa0dfc62807bd9574f"><td class="mdescLeft">&#160;</td><td class="mdescRight">User defined API used to store outgoing publishes. <br /></td></tr>
+<tr class="separator:ac205fc33078b0cfa0dfc62807bd9574f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a270e9e595ecd60948c960d059f8fe718"><td class="memItemLeft" align="right" valign="top"><a id="a270e9e595ecd60948c960d059f8fe718" name="a270e9e595ecd60948c960d059f8fe718"></a>
+<a class="el" href="core__mqtt_8h.html#a56514a9a33dbf82a5d33afedb54903b6">MQTTRetrievePacketForRetransmit</a>&#160;</td><td class="memItemRight" valign="bottom"><b>retrieveFunction</b></td></tr>
+<tr class="memdesc:a270e9e595ecd60948c960d059f8fe718"><td class="mdescLeft">&#160;</td><td class="mdescRight">User defined API used to retreive a copied publish for resend operation. <br /></td></tr>
+<tr class="separator:a270e9e595ecd60948c960d059f8fe718"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36e3d500e6efa050d6e666aefa3ff577"><td class="memItemLeft" align="right" valign="top"><a id="a36e3d500e6efa050d6e666aefa3ff577" name="a36e3d500e6efa050d6e666aefa3ff577"></a>
+<a class="el" href="core__mqtt_8h.html#a864718ceee18ff04e9c92fe9825d601b">MQTTClearPacketForRetransmit</a>&#160;</td><td class="memItemRight" valign="bottom"><b>clearFunction</b></td></tr>
+<tr class="memdesc:a36e3d500e6efa050d6e666aefa3ff577"><td class="mdescLeft">&#160;</td><td class="mdescRight">User defined API used to clear a particular copied publish packet. <br /></td></tr>
+<tr class="separator:a36e3d500e6efa050d6e666aefa3ff577"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A struct representing an MQTT connection. </p>

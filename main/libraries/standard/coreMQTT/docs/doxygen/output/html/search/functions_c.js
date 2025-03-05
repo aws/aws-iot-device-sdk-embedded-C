@@ -4,7 +4,7 @@ var searchData=
   ['sendconnectwithoutcopy_1',['sendConnectWithoutCopy',['../core__mqtt_8c.html#a3c6935ecef4879b9aeee05ffb0f0a9cb',1,'core_mqtt.c']]],
   ['sendmessagevector_2',['sendMessageVector',['../core__mqtt_8c.html#a39f478d2bb0366a5f14bfa90316d8d26',1,'core_mqtt.c']]],
   ['sendpublishacks_3',['sendPublishAcks',['../core__mqtt_8c.html#ab4b719d2f726b049c279dcb37fcba840',1,'core_mqtt.c']]],
-  ['sendpublishwithoutcopy_4',['sendPublishWithoutCopy',['../core__mqtt_8c.html#aaaca64a926603116f5dfec4a65f28283',1,'core_mqtt.c']]],
+  ['sendpublishwithoutcopy_4',['sendPublishWithoutCopy',['../core__mqtt_8c.html#af775574fd302e755d793a07818b62a2a',1,'core_mqtt.c']]],
   ['sendsubscribewithoutcopy_5',['sendSubscribeWithoutCopy',['../core__mqtt_8c.html#a86259fe46a81f7981a7b43b677ab896d',1,'core_mqtt.c']]],
   ['sendunsubscribewithoutcopy_6',['sendUnsubscribeWithoutCopy',['../core__mqtt_8c.html#a5fc0209190ce8ce635050195689306e2',1,'core_mqtt.c']]],
   ['serializeconnectpacket_7',['serializeConnectPacket',['../core__mqtt__serializer_8c.html#a95bf697a3b1f86950e5c199d9cf3a185',1,'core_mqtt_serializer.c']]],

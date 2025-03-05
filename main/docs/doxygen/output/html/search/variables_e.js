@@ -49,5 +49,6 @@ var searchData=
   ['pusername_46',['pUserName',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_connect_info__t.html#a1118d7d3251a11445318557280db53b4',1,'MQTTConnectInfo_t']]],
   ['pvaluelen_47',['pValueLen',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/structfind_header_context__t.html#ab570a632683ff451d7dd5fa03ae4fe60',1,'findHeaderContext_t']]],
   ['pvalueloc_48',['pValueLoc',['../../../../../libraries/standard/coreHTTP/docs/doxygen/output\html/structfind_header_context__t.html#a1426be39bf89d99c7b1ae54589968e20',1,'findHeaderContext_t']]],
-  ['pxfindobjectlabel_49',['pxFindObjectLabel',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p11_session__t.html#a1b3bec8cf6fa188a2aca9709c2400188',1,'P11Session_t']]]
+  ['pvector_49',['pVector',['../../../../../libraries/standard/coreMQTT/docs/doxygen/output/html/struct_m_q_t_t_vec.html#a35ba714afe80db56d4346949ce635a5f',1,'MQTTVec']]],
+  ['pxfindobjectlabel_50',['pxFindObjectLabel',['../../../../../libraries/standard/corePKCS11/docs/doxygen/output/html/struct_p11_session__t.html#a1b3bec8cf6fa188a2aca9709c2400188',1,'P11Session_t']]]
 ];

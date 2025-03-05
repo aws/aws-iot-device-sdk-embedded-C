@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>coreMQTT: MQTT_Status_strerror</title>
+<title>coreMQTT: MQTTVec_t Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('mqtt_status_strerror_function.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('struct_m_q_t_t_vec.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -96,27 +96,65 @@ $(document).ready(function(){initNavTree('mqtt_status_strerror_function.html',''
 </div>
 </div>
 
-<div><div class="header">
-  <div class="headertitle"><div class="title">MQTT_Status_strerror </div></div>
+<div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Data Fields</a>  </div>
+  <div class="headertitle"><div class="title">MQTTVec_t Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><div class="fragment"><div class="line"><span class="keyword">const</span> <span class="keywordtype">char</span> * <a class="code hl_function" href="core__mqtt_8h.html#a05d9facfce89c5f9edef09ca13717f50">MQTT_Status_strerror</a>( <a class="code hl_enumeration" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a> status );</div>
-<div class="ttc" id="acore__mqtt_8h_html_a05d9facfce89c5f9edef09ca13717f50"><div class="ttname"><a href="core__mqtt_8h.html#a05d9facfce89c5f9edef09ca13717f50">MQTT_Status_strerror</a></div><div class="ttdeci">const char * MQTT_Status_strerror(MQTTStatus_t status)</div><div class="ttdoc">Error code to string conversion for MQTT statuses.</div><div class="ttdef"><b>Definition:</b> core_mqtt.c:3648</div></div>
-<div class="ttc" id="agroup__mqtt__enum__types_html_gaba7ec045874a1c3432f99173367f735c"><div class="ttname"><a href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a></div><div class="ttdeci">MQTTStatus_t</div><div class="ttdoc">Return codes from MQTT functions.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:87</div></div>
-</div><!-- fragment --><p>Error code to string conversion for MQTT statuses.  </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">status</td><td>The status to convert to a string.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The string representation of the status.   </dd></dl>
-</div></div><!-- contents -->
-</div><!-- PageDoc -->
+
+<p>An opaque structure provided by the library to the <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba" title="User defined callback used to store outgoing publishes. Used to track any publish retransmit on an un...">MQTTStorePacketForRetransmit</a> function when using <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba" title="User defined callback used to store outgoing publishes. Used to track any publish retransmit on an un...">MQTTStorePacketForRetransmit</a>.  
+ <a href="struct_m_q_t_t_vec.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Data Fields</h2></td></tr>
+<tr class="memitem:a35ba714afe80db56d4346949ce635a5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_m_q_t_t_vec.html#a35ba714afe80db56d4346949ce635a5f">pVector</a></td></tr>
+<tr class="separator:a35ba714afe80db56d4346949ce635a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53b13c310696095b7f1a5254e75552fb"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_m_q_t_t_vec.html#a53b13c310696095b7f1a5254e75552fb">vectorLen</a></td></tr>
+<tr class="separator:a53b13c310696095b7f1a5254e75552fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>An opaque structure provided by the library to the <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba" title="User defined callback used to store outgoing publishes. Used to track any publish retransmit on an un...">MQTTStorePacketForRetransmit</a> function when using <a class="el" href="core__mqtt_8h.html#ae4ae1546af467967e2c996daeb78e0ba" title="User defined callback used to store outgoing publishes. Used to track any publish retransmit on an un...">MQTTStorePacketForRetransmit</a>. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
+<a id="a35ba714afe80db56d4346949ce635a5f" name="a35ba714afe80db56d4346949ce635a5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35ba714afe80db56d4346949ce635a5f">&#9670;&#160;</a></span>pVector</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_transport_out_vector__t.html">TransportOutVector_t</a>* MQTTVec_t::pVector</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Pointer to transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. </p>
+
+</div>
+</div>
+<a id="a53b13c310696095b7f1a5254e75552fb" name="a53b13c310696095b7f1a5254e75552fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a53b13c310696095b7f1a5254e75552fb">&#9670;&#160;</a></span>vectorLen</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t MQTTVec_t::vectorLen</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Length of the transport vector. USER SHOULD NOT ACCESS THIS DIRECTLY - IT IS AN INTERNAL DETAIL AND CAN CHANGE. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li><a class="el" href="core__mqtt_8c.html">core_mqtt.c</a></li>
+</ul>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
+    <li class="navelem"><a class="el" href="struct_m_q_t_t_vec.html">MQTTVec</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
   </ul>
 </div>

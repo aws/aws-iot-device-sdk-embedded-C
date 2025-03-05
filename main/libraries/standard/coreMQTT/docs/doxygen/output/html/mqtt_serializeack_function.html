@@ -31,7 +31,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1</span>
+   <div id="projectname">coreMQTT<span id="projectnumber">&#160;v2.3.1+</span>
    </div>
    <div id="projectbrief">MQTT 3.1.1 Client Library</div>
   </td>
@@ -103,9 +103,9 @@ $(document).ready(function(){initNavTree('mqtt_serializeack_function.html',''); 
 <div class="textblock"><div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a> <a class="code hl_function" href="core__mqtt__serializer_8h.html#a11ea4ac5ea27e93121288e463ca34ee6">MQTT_SerializeAck</a>( <span class="keyword">const</span> <a class="code hl_struct" href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a> * pFixedBuffer,</div>
 <div class="line">                                uint8_t packetType,</div>
 <div class="line">                                uint16_t packetId );</div>
-<div class="ttc" id="acore__mqtt__serializer_8h_html_a11ea4ac5ea27e93121288e463ca34ee6"><div class="ttname"><a href="core__mqtt__serializer_8h.html#a11ea4ac5ea27e93121288e463ca34ee6">MQTT_SerializeAck</a></div><div class="ttdeci">MQTTStatus_t MQTT_SerializeAck(const MQTTFixedBuffer_t *pFixedBuffer, uint8_t packetType, uint16_t packetId)</div><div class="ttdoc">Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.c:2266</div></div>
+<div class="ttc" id="acore__mqtt__serializer_8h_html_a11ea4ac5ea27e93121288e463ca34ee6"><div class="ttname"><a href="core__mqtt__serializer_8h.html#a11ea4ac5ea27e93121288e463ca34ee6">MQTT_SerializeAck</a></div><div class="ttdeci">MQTTStatus_t MQTT_SerializeAck(const MQTTFixedBuffer_t *pFixedBuffer, uint8_t packetType, uint16_t packetId)</div><div class="ttdoc">Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.c:2262</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_gaba7ec045874a1c3432f99173367f735c"><div class="ttname"><a href="group__mqtt__enum__types.html#gaba7ec045874a1c3432f99173367f735c">MQTTStatus_t</a></div><div class="ttdeci">MQTTStatus_t</div><div class="ttdoc">Return codes from MQTT functions.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:87</div></div>
-<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a></div><div class="ttdoc">Buffer passed to MQTT library.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:123</div></div>
+<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html">MQTTFixedBuffer_t</a></div><div class="ttdoc">Buffer passed to MQTT library.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:130</div></div>
 </div><!-- fragment --><p>Serialize an MQTT PUBACK, PUBREC, PUBREL, or PUBCOMP into the given buffer.  </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -144,8 +144,8 @@ $(document).ready(function(){initNavTree('mqtt_serializeack_function.html',''); 
 <div class="ttc" id="agroup__mqtt__constants_html_ga26994fcfacb1cff892caa45ec31ca7c6"><div class="ttname"><a href="group__mqtt__constants.html#ga26994fcfacb1cff892caa45ec31ca7c6">MQTT_PUBLISH_ACK_PACKET_SIZE</a></div><div class="ttdeci">#define MQTT_PUBLISH_ACK_PACKET_SIZE</div><div class="ttdoc">The size of MQTT PUBACK, PUBREC, PUBREL, and PUBCOMP packets, per MQTT spec.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:73</div></div>
 <div class="ttc" id="agroup__mqtt__constants_html_ga5f279d63de47a973b41b95f74f47a4f6"><div class="ttname"><a href="group__mqtt__constants.html#ga5f279d63de47a973b41b95f74f47a4f6">MQTT_PACKET_TYPE_PUBACK</a></div><div class="ttdeci">#define MQTT_PACKET_TYPE_PUBACK</div><div class="ttdoc">PUBACK (bidirectional).</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:56</div></div>
 <div class="ttc" id="agroup__mqtt__enum__types_html_ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056"><div class="ttname"><a href="group__mqtt__enum__types.html#ggaba7ec045874a1c3432f99173367f735ca484e062cb4f3fccc1858dd25cfeee056">MQTTSuccess</a></div><div class="ttdeci">@ MQTTSuccess</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:88</div></div>
-<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_a0b0b6a93cc62751ebeb03095d5431636"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636">MQTTFixedBuffer_t::size</a></div><div class="ttdeci">size_t size</div><div class="ttdoc">Size of buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:125</div></div>
-<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_acea147448e044870fb36b7fa2347dbd6"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#acea147448e044870fb36b7fa2347dbd6">MQTTFixedBuffer_t::pBuffer</a></div><div class="ttdeci">uint8_t * pBuffer</div><div class="ttdoc">Pointer to buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:124</div></div>
+<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_a0b0b6a93cc62751ebeb03095d5431636"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#a0b0b6a93cc62751ebeb03095d5431636">MQTTFixedBuffer_t::size</a></div><div class="ttdeci">size_t size</div><div class="ttdoc">Size of buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:132</div></div>
+<div class="ttc" id="astruct_m_q_t_t_fixed_buffer__t_html_acea147448e044870fb36b7fa2347dbd6"><div class="ttname"><a href="struct_m_q_t_t_fixed_buffer__t.html#acea147448e044870fb36b7fa2347dbd6">MQTTFixedBuffer_t::pBuffer</a></div><div class="ttdeci">uint8_t * pBuffer</div><div class="ttdoc">Pointer to buffer.</div><div class="ttdef"><b>Definition:</b> core_mqtt_serializer.h:131</div></div>
 </div><!-- fragment -->   </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
