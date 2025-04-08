@@ -694,7 +694,8 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     if( returnStatus != OPENSSL_SUCCESS )
     {
         LogError( ( "Failed to establish a TLS connection." ) );
-        if( socketStatus == SOCKETS_SUCCESS ) {
+        if( socketStatus == SOCKETS_SUCCESS )
+        {
             Sockets_Disconnect( pOpensslParams->socketDescriptor );
         }
     }
