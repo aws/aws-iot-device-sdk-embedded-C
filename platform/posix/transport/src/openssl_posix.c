@@ -586,7 +586,7 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
                                  uint32_t recvTimeoutMs )
 {
     OpensslParams_t * pOpensslParams = NULL;
-    SocketStatus_t socketStatus = SOCKETS_SUCCESS;
+    SocketStatus_t socketStatus = SOCKETS_CONNECT_FAILURE;
     OpensslStatus_t returnStatus = OPENSSL_SUCCESS;
     int32_t sslStatus = 0;
     uint8_t sslObjectCreated = 0;
@@ -694,6 +694,11 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
     if( returnStatus != OPENSSL_SUCCESS )
     {
         LogError( ( "Failed to establish a TLS connection." ) );
+
+        if( socketStatus == SOCKETS_SUCCESS )
+        {
+            Sockets_Disconnect( pOpensslParams->socketDescriptor );
+        }
     }
     else
     {
