@@ -1093,7 +1093,8 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
     ( void ) memset( ( void * ) pGlobalSubscriptionList, 0x00, sizeof( pGlobalSubscriptionList ) );
 
     /* This example subscribes to only one topic and uses QOS2. */
-    pGlobalSubscriptionList[ 0 ].qos = MQTTQoS2;
+    /* AWS IoT Core does not support QoS2. Use QoS1 instead to avoid SSL_read failure. */
+    pGlobalSubscriptionList[ 0 ].qos = MQTTQoS1;
     pGlobalSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pGlobalSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -1135,8 +1136,9 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
     ( void ) memset( ( void * ) pGlobalSubscriptionList, 0x00, sizeof( pGlobalSubscriptionList ) );
 
     /* This example subscribes to and unsubscribes from only one topic
-     * and uses QOS2. */
-    pGlobalSubscriptionList[ 0 ].qos = MQTTQoS2;
+     * and uses QOS2. */    
+    /* AWS IoT Core does not support QoS2. Use QoS1 instead to avoid SSL_read failure. */
+    pGlobalSubscriptionList[ 0 ].qos = MQTTQoS1;
     pGlobalSubscriptionList[ 0 ].pTopicFilter = MQTT_EXAMPLE_TOPIC;
     pGlobalSubscriptionList[ 0 ].topicFilterLength = MQTT_EXAMPLE_TOPIC_LENGTH;
 
@@ -1188,7 +1190,8 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
     else
     {
         /* This example publishes to only one topic and uses QOS2. */
-        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS2;
+        /* AWS IoT Core does not support QoS2. Use QoS1 instead to avoid SSL_read failure. */
+        outgoingPublishPackets[ publishIndex ].pubInfo.qos = MQTTQoS1;
         outgoingPublishPackets[ publishIndex ].pubInfo.pTopicName = MQTT_EXAMPLE_TOPIC;
         outgoingPublishPackets[ publishIndex ].pubInfo.topicNameLength = MQTT_EXAMPLE_TOPIC_LENGTH;
         outgoingPublishPackets[ publishIndex ].pubInfo.pPayload = MQTT_EXAMPLE_MESSAGE;
