@@ -60,7 +60,7 @@
  *
  * #define BROKER_ENDPOINT               "...insert here..."
  */
-
+#define BROKER_ENDPOINT    "test.mosquitto.org"
 /**
  * @brief MQTT server port number.
  *
