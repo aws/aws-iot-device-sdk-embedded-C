@@ -17,6 +17,8 @@ add_executable(
         ${BACKOFF_ALGORITHM_SOURCES}
 )
 
+target_sources(${DEMO_NAME} PRIVATE ${ROOT_DIR}/libraries/standard/coreMQTT/source/core_mqtt_utils.c)
+
 target_link_libraries(
     ${DEMO_NAME}
     PRIVATE

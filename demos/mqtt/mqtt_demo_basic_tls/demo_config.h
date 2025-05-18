@@ -60,7 +60,7 @@
  *
  * #define BROKER_ENDPOINT               "...insert here..."
  */
-
+#define BROKER_ENDPOINT    "test.mosquitto.org"
 /**
  * @brief MQTT server port number.
  *
@@ -75,7 +75,7 @@
  *
  * #define ROOT_CA_CERT_PATH         ".....insert here...."
  */
-
+#define ROOT_CA_CERT_PATH    "/home/ubuntu/aws-iot-device-sdk-embedded-C/certs/mosquitto_rootCA.crt"
 /**
  * @brief MQTT client identifier.
  *
