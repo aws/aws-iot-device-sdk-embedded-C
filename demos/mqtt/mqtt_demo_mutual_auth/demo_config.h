@@ -57,7 +57,7 @@
  *
  * #define AWS_IOT_ENDPOINT               "...insert here..."
  */
-#define AWS_IOT_ENDPOINT    "arfk9u1wy8ods-ats.iot.ap-south-1.amazonaws.com"
+
 /**
  * @brief AWS IoT MQTT broker port number.
  *
@@ -86,7 +86,7 @@
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
 #ifndef ROOT_CA_CERT_PATH
-    #define ROOT_CA_CERT_PATH    "/home/ubuntu/aws-iot-device-sdk-embedded-C/certs/AmazonRootCA1.crt"
+    #define ROOT_CA_CERT_PATH    "build/bin/certificates/AmazonRootCA1.crt"
 #endif
 
 /**
@@ -100,7 +100,7 @@
  *
  * #define CLIENT_CERT_PATH    "...insert here..."
  */
-#define CLIENT_CERT_PATH    "/home/ubuntu/aws-iot-device-sdk-embedded-C/certs/cert.crt"
+
 /**
  * @brief Path of the file containing the client's private key.
  *
@@ -112,7 +112,7 @@
  *
  * #define CLIENT_PRIVATE_KEY_PATH    "...insert here..."
  */
-#define CLIENT_PRIVATE_KEY_PATH    "/home/ubuntu/aws-iot-device-sdk-embedded-C/certs/private_key.key"
+
 /**
  * @brief The username value for authenticating client to MQTT broker when
  * username/password based client authentication is used.

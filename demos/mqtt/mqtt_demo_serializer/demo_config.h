@@ -60,13 +60,12 @@
  *
  * #define BROKER_ENDPOINT               "...insert here..."
  */
-#define BROKER_ENDPOINT    "test.mosquitto.org"
+
 /**
  * @brief MQTT server port number.
  *
  * In general, port 1883 is for unsecured MQTT connections.
  */
-#define BROKER_PORT    1883
 
 /**
  * @brief MQTT client identifier.

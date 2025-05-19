@@ -85,6 +85,7 @@
  * @note This path is relative from the demo binary created. Update
  * ROOT_CA_CERT_PATH to the absolute path if this demo is executed from elsewhere.
  */
+
 #ifndef ROOT_CA_CERT_PATH
     #define ROOT_CA_CERT_PATH    "certificates/AmazonRootCA1.crt"
 #endif

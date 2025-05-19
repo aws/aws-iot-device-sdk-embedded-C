@@ -60,13 +60,12 @@
  *
  * #define BROKER_ENDPOINT               "...insert here..."
  */
-#define BROKER_ENDPOINT    "test.mosquitto.org"
+
 /**
  * @brief MQTT server port number.
  *
  * In general, port 8883 is for secured MQTT connections.
  */
-#define BROKER_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
@@ -75,7 +74,7 @@
  *
  * #define ROOT_CA_CERT_PATH         ".....insert here...."
  */
-#define ROOT_CA_CERT_PATH    "/home/ubuntu/aws-iot-device-sdk-embedded-C/certs/mosquitto_rootCA.crt"
+
 /**
  * @brief MQTT client identifier.
  *
