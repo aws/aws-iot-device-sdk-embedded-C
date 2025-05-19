@@ -237,7 +237,10 @@ static bool shadowDeleted = false;
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo );
+                           MQTTDeserializedInfo_t * pDeserializedInfo, 
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer); 
 
 /**
  * @brief Process payload from /update/delta topic.
@@ -558,7 +561,10 @@ static void updateAcceptedHandler( MQTTPublishInfo_t * pPublishInfo )
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo, 
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer)
 {
     ShadowMessageType_t messageType = ShadowMessageTypeMaxNum;
     const char * pThingName = NULL;
