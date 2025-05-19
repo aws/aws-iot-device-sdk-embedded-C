@@ -448,8 +448,8 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo,
                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                           MqttPropBuilder_t * sendPropsBuffer,
-                           MqttPropBuilder_t * getPropsBuffer  );
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer  );
 
 /**
  * @brief Initializes the MQTT library.
@@ -1028,8 +1028,8 @@ static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo,
                            MQTTSuccessFailReasonCode_t * pReasonCode,
-                           MqttPropBuilder_t * sendPropsBuffer,
-                           MqttPropBuilder_t * getPropsBuffer  )
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer  )
 {
     uint16_t packetIdentifier;
 
