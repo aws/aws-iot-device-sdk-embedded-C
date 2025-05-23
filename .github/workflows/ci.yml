@@ -116,7 +116,7 @@ jobs:
       - name: Configure CMake for installation of static libraries at custom location
         run: |
           cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -DBUILD_SHARED_LIBRARIES=OFF \
           -DBUILD_DEMOS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../static-libs-headers-install-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../static-libs-install-dir"
@@ -136,7 +136,7 @@ jobs:
       - name: Configure CMake build for system install location and selective installation
         run: |
           cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -DBUILD_DEMOS=0 -DBUILD_TESTS=0 -DINSTALL_TO_SYSTEM=1 \
           -DINSTALL_LIBS="SHADOW;DEFENDER" -DINSTALL_PLATFORM_ABSTRACTIONS=0
       - name: Install selected libraries and verify default system installation path is used
