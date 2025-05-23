@@ -936,10 +936,12 @@ static int32_t privateKeySigningCallback( mbedtls_pk_context * pContext,
     {
         ret = CKR_ARGUMENTS_BAD;
     }
-
-    mech.mechanism = CKM_ECDSA;
-    memcpy( toBeSigned, pHash, hashLen );
-    toBeSignedLen = hashLen;
+    else
+    {
+        mech.mechanism = CKM_ECDSA;
+        memcpy( toBeSigned, pHash, hashLen );
+        toBeSignedLen = hashLen;
+    }
 
     if( ret == CKR_OK )
     {
