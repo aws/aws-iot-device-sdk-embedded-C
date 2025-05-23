@@ -17,11 +17,9 @@ jobs:
           submodules: recursive
       - name: Configure CMake build
         run: |
-          sudo apt-get install -y libmosquitto-dev
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+          sudo apt-get install -y libmosquitto-dev cmake
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -G "Unix Makefiles" \
           -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
@@ -63,11 +61,9 @@ jobs:
           done
       - name: Configure CMake build
         run: |
-          sudo apt-get install -y libmosquitto-dev
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+          sudo apt-get install -y libmosquitto-dev cmake
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -G "Unix Makefiles" \
           -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
@@ -99,10 +95,9 @@ jobs:
           submodules: recursive
       - name: Configure CMake for installation of shared libraries at custom location
         run: |
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+          sudo apt-get install -y cmake
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -DBUILD_DEMOS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../shared-libs-headers-install-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../shared-libs-install-dir"
       - name: Install shared libraries and verify custom install location
