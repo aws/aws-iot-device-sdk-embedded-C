@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-check-demos:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
   build-check-demos-cpp:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -87,7 +87,7 @@ jobs:
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
   build-check-install:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -160,7 +160,7 @@ jobs:
           # Each line of install_manifest.txt contains the location of an installed library or header
           done <install_manifest.txt
   complexity:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup
@@ -170,7 +170,7 @@ jobs:
           find platform/ \( -iname '*.c' ! -wholename '*test*' \) |\
           xargs complexity --scores --threshold=0 --horrid-threshold=8
   spell-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install spell
@@ -189,7 +189,7 @@ jobs:
             fi
           done
   formatting:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Check formatting
@@ -226,7 +226,7 @@ jobs:
           path: ./doxygen.zip
           retention-days: 2
   git-secrets:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -244,7 +244,7 @@ jobs:
           git-secrets --register-aws
           git-secrets --scan
   link-verifier:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -263,7 +263,7 @@ jobs:
           include-file-types: .c,.h,.dox
           allowlist-file: ./.github/links_allowlist.txt
   verify-manifest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
