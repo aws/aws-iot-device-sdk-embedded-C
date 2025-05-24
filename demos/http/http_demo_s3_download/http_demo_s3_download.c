@@ -349,7 +349,7 @@ static SigV4CryptoInterface_t cryptoInterface =
  * @brief SigV4 parameters provided to SigV4 library by the application for generating
  * the Authorization header.
  */
-static SigV4Parameters_t sigv4Params =
+SigV4Parameters_t sigv4Params =
 {
     .pCredentials     = &sigvCreds,
     .pDateIso8601     = pDateISO8601,
