@@ -28,9 +28,7 @@ jobs:
 
       - name: Install CMake
         id: install-cmake
-        uses: lukka/get-cmake@v3.26.0
-        with:
-          cmakeVersion: 3.2.0
+        run: sudo apt-get install -y cmake
 
       - name: Generate SSL credentials
         id: generate-credentials
