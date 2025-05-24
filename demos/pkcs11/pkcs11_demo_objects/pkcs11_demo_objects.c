@@ -284,7 +284,7 @@ static CK_RV objectImporting( void )
      *
      * See this explanation for the difference between the PEM format and the
      * DER format:
-     * https://stackoverflow.com/questions/22743415/what-are-the-differences-between-pem-cer-and-der/22743616
+     * https://www.ssl.com/guide/pem-der-crt-and-cer-x-509-encodings-and-conversions/
      *
      */
     if( result == CKR_OK )
