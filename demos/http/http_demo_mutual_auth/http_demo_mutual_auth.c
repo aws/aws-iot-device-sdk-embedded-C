@@ -431,6 +431,7 @@ int main( int argc,
 
         LogInfo( ( "Short delay before starting the next iteration....\n" ) );
         sleep( DEMO_LOOP_DELAY_SECONDS );
-
-        return returnStatus;
     }
+
+    return returnStatus;
+}
