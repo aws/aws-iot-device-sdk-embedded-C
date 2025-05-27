@@ -313,7 +313,8 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
     }
 
     LogInfo( ( "ABC" ) );
-    fflush(stdout);
+    fflush( stdout );
+    fflush( stderr );
 
     if( httpStatus != HTTPSuccess )
     {
