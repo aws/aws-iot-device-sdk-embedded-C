@@ -395,7 +395,9 @@ int main( int argc,
                                         HTTP_METHOD_POST_LENGTH,
                                         POST_PATH,
                                         POST_PATH_LENGTH );
-        LogInfo( ( "Final returnStatus = %d", returnStatus ) );
+        
+        LogInfo( ( "ABC") );
+       LogInfo( ( "Final returnStatus = %d", returnStatus ) );
     }
 
     if( returnStatus == EXIT_SUCCESS )
@@ -403,10 +405,6 @@ int main( int argc,
         LogInfo( ( "Rahul" ) );
         /* Log message indicating an iteration completed successfully. */
         //printf( "Demo completed successfully." );
-
-        /* Ensure logs are flushed before exiting. */
-        fflush( stdout );
-        fflush( stderr );
     }
 
     /************************** Disconnect. *****************************/
