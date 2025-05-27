@@ -395,6 +395,7 @@ int main( int argc,
                                         HTTP_METHOD_POST_LENGTH,
                                         POST_PATH,
                                         POST_PATH_LENGTH );
+        LogInfo( ( "Final returnStatus = %d", returnStatus ) );
     }
 
     if( returnStatus == EXIT_SUCCESS )
