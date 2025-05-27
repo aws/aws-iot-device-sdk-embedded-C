@@ -401,6 +401,10 @@ int main( int argc,
     {
         /* Log message indicating an iteration completed successfully. */
         LogInfo( ( "Demo completed successfully." ) );
+
+        /* Ensure logs are flushed before exiting. */
+        fflush( stdout );
+        fflush( stderr );
     }
 
     /************************** Disconnect. *****************************/
