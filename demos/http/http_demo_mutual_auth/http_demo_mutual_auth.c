@@ -312,6 +312,9 @@ static int32_t sendHttpRequest( const TransportInterface_t * pTransportInterface
                     HTTPClient_strerror( httpStatus ) ) );
     }
 
+    LogInfo( ( "ABC" ) );
+    fflush(stdout);
+
     if( httpStatus != HTTPSuccess )
     {
         returnStatus = EXIT_FAILURE;
@@ -397,14 +400,10 @@ int main( int argc,
                                         POST_PATH_LENGTH );
     }
 
-    LogInfo( ( "ABC" ) );
-    LogInfo( ( "Final returnStatus = %d", returnStatus ) );
-
     if( returnStatus == EXIT_SUCCESS )
     {
-        LogInfo( ( "Rahul" ) );
         /* Log message indicating an iteration completed successfully. */
-        /*printf( "Demo completed successfully." ); */
+        LogInfo( ( "Demo completed successfully." ) );
     }
 
     /************************** Disconnect. *****************************/
