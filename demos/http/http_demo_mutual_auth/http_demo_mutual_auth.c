@@ -399,8 +399,9 @@ int main( int argc,
 
     if( returnStatus == EXIT_SUCCESS )
     {
+        LogInfo( ( "Rahul" ) );
         /* Log message indicating an iteration completed successfully. */
-        LogInfo( ( "Demo completed successfully." ) );
+        printf( ( "Demo completed successfully." ) );
 
         /* Ensure logs are flushed before exiting. */
         fflush( stdout );
