@@ -522,7 +522,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
+        // LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
     } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
@@ -541,7 +541,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
     connackProperties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
 
     MQTTPropBuilder_t propBuffer = {0} ;
-    result = MQTT_DeserializeConnack( &connackProperties, &incomingPacket, &sessionPresent, &propBuffer );
+    result = MQTT_DeserializeAck( &incomingPacket, NULL, &sessionPresent, NULL, 0, MQTT_MAX_PACKET_SIZE, NULL, &connackProperties );
 
     if( result != MQTTSuccess )
     {
@@ -878,7 +878,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
+        // LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
     } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
@@ -900,37 +900,18 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
 
     if( ( incomingPacket.type & 0xf0 ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        result = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo , NULL, MQTT_MAX_PACKET_SIZE);
+        result = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo , NULL, MQTT_MAX_PACKET_SIZE, 0);
         assert( result == MQTTSuccess );
 
         /* Process incoming Publish message. */
         mqttProcessIncomingPublish( &publishInfo, packetId );
     }
-    else if( ( incomingPacket.type == MQTT_PACKET_TYPE_SUBACK ) || ( incomingPacket.type == MQTT_PACKET_TYPE_UNSUBACK ) )
-    {
-        MQTTReasonCodeInfo_t reasonCodes ; 
-        result = MQTT_DeserializeSuback( &reasonCodes, &incomingPacket, &packetId, NULL, MQTT_MAX_PACKET_SIZE );
-        globalSubAckStatus = ( result == MQTTSuccess );
-        assert( result == MQTTSuccess || result == MQTTServerRefused );
-
-        /* Process the response. */
-        mqttProcessResponse( &incomingPacket, packetId );
-    }
-    else if( (incomingPacket.type == MQTT_PACKET_TYPE_PUBACK) ||
-             (incomingPacket.type == MQTT_PACKET_TYPE_PUBREC) ||
-             (incomingPacket.type == MQTT_PACKET_TYPE_PUBREL) ||
-             (incomingPacket.type == MQTT_PACKET_TYPE_PUBCOMP) )
-    {
-        MQTTReasonCodeInfo_t reasonCode ; 
-        result = MQTT_DeserializePublishAck( &incomingPacket, &packetId, &reasonCode, 0 , MQTT_MAX_PACKET_SIZE, NULL );
-        assert( result == MQTTSuccess );
-        /* Process the response. */
-        mqttProcessResponse( &incomingPacket, packetId );
-    }
     else
     {
-        result = MQTT_DeserializePing(&incomingPacket); 
-        assert( result == MQTTSuccess );
+        MQTTReasonCodeInfo_t reasonCodes ; 
+        result = MQTT_DeserializeAck( &incomingPacket, &packetId, NULL, &reasonCodes,0, MQTT_MAX_PACKET_SIZE,NULL, NULL );
+        globalSubAckStatus = ( result == MQTTSuccess );
+        assert( result == MQTTSuccess || result == MQTTServerRefused );
         /* Process the response. */
         mqttProcessResponse( &incomingPacket, packetId );
     }
