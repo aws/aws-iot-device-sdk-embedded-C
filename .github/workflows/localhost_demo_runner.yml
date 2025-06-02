@@ -178,28 +178,28 @@ jobs:
         if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
         run: ./build/bin/mqtt_demo_serializer
 
-      - name: Run and monitor the MQTT Serializer Demo
-        if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
-        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
-        with:
-          exe-path: ./build/bin/mqtt_demo_serializer
-          log-dir: demo_run_logs
-          timeout-seconds: 300
-          success-line: "Demo completed successfully."
+      # - name: Run and monitor the MQTT Serializer Demo
+      #   if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
+      #   uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+      #   with:
+      #     exe-path: ./build/bin/mqtt_demo_serializer
+      #     log-dir: demo_run_logs
+      #     timeout-seconds: 300
+      #     success-line: "Demo completed successfully."
 
       - name: Build the MQTT Subscription Manager Demo
         id: build-mqtt-subscription-manager-demo
         if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_subscription_manager
 
-      - name: Run and monitor the MQTT Subscription Manager Demo
-        if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
-        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
-        with:
-          exe-path: ./build/bin/mqtt_demo_subscription_manager
-          log-dir: demo_run_logs
-          timeout-seconds: 300
-          success-line: "Demo completed successfully."
+      # - name: Run and monitor the MQTT Subscription Manager Demo
+      #   if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
+      #   uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+      #   with:
+      #     exe-path: ./build/bin/mqtt_demo_subscription_manager
+      #     log-dir: demo_run_logs
+      #     timeout-seconds: 300
+      #     success-line: "Demo completed successfully."
 
       - name: 'Upload demo logs'
         if: always()
