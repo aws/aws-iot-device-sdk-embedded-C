@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-check-demos:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -17,11 +17,9 @@ jobs:
           submodules: recursive
       - name: Configure CMake build
         run: |
-          sudo apt-get install -y libmosquitto-dev
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+          sudo apt-get install -y libmosquitto-dev cmake
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -G "Unix Makefiles" \
           -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
@@ -46,7 +44,7 @@ jobs:
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
           make -C demos/jobs/jobs_demo_mosquitto
   build-check-demos-cpp:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -63,11 +61,9 @@ jobs:
           done
       - name: Configure CMake build
         run: |
-          sudo apt-get install -y libmosquitto-dev
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+          sudo apt-get install -y libmosquitto-dev cmake
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -G "Unix Makefiles" \
           -DBUILD_DEMOS=1 \
           -DCMAKE_BUILD_TYPE=Release \
@@ -91,7 +87,7 @@ jobs:
         run: |
           make -C build/ help | grep demo | tr -d '. ' | xargs make -C build/
   build-check-install:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -99,10 +95,9 @@ jobs:
           submodules: recursive
       - name: Configure CMake for installation of shared libraries at custom location
         run: |
-          curl https://cmake.org/files/v3.2/cmake-3.2.0-Linux-x86_64.tar.gz -o cmake.tar.gz
-          tar -xf cmake.tar.gz
+          sudo apt-get install -y cmake
           mkdir build && cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -DBUILD_DEMOS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../shared-libs-headers-install-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../shared-libs-install-dir"
       - name: Install shared libraries and verify custom install location
@@ -121,7 +116,7 @@ jobs:
       - name: Configure CMake for installation of static libraries at custom location
         run: |
           cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -DBUILD_SHARED_LIBRARIES=OFF \
           -DBUILD_DEMOS=0 \
           -DCSDK_HEADER_INSTALL_PATH="$PWD/../static-libs-headers-install-dir" -DCSDK_LIB_INSTALL_PATH="$PWD/../static-libs-install-dir"
@@ -141,7 +136,7 @@ jobs:
       - name: Configure CMake build for system install location and selective installation
         run: |
           cd build
-          ../cmake-3.2.0-Linux-x86_64/bin/cmake .. \
+          cmake .. \
           -DBUILD_DEMOS=0 -DBUILD_TESTS=0 -DINSTALL_TO_SYSTEM=1 \
           -DINSTALL_LIBS="SHADOW;DEFENDER" -DINSTALL_PLATFORM_ABSTRACTIONS=0
       - name: Install selected libraries and verify default system installation path is used
@@ -165,7 +160,7 @@ jobs:
           # Each line of install_manifest.txt contains the location of an installed library or header
           done <install_manifest.txt
   complexity:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup
@@ -175,7 +170,7 @@ jobs:
           find platform/ \( -iname '*.c' ! -wholename '*test*' \) |\
           xargs complexity --scores --threshold=0 --horrid-threshold=8
   spell-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install spell
@@ -194,7 +189,7 @@ jobs:
             fi
           done
   formatting:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Check formatting
@@ -231,7 +226,7 @@ jobs:
           path: ./doxygen.zip
           retention-days: 2
   git-secrets:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -249,7 +244,7 @@ jobs:
           git-secrets --register-aws
           git-secrets --scan
   link-verifier:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -257,7 +252,7 @@ jobs:
       - name: Setup Python for link verifier action
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7.10'
+          python-version: '3.8'
       - name: Check Links
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -268,7 +263,7 @@ jobs:
           include-file-types: .c,.h,.dox
           allowlist-file: ./.github/links_allowlist.txt
   verify-manifest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:

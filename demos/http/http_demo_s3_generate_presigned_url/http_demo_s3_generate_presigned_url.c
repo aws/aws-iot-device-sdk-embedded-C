@@ -242,6 +242,8 @@ static SigV4CryptoInterface_t cryptoInterface =
     .hashDigestLen = SHA256_HASH_DIGEST_LENGTH,
 };
 
+static SigV4HttpParameters_t sigv4HttpParams;
+
 /**
  * @brief SigV4 parameters provided to SigV4 library by the application for generating
  * the Authorization header.
@@ -273,7 +275,6 @@ static bool printS3ObjectFilePresignedURL( const char * pHost,
     uint8_t userBuffer[ USER_BUFFER_LENGTH ];
 
     SigV4Status_t sigv4Status = SigV4Success;
-    SigV4HttpParameters_t sigv4HttpParams;
 
     char * pHeaders = NULL;
     size_t headersLen = 0;

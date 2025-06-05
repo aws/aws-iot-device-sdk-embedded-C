@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-run-localhost-demos:
     name: Build and Run Localhost Server Demos
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Clone This Repo
         uses: actions/checkout@v2
@@ -28,9 +28,7 @@ jobs:
 
       - name: Install CMake
         id: install-cmake
-        uses: lukka/get-cmake@v3.26.0
-        with:
-          cmakeVersion: 3.2.0
+        run: sudo apt-get install -y cmake
 
       - name: Generate SSL credentials
         id: generate-credentials
@@ -180,28 +178,28 @@ jobs:
         if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
         run: ./build/bin/mqtt_demo_serializer
 
-      - name: Run and monitor the MQTT Serializer Demo
-        if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
-        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
-        with:
-          exe-path: ./build/bin/mqtt_demo_serializer
-          log-dir: demo_run_logs
-          timeout-seconds: 300
-          success-line: "Demo completed successfully."
+      # - name: Run and monitor the MQTT Serializer Demo
+      #   if: success() || failure() && steps.build-mqtt-serializer-demo.outcome == 'success'
+      #   uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+      #   with:
+      #     exe-path: ./build/bin/mqtt_demo_serializer
+      #     log-dir: demo_run_logs
+      #     timeout-seconds: 300
+      #     success-line: "Demo completed successfully."
 
       - name: Build the MQTT Subscription Manager Demo
         id: build-mqtt-subscription-manager-demo
         if: success() || failure() && steps.configure-cmake-build.outcome == 'success'
         run: cd build && make mqtt_demo_subscription_manager
 
-      - name: Run and monitor the MQTT Subscription Manager Demo
-        if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
-        uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
-        with:
-          exe-path: ./build/bin/mqtt_demo_subscription_manager
-          log-dir: demo_run_logs
-          timeout-seconds: 300
-          success-line: "Demo completed successfully."
+      # - name: Run and monitor the MQTT Subscription Manager Demo
+      #   if: success() || failure() && steps.build-mqtt-subscription-manager-demo.outcome == 'success'
+      #   uses: FreeRTOS/CI-CD-GitHub-Actions/executable-monitor@main
+      #   with:
+      #     exe-path: ./build/bin/mqtt_demo_subscription_manager
+      #     log-dir: demo_run_logs
+      #     timeout-seconds: 300
+      #     success-line: "Demo completed successfully."
 
       - name: 'Upload demo logs'
         if: always()

@@ -345,6 +345,8 @@ static SigV4CryptoInterface_t cryptoInterface =
     .hashDigestLen = SHA256_HASH_DIGEST_LENGTH,
 };
 
+static SigV4HttpParameters_t sigv4HttpParams;
+
 /**
  * @brief SigV4 parameters provided to SigV4 library by the application for generating
  * the Authorization header.
@@ -453,7 +455,6 @@ static bool downloadS3ObjectFile( const TransportInterface_t * pTransportInterfa
     size_t curByte = 0;
 
     SigV4Status_t sigv4Status = SigV4Success;
-    SigV4HttpParameters_t sigv4HttpParams;
 
     char * pHeaders = NULL;
     size_t headersLen = 0;
@@ -720,7 +721,6 @@ static bool getS3ObjectFileSize( size_t * pFileSize,
     size_t contentRangeValStrLength = 0;
 
     SigV4Status_t sigv4Status = SigV4Success;
-    SigV4HttpParameters_t sigv4HttpParams;
 
     char * pHeaders = NULL;
     size_t headersLen = 0;

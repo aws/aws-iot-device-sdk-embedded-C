@@ -13,7 +13,7 @@ on:
 jobs:
   tag-commit:
     name: Tag commit
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
   create-zip:
     needs: tag-commit
     name: Create ZIP and verify package for release asset.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Install ZIP tools
         run: sudo apt-get install zip unzip
@@ -132,7 +132,7 @@ jobs:
   deploy-docs:
     needs: tag-commit
     name: Deploy doxygen docs
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy doxygen for release tag
         uses: FreeRTOS/CI-CD-Github-Actions/doxygen-generation@main
@@ -163,7 +163,7 @@ jobs:
       - create-zip
       - deploy-docs
     name: Create Release and Upload Release Asset
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Create Release
         id: create_release
