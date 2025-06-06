@@ -343,7 +343,10 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId );
  */
 static void mqttCallback( MQTTContext_t * pMqttContext,
                           MQTTPacketInfo_t * pPacketInfo,
-                          MQTTDeserializedInfo_t * pDeserializedInfo );
+                          MQTTDeserializedInfo_t * pDeserializedInfo, 
+                          MQTTSuccessFailReasonCode_t * pReasonCode,
+                          MQTTPropBuilder_t * sendPropsBuffer,
+                          MQTTPropBuilder_t * getPropsBuffer ); 
 
 /**
  * @brief Resend the publishes if a session is re-established with the broker.
@@ -555,7 +558,10 @@ static void cleanupOutgoingPublishWithPacketID( uint16_t packetId )
 
 static void mqttCallback( MQTTContext_t * pMqttContext,
                           MQTTPacketInfo_t * pPacketInfo,
-                          MQTTDeserializedInfo_t * pDeserializedInfo )
+                          MQTTDeserializedInfo_t * pDeserializedInfo, 
+                          MQTTSuccessFailReasonCode_t * pReasonCode,
+                          MQTTPropBuilder_t * sendPropsBuffer,
+                          MQTTPropBuilder_t * getPropsBuffer )
 {
     uint16_t packetIdentifier;
 
@@ -659,7 +665,7 @@ static bool handlePublishResend( MQTTContext_t * pMqttContext )
                         outgoingPublishPackets[ index ].packetId ) );
             mqttStatus = MQTT_Publish( pMqttContext,
                                        &outgoingPublishPackets[ index ].pubInfo,
-                                       outgoingPublishPackets[ index ].packetId );
+                                       outgoingPublishPackets[ index ].packetId , NULL);
 
             if( mqttStatus != MQTTSuccess )
             {
@@ -799,7 +805,7 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
                                                pOutgoingPublishRecords,
                                                OUTGOING_PUBLISH_RECORD_LEN,
                                                pIncomingPublishRecords,
-                                               INCOMING_PUBLISH_RECORD_LEN );
+                                               INCOMING_PUBLISH_RECORD_LEN, NULL, 0 );
 
             if( mqttStatus != MQTTSuccess )
             {
@@ -842,7 +848,7 @@ bool EstablishMqttSession( MQTTPublishCallback_t publishCallback )
                                            &connectInfo,
                                            NULL,
                                            CONNACK_RECV_TIMEOUT_MS,
-                                           &sessionPresent );
+                                           &sessionPresent, NULL, NULL );
 
                 if( mqttStatus != MQTTSuccess )
                 {
@@ -908,7 +914,7 @@ bool DisconnectMqttSession( void )
     if( mqttSessionEstablished == true )
     {
         /* Send DISCONNECT. */
-        mqttStatus = MQTT_Disconnect( pMqttContext );
+        mqttStatus = MQTT_Disconnect( pMqttContext , NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION);
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -956,7 +962,7 @@ bool SubscribeToTopic( const char * pTopicFilter,
     mqttStatus = MQTT_Subscribe( pMqttContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 globalSubscribePacketIdentifier );
+                                 globalSubscribePacketIdentifier, NULL);
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1012,7 +1018,7 @@ bool UnsubscribeFromTopic( const char * pTopicFilter,
     mqttStatus = MQTT_Unsubscribe( pMqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                   globalUnsubscribePacketIdentifier );
+                                   globalUnsubscribePacketIdentifier, NULL);
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1080,7 +1086,7 @@ bool PublishToTopic( const char * pTopicFilter,
         /* Send PUBLISH packet. */
         mqttStatus = MQTT_Publish( pMqttContext,
                                    &outgoingPublishPackets[ publishIndex ].pubInfo,
-                                   outgoingPublishPackets[ publishIndex ].packetId );
+                                   outgoingPublishPackets[ publishIndex ].packetId , NULL );
 
         if( mqttStatus != MQTTSuccess )
         {
