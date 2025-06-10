@@ -99,7 +99,7 @@ openssl x509 -req \
 
 Deploy the following components to your Greengrass core:
 - aws.greengrass.clientdevices.Auth
-- aws.greengrass.clientdevices.mqtt.Moquette
+- aws.greengrass.clientdevices.mqtt.EMQX
 - aws.greengrass.clientdevices.mqtt.Bridge
 - aws.greengrass.clientdevices.IPDetector
 

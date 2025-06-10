@@ -686,7 +686,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                        outgoingPublishPackets[ index ].packetId ) );
             mqttStatus = MQTT_Publish( pMqttContext,
                                        &outgoingPublishPackets[ index ].pubInfo,
-                                       outgoingPublishPackets[ index ].packetId );
+                                       outgoingPublishPackets[ index ].packetId, NULL );
 
             if( mqttStatus != MQTTSuccess )
             {
@@ -770,7 +770,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
                                                pOutgoingPublishRecords,
                                                OUTGOING_PUBLISH_RECORD_LEN,
                                                pIncomingPublishRecords,
-                                               INCOMING_PUBLISH_RECORD_LEN );
+                                               INCOMING_PUBLISH_RECORD_LEN, NULL, 0 );
 
             if( mqttStatus != MQTTSuccess )
             {
@@ -812,7 +812,7 @@ int EstablishMqttSession( MQTTEventCallback_t eventCallback )
                                            &connectInfo,
                                            NULL,
                                            CONNACK_RECV_TIMEOUT_MS,
-                                           &sessionPresent );
+                                           &sessionPresent, NULL, NULL );
 
                 if( mqttStatus != MQTTSuccess )
                 {
@@ -877,7 +877,7 @@ int32_t DisconnectMqttSession( void )
     if( mqttSessionEstablished == true )
     {
         /* Send DISCONNECT. */
-        mqttStatus = MQTT_Disconnect( pMqttContext );
+        mqttStatus = MQTT_Disconnect( pMqttContext, NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -922,7 +922,7 @@ int32_t SubscribeToTopic( const char * pTopicFilter,
     mqttStatus = MQTT_Subscribe( pMqttContext,
                                  pSubscriptionList,
                                  sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 globalSubscribePacketIdentifier );
+                                 globalSubscribePacketIdentifier, NULL );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -980,7 +980,7 @@ int32_t UnsubscribeFromTopic( const char * pTopicFilter,
     mqttStatus = MQTT_Unsubscribe( pMqttContext,
                                    pSubscriptionList,
                                    sizeof( pSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                   globalUnsubscribePacketIdentifier );
+                                   globalUnsubscribePacketIdentifier, NULL );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1051,7 +1051,7 @@ int32_t PublishToTopic( const char * pTopicFilter,
         /* Send PUBLISH packet. */
         mqttStatus = MQTT_Publish( pMqttContext,
                                    &outgoingPublishPackets[ publishIndex ].pubInfo,
-                                   outgoingPublishPackets[ publishIndex ].packetId );
+                                   outgoingPublishPackets[ publishIndex ].packetId, NULL );
 
         if( mqttStatus != MQTTSuccess )
         {

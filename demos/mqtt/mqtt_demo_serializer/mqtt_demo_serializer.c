@@ -51,6 +51,7 @@
 
 /* MQTT Serializer Serializer API header. */
 #include "core_mqtt_serializer.h"
+#include "core_mqtt_utils.h"
 
 /* Plaintext transport implementation. */
 #include "plaintext_posix.h"
@@ -142,6 +143,11 @@
  * @brief Delay between two demo iterations.
  */
 #define MQTT_DEMO_ITERATION_DELAY_SECONDS    ( 5U )
+
+/**
+ * @brief Per the MQTT spec, the max packet size  can be of  max remaining length + 5 bytes
+ */
+#define MQTT_MAX_PACKET_SIZE                        ( 268435460U )
 
 /*-----------------------------------------------------------*/
 
@@ -486,14 +492,14 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
     mqttConnectInfo.keepAliveSeconds = MQTT_KEEP_ALIVE_INTERVAL_SECONDS;
 
     /* Get size requirement for the connect packet */
-    result = MQTT_GetConnectPacketSize( &mqttConnectInfo, NULL, &remainingLength, &packetSize );
+    result = MQTT_GetConnectPacketSize( &mqttConnectInfo, NULL, NULL, NULL, &remainingLength, &packetSize );
 
     /* Make sure the packet size is less than static buffer size. */
     assert( result == MQTTSuccess );
     assert( packetSize < pFixedBuffer->size );
 
     /* Serialize MQTT connect packet into the provided buffer. */
-    result = MQTT_SerializeConnect( &mqttConnectInfo, NULL, remainingLength, pFixedBuffer );
+    result = MQTT_SerializeConnect( &mqttConnectInfo, NULL, NULL, NULL, remainingLength, pFixedBuffer );
     assert( result == MQTTSuccess );
 
     /* Send the serialized connect packet to the MQTT broker */
@@ -516,7 +522,7 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Since TCP socket has timeout, retry until the data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
+        // LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
     } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
@@ -531,7 +537,11 @@ static int createMQTTConnectionWithBroker( NetworkContext_t * pNetworkContext,
 
     /* Deserialize the received packet to make sure the content of the CONNACK
      * is valid. Note that the packetId is not present in the connection ack. */
-    result = MQTT_DeserializeAck( &incomingPacket, &packetId, &sessionPresent );
+    MQTTConnectProperties_t  connackProperties = {0} ;
+    connackProperties.maxPacketSize = MQTT_MAX_PACKET_SIZE;
+
+    MQTTPropBuilder_t propBuffer = {0} ;
+    result = MQTT_DeserializeAck( &incomingPacket, NULL, &sessionPresent, NULL, 0, MQTT_MAX_PACKET_SIZE, NULL, &connackProperties );
 
     if( result != MQTTSuccess )
     {
@@ -578,7 +588,8 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
 
     result = MQTT_GetSubscribePacketSize( mqttSubscription,
                                           sizeof( mqttSubscription ) / sizeof( MQTTSubscribeInfo_t ),
-                                          &remainingLength, &packetSize );
+                                          NULL,
+                                          &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
 
     /* Make sure the packet size is less than static buffer size. */
     assert( result == MQTTSuccess );
@@ -586,8 +597,10 @@ static void mqttSubscribeToTopic( NetworkContext_t * pNetworkContext,
     subscribePacketIdentifier = getNextPacketIdentifier();
 
     /* Serialize subscribe into statically allocated buffer. */
+
     result = MQTT_SerializeSubscribe( mqttSubscription,
                                       sizeof( mqttSubscription ) / sizeof( MQTTSubscribeInfo_t ),
+                                      NULL,
                                       subscribePacketIdentifier,
                                       remainingLength,
                                       pFixedBuffer );
@@ -631,7 +644,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
     mqttPublishInfo.payloadLength = strlen( MQTT_EXAMPLE_MESSAGE );
 
     /* Find out length of Publish packet size. */
-    result = MQTT_GetPublishPacketSize( &mqttPublishInfo, &remainingLength, &packetSize );
+    result = MQTT_GetPublishPacketSize( &mqttPublishInfo, NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE );
     assert( result == MQTTSuccess );
 
     /* Make sure the packet size is less than static buffer size. */
@@ -641,6 +654,7 @@ static void mqttPublishToTopic( NetworkContext_t * pNetworkContext,
      * be sent directly in order to avoid copying it into the buffer.
      * QOS0 does not make use of packet identifier, therefore value of 0 is used */
     result = MQTT_SerializePublishHeader( &mqttPublishInfo,
+                                          NULL, 
                                           0,
                                           remainingLength,
                                           pFixedBuffer,
@@ -680,8 +694,10 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
 
     result = MQTT_GetUnsubscribePacketSize( mqttSubscription,
                                             sizeof( mqttSubscription ) / sizeof( MQTTSubscribeInfo_t ),
+                                            NULL, 
                                             &remainingLength,
-                                            &packetSize );
+                                            &packetSize,
+                                            MQTT_MAX_PACKET_SIZE);
     assert( result == MQTTSuccess );
     /* Make sure the packet size is less than static buffer size */
     assert( packetSize < pFixedBuffer->size );
@@ -691,6 +707,7 @@ static void mqttUnsubscribeFromTopic( NetworkContext_t * pNetworkContext,
 
     result = MQTT_SerializeUnsubscribe( mqttSubscription,
                                         sizeof( mqttSubscription ) / sizeof( MQTTSubscribeInfo_t ),
+                                        NULL,
                                         unsubscribePacketIdentifier,
                                         remainingLength,
                                         pFixedBuffer );
@@ -734,17 +751,18 @@ static void mqttDisconnect( NetworkContext_t * pNetworkContext,
 {
     MQTTStatus_t result;
     int32_t status;
+    size_t remainingLength ; 
     size_t packetSize = 0;
 
     /* Suppress unused variable warnings when asserts are disabled in build. */
     ( void ) status;
     ( void ) result;
-
-    status = MQTT_GetDisconnectPacketSize( &packetSize );
+    
+    status = MQTT_GetDisconnectPacketSize( NULL, &remainingLength, &packetSize, MQTT_MAX_PACKET_SIZE, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION );
 
     assert( packetSize <= pFixedBuffer->size );
 
-    result = MQTT_SerializeDisconnect( pFixedBuffer );
+    result = MQTT_SerializeDisconnect( NULL, MQTT_REASON_DISCONNECT_NORMAL_DISCONNECTION, remainingLength, pFixedBuffer );
     assert( result == MQTTSuccess );
 
     /* Send disconnect packet to the broker */
@@ -860,7 +878,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
         Clock_SleepMs( MQTT_RESPONSE_WAIT_TIME_MS );
         /* Retry till data is available */
         result = MQTT_GetIncomingPacketTypeAndLength( Plaintext_Recv, pNetworkContext, &incomingPacket );
-        LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
+        // LogInfo( ( "MQTT_GetIncomingPacketTypeAndLength returned: %d\n", result ) );
     } while( ( result == MQTTNoDataAvailable ) );
 
     assert( result == MQTTSuccess );
@@ -882,7 +900,7 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
 
     if( ( incomingPacket.type & 0xf0 ) == MQTT_PACKET_TYPE_PUBLISH )
     {
-        result = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo );
+        result = MQTT_DeserializePublish( &incomingPacket, &packetId, &publishInfo , NULL, MQTT_MAX_PACKET_SIZE, 0);
         assert( result == MQTTSuccess );
 
         /* Process incoming Publish message. */
@@ -890,22 +908,10 @@ static void mqttProcessIncomingPacket( NetworkContext_t * pNetworkContext,
     }
     else
     {
-        /* If the received packet is not a Publish message, then it is an ACK for one
-         * of the messages we sent out, verify that the ACK packet is a valid MQTT
-         * packet. Since CONNACK is already processed, session present parameter is
-         * to NULL */
-        result = MQTT_DeserializeAck( &incomingPacket, &packetId, &sessionPresent );
-
-        if( incomingPacket.type == MQTT_PACKET_TYPE_SUBACK )
-        {
-            globalSubAckStatus = ( result == MQTTSuccess );
-            assert( result == MQTTSuccess || result == MQTTServerRefused );
-        }
-        else
-        {
-            assert( result == MQTTSuccess );
-        }
-
+        MQTTReasonCodeInfo_t reasonCodes ; 
+        result = MQTT_DeserializeAck( &incomingPacket, &packetId, NULL, &reasonCodes,0, MQTT_MAX_PACKET_SIZE,NULL, NULL );
+        globalSubAckStatus = ( result == MQTTSuccess );
+        assert( result == MQTTSuccess || result == MQTTServerRefused );
         /* Process the response. */
         mqttProcessResponse( &incomingPacket, packetId );
     }
