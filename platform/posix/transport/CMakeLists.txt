@@ -10,6 +10,7 @@ add_library( sockets_posix
 
 target_include_directories( sockets_posix
                             PUBLIC
+                                ${OPENSSL_INCLUDE_DIR}
                                 ${COMMON_TRANSPORT_INCLUDE_PUBLIC_DIRS}
                                 ${LOGGING_INCLUDE_DIRS}
                                 ${TRANSPORT_INTERFACE_INCLUDE_DIR} )
