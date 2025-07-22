@@ -446,7 +446,10 @@ static void handleIncomingPublish( MQTTPublishInfo_t * pPublishInfo,
  */
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo );
+                           MQTTDeserializedInfo_t * pDeserializedInfo,
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer  );
 
 /**
  * @brief Initializes the MQTT library.
@@ -851,7 +854,7 @@ static int handlePublishResend( MQTTContext_t * pMqttContext )
                            outgoingPublishPackets[ index ].packetId ) );
                 mqttStatus = MQTT_Publish( pMqttContext,
                                            &outgoingPublishPackets[ index ].pubInfo,
-                                           outgoingPublishPackets[ index ].packetId );
+                                           outgoingPublishPackets[ index ].packetId , NULL);
 
                 if( mqttStatus != MQTTSuccess )
                 {
@@ -968,7 +971,7 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
         mqttStatus = MQTT_Subscribe( pMqttContext,
                                      pGlobalSubscriptionList,
                                      sizeof( pGlobalSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                     globalSubscribePacketIdentifier );
+                                     globalSubscribePacketIdentifier, NULL );
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -1023,7 +1026,10 @@ static int handleResubscribe( MQTTContext_t * pMqttContext )
 
 static void eventCallback( MQTTContext_t * pMqttContext,
                            MQTTPacketInfo_t * pPacketInfo,
-                           MQTTDeserializedInfo_t * pDeserializedInfo )
+                           MQTTDeserializedInfo_t * pDeserializedInfo,
+                           MQTTSuccessFailReasonCode_t * pReasonCode,
+                           MQTTPropBuilder_t * sendPropsBuffer,
+                           MQTTPropBuilder_t * getPropsBuffer  )
 {
     uint16_t packetIdentifier;
 
@@ -1193,7 +1199,7 @@ static int establishMqttSession( MQTTContext_t * pMqttContext,
     #endif /* ifdef CLIENT_USERNAME */
 
     /* Send MQTT CONNECT packet to broker. */
-    mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent );
+    mqttStatus = MQTT_Connect( pMqttContext, &connectInfo, NULL, CONNACK_RECV_TIMEOUT_MS, pSessionPresent, NULL,NULL );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1219,7 +1225,7 @@ static int disconnectMqttSession( MQTTContext_t * pMqttContext )
     assert( pMqttContext != NULL );
 
     /* Send DISCONNECT. */
-    mqttStatus = MQTT_Disconnect( pMqttContext );
+    mqttStatus = MQTT_Disconnect( pMqttContext, NULL, 0x00 );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1255,7 +1261,7 @@ static int subscribeToTopic( MQTTContext_t * pMqttContext )
     mqttStatus = MQTT_Subscribe( pMqttContext,
                                  pGlobalSubscriptionList,
                                  sizeof( pGlobalSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                 globalSubscribePacketIdentifier );
+                                 globalSubscribePacketIdentifier, NULL );
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1298,7 +1304,7 @@ static int unsubscribeFromTopic( MQTTContext_t * pMqttContext )
     mqttStatus = MQTT_Unsubscribe( pMqttContext,
                                    pGlobalSubscriptionList,
                                    sizeof( pGlobalSubscriptionList ) / sizeof( MQTTSubscribeInfo_t ),
-                                   globalUnsubscribePacketIdentifier );
+                                   globalUnsubscribePacketIdentifier , NULL);
 
     if( mqttStatus != MQTTSuccess )
     {
@@ -1351,7 +1357,7 @@ static int publishToTopic( MQTTContext_t * pMqttContext )
         /* Send PUBLISH packet. */
         mqttStatus = MQTT_Publish( pMqttContext,
                                    &outgoingPublishPackets[ publishIndex ].pubInfo,
-                                   outgoingPublishPackets[ publishIndex ].packetId );
+                                   outgoingPublishPackets[ publishIndex ].packetId , NULL);
 
         if( mqttStatus != MQTTSuccess )
         {
@@ -1415,7 +1421,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
                                            pOutgoingPublishRecords,
                                            OUTGOING_PUBLISH_RECORD_LEN,
                                            pIncomingPublishRecords,
-                                           INCOMING_PUBLISH_RECORD_LEN );
+                                           INCOMING_PUBLISH_RECORD_LEN , NULL, 0);
 
         if( mqttStatus != MQTTSuccess )
         {
