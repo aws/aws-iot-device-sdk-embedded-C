@@ -554,6 +554,9 @@ static bool uploadS3ObjectFile( const TransportInterface_t * pTransportInterface
     response.pBuffer = userBuffer;
     response.bufferLen = USER_BUFFER_LENGTH;
 
+    /* Enable use of HTTP_SEND_RETRY_TIMEOUT_MS */
+    response.getTime = Clock_GetTimeMs;
+
     if( httpStatus == HTTPSuccess )
     {
         httpStatus = HTTPClient_InitializeRequestHeaders( &requestHeaders,
