@@ -44,6 +44,9 @@
 /*Include backoff algorithm header for retry logic.*/
 #include "backoff_algorithm.h"
 
+/* Clock for timer. */
+#include "clock.h"
+
 /* Check that TLS port of the server is defined. */
 #ifndef HTTPS_PORT
     #error "Please define a HTTPS_PORT."
