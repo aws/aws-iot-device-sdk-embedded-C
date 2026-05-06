@@ -631,6 +631,17 @@ OpensslStatus_t Openssl_Connect( NetworkContext_t * pNetworkContext,
         }
     }
 
+    /* Set minimum TLS version. */
+    if( returnStatus == OPENSSL_SUCCESS )
+    {
+        int ret = SSL_CTX_set_min_proto_version( pSslContext, TLS1_3_VERSION );
+        if( ret != 1 )
+        {
+            LogError( ( "Failed to set minimum TLS version to 1.3." ) );
+            returnStatus = OPENSSL_API_ERROR;
+        }
+    }
+
     /* Setup credentials. */
     if( returnStatus == OPENSSL_SUCCESS )
     {
