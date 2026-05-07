@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestor de Tareas con Correo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Gestor de Tareas</h1>
+    <p class="subtitle">Organiza tus pendientes y envíalos por correo</p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Nueva tarea</h2>
+      <form id="task-form" class="task-form" autocomplete="off">
+        <div class="form-row">
+          <label for="title">Título</label>
+          <input type="text" id="title" name="title" required maxlength="120" placeholder="Ej. Preparar reporte semanal" />
+        </div>
+
+        <div class="form-row">
+          <label for="description">Descripción</label>
+          <textarea id="description" name="description" rows="3" maxlength="1000" placeholder="Detalles opcionales"></textarea>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="priority">Prioridad</label>
+            <select id="priority" name="priority">
+              <option value="baja">Baja</option>
+              <option value="media" selected>Media</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="dueDate">Fecha límite</label>
+            <input type="date" id="dueDate" name="dueDate" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Agregar tarea</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2>Mis tareas</h2>
+        <div class="toolbar-actions">
+          <select id="filter" aria-label="Filtrar tareas">
+            <option value="all">Todas</option>
+            <option value="pending">Pendientes</option>
+            <option value="done">Completadas</option>
+          </select>
+          <button id="clear-done" type="button" class="btn btn-secondary">Borrar completadas</button>
+        </div>
+      </div>
+
+      <ul id="task-list" class="task-list" aria-live="polite"></ul>
+      <p id="empty-state" class="empty-state">No hay tareas todavía. ¡Agrega la primera!</p>
+    </section>
+
+    <section class="card">
+      <h2>Enviar resumen por correo</h2>
+      <p class="hint">
+        Se abrirá tu cliente de correo con un mensaje pre-llenado que contiene tus tareas.
+      </p>
+      <form id="email-form" class="task-form" autocomplete="off">
+        <div class="form-row">
+          <label for="recipient">Destinatario</label>
+          <input type="email" id="recipient" name="recipient" required placeholder="alguien@ejemplo.com" />
+        </div>
+
+        <div class="form-row">
+          <label for="emailScope">Incluir</label>
+          <select id="emailScope" name="emailScope">
+            <option value="pending" selected>Solo pendientes</option>
+            <option value="all">Todas las tareas</option>
+            <option value="done">Solo completadas</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enviar resumen</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>Tus tareas se guardan localmente en este navegador.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
