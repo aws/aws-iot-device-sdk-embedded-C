@@ -66,7 +66,6 @@
  *
  * In general, port 1883 is for unsecured MQTT connections.
  */
-#define BROKER_PORT    ( 1883 )
 
 /**
  * @brief MQTT client identifier.

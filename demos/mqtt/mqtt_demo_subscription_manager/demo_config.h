@@ -66,7 +66,6 @@
  *
  * In general, port 8883 is for secured MQTT connections.
  */
-#define BROKER_PORT    ( 8883 )
 
 /**
  * @brief Path of the file containing the server's root CA certificate.
